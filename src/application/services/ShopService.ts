@@ -12,6 +12,20 @@ export class ShopService {
     return this.shopRepository.listActiveShops()
   }
 
+  public async listShopsPendingReview(): Promise<readonly Shop[]> {
+    return this.shopRepository.listShopsPendingReview()
+  }
+
+  public async listAllShopsForReview(): Promise<readonly Shop[]> {
+    return this.shopRepository.listAllShopsForReview()
+  }
+
+  public async fetchShopsByIdentifiers(
+    shopIdentifiers: readonly string[],
+  ): Promise<readonly Shop[]> {
+    return this.shopRepository.fetchShopsByIdentifiers(shopIdentifiers)
+  }
+
   public async listShopsByOwnerIdentifier(
     ownerIdentifier: string,
   ): Promise<readonly Shop[]> {

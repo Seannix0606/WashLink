@@ -6,6 +6,8 @@ import {
   buildGoogleMapsSearchUrlForAddress,
   openExternalUrlInNewTab,
 } from '../../utilities/buildExternalNavigationUrl'
+import { BookingNotesBlock } from '../booking/BookingNotesBlock'
+import { BookingRatingSummaryBlock } from '../rating/BookingRatingSummaryBlock'
 
 interface WorkerJobCardDetailsProps {
   readonly booking: Booking
@@ -39,6 +41,14 @@ export function WorkerJobCardDetails({
         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-ink-500)]" />
         <p className="min-w-0 flex-1 break-words">{booking.address}</p>
       </div>
+
+      <BookingNotesBlock
+        customerNotes={booking.customerNotes}
+        tone="highlight"
+        titleText="Customer notes"
+      />
+
+      <BookingRatingSummaryBlock booking={booking} />
 
       <Button
         type="button"

@@ -1,6 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { BookingService } from '../../application/services/BookingService'
-import type { Booking } from '../../domain/models/Booking'
+import type { Booking, BookingStatus } from '../../domain/models/Booking'
+
+interface UseCustomerBookingsRealtimeOptions {
+  readonly onBookingStatusTransitioned?: (
+    updatedBooking: Booking,
+    previousBookingStatus: BookingStatus,
+  ) => void
+}
 
 interface UseCustomerBookingsRealtimeResult {
   readonly customerBookings: readonly Booking[]
@@ -11,7 +18,15 @@ interface UseCustomerBookingsRealtimeResult {
 export function useCustomerBookingsRealtime(
   bookingService: BookingService,
   customerIdentifier: string,
+  options?: UseCustomerBookingsRealtimeOptions,
 ): UseCustomerBookingsRealtimeResult {
+  const onBookingStatusTransitionedCallbackRef = useRef(
+    options?.onBookingStatusTransitioned,
+  )
+  useEffect(() => {
+    onBookingStatusTransitionedCallbackRef.current =
+      options?.onBookingStatusTransitioned
+  }, [options?.onBookingStatusTransitioned])
   const [customerBookings, setCustomerBookings] = useState<Booking[]>([])
   const [isLoadingCustomerBookings, setIsLoadingCustomerBookings] =
     useState<boolean>(true)
@@ -63,13 +78,28 @@ export function useCustomerBookingsRealtime(
         if (!isComponentMounted) {
           return
         }
-        setCustomerBookings((previousCustomerBookingList) =>
-          mergeUpdatedBookingIfOwnedByCustomer(
+        setCustomerBookings((previousCustomerBookingList) => {
+          if (!doesBookingBelongToCustomer(updatedBooking, customerIdentifier)) {
+            return previousCustomerBookingList
+          }
+          const previousMatchingBooking = previousCustomerBookingList.find(
+            (existingBooking) => existingBooking.id === updatedBooking.id,
+          )
+          if (
+            previousMatchingBooking !== undefined &&
+            previousMatchingBooking.bookingStatus !== updatedBooking.bookingStatus
+          ) {
+            onBookingStatusTransitionedCallbackRef.current?.(
+              updatedBooking,
+              previousMatchingBooking.bookingStatus,
+            )
+          }
+          return mergeUpdatedBookingIfOwnedByCustomer(
             previousCustomerBookingList,
             updatedBooking,
             customerIdentifier,
-          ),
-        )
+          )
+        })
       },
     })
 

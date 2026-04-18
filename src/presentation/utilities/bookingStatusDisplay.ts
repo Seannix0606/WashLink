@@ -15,6 +15,7 @@ const bookingStatusDisplayDefinitionByStatus: Record<
   in_progress: { displayLabel: 'In progress', badgeTone: 'brand' },
   completed: { displayLabel: 'Completed', badgeTone: 'success' },
   rejected: { displayLabel: 'Rejected', badgeTone: 'danger' },
+  cancelled: { displayLabel: 'Cancelled', badgeTone: 'neutral' },
 }
 
 export function describeBookingStatus(

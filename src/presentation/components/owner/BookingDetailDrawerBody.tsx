@@ -1,11 +1,13 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
 import {
+  Ban,
   Calendar,
   Car,
   CheckCircle2,
   MapPin,
   Phone,
+  ShieldAlert,
   UserCircle2,
   UserPlus,
   XCircle,
@@ -25,6 +27,8 @@ import {
 } from '../../utilities/datetimeFormatting'
 import { runServiceActionWithToast } from '../../utilities/runServiceActionWithToast'
 import { describeBookingStatus } from '../../utilities/bookingStatusDisplay'
+import { BookingNotesBlock } from '../booking/BookingNotesBlock'
+import { BookingRatingSummaryBlock } from '../rating/BookingRatingSummaryBlock'
 import { BookingDetailRow } from './BookingDetailRow'
 
 interface BookingDetailDrawerBodyProps {
@@ -74,6 +78,10 @@ export function BookingDetailDrawerBody({
   const canAssign =
     booking.bookingStatus === 'accepted' &&
     booking.assignedWorkerIdentifier === undefined
+  const isBookingCancelledByCustomer = booking.bookingStatus === 'cancelled'
+  const isBookingRejected = booking.bookingStatus === 'rejected'
+  const shouldHideDecisionActions =
+    isBookingCancelledByCustomer || isBookingRejected
 
   const handleAccept = async (): Promise<void> => {
     setIsAcceptingBooking(true)
@@ -164,26 +172,48 @@ export function BookingDetailDrawerBody({
         ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant="primary"
-          leadingIcon={<CheckCircle2 className="h-4 w-4" />}
-          isLoading={isAcceptingBooking}
-          disabled={!canAccept || isAcceptingBooking}
-          onClick={() => void handleAccept()}
-        >
-          Accept
-        </Button>
-        <Button
-          variant="danger"
-          leadingIcon={<XCircle className="h-4 w-4" />}
-          isLoading={isRejectingBooking}
-          disabled={!canReject || isRejectingBooking}
-          onClick={() => void handleReject()}
-        >
-          Reject
-        </Button>
-      </div>
+      <BookingNotesBlock customerNotes={booking.customerNotes} />
+
+      <BookingRatingSummaryBlock booking={booking} />
+
+      {isBookingCancelledByCustomer ? (
+        <BookingTerminalNotice
+          iconNode={<Ban className="h-4 w-4" />}
+          noticeMessage="The customer cancelled this booking before it was accepted."
+          noticeTone="neutral"
+        />
+      ) : null}
+
+      {isBookingRejected ? (
+        <BookingTerminalNotice
+          iconNode={<ShieldAlert className="h-4 w-4" />}
+          noticeMessage="This booking was rejected. No further action is needed."
+          noticeTone="danger"
+        />
+      ) : null}
+
+      {shouldHideDecisionActions ? null : (
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="primary"
+            leadingIcon={<CheckCircle2 className="h-4 w-4" />}
+            isLoading={isAcceptingBooking}
+            disabled={!canAccept || isAcceptingBooking}
+            onClick={() => void handleAccept()}
+          >
+            Accept
+          </Button>
+          <Button
+            variant="danger"
+            leadingIcon={<XCircle className="h-4 w-4" />}
+            isLoading={isRejectingBooking}
+            disabled={!canReject || isRejectingBooking}
+            onClick={() => void handleReject()}
+          >
+            Reject
+          </Button>
+        </div>
+      )}
 
       {canAssign ? (
         <div className="space-y-2 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-white p-3">
@@ -211,6 +241,51 @@ export function BookingDetailDrawerBody({
           </Button>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+type BookingTerminalNoticeTone = 'neutral' | 'danger'
+
+interface BookingTerminalNoticeProps {
+  readonly iconNode: ReactElement
+  readonly noticeMessage: string
+  readonly noticeTone: BookingTerminalNoticeTone
+}
+
+const bookingTerminalNoticeContainerClassNameByTone: Record<
+  BookingTerminalNoticeTone,
+  string
+> = {
+  neutral:
+    'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]',
+  danger:
+    'bg-[var(--color-danger-50)] text-[var(--color-danger-600)]',
+}
+
+const bookingTerminalNoticeIconBubbleClassNameByTone: Record<
+  BookingTerminalNoticeTone,
+  string
+> = {
+  neutral: 'bg-[var(--color-ink-500)] text-white',
+  danger: 'bg-[var(--color-danger-500)] text-white',
+}
+
+function BookingTerminalNotice({
+  iconNode,
+  noticeMessage,
+  noticeTone,
+}: BookingTerminalNoticeProps): ReactElement {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-[var(--radius-surface)] px-3 py-2 text-xs font-medium ${bookingTerminalNoticeContainerClassNameByTone[noticeTone]}`}
+    >
+      <span
+        className={`flex h-6 w-6 items-center justify-center rounded-full ${bookingTerminalNoticeIconBubbleClassNameByTone[noticeTone]}`}
+      >
+        {iconNode}
+      </span>
+      {noticeMessage}
     </div>
   )
 }

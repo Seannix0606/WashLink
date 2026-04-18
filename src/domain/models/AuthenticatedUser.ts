@@ -1,4 +1,8 @@
-export type ApplicationUserRole = 'customer' | 'owner' | 'worker'
+export type ApplicationUserRole =
+  | 'customer'
+  | 'owner'
+  | 'worker'
+  | 'super_admin'
 
 export interface AuthenticatedUser {
   readonly userIdentifier: string

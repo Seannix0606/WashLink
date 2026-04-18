@@ -18,6 +18,16 @@ export interface BookingRepository {
     assignedWorkerIdentifier: string,
     bookingStatus: BookingStatus,
   ): Promise<Booking>
+  cancelPendingBookingForCustomer(
+    bookingIdentifier: string,
+    customerIdentifier: string,
+  ): Promise<Booking>
+  submitBookingRatingForCustomer(
+    bookingIdentifier: string,
+    customerIdentifier: string,
+    ratingStars: number,
+    ratingComment: string | null,
+  ): Promise<Booking>
   subscribeToBookingRealtimeEvents(handlers: {
     onBookingInserted: (booking: Booking) => void
     onBookingUpdated: (booking: Booking) => void

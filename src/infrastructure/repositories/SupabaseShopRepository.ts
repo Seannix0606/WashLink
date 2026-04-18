@@ -1,6 +1,7 @@
 import type {
   CreateShopInput,
   Shop,
+  ShopVerificationStatus,
   UpdateShopInput,
 } from '../../domain/models/Shop'
 import type { ShopRepository } from '../../domain/repositories/ShopRepository'
@@ -16,10 +17,26 @@ interface SupabaseShopRow {
   longitude: number | null
   is_active: boolean
   created_at: string
+  verification_status: string
+  verification_notes: string | null
+  verification_submitted_at: string | null
+  verification_reviewed_at: string | null
+  verification_reviewed_by: string | null
 }
 
 const supabaseShopSelectColumns =
-  'id, owner_id, name, address, phone_number, latitude, longitude, is_active, created_at'
+  'id, owner_id, name, address, phone_number, latitude, longitude, is_active, created_at, verification_status, verification_notes, verification_submitted_at, verification_reviewed_at, verification_reviewed_by'
+
+const shopVerificationStatusSet: ReadonlySet<ShopVerificationStatus> = new Set<
+  ShopVerificationStatus
+>(['pending', 'changes_requested', 'approved', 'rejected'])
+
+function mapVerificationStatus(rawStatus: string): ShopVerificationStatus {
+  if (shopVerificationStatusSet.has(rawStatus as ShopVerificationStatus)) {
+    return rawStatus as ShopVerificationStatus
+  }
+  return 'pending'
+}
 
 export class SupabaseShopRepository implements ShopRepository {
   public async listActiveShops(): Promise<readonly Shop[]> {
@@ -27,10 +44,64 @@ export class SupabaseShopRepository implements ShopRepository {
       .from('shops')
       .select(supabaseShopSelectColumns)
       .eq('is_active', true)
+      .eq('verification_status', 'approved')
       .order('name', { ascending: true })
 
     if (error) {
       throw new Error(`Failed to list active shops: ${error.message}`)
+    }
+
+    const shopRows: SupabaseShopRow[] = data
+    return shopRows.map(mapSupabaseShopRowToShop)
+  }
+
+  public async listShopsPendingReview(): Promise<readonly Shop[]> {
+    const { data, error } = await getSupabaseClient()
+      .from('shops')
+      .select(supabaseShopSelectColumns)
+      .in('verification_status', ['pending', 'changes_requested'])
+      .order('verification_submitted_at', {
+        ascending: true,
+        nullsFirst: false,
+      })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw new Error(`Failed to list shops for review: ${error.message}`)
+    }
+
+    const shopRows: SupabaseShopRow[] = data
+    return shopRows.map(mapSupabaseShopRowToShop)
+  }
+
+  public async listAllShopsForReview(): Promise<readonly Shop[]> {
+    const { data, error } = await getSupabaseClient()
+      .from('shops')
+      .select(supabaseShopSelectColumns)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      throw new Error(`Failed to list shops: ${error.message}`)
+    }
+
+    const shopRows: SupabaseShopRow[] = data
+    return shopRows.map(mapSupabaseShopRowToShop)
+  }
+
+  public async fetchShopsByIdentifiers(
+    shopIdentifiers: readonly string[],
+  ): Promise<readonly Shop[]> {
+    if (shopIdentifiers.length === 0) {
+      return []
+    }
+
+    const { data, error } = await getSupabaseClient()
+      .from('shops')
+      .select(supabaseShopSelectColumns)
+      .in('id', shopIdentifiers as string[])
+
+    if (error) {
+      throw new Error(`Failed to fetch shops by identifiers: ${error.message}`)
     }
 
     const shopRows: SupabaseShopRow[] = data
@@ -143,5 +214,10 @@ function mapSupabaseShopRowToShop(shopRow: SupabaseShopRow): Shop {
       typeof shopRow.longitude === 'number' ? shopRow.longitude : null,
     isActive: shopRow.is_active,
     createdAt: shopRow.created_at,
+    verificationStatus: mapVerificationStatus(shopRow.verification_status),
+    verificationNotes: shopRow.verification_notes,
+    verificationSubmittedAt: shopRow.verification_submitted_at,
+    verificationReviewedAt: shopRow.verification_reviewed_at,
+    verificationReviewedBy: shopRow.verification_reviewed_by,
   }
 }

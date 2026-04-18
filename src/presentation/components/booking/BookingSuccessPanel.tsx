@@ -8,8 +8,9 @@ import {
   Sparkles,
   UserCheck,
 } from 'lucide-react'
-import type { Booking } from '../../../domain/models/Booking'
+import type { Booking, BookingStatus } from '../../../domain/models/Booking'
 import { Badge, Button, Card } from '../../design/ui'
+import type { BadgeTone } from '../../design/ui'
 import {
   findServiceOptionByValue,
   findVehicleOptionByValue,
@@ -20,21 +21,23 @@ interface BookingSuccessPanelProps {
   readonly onBookAnother: () => void
 }
 
-const statusToneByStatusKey = {
+const statusToneByStatusKey: Record<BookingStatus, BadgeTone> = {
   pending: 'warning',
   accepted: 'brand',
   in_progress: 'info',
   completed: 'success',
   rejected: 'danger',
-} as const
+  cancelled: 'neutral',
+}
 
-const statusLabelByStatusKey = {
+const statusLabelByStatusKey: Record<BookingStatus, string> = {
   pending: 'Pending',
   accepted: 'Accepted',
   in_progress: 'In progress',
   completed: 'Completed',
   rejected: 'Rejected',
-} as const
+  cancelled: 'Cancelled',
+}
 
 export function BookingSuccessPanel({
   submittedBooking,

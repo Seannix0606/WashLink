@@ -1,13 +1,16 @@
 import type { ReactElement } from 'react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { BookingService } from '../../../application/services/BookingService'
 import type { ShopService } from '../../../application/services/ShopService'
+import type { ShopVerificationService } from '../../../application/services/ShopVerificationService'
 import type { WorkerService } from '../../../application/services/WorkerService'
 import type { Booking } from '../../../domain/models/Booking'
 import type { Shop } from '../../../domain/models/Shop'
 import { AppShell, Tabs, type TabItemDefinition } from '../../design/ui'
 import { useOwnerBookingDashboard } from '../../hooks/useOwnerBookingDashboard'
 import { useOwnerDashboardBookingFilterSelection } from '../../hooks/useOwnerDashboardBookingFilterSelection'
+import { OwnerVerificationBanner } from '../verification/OwnerVerificationBanner'
+import { OwnerVerificationPanel } from '../verification/OwnerVerificationPanel'
 import { BookingDetailDrawer } from './BookingDetailDrawer'
 import { OwnerDashboardBookingsSection } from './OwnerDashboardBookingsSection'
 import { OwnerDashboardKpiStrip } from './OwnerDashboardKpiStrip'
@@ -15,13 +18,18 @@ import { OwnerDashboardTopBar } from './OwnerDashboardTopBar'
 import { OwnerShopsPanel } from './OwnerShopsPanel'
 import { OwnerWorkersPanel } from './OwnerWorkersPanel'
 
-type OwnerDashboardPrimaryTabKey = 'bookings' | 'shops' | 'team'
+type OwnerDashboardPrimaryTabKey =
+  | 'bookings'
+  | 'shops'
+  | 'team'
+  | 'verification'
 
 interface OwnerDashboardContentProps {
   readonly ownerIdentifier: string
   readonly bookingService: BookingService
   readonly workerService: WorkerService
   readonly shopService: ShopService
+  readonly shopVerificationService: ShopVerificationService
   readonly ownerShopList: Shop[]
   readonly onOwnerShopListChanged: (nextOwnerShopList: Shop[]) => void
 }
@@ -31,6 +39,7 @@ export function OwnerDashboardContent({
   bookingService,
   workerService,
   shopService,
+  shopVerificationService,
   ownerShopList,
   onOwnerShopListChanged,
 }: OwnerDashboardContentProps): ReactElement {
@@ -67,11 +76,36 @@ export function OwnerDashboardContent({
     )
   }, [bookings, selectedBookingIdentifier])
 
+  const unverifiedOwnerShopCount = useMemo<number>(() => {
+    return ownerShopList.filter(
+      (ownerShop) => ownerShop.verificationStatus !== 'approved',
+    ).length
+  }, [ownerShopList])
+
   const primaryTabItems: TabItemDefinition<OwnerDashboardPrimaryTabKey>[] = [
     { value: 'bookings', label: 'Bookings', badgeContent: bookings.length },
     { value: 'shops', label: 'My shops', badgeContent: ownerShopList.length },
     { value: 'team', label: 'My team', badgeContent: workers.length },
+    {
+      value: 'verification',
+      label: 'Verification',
+      badgeContent:
+        unverifiedOwnerShopCount > 0 ? unverifiedOwnerShopCount : undefined,
+    },
   ]
+
+  const handleOwnerShopUpdatedAfterVerificationChange = useCallback(
+    (updatedShop: Shop): void => {
+      onOwnerShopListChanged(
+        ownerShopList.map((existingOwnerShop) =>
+          existingOwnerShop.id === updatedShop.id
+            ? updatedShop
+            : existingOwnerShop,
+        ),
+      )
+    },
+    [onOwnerShopListChanged, ownerShopList],
+  )
 
   const handleNotificationButtonClick = (): void => {
     closeNotificationBanner()
@@ -99,6 +133,13 @@ export function OwnerDashboardContent({
             Keep an eye on incoming bookings, your team, and your shops.
           </p>
         </header>
+
+        <OwnerVerificationBanner
+          ownerShopList={ownerShopList}
+          onReviewVerificationRequested={() =>
+            setSelectedPrimaryTab('verification')
+          }
+        />
 
         <OwnerDashboardKpiStrip bookings={bookings} workers={workers} />
 
@@ -135,6 +176,17 @@ export function OwnerDashboardContent({
             workerService={workerService}
             workers={workers}
             onWorkersChanged={replaceLocalWorkerList}
+          />
+        ) : null}
+
+        {selectedPrimaryTab === 'verification' ? (
+          <OwnerVerificationPanel
+            ownerIdentifier={ownerIdentifier}
+            ownerShopList={ownerShopList}
+            shopVerificationService={shopVerificationService}
+            onOwnerShopUpdatedAfterVerificationChange={
+              handleOwnerShopUpdatedAfterVerificationChange
+            }
           />
         ) : null}
       </div>

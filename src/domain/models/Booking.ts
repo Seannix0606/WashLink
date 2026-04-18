@@ -4,6 +4,7 @@ export type BookingStatus =
   | 'in_progress'
   | 'completed'
   | 'rejected'
+  | 'cancelled'
 
 export interface Booking {
   readonly id: string
@@ -19,6 +20,10 @@ export interface Booking {
   readonly shopIdentifier: string | null
   readonly latitude: number | null
   readonly longitude: number | null
+  readonly customerNotes: string | null
+  readonly customerRatingStars: number | null
+  readonly customerRatingComment: string | null
+  readonly customerRatedAt: string | null
 }
 
 export interface CreateBookingInput {
@@ -30,4 +35,5 @@ export interface CreateBookingInput {
   readonly shopIdentifier: string | null
   readonly latitude: number | null
   readonly longitude: number | null
+  readonly customerNotes: string | null
 }

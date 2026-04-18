@@ -1,20 +1,27 @@
 import type { ReactElement } from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { LogOut } from 'lucide-react'
+import { KeyRound, LogOut, UserCog } from 'lucide-react'
 import { useAuthenticatedUser } from '../auth/AuthenticatedUserContext'
 import { Avatar } from '../design/ui'
 import { joinClassNames } from '../design/classNames'
+import { ChangePasswordModal } from './profile/ChangePasswordModal'
+import { ProfileEditorModal } from './profile/ProfileEditorModal'
+import type { ApplicationUserRole } from '../../domain/models/AuthenticatedUser'
 
-const roleDisplayLabelByRoleKey = {
+const roleDisplayLabelByRoleKey: Record<ApplicationUserRole, string> = {
   customer: 'Customer',
   owner: 'Shop owner',
   worker: 'Worker',
-} as const
+  super_admin: 'Super admin',
+}
 
 export function UserAccountMenu(): ReactElement | null {
   const { authenticatedUser, signOut, isSignOutInProgress } =
     useAuthenticatedUser()
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState<boolean>(false)
+  const [isChangePasswordOpen, setIsChangePasswordOpen] =
+    useState<boolean>(false)
   const menuContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -49,6 +56,16 @@ export function UserAccountMenu(): ReactElement | null {
   const handleSignOutClicked = async (): Promise<void> => {
     setIsMenuOpen(false)
     await signOut()
+  }
+
+  const handleEditProfileClicked = (): void => {
+    setIsMenuOpen(false)
+    setIsProfileEditorOpen(true)
+  }
+
+  const handleChangePasswordClicked = (): void => {
+    setIsMenuOpen(false)
+    setIsChangePasswordOpen(true)
   }
 
   return (
@@ -93,6 +110,24 @@ export function UserAccountMenu(): ReactElement | null {
           <button
             type="button"
             role="menuitem"
+            onClick={handleEditProfileClicked}
+            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-[var(--color-ink-900)] transition-colors hover:bg-[var(--color-surface-muted)]"
+          >
+            <UserCog className="h-4 w-4 text-[var(--color-ink-500)]" />
+            Edit profile
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleChangePasswordClicked}
+            className="flex w-full items-center gap-2 border-b border-[var(--color-ink-200)] px-4 py-3 text-left text-sm font-medium text-[var(--color-ink-900)] transition-colors hover:bg-[var(--color-surface-muted)]"
+          >
+            <KeyRound className="h-4 w-4 text-[var(--color-ink-500)]" />
+            Change password
+          </button>
+          <button
+            type="button"
+            role="menuitem"
             disabled={isSignOutInProgress}
             onClick={() => {
               void handleSignOutClicked()
@@ -104,6 +139,17 @@ export function UserAccountMenu(): ReactElement | null {
           </button>
         </div>
       ) : null}
+
+      <ProfileEditorModal
+        isOpen={isProfileEditorOpen}
+        onClose={() => setIsProfileEditorOpen(false)}
+        authenticatedUser={authenticatedUser}
+      />
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   )
 }

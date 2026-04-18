@@ -5,6 +5,7 @@ export interface BottomNavItemDefinition<NavItemValue extends string> {
   readonly value: NavItemValue
   readonly label: string
   readonly icon: ReactNode
+  readonly badgeCount?: number
 }
 
 interface BottomNavProps<NavItemValue extends string> {
@@ -31,6 +32,14 @@ export function BottomNav<NavItemValue extends string>({
       <ul className="mx-auto flex max-w-md items-stretch justify-around">
         {navItems.map((navItem) => {
           const isActive = navItem.value === activeNavItemValue
+          const hasBadgeCount =
+            typeof navItem.badgeCount === 'number' && navItem.badgeCount > 0
+          const displayBadgeText =
+            hasBadgeCount && navItem.badgeCount !== undefined
+              ? navItem.badgeCount > 9
+                ? '9+'
+                : String(navItem.badgeCount)
+              : null
           return (
             <li key={navItem.value} className="flex-1">
               <button
@@ -44,7 +53,14 @@ export function BottomNav<NavItemValue extends string>({
                     : 'text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]',
                 )}
               >
-                <span aria-hidden="true">{navItem.icon}</span>
+                <span className="relative inline-flex" aria-hidden="true">
+                  {navItem.icon}
+                  {displayBadgeText !== null ? (
+                    <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-brand-700)] px-1 text-[10px] font-bold leading-none text-white shadow-sm">
+                      {displayBadgeText}
+                    </span>
+                  ) : null}
+                </span>
                 <span>{navItem.label}</span>
               </button>
             </li>

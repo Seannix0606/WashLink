@@ -5,6 +5,7 @@ import {
   ArrowRight,
   CalendarClock,
   CheckCircle2,
+  StickyNote,
   User as UserIcon,
 } from 'lucide-react'
 import type { CreateBookingInput } from '../../../domain/models/Booking'
@@ -74,6 +75,7 @@ export function BookingStepFlow({
   )
   const [customerName, setCustomerName] = useState<string>(defaultCustomerName)
   const [selectedDateTime, setSelectedDateTime] = useState<string>('')
+  const [customerNotesDraft, setCustomerNotesDraft] = useState<string>('')
 
   const selectedVehicleOption = useMemo(
     () => findVehicleOptionByValue(selectedVehicleValue),
@@ -138,6 +140,7 @@ export function BookingStepFlow({
       return
     }
     try {
+      const trimmedCustomerNotes = customerNotesDraft.trim()
       await onSubmitBooking({
         customerName: customerName.trim(),
         vehicleType: selectedVehicleValue,
@@ -147,6 +150,8 @@ export function BookingStepFlow({
         shopIdentifier: selectedShopIdentifier,
         latitude: selectedLocation.latitude,
         longitude: selectedLocation.longitude,
+        customerNotes:
+          trimmedCustomerNotes.length > 0 ? trimmedCustomerNotes : null,
       })
     } catch (error) {
       applicationToast.error(
@@ -195,6 +200,8 @@ export function BookingStepFlow({
             onCustomerNameChanged={setCustomerName}
             selectedDateTime={selectedDateTime}
             onSelectedDateTimeChanged={setSelectedDateTime}
+            customerNotesDraft={customerNotesDraft}
+            onCustomerNotesDraftChanged={setCustomerNotesDraft}
           />
         ) : null}
         {activeStepKey === 'review' ? (
@@ -209,6 +216,7 @@ export function BookingStepFlow({
               selectedServiceOption?.durationLabel ?? ''
             }
             selectedShopLabel={selectedShopOption?.name ?? 'Any available shop'}
+            customerNotesPreview={customerNotesDraft.trim()}
           />
         ) : null}
       </div>
@@ -390,14 +398,22 @@ interface ScheduleStepProps {
   readonly onCustomerNameChanged: (nextCustomerName: string) => void
   readonly selectedDateTime: string
   readonly onSelectedDateTimeChanged: (nextSelectedDateTime: string) => void
+  readonly customerNotesDraft: string
+  readonly onCustomerNotesDraftChanged: (nextCustomerNotesDraft: string) => void
 }
+
+const customerNotesMaximumLength = 280
 
 function ScheduleStep({
   customerName,
   onCustomerNameChanged,
   selectedDateTime,
   onSelectedDateTimeChanged,
+  customerNotesDraft,
+  onCustomerNotesDraftChanged,
 }: ScheduleStepProps): ReactElement {
+  const customerNotesRemainingCharacters =
+    customerNotesMaximumLength - customerNotesDraft.length
   return (
     <Card elevation="flat" className="space-y-4 p-5">
       <StepHeader
@@ -423,6 +439,42 @@ function ScheduleStep({
           onChange={(event) => onSelectedDateTimeChanged(event.target.value)}
           leadingIcon={<CalendarClock className="h-4 w-4" />}
         />
+        <div className="space-y-1.5">
+          <label
+            htmlFor="customerNotesInput"
+            className="flex items-center justify-between text-sm font-medium text-[var(--color-ink-900)]"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <StickyNote className="h-4 w-4 text-[var(--color-ink-500)]" />
+              Notes for the worker{' '}
+              <span className="text-xs font-normal text-[var(--color-ink-500)]">
+                (optional)
+              </span>
+            </span>
+            <span className="text-[11px] font-medium text-[var(--color-ink-500)]">
+              {customerNotesRemainingCharacters}
+            </span>
+          </label>
+          <textarea
+            id="customerNotesInput"
+            name="customerNotes"
+            value={customerNotesDraft}
+            onChange={(changeEvent) =>
+              onCustomerNotesDraftChanged(
+                changeEvent.target.value.slice(0, customerNotesMaximumLength),
+              )
+            }
+            rows={3}
+            placeholder="Gate code, parking slot, car color, anything the worker should know…"
+            className={joinClassNames(
+              'w-full resize-y rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] outline-none transition-colors',
+              'focus:border-[var(--color-brand-600)]',
+            )}
+          />
+          <p className="text-[11px] text-[var(--color-ink-500)]">
+            Your worker will see these notes on their job card.
+          </p>
+        </div>
       </div>
     </Card>
   )
@@ -437,6 +489,7 @@ interface ReviewStepProps {
   readonly selectedServicePriceLabel: string
   readonly selectedServiceDurationLabel: string
   readonly selectedShopLabel: string
+  readonly customerNotesPreview: string
 }
 
 function ReviewStep({
@@ -448,6 +501,7 @@ function ReviewStep({
   selectedServicePriceLabel,
   selectedServiceDurationLabel,
   selectedShopLabel,
+  customerNotesPreview,
 }: ReviewStepProps): ReactElement {
   const formattedDateTime = selectedDateTime
     ? new Date(selectedDateTime).toLocaleString()
@@ -468,6 +522,14 @@ function ReviewStep({
         />
         <ReviewSummaryRow label="Address" value={addressDisplay} />
         <ReviewSummaryRow label="Date and time" value={formattedDateTime} />
+        <ReviewSummaryRow
+          label="Notes"
+          value={
+            customerNotesPreview.length > 0
+              ? customerNotesPreview
+              : 'No notes added'
+          }
+        />
         <ReviewSummaryRow
           label="Estimated price"
           value={selectedServicePriceLabel}

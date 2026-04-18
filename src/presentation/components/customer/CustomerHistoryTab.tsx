@@ -1,40 +1,51 @@
 import type { ReactElement } from 'react'
-import { useMemo } from 'react'
+import { useCallback } from 'react'
 import { AlertTriangle } from 'lucide-react'
-import type { BookingService } from '../../../application/services/BookingService'
+import type { ShopService } from '../../../application/services/ShopService'
 import type { Booking } from '../../../domain/models/Booking'
 import type { Shop } from '../../../domain/models/Shop'
-import { useCustomerBookingsRealtime } from '../../hooks/useCustomerBookingsRealtime'
+import { useCustomerShopLookup } from '../../hooks/useCustomerShopLookup'
 import { Card } from '../../design/ui'
 import { CustomerBookingsSection } from './CustomerBookingsSection'
 import { CustomerHistoryLoadingShell } from './CustomerHistoryLoadingShell'
 
 interface CustomerHistoryTabProps {
-  readonly bookingService: BookingService
-  readonly customerIdentifier: string
+  readonly shopService: ShopService
   readonly availableShops: readonly Shop[]
+  readonly customerBookings: readonly Booking[]
+  readonly isLoadingCustomerBookings: boolean
+  readonly customerBookingsLoadErrorMessage: string | null
+  readonly cancellingBookingIdentifier: string | null
+  readonly submittingRatingForBookingIdentifier: string | null
   readonly onRebookFromBooking: (booking: Booking) => void
+  readonly onRequestCancelBooking: (booking: Booking) => void
+  readonly onRequestRateBooking: (booking: Booking) => void
 }
 
 export function CustomerHistoryTab({
-  bookingService,
-  customerIdentifier,
+  shopService,
   availableShops,
+  customerBookings,
+  isLoadingCustomerBookings,
+  customerBookingsLoadErrorMessage,
+  cancellingBookingIdentifier,
+  submittingRatingForBookingIdentifier,
   onRebookFromBooking,
+  onRequestCancelBooking,
+  onRequestRateBooking,
 }: CustomerHistoryTabProps): ReactElement {
-  const {
+  const { shopLookupByIdentifier } = useCustomerShopLookup(
+    shopService,
+    availableShops,
     customerBookings,
-    isLoadingCustomerBookings,
-    customerBookingsLoadErrorMessage,
-  } = useCustomerBookingsRealtime(bookingService, customerIdentifier)
+  )
 
-  const shopLookupByIdentifier = useMemo<Readonly<Record<string, Shop>>>(() => {
-    const nextShopLookup: Record<string, Shop> = {}
-    for (const shop of availableShops) {
-      nextShopLookup[shop.id] = shop
-    }
-    return nextShopLookup
-  }, [availableShops])
+  const handleRebook = useCallback(
+    (booking: Booking): void => {
+      onRebookFromBooking(booking)
+    },
+    [onRebookFromBooking],
+  )
 
   if (isLoadingCustomerBookings) {
     return <CustomerHistoryLoadingShell />
@@ -65,7 +76,11 @@ export function CustomerHistoryTab({
     <CustomerBookingsSection
       customerBookings={customerBookings}
       shopLookupByIdentifier={shopLookupByIdentifier}
-      onRebookFromBooking={onRebookFromBooking}
+      cancellingBookingIdentifier={cancellingBookingIdentifier}
+      submittingRatingForBookingIdentifier={submittingRatingForBookingIdentifier}
+      onRebookFromBooking={handleRebook}
+      onRequestCancelBooking={onRequestCancelBooking}
+      onRequestRateBooking={onRequestRateBooking}
     />
   )
 }

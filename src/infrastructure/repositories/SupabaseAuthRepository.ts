@@ -5,6 +5,8 @@ import type {
 } from '../../domain/models/AuthenticatedUser'
 import type {
   AuthRepository,
+  ChangePasswordInput,
+  SendPasswordResetEmailInput,
   SignUpInput,
 } from '../../domain/repositories/AuthRepository'
 import { getSupabaseClient } from '../supabase/supabaseClient'
@@ -68,6 +70,66 @@ export class SupabaseAuthRepository implements AuthRepository {
     }
 
     return this.fetchAuthenticatedUserProfile(session.user)
+  }
+
+  public async changePassword(
+    changePasswordInput: ChangePasswordInput,
+  ): Promise<void> {
+    const supabaseClient = getSupabaseClient()
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseClient.auth.getSession()
+
+    if (sessionError) {
+      throw new Error(`Failed to read session: ${sessionError.message}`)
+    }
+    const currentUserEmailAddress = session?.user?.email ?? ''
+    if (currentUserEmailAddress.length === 0) {
+      throw new Error('You must be signed in to change your password.')
+    }
+
+    const { error: reauthenticationError } =
+      await supabaseClient.auth.signInWithPassword({
+        email: currentUserEmailAddress,
+        password: changePasswordInput.currentPassword,
+      })
+    if (reauthenticationError) {
+      throw new Error('Current password is incorrect.')
+    }
+
+    const { error: updatePasswordError } = await supabaseClient.auth.updateUser(
+      { password: changePasswordInput.newPassword },
+    )
+    if (updatePasswordError) {
+      throw new Error(
+        `Failed to update password: ${updatePasswordError.message}`,
+      )
+    }
+  }
+
+  public async sendPasswordResetEmail(
+    sendPasswordResetEmailInput: SendPasswordResetEmailInput,
+  ): Promise<void> {
+    const { error } = await getSupabaseClient().auth.resetPasswordForEmail(
+      sendPasswordResetEmailInput.emailAddress,
+      { redirectTo: sendPasswordResetEmailInput.redirectToUrl },
+    )
+    if (error) {
+      throw new Error(
+        `Failed to send password reset email: ${error.message}`,
+      )
+    }
+  }
+
+  public async completePasswordRecovery(newPassword: string): Promise<void> {
+    const { error } = await getSupabaseClient().auth.updateUser({
+      password: newPassword,
+    })
+    if (error) {
+      throw new Error(`Failed to update password: ${error.message}`)
+    }
   }
 
   public subscribeToAuthChanges(

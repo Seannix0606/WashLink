@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import {
+  Ban,
   CalendarClock,
   Car,
   MapPin,
@@ -17,18 +18,28 @@ import {
 } from '../../utilities/buildExternalNavigationUrl'
 import { describeBookingStatus } from '../../utilities/bookingStatusDisplay'
 import { formatScheduledDateTime } from '../../utilities/datetimeFormatting'
+import { BookingNotesBlock } from '../booking/BookingNotesBlock'
+import { CustomerBookingRatingBlock } from '../rating/CustomerBookingRatingBlock'
 import { CustomerBookingProgressTrack } from './CustomerBookingProgressTrack'
 
 interface CustomerBookingCardProps {
   readonly booking: Booking
   readonly shopLookupByIdentifier: Readonly<Record<string, Shop>>
+  readonly isCancellingBooking: boolean
+  readonly isSubmittingRatingForThisBooking: boolean
   readonly onRebookFromBooking: (booking: Booking) => void
+  readonly onRequestCancelBooking: (booking: Booking) => void
+  readonly onRequestRateBooking: (booking: Booking) => void
 }
 
 export function CustomerBookingCard({
   booking,
   shopLookupByIdentifier,
+  isCancellingBooking,
+  isSubmittingRatingForThisBooking,
   onRebookFromBooking,
+  onRequestCancelBooking,
+  onRequestRateBooking,
 }: CustomerBookingCardProps): ReactElement {
   const statusDisplay = describeBookingStatus(booking.bookingStatus)
   const scheduledTimeDisplay = formatScheduledDateTime(booking.time)
@@ -44,7 +55,9 @@ export function CustomerBookingCard({
   const hasNonEmptyServiceAddress = booking.address.trim().length > 0
   const isTerminalBooking =
     booking.bookingStatus === 'completed' ||
-    booking.bookingStatus === 'rejected'
+    booking.bookingStatus === 'rejected' ||
+    booking.bookingStatus === 'cancelled'
+  const isCancellable = booking.bookingStatus === 'pending'
 
   const handleOpenAddressInMaps = (): void => {
     if (!hasNonEmptyServiceAddress) {
@@ -55,6 +68,10 @@ export function CustomerBookingCard({
 
   const handleRebookClicked = (): void => {
     onRebookFromBooking(booking)
+  }
+
+  const handleCancelClicked = (): void => {
+    onRequestCancelBooking(booking)
   }
 
   return (
@@ -118,6 +135,17 @@ export function CustomerBookingCard({
         ) : null}
       </div>
 
+      <BookingNotesBlock
+        customerNotes={booking.customerNotes}
+        titleText="Your notes"
+      />
+
+      <CustomerBookingRatingBlock
+        booking={booking}
+        isSubmittingRatingForThisBooking={isSubmittingRatingForThisBooking}
+        onRequestRateBooking={onRequestRateBooking}
+      />
+
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           type="button"
@@ -130,6 +158,20 @@ export function CustomerBookingCard({
         >
           Open in Maps
         </Button>
+        {isCancellable ? (
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            isFullWidth
+            leadingIcon={<Ban className="h-4 w-4" />}
+            isLoading={isCancellingBooking}
+            disabled={isCancellingBooking}
+            onClick={handleCancelClicked}
+          >
+            Cancel booking
+          </Button>
+        ) : null}
         {isTerminalBooking ? (
           <Button
             type="button"

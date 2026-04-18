@@ -19,6 +19,12 @@ const WorkerJobsPage = lazy(async () => ({
 const AuthLandingPage = lazy(async () => ({
   default: (await import('./presentation/pages/AuthLandingPage')).AuthLandingPage,
 }))
+const ResetPasswordPage = lazy(async () => ({
+  default: (await import('./presentation/pages/ResetPasswordPage')).ResetPasswordPage,
+}))
+const SuperAdminDashboardPage = lazy(async () => ({
+  default: (await import('./presentation/pages/SuperAdminDashboardPage')).SuperAdminDashboardPage,
+}))
 
 function SupabaseEnvMissingScreen(): ReactElement {
   return (
@@ -63,10 +69,22 @@ function PageLoadingFallback(): ReactElement {
 }
 
 function AppContent(): ReactElement {
-  const { authenticatedUser, isInitializingAuthState } = useAuthenticatedUser()
+  const {
+    authenticatedUser,
+    isInitializingAuthState,
+    isPasswordRecoveryInProgress,
+  } = useAuthenticatedUser()
 
   if (isInitializingAuthState) {
     return <PageLoadingFallback />
+  }
+
+  if (isPasswordRecoveryInProgress) {
+    return (
+      <Suspense fallback={<PageLoadingFallback />}>
+        <ResetPasswordPage />
+      </Suspense>
+    )
   }
 
   if (!authenticatedUser) {
@@ -77,6 +95,15 @@ function AppContent(): ReactElement {
     )
   }
 
+  if (authenticatedUser.role === 'super_admin') {
+    return (
+      <Suspense fallback={<PageLoadingFallback />}>
+        <SuperAdminDashboardPage
+          superAdminIdentifier={authenticatedUser.userIdentifier}
+        />
+      </Suspense>
+    )
+  }
   if (authenticatedUser.role === 'owner') {
     return (
       <Suspense fallback={<PageLoadingFallback />}>

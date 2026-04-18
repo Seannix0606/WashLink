@@ -19,6 +19,7 @@ interface CreateBookingRow {
   shop_id: string | null
   latitude: number | null
   longitude: number | null
+  customer_notes: string | null
 }
 
 export class SupabaseBookingRepository implements BookingRepository {
@@ -113,6 +114,71 @@ export class SupabaseBookingRepository implements BookingRepository {
     return mapSupabaseBookingRowToBooking(bookingRow)
   }
 
+  public async cancelPendingBookingForCustomer(
+    bookingIdentifier: string,
+    customerIdentifier: string,
+  ): Promise<Booking> {
+    const { data, error } = await getSupabaseClient()
+      .from('bookings')
+      .update({ booking_status: 'cancelled' })
+      .eq('id', bookingIdentifier)
+      .eq('customer_id', customerIdentifier)
+      .eq('booking_status', 'pending')
+      .select(supabaseBookingSelectColumns)
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to cancel booking: ${error.message}`)
+    }
+
+    if (data === null) {
+      throw new Error(
+        'This booking can no longer be cancelled. It may have already been accepted or cancelled.',
+      )
+    }
+
+    const bookingRow: SupabaseBookingRow = data
+    return mapSupabaseBookingRowToBooking(bookingRow)
+  }
+
+  public async submitBookingRatingForCustomer(
+    bookingIdentifier: string,
+    customerIdentifier: string,
+    ratingStars: number,
+    ratingComment: string | null,
+  ): Promise<Booking> {
+    if (ratingStars < 1 || ratingStars > 5) {
+      throw new Error('Rating must be between 1 and 5 stars.')
+    }
+
+    const { data, error } = await getSupabaseClient()
+      .from('bookings')
+      .update({
+        customer_rating_stars: ratingStars,
+        customer_rating_comment: ratingComment,
+        customer_rated_at: new Date().toISOString(),
+      })
+      .eq('id', bookingIdentifier)
+      .eq('customer_id', customerIdentifier)
+      .eq('booking_status', 'completed')
+      .is('customer_rating_stars', null)
+      .select(supabaseBookingSelectColumns)
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to submit rating: ${error.message}`)
+    }
+
+    if (data === null) {
+      throw new Error(
+        'This booking can no longer be rated. It may have already been rated or is not completed yet.',
+      )
+    }
+
+    const bookingRow: SupabaseBookingRow = data
+    return mapSupabaseBookingRowToBooking(bookingRow)
+  }
+
   public async updateBookingStatusForAssignedWorker(
     bookingIdentifier: string,
     assignedWorkerIdentifier: string,
@@ -192,6 +258,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       shop_id: createBookingInput.shopIdentifier,
       latitude: createBookingInput.latitude,
       longitude: createBookingInput.longitude,
+      customer_notes: createBookingInput.customerNotes,
     }
   }
 }

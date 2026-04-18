@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { Check, X } from 'lucide-react'
+import { Ban, Check, X } from 'lucide-react'
 import type { BookingStatus } from '../../../domain/models/Booking'
 import { joinClassNames } from '../../design/classNames'
 
@@ -44,6 +44,20 @@ export function CustomerBookingProgressTrack({
           <X className="h-3.5 w-3.5" />
         </span>
         This booking was declined. You can try another shop or time.
+      </div>
+    )
+  }
+
+  if (bookingStatus === 'cancelled') {
+    return (
+      <div
+        className="flex items-center gap-2 rounded-[var(--radius-surface)] bg-[var(--color-ink-100)] px-3 py-2 text-xs font-medium text-[var(--color-ink-700)]"
+        aria-label="Booking cancelled"
+      >
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-ink-500)] text-white">
+          <Ban className="h-3.5 w-3.5" />
+        </span>
+        You cancelled this booking.
       </div>
     )
   }

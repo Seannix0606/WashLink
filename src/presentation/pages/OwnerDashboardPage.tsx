@@ -15,10 +15,11 @@ export function OwnerDashboardPage({
   ownerIdentifier,
 }: OwnerDashboardPageProps): ReactElement {
   const { authenticatedUser } = useAuthenticatedUser()
-  const { bookingService, workerService, shopService } = useMemo(
-    () => createDashboardDependencies(ownerIdentifier),
-    [ownerIdentifier],
-  )
+  const { bookingService, workerService, shopService, shopVerificationService } =
+    useMemo(
+      () => createDashboardDependencies(ownerIdentifier),
+      [ownerIdentifier],
+    )
 
   const {
     ownerShopList,
@@ -58,6 +59,7 @@ export function OwnerDashboardPage({
       bookingService={bookingService}
       workerService={workerService}
       shopService={shopService}
+      shopVerificationService={shopVerificationService}
       ownerShopList={ownerShopList}
       onOwnerShopListChanged={setOwnerShopList}
     />

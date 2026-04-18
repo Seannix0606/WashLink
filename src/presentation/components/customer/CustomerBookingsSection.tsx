@@ -12,7 +12,11 @@ type CustomerBookingsTabKey = 'active' | 'past'
 interface CustomerBookingsSectionProps {
   readonly customerBookings: readonly Booking[]
   readonly shopLookupByIdentifier: Readonly<Record<string, Shop>>
+  readonly cancellingBookingIdentifier: string | null
+  readonly submittingRatingForBookingIdentifier: string | null
   readonly onRebookFromBooking: (booking: Booking) => void
+  readonly onRequestCancelBooking: (booking: Booking) => void
+  readonly onRequestRateBooking: (booking: Booking) => void
 }
 
 const activeBookingStatusSet: ReadonlySet<BookingStatus> = new Set<BookingStatus>(
@@ -22,7 +26,11 @@ const activeBookingStatusSet: ReadonlySet<BookingStatus> = new Set<BookingStatus
 export function CustomerBookingsSection({
   customerBookings,
   shopLookupByIdentifier,
+  cancellingBookingIdentifier,
+  submittingRatingForBookingIdentifier,
   onRebookFromBooking,
+  onRequestCancelBooking,
+  onRequestRateBooking,
 }: CustomerBookingsSectionProps): ReactElement {
   const [selectedTab, setSelectedTab] = useState<CustomerBookingsTabKey>('active')
 
@@ -102,7 +110,15 @@ export function CustomerBookingsSection({
               <CustomerBookingCard
                 booking={customerBooking}
                 shopLookupByIdentifier={shopLookupByIdentifier}
+                isCancellingBooking={
+                  cancellingBookingIdentifier === customerBooking.id
+                }
+                isSubmittingRatingForThisBooking={
+                  submittingRatingForBookingIdentifier === customerBooking.id
+                }
                 onRebookFromBooking={onRebookFromBooking}
+                onRequestCancelBooking={onRequestCancelBooking}
+                onRequestRateBooking={onRequestRateBooking}
               />
             </motion.li>
           ))}

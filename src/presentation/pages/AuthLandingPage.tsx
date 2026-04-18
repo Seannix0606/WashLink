@@ -23,6 +23,7 @@ import {
   Input,
 } from '../design/ui'
 import { joinClassNames } from '../design/classNames'
+import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal'
 
 type AuthLandingTabKey = 'signIn' | 'signUp'
 
@@ -182,6 +183,8 @@ function SignInForm({ onRequestSignUp }: SignInFormProps): ReactElement {
   const [password, setPassword] = useState<string>('')
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] =
+    useState<boolean>(false)
 
   const handleSignInSubmit = async (
     event: FormEvent<HTMLFormElement>,
@@ -256,6 +259,16 @@ function SignInForm({ onRequestSignUp }: SignInFormProps): ReactElement {
           }
         />
 
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setIsForgotPasswordOpen(true)}
+            className="text-xs font-semibold text-[var(--color-brand-700)] hover:text-[var(--color-brand-800)]"
+          >
+            Forgot password?
+          </button>
+        </div>
+
         <Button
           type="submit"
           variant="primary"
@@ -277,6 +290,12 @@ function SignInForm({ onRequestSignUp }: SignInFormProps): ReactElement {
           Create an account
         </button>
       </p>
+
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+        initialEmailAddress={emailAddress.trim()}
+      />
     </Card>
   )
 }

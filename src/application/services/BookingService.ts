@@ -48,6 +48,30 @@ export class BookingService {
     return this.bookingRepository.fetchBookingsByCustomer(customerIdentifier)
   }
 
+  public async cancelPendingBookingForCustomer(
+    bookingIdentifier: string,
+    customerIdentifier: string,
+  ): Promise<Booking> {
+    return this.bookingRepository.cancelPendingBookingForCustomer(
+      bookingIdentifier,
+      customerIdentifier,
+    )
+  }
+
+  public async submitBookingRatingForCustomer(
+    bookingIdentifier: string,
+    customerIdentifier: string,
+    ratingStars: number,
+    ratingComment: string | null,
+  ): Promise<Booking> {
+    return this.bookingRepository.submitBookingRatingForCustomer(
+      bookingIdentifier,
+      customerIdentifier,
+      ratingStars,
+      ratingComment,
+    )
+  }
+
   public async markWorkerJobAsInProgress(
     bookingIdentifier: string,
     workerIdentifier: string,

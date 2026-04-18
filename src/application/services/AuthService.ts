@@ -2,6 +2,8 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { AuthenticatedUser } from '../../domain/models/AuthenticatedUser'
 import type {
   AuthRepository,
+  ChangePasswordInput,
+  SendPasswordResetEmailInput,
   SignUpInput,
 } from '../../domain/repositories/AuthRepository'
 
@@ -26,6 +28,24 @@ export class AuthService {
 
   public async getCurrentSessionUserWithProfile(): Promise<AuthenticatedUser | null> {
     return this.authRepository.getCurrentSessionUserWithProfile()
+  }
+
+  public async changePassword(
+    changePasswordInput: ChangePasswordInput,
+  ): Promise<void> {
+    await this.authRepository.changePassword(changePasswordInput)
+  }
+
+  public async sendPasswordResetEmail(
+    sendPasswordResetEmailInput: SendPasswordResetEmailInput,
+  ): Promise<void> {
+    await this.authRepository.sendPasswordResetEmail(
+      sendPasswordResetEmailInput,
+    )
+  }
+
+  public async completePasswordRecovery(newPassword: string): Promise<void> {
+    await this.authRepository.completePasswordRecovery(newPassword)
   }
 
   public subscribeToAuthChanges(
