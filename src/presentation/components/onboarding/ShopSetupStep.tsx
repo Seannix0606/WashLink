@@ -10,7 +10,7 @@ import {
 import type { CreateShopInput } from '../../../domain/models/Shop'
 import { Button, Card, Input, applicationToast } from '../../design/ui'
 import { useGeolocationPicker } from '../../hooks/useGeolocationPicker'
-import { reverseGeocodeCoordinates } from '../../services/reverseGeocoding'
+import { reverseGeocodeCoordinates } from '../../../services/geocodingService'
 import { LocationPickerMap } from '../common/LocationPickerMap'
 
 interface ShopSetupStepProps {
