@@ -1,0 +1,582 @@
+import type { ReactElement } from 'react'
+import { joinClassNames } from '../../presentation/design/classNames'
+import { Button, Card, Input } from '../../presentation/design/ui'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarClock,
+  CheckCircle2,
+  StickyNote,
+  User as UserIcon,
+} from 'lucide-react'
+import type { SelectedLocationValue } from '../../presentation/components/booking/LocationAndShopStep'
+import type { Shop } from '../../domain/models/Shop'
+import type { BookingStepKey } from './useBookingStepFlow'
+import { LocationAndShopStep } from '../../presentation/components/booking/LocationAndShopStep'
+import {
+  findServiceOptionByValue,
+  findVehicleOptionByValue,
+  serviceOptionDefinitions,
+} from '../../presentation/components/booking/bookingCatalog'
+
+interface BookingStepFlowStepsProps {
+  readonly activeStepKey: BookingStepKey
+  readonly customerName: string
+  readonly customerNotesDraft: string
+  readonly currentStepIndex: number
+  readonly isFirstStep: boolean
+  readonly isLastStep: boolean
+  readonly isSubmittingBooking: boolean
+  readonly selectedDateTime: string
+  readonly selectedVehicleValue: string
+  readonly selectedServiceValue: string
+  readonly selectedShopLabel: string
+  readonly selectedLocation: SelectedLocationValue | null
+  readonly customerNotesPreview: string
+  readonly selectedServiceOption?: {
+    readonly label: string
+    readonly priceLabel: string
+    readonly durationLabel: string
+  }
+  readonly selectedVehicleOption?: {
+    readonly label: string
+  }
+  readonly selectedShopOption?: Shop | null
+  readonly availableShops: readonly Shop[]
+  readonly isLoadingShops: boolean
+  readonly onSelectedLocationChanged: (
+    nextSelectedLocation: SelectedLocationValue,
+  ) => void
+  readonly onSelectedShopIdentifierChanged: (
+    nextSelectedShopIdentifier: string | null,
+  ) => void
+  readonly onVehicleSelected: (nextVehicleValue: string) => void
+  readonly onServiceSelected: (nextServiceValue: string) => void
+  readonly onCustomerNameChanged: (nextCustomerName: string) => void
+  readonly onSelectedDateTimeChanged: (nextSelectedDateTime: string) => void
+  readonly onCustomerNotesDraftChanged: (
+    nextCustomerNotesDraft: string,
+  ) => void
+  readonly onBackClicked: () => void
+  readonly onContinueClicked: () => void
+  readonly onConfirmClicked: () => void
+}
+
+const customerNotesMaximumLength = 280
+
+export function BookingStepFlowSteps({
+  activeStepKey,
+  availableShops,
+  currentStepIndex,
+  customerName,
+  customerNotesDraft,
+  isFirstStep,
+  isLastStep,
+  isSubmittingBooking,
+  selectedDateTime,
+  selectedVehicleValue,
+  selectedServiceValue,
+  selectedShopLabel,
+  selectedLocation,
+  customerNotesPreview,
+  selectedServiceOption,
+  selectedVehicleOption,
+  selectedShopOption,
+  isLoadingShops,
+  onSelectedLocationChanged,
+  onSelectedShopIdentifierChanged,
+  onVehicleSelected,
+  onServiceSelected,
+  onCustomerNameChanged,
+  onSelectedDateTimeChanged,
+  onCustomerNotesDraftChanged,
+  onBackClicked,
+  onContinueClicked,
+  onConfirmClicked,
+}: BookingStepFlowStepsProps): ReactElement {
+  const addressDisplay = selectedLocation?.displayAddress ?? '—'
+  const selectedVehicleLabel = selectedVehicleOption?.label ??
+    findVehicleOptionByValue(selectedVehicleValue)?.label ?? ''
+  const selectedServiceLabel = selectedServiceOption?.label ??
+    findServiceOptionByValue(selectedServiceValue)?.label ?? ''
+  const selectedServicePriceLabel = selectedServiceOption?.priceLabel ?? ''
+  const selectedServiceDurationLabel =
+    selectedServiceOption?.durationLabel ?? ''
+
+  return (
+    <div className="space-y-5 pb-28 sm:pb-0">
+      <div className="wl-animate-in" key={activeStepKey}>
+        {activeStepKey === 'location' ? (
+          <LocationAndShopStep
+            selectedLocation={selectedLocation}
+            onSelectedLocationChanged={onSelectedLocationChanged}
+            selectedShopIdentifier={selectedShopOption?.id ?? null}
+            onSelectedShopIdentifierChanged={onSelectedShopIdentifierChanged}
+            availableShops={availableShops}
+            isLoadingShops={isLoadingShops}
+          />
+        ) : null}
+        {activeStepKey === 'vehicle' ? (
+          <VehicleSelectionStep
+            selectedVehicleValue={selectedVehicleValue}
+            onVehicleSelected={onVehicleSelected}
+          />
+        ) : null}
+        {activeStepKey === 'service' ? (
+          <ServiceSelectionStep
+            selectedServiceValue={selectedServiceValue}
+            onServiceSelected={onServiceSelected}
+          />
+        ) : null}
+        {activeStepKey === 'schedule' ? (
+          <ScheduleStep
+            customerName={customerName}
+            onCustomerNameChanged={onCustomerNameChanged}
+            selectedDateTime={selectedDateTime}
+            onSelectedDateTimeChanged={onSelectedDateTimeChanged}
+            customerNotesDraft={customerNotesDraft}
+            onCustomerNotesDraftChanged={onCustomerNotesDraftChanged}
+          />
+        ) : null}
+        {activeStepKey === 'review' ? (
+          <ReviewStep
+            customerName={customerName}
+            addressDisplay={addressDisplay}
+            selectedDateTime={selectedDateTime}
+            selectedVehicleLabel={selectedVehicleLabel}
+            selectedServiceLabel={selectedServiceLabel}
+            selectedServicePriceLabel={selectedServicePriceLabel}
+            selectedServiceDurationLabel={selectedServiceDurationLabel}
+            selectedShopLabel={selectedShopLabel}
+            customerNotesPreview={customerNotesPreview}
+          />
+        ) : null}
+      </div>
+
+      <div className="hidden items-center justify-between gap-3 sm:flex">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onBackClicked}
+          disabled={isFirstStep || isSubmittingBooking}
+          leadingIcon={<ArrowLeft className="h-4 w-4" />}
+        >
+          Back
+        </Button>
+        {isLastStep ? (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onConfirmClicked}
+            isLoading={isSubmittingBooking}
+            leadingIcon={<CheckCircle2 className="h-4 w-4" />}
+          >
+            Confirm booking
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onContinueClicked}
+            trailingIcon={<ArrowRight className="h-4 w-4" />}
+          >
+            Continue
+          </Button>
+        )}
+      </div>
+
+      <StickyMobileBookingBar
+        currentStepIndex={currentStepIndex}
+        totalStepCount={5}
+        isFirstStep={isFirstStep}
+        isLastStep={isLastStep}
+        isSubmittingBooking={isSubmittingBooking}
+        selectedServicePriceLabel={selectedServicePriceLabel}
+        onBackClicked={onBackClicked}
+        onContinueClicked={onContinueClicked}
+        onConfirmClicked={onConfirmClicked}
+      />
+    </div>
+  )
+}
+
+function VehicleSelectionStep({
+  selectedVehicleValue,
+  onVehicleSelected,
+}: {
+  readonly selectedVehicleValue: string
+  readonly onVehicleSelected: (nextVehicleValue: string) => void
+}): ReactElement {
+  return (
+    <Card elevation="flat" className="space-y-4 p-5">
+      <StepHeader
+        title="What are we washing?"
+        description="Pick the vehicle type so we can estimate time and price."
+      />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {serviceOptionDefinitions.map((vehicleOption) => {
+          const isSelected = vehicleOption.value === selectedVehicleValue
+          return (
+            <button
+              key={vehicleOption.value}
+              type="button"
+              onClick={() => onVehicleSelected(vehicleOption.value)}
+              aria-pressed={isSelected}
+              className={joinClassNames(
+                'flex flex-col items-start gap-2 rounded-[var(--radius-surface)] border px-4 py-4 text-left transition-all',
+                isSelected
+                  ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
+                  : 'border-[var(--color-ink-200)] bg-white hover:border-[var(--color-brand-300)]',
+              )}
+            >
+              <span
+                className={joinClassNames(
+                  'flex h-10 w-10 items-center justify-center rounded-full',
+                  isSelected
+                    ? 'bg-[var(--color-brand-700)] text-white'
+                    : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]',
+                )}
+              >
+                {vehicleOption.icon}
+              </span>
+              <span className="text-sm font-semibold text-[var(--color-ink-900)]">
+                {vehicleOption.label}
+              </span>
+              <span className="text-xs text-[var(--color-ink-500)]">
+                {vehicleOption.description}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </Card>
+  )
+}
+
+function ServiceSelectionStep({
+  selectedServiceValue,
+  onServiceSelected,
+}: {
+  readonly selectedServiceValue: string
+  readonly onServiceSelected: (nextServiceValue: string) => void
+}): ReactElement {
+  return (
+    <Card elevation="flat" className="space-y-4 p-5">
+      <StepHeader
+        title="Choose a service"
+        description="Pick a package. Final price is confirmed on arrival."
+      />
+      <ul className="space-y-3">
+        {serviceOptionDefinitions.map((serviceOption) => {
+          const isSelected = serviceOption.value === selectedServiceValue
+          return (
+            <li key={serviceOption.value}>
+              <button
+                type="button"
+                onClick={() => onServiceSelected(serviceOption.value)}
+                aria-pressed={isSelected}
+                className={joinClassNames(
+                  'flex w-full items-start gap-3 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all',
+                  isSelected
+                    ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
+                    : 'border-[var(--color-ink-200)] bg-white hover:border-[var(--color-brand-300)]',
+                )}
+              >
+                <span
+                  className={joinClassNames(
+                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+                    isSelected
+                      ? 'bg-[var(--color-brand-700)] text-white'
+                      : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]',
+                  )}
+                >
+                  {serviceOption.icon}
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-[var(--color-ink-900)]">
+                      {serviceOption.label}
+                    </span>
+                    <span className="text-sm font-semibold text-[var(--color-brand-700)]">
+                      {serviceOption.priceLabel}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[var(--color-ink-500)]">
+                    {serviceOption.description}
+                  </span>
+                  <span className="mt-1 text-[11px] font-medium text-[var(--color-ink-500)]">
+                    {serviceOption.durationLabel}
+                  </span>
+                </div>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </Card>
+  )
+}
+
+function ScheduleStep({
+  customerName,
+  onCustomerNameChanged,
+  selectedDateTime,
+  onSelectedDateTimeChanged,
+  customerNotesDraft,
+  onCustomerNotesDraftChanged,
+}: {
+  readonly customerName: string
+  readonly onCustomerNameChanged: (nextCustomerName: string) => void
+  readonly selectedDateTime: string
+  readonly onSelectedDateTimeChanged: (nextSelectedDateTime: string) => void
+  readonly customerNotesDraft: string
+  readonly onCustomerNotesDraftChanged: (nextCustomerNotesDraft: string) => void
+}): ReactElement {
+  const customerNotesRemainingCharacters =
+    customerNotesMaximumLength - customerNotesDraft.length
+
+  return (
+    <Card elevation="flat" className="space-y-4 p-5">
+      <StepHeader
+        title="When should we come?"
+        description="We'll use the location you set earlier."
+      />
+      <div className="space-y-4">
+        <Input
+          name="customerName"
+          label="Your name"
+          placeholder="Juan Dela Cruz"
+          required
+          value={customerName}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            onCustomerNameChanged(event.target.value)
+          }
+          leadingIcon={<UserIcon className="h-4 w-4" />}
+        />
+        <Input
+          name="selectedDateTime"
+          type="datetime-local"
+          label="Date and time"
+          required
+          value={selectedDateTime}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            onSelectedDateTimeChanged(event.target.value)
+          }
+          leadingIcon={<CalendarClock className="h-4 w-4" />}
+        />
+        <div className="space-y-1.5">
+          <label
+            htmlFor="customerNotesInput"
+            className="flex items-center justify-between text-sm font-medium text-[var(--color-ink-900)]"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <StickyNote className="h-4 w-4 text-[var(--color-ink-500)]" />
+              Notes for the worker{' '}
+              <span className="text-xs font-normal text-[var(--color-ink-500)]">
+                (optional)
+              </span>
+            </span>
+            <span className="text-[11px] font-medium text-[var(--color-ink-500)]">
+              {customerNotesRemainingCharacters}
+            </span>
+          </label>
+          <textarea
+            id="customerNotesInput"
+            name="customerNotes"
+            value={customerNotesDraft}
+            onChange={(changeEvent: React.ChangeEvent<HTMLTextAreaElement>) =>
+              onCustomerNotesDraftChanged(
+                changeEvent.target.value.slice(0, customerNotesMaximumLength),
+              )
+            }
+            rows={3}
+            placeholder="Gate code, parking slot, car color, anything the worker should know…"
+            className={joinClassNames(
+              'w-full resize-y rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] outline-none transition-colors',
+              'focus:border-[var(--color-brand-600)]',
+            )}
+          />
+          <p className="text-[11px] text-[var(--color-ink-500)]">
+            Your worker will see these notes on their job card.
+          </p>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function ReviewStep({
+  customerName,
+  addressDisplay,
+  selectedDateTime,
+  selectedVehicleLabel,
+  selectedServiceLabel,
+  selectedServicePriceLabel,
+  selectedServiceDurationLabel,
+  selectedShopLabel,
+  customerNotesPreview,
+}: {
+  readonly customerName: string
+  readonly addressDisplay: string
+  readonly selectedDateTime: string
+  readonly selectedVehicleLabel: string
+  readonly selectedServiceLabel: string
+  readonly selectedServicePriceLabel: string
+  readonly selectedServiceDurationLabel: string
+  readonly selectedShopLabel: string
+  readonly customerNotesPreview: string
+}): ReactElement {
+  const formattedDateTime = selectedDateTime
+    ? new Date(selectedDateTime).toLocaleString()
+    : '—'
+
+  return (
+    <Card elevation="flat" className="space-y-4 p-5">
+      <StepHeader
+        title="Review your booking"
+        description="Double-check the details before confirming."
+      />
+      <dl className="divide-y divide-[var(--color-ink-200)] rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-white">
+        <ReviewSummaryRow label="Name" value={customerName || '—'} />
+        <ReviewSummaryRow label="Shop" value={selectedShopLabel} />
+        <ReviewSummaryRow label="Vehicle" value={selectedVehicleLabel || '—'} />
+        <ReviewSummaryRow
+          label="Service"
+          value={`${selectedServiceLabel} · ${selectedServiceDurationLabel}`}
+        />
+        <ReviewSummaryRow label="Address" value={addressDisplay} />
+        <ReviewSummaryRow label="Date and time" value={formattedDateTime} />
+        <ReviewSummaryRow
+          label="Notes"
+          value={
+            customerNotesPreview.length > 0
+              ? customerNotesPreview
+              : 'No notes added'
+          }
+        />
+        <ReviewSummaryRow
+          label="Estimated price"
+          value={selectedServicePriceLabel}
+          emphasize
+        />
+      </dl>
+      <p className="text-xs text-[var(--color-ink-500)]">
+        Once confirmed, your booking will be pending until a worker is assigned.
+        You'll get realtime updates on the home screen.
+      </p>
+    </Card>
+  )
+}
+
+function ReviewSummaryRow({
+  label,
+  value,
+  emphasize,
+}: {
+  readonly label: string
+  readonly value: string
+  readonly emphasize?: boolean
+}): ReactElement {
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-ink-500)]">
+        {label}
+      </dt>
+      <dd
+        className={joinClassNames(
+          'text-right text-sm',
+          emphasize
+            ? 'font-bold text-[var(--color-brand-700)]'
+            : 'font-semibold text-[var(--color-ink-900)]',
+        )}
+      >
+        {value}
+      </dd>
+    </div>
+  )
+}
+
+function StepHeader({
+  title,
+  description,
+}: {
+  readonly title: string
+  readonly description: string
+}): ReactElement {
+  return (
+    <header className="space-y-1">
+      <h2 className="text-lg font-bold text-[var(--color-ink-900)]">{title}</h2>
+      <p className="text-sm text-[var(--color-ink-500)]">{description}</p>
+    </header>
+  )
+}
+
+function StickyMobileBookingBar({
+  currentStepIndex,
+  totalStepCount,
+  isFirstStep,
+  isLastStep,
+  isSubmittingBooking,
+  selectedServicePriceLabel,
+  onBackClicked,
+  onContinueClicked,
+  onConfirmClicked,
+}: {
+  readonly currentStepIndex: number
+  readonly totalStepCount: number
+  readonly isFirstStep: boolean
+  readonly isLastStep: boolean
+  readonly isSubmittingBooking: boolean
+  readonly selectedServicePriceLabel: string
+  readonly onBackClicked: () => void
+  readonly onContinueClicked: () => void
+  readonly onConfirmClicked: () => void
+}): ReactElement {
+  return (
+    <div className="fixed inset-x-0 bottom-14 z-30 border-t border-[var(--color-ink-200)] bg-white/95 px-4 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur sm:hidden">
+      <div className="mx-auto flex max-w-md items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-ink-500)]">
+            Step {currentStepIndex + 1} of {totalStepCount}
+          </p>
+          <p className="truncate text-sm font-semibold text-[var(--color-ink-900)]">
+            {selectedServicePriceLabel || 'Estimating…'}
+          </p>
+        </div>
+        {!isFirstStep ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onBackClicked}
+            disabled={isSubmittingBooking}
+            leadingIcon={<ArrowLeft className="h-4 w-4" />}
+          >
+            Back
+          </Button>
+        ) : null}
+        {isLastStep ? (
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={onConfirmClicked}
+            isLoading={isSubmittingBooking}
+          >
+            Confirm
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={onContinueClicked}
+            trailingIcon={<ArrowRight className="h-4 w-4" />}
+          >
+            Continue
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}

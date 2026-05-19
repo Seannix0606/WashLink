@@ -2,6 +2,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { Booking, CreateBookingInput } from '../../domain/models/Booking'
 import type { BookingRepository } from '../../domain/repositories/BookingRepository'
 import type { WorkerRepository } from '../../domain/repositories/WorkerRepository'
+import { CreateBookingInputSchema } from '../validation/schemas'
 
 export class BookingService {
   public constructor(
@@ -17,7 +18,8 @@ export class BookingService {
     createBookingInput: CreateBookingInput,
     customerIdentifier: string,
   ): Promise<Booking> {
-    return this.bookingRepository.createBooking(createBookingInput, customerIdentifier)
+    const validatedBookingInput = CreateBookingInputSchema.parse(createBookingInput)
+    return this.bookingRepository.createBooking(validatedBookingInput, customerIdentifier)
   }
 
   public async acceptBooking(bookingIdentifier: string): Promise<Booking> {

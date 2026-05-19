@@ -1,5 +1,5 @@
 import type { Shop } from '../../domain/models/Shop'
-import { computeDistanceInKilometers } from '../services/reverseGeocoding'
+import { computeDistanceInKilometers } from '../../services/geocodingService'
 
 export interface ShopWithComputedDistance {
   readonly shop: Shop

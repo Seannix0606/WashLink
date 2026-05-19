@@ -4,6 +4,7 @@ import type {
   UpdateShopInput,
 } from '../../domain/models/Shop'
 import type { ShopRepository } from '../../domain/repositories/ShopRepository'
+import { CreateShopInputSchema, UpdateShopInputSchema } from '../validation/schemas'
 
 export class ShopService {
   public constructor(private readonly shopRepository: ShopRepository) {}
@@ -36,14 +37,16 @@ export class ShopService {
     ownerIdentifier: string,
     createShopInput: CreateShopInput,
   ): Promise<Shop> {
-    return this.shopRepository.createShop(ownerIdentifier, createShopInput)
+    const validatedShopInput = CreateShopInputSchema.parse(createShopInput)
+    return this.shopRepository.createShop(ownerIdentifier, validatedShopInput)
   }
 
   public async updateShop(
     shopIdentifier: string,
     updateShopInput: UpdateShopInput,
   ): Promise<Shop> {
-    return this.shopRepository.updateShop(shopIdentifier, updateShopInput)
+    const validatedUpdateShopInput = UpdateShopInputSchema.parse(updateShopInput)
+    return this.shopRepository.updateShop(shopIdentifier, validatedUpdateShopInput)
   }
 
   public async deleteShop(shopIdentifier: string): Promise<void> {

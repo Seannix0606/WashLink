@@ -6,6 +6,7 @@ import {
   useAuthenticatedUser,
 } from './presentation/auth/AuthenticatedUserContext'
 import { ApplicationToaster } from './presentation/design/ui'
+import { ErrorBoundary } from './presentation/components/ErrorBoundary'
 
 const CustomerBookingPage = lazy(async () => ({
   default: (await import('./presentation/pages/CustomerBookingPage')).CustomerBookingPage,
@@ -136,10 +137,12 @@ function App(): ReactElement {
   }
 
   return (
-    <AuthenticatedUserProvider>
-      <AppContent />
-      <ApplicationToaster />
-    </AuthenticatedUserProvider>
+    <ErrorBoundary>
+      <AuthenticatedUserProvider>
+        <AppContent />
+        <ApplicationToaster />
+      </AuthenticatedUserProvider>
+    </ErrorBoundary>
   )
 }
 

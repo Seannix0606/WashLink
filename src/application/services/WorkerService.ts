@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { CreateWorkerInput, Worker } from '../../domain/models/Worker'
 import type { WorkerRepository } from '../../domain/repositories/WorkerRepository'
+import { CreateWorkerInputSchema } from '../validation/schemas'
 
 export class WorkerService {
   public constructor(private readonly workerRepository: WorkerRepository) {}
@@ -13,9 +14,10 @@ export class WorkerService {
     ownerIdentifier: string,
     createWorkerInput: CreateWorkerInput,
   ): Promise<Worker> {
+    const validatedWorkerInput = CreateWorkerInputSchema.parse(createWorkerInput)
     return this.workerRepository.createWorkerForOwner(
       ownerIdentifier,
-      createWorkerInput,
+      validatedWorkerInput,
     )
   }
 
