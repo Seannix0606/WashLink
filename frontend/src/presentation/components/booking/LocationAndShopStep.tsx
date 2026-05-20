@@ -12,7 +12,7 @@ import { Button, Card, Input } from '../../design/ui'
 import { useGeolocationPicker } from '../../hooks/useGeolocationPicker'
 import { reverseGeocodeCoordinates } from '../../../services/geocodingService'
 import { sortShopsByProximity } from '../../utilities/sortShopsByProximity'
-import { LocationPickerMap } from '../common/LocationPickerMap'
+import { LocationPickerMap } from '../shared/LocationPickerMap'
 import { ShopPickerRow } from './ShopPickerRow'
 
 export interface SelectedLocationValue {

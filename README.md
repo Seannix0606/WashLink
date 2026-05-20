@@ -1,80 +1,87 @@
-# WashLink
+# WashLink Monorepo
 
-Production-grade car wash booking and operations dashboard (React + TypeScript) using Clean Architecture and SOLID principles.
+This repository contains both the frontend and backend for the WashLink platform.
 
-## Stack
+- `frontend/` - React + TypeScript application
+- `backend/` - FastAPI + SQLAlchemy service scaffold
+- `docs/` - architectural and engineering standards for the project
 
-- React + TypeScript (strict mode)
-- Tailwind CSS
-- Supabase Auth + Realtime
-- ESLint strict type-aware rules
+## Getting Started
 
-## Architecture Layers
-
-- `src/domain`: Business entities and repository contracts
-- `src/application`: Use-case orchestration services
-- `src/infrastructure`: Supabase implementations
-- `src/presentation`: UI components, hooks, and pages
-
-## Environment Setup
-
-1. Copy `.env.example` to `.env`.
-2. Add your Supabase values:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY` (use the project publishable or anon public key)
-
-## Auth + Landing Flow
-
-- Unauthenticated users land on a sign-in screen.
-- New users can switch to sign-up and register as:
-  - `customer`
-  - `owner`
-- After sign-in, the app reads `profiles.role` and routes automatically:
-  - `customer` -> booking page
-  - `owner` -> owner dashboard
-  - `worker` -> worker jobs page
-
-## Run Locally
+### Frontend
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
 
-## Realtime Behavior
+### Backend
 
-- Subscribes to `INSERT` and `UPDATE` events on `public.bookings`
-- Shows green banner: `New Booking Received` (on insert)
-- Plays a sound notification (on insert)
-- Prepends new booking cards; merges updates (including `assigned_worker_id`) in place
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-## Supabase schema (expected)
+## Structure
 
-Tables required:
+- `frontend/` contains the complete UI application with Vite, React, and Supabase integration.
+- `backend/` contains the API scaffold, async database layer, and future AI/worker services.
+- `docs/` contains the source of truth for architecture, API standards, and engineering rules.
 
-- `profiles`
-  - `id` (uuid, references `auth.users.id`)
-  - `role` (`customer | owner | worker`)
-  - `full_name` (text)
-  - `phone_number` (text)
-- `workers`
-  - `id` (uuid)
-  - `owner_id` (uuid, references `auth.users.id`)
-  - `user_id` (uuid, nullable, references `auth.users.id`)
-  - `name` (text)
-  - `phone_number` (text)
-  - `is_available` (boolean)
-- `bookings`
-  - `assigned_worker_id` (nullable, references `workers.id`)
-  - `customer_id` (references `auth.users.id`)
-  - `booking_status` in `pending | accepted | in_progress | completed | rejected`
+## Render Deployment
 
-RLS policies should enforce:
+This repository includes a `render.yaml` manifest for deploying both the frontend and backend services on Render.
 
-- Customers can insert/select their own bookings.
-- Owners can manage their own workers and booking operations.
-- Workers can view/update bookings assigned to their linked worker row.
+### Deploy to Render
 
-Enable replication for `bookings` and `workers` if you use Supabase Realtime.
+1. Connect your GitHub repository to Render.
+2. Render will detect `render.yaml` and create two services:
+   - `washlink-frontend` as a static site
+   - `washlink-backend` as a Python web service
+3. Configure environment variables in the Render dashboard for the backend:
+   - `DATABASE_URL`
+   - `REDIS_URL`
+   - `SECRET_KEY`
+   - `CORS_ORIGINS`
+4. For the frontend, set any Supabase-only env vars in the Render static site settings:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
 
-There is no hash-based route configuration anymore.
+### Custom Domain
+
+- Add a custom domain in Render service settings.
+- Use `www.example.com` or `app.example.com` for the frontend service.
+- Use `api.example.com` for the backend service.
+- Create the DNS records that Render provides, usually a CNAME to Render.
+- Render provisions SSL automatically.
+
+### Static frontend only
+
+If you only want to try the frontend as a static site, you can deploy just the `frontend/` folder.
+
+1. In Render, create a new service and choose `Static Site`.
+2. Set the root directory to `frontend`.
+3. Use the build command:
+   ```bash
+   npm install && npm run build
+   ```
+4. Set the publish path to `dist`.
+5. Add any frontend env vars you need, for example:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+
+This will deploy the frontend independently and let you validate the UI without the backend service first.
+
+### Free plan notes
+
+- Render static sites are free and ideal for the frontend.
+- Render free web services may sleep after inactivity.
+- Use an external Postgres provider such as Supabase if you need a free database.
+
+## Notes
+
+This repo is now structured as a monorepo, keeping frontend and backend separated while enabling shared documentation and coordinated development.

@@ -11,7 +11,7 @@ import type { CreateShopInput } from '../../../domain/models/Shop'
 import { Button, Card, Input, applicationToast } from '../../design/ui'
 import { useGeolocationPicker } from '../../hooks/useGeolocationPicker'
 import { reverseGeocodeCoordinates } from '../../../services/geocodingService'
-import { LocationPickerMap } from '../common/LocationPickerMap'
+import { LocationPickerMap } from '../shared/LocationPickerMap'
 
 interface ShopSetupStepProps {
   readonly initialInputs?: Partial<ShopSetupFormValues>
