@@ -14,7 +14,11 @@ config = context.config
 fileConfig(config.config_file_name)
 
 settings = get_settings()
-config.set_main_option('sqlalchemy.url', str(settings.database_url))
+# Convert asyncpg URL to psycopg for Alembic (which requires sync driver)
+database_url = str(settings.database_url)
+if database_url.startswith("postgresql+asyncpg://"):
+    database_url = database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://")
+config.set_main_option('sqlalchemy.url', database_url)
 
 target_metadata = Base.metadata
 

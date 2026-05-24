@@ -1,21 +1,31 @@
 from typing import List
-from pydantic import BaseSettings, AnyUrl, Field, SecretStr
+from pydantic import AnyUrl, Field, SecretStr, ConfigDict, field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+    
     app_name: str = "WashLink Backend"
-    app_env: str = Field(default="development", env="APP_ENV")
-    debug: bool = Field(default=True, env="APP_DEBUG")
-    database_url: AnyUrl = Field(..., env="DATABASE_URL")
-    redis_url: AnyUrl = Field(..., env="REDIS_URL")
-    cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"], env="CORS_ORIGINS")
-    secret_key: SecretStr = Field(..., env="SECRET_KEY")
-    port: int = Field(default=8000, env="PORT")
+    app_env: str = Field(default="development")
+    debug: bool = Field(default=True)
+    database_url: AnyUrl
+    redis_url: AnyUrl
+    cors_origins: List[str] = Field(default=["http://localhost:5173"])
+    secret_key: SecretStr
+    port: int = Field(default=8000)
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
 
 
 def get_settings() -> Settings:

@@ -14,5 +14,7 @@ class Shop(Base):
     owner_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=False)
     name = Column(String(length=255), nullable=False)
     address = Column(String(length=512), nullable=True)
+    status = Column(String(length=20), default="draft", nullable=False)  # draft, active, inactive
+    phone_number = Column(String(length=20), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

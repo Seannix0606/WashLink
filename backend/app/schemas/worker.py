@@ -1,10 +1,12 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkerSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     owner_id: UUID
     user_id: UUID | None = None
@@ -13,9 +15,6 @@ class WorkerSchema(BaseModel):
     is_available: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        orm_mode = True
 
 
 class WorkerListResponse(BaseModel):

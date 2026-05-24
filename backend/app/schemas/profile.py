@@ -1,19 +1,19 @@
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProfileSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
-    role: constr(regex="^(customer|owner|worker)$")
+    role: Annotated[str, Field(pattern="^(customer|owner|worker)$")]
     full_name: str
     phone_number: str
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        orm_mode = True
 
 
 class ProfileListResponse(BaseModel):
