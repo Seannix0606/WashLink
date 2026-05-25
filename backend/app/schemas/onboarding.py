@@ -38,9 +38,9 @@ class PricingRequestSchema(BaseModel):
         if not v:
             raise ValueError("Pricing cannot be empty")
         for vehicle_type, price in v.items():
-            if not vehicle_type or not isinstance(vehicle_type, str):
+            if not vehicle_type:
                 raise ValueError("Vehicle type must be non-empty string")
-            if not isinstance(price, int) or price < 0:
+            if price < 0:
                 raise ValueError(f"Price for {vehicle_type} must be non-negative integer")
         return v
 
