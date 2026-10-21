@@ -40,9 +40,9 @@ export function OwnerDashboardBookingsSection({
       <OwnerBookingFilterPillTabs
         bookings={bookings}
         selectedFilterTab={selectedFilterTab}
-        onFilterTabSelected={(nextFilterTab) =>
-          onFilterTabSelected(nextFilterTab as OwnerDashboardBookingFilterTab)
-        }
+        onFilterTabSelected={(nextFilterTab): void => {
+          onFilterTabSelected(nextFilterTab)
+        }}
       />
 
       {filteredBookings.length === 0 ? (
@@ -97,11 +97,11 @@ function filterBookingsForOwnerDashboard(
 ): readonly Booking[] {
   const normalizedSearchQuery = searchQuery.trim().toLowerCase()
   return bookings.filter((booking) => {
-    const matchesFilterTab = bookingMatchesOwnerDashboardFilterTab(
+    const shouldMatchFilterTab = bookingMatchesOwnerDashboardFilterTab(
       booking,
       selectedFilterTab,
     )
-    if (!matchesFilterTab) {
+    if (!shouldMatchFilterTab) {
       return false
     }
     if (normalizedSearchQuery.length === 0) {

@@ -27,7 +27,9 @@ export function OwnerBookingRow({
   return (
     <button
       type="button"
-      onClick={() => onSelectBooking(booking.id)}
+      onClick={(): void => {
+        onSelectBooking(booking.id)
+      }}
       className={joinClassNames(
         'group flex w-full items-center gap-4 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-white p-4 text-left transition-shadow',
         'hover:border-transparent hover:shadow-[var(--shadow-card-hover)]',

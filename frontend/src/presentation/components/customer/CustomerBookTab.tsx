@@ -14,6 +14,7 @@ interface CustomerBookTabProps {
   readonly customerFullName: string
   readonly availableShops: readonly Shop[]
   readonly isLoadingShops: boolean
+  readonly onBackToDashboard: () => void
 }
 
 export function CustomerBookTab({
@@ -22,6 +23,7 @@ export function CustomerBookTab({
   customerFullName,
   availableShops,
   isLoadingShops,
+  onBackToDashboard,
 }: CustomerBookTabProps): ReactElement {
   const {
     submittedBooking,
@@ -46,25 +48,26 @@ export function CustomerBookTab({
     }
   }
 
-  if (submittedBooking) {
-    return (
-      <BookingSuccessPanel
-        submittedBooking={submittedBooking}
-        onBookAnother={resetSubmittedBooking}
-      />
-    )
-  }
-
   return (
     <div className="space-y-4">
-      <CustomerBookingGreetingBanner customerFullName={customerFullName} />
-      <BookingStepFlow
-        onSubmitBooking={handleSubmitBooking}
-        isSubmittingBooking={isSubmittingBooking}
-        defaultCustomerName={customerFullName}
-        availableShops={availableShops}
-        isLoadingShops={isLoadingShops}
-      />
+      {submittedBooking ? (
+        <BookingSuccessPanel
+          submittedBooking={submittedBooking}
+          onBookAnother={resetSubmittedBooking}
+        />
+      ) : (
+        <>
+          <CustomerBookingGreetingBanner customerFullName={customerFullName} />
+          <BookingStepFlow
+            onSubmitBooking={handleSubmitBooking}
+            onBackToDashboard={onBackToDashboard}
+            isSubmittingBooking={isSubmittingBooking}
+            defaultCustomerName={customerFullName}
+            availableShops={availableShops}
+            isLoadingShops={isLoadingShops}
+          />
+        </>
+      )}
     </div>
   )
 }

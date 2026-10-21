@@ -41,9 +41,12 @@ export function BookingRatingStarInput({
     <div className="space-y-1.5">
       <div
         className="flex items-center gap-1"
-        onMouseLeave={() => setHoveredRatingStars(0)}
+        onMouseLeave={(): void => {
+          setHoveredRatingStars(0)
+        }}
       >
-        {Array.from({ length: totalStarCount }).map((_, starIndex) => {
+        {Array.from({ length: totalStarCount }).map((unusedValue, starIndex) => {
+          void unusedValue
           const starValue = starIndex + 1
           const isHighlighted = starValue <= effectiveRatingStarsForDisplay
           return (
@@ -53,10 +56,18 @@ export function BookingRatingStarInput({
               aria-label={starButtonAccessibleLabelByStarCount[starValue]}
               aria-pressed={starValue === selectedRatingStars}
               disabled={isDisabled}
-              onClick={() => onRatingStarsChanged(starValue)}
-              onMouseEnter={() => setHoveredRatingStars(starValue)}
-              onFocus={() => setHoveredRatingStars(starValue)}
-              onBlur={() => setHoveredRatingStars(0)}
+              onClick={(): void => {
+                onRatingStarsChanged(starValue)
+              }}
+              onMouseEnter={(): void => {
+                setHoveredRatingStars(starValue)
+              }}
+              onFocus={(): void => {
+                setHoveredRatingStars(starValue)
+              }}
+              onBlur={(): void => {
+                setHoveredRatingStars(0)
+              }}
               className={joinClassNames(
                 'flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] transition-all',
                 'disabled:cursor-not-allowed disabled:opacity-60',

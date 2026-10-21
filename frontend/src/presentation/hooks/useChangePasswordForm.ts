@@ -36,7 +36,7 @@ export function useChangePasswordForm(
       return null
     }
     if (newPassword.length < minimumPasswordLength) {
-      return `New password must be at least ${minimumPasswordLength} characters.`
+      return `New password must be at least ${String(minimumPasswordLength)} characters.`
     }
     if (newPassword === currentPassword) {
       return 'New password must be different from your current password.'

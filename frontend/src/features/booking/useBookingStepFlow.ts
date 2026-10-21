@@ -1,4 +1,10 @@
-import { useCallback, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react'
 import { applicationToast } from '../../presentation/design/ui'
 import type { BookingStepDefinition } from '../../presentation/components/booking/BookingStepProgress'
 import {
@@ -9,6 +15,10 @@ import {
 } from '../../presentation/components/booking/bookingCatalog'
 import type { CreateBookingInput } from '../../domain/models/Booking'
 import type { Shop } from '../../domain/models/Shop'
+import {
+  findShopServicePrice,
+  shopHasCompletePricing,
+} from '../../domain/utilities/shopPricing'
 
 export type BookingStepKey =
   | 'location'
@@ -33,13 +43,64 @@ interface UseBookingStepFlowProps {
   readonly isLoadingShops: boolean
 }
 
+interface UseBookingStepFlowResult {
+  readonly activeStepKey: BookingStepKey
+  readonly availableShops: readonly Shop[]
+  readonly currentStepIndex: number
+  readonly customerName: string
+  readonly customerNotesDraft: string
+  readonly isFirstStep: boolean
+  readonly isLastStep: boolean
+  readonly isSubmittingBooking: boolean
+  readonly selectedDateTime: string
+  readonly selectedLocation: {
+    readonly latitude: number
+    readonly longitude: number
+    readonly displayAddress: string
+  } | null
+  readonly selectedServiceOption:
+    | {
+        readonly label: string
+        readonly durationLabel: string
+      }
+    | undefined
+  readonly selectedServiceValue: string
+  readonly selectedShopIdentifier: string | null
+  readonly selectedShopOption: Shop | null
+  readonly selectedVehicleOption:
+    | {
+        readonly label: string
+      }
+    | undefined
+  readonly selectedVehicleValue: string
+  readonly setActiveStepKey: Dispatch<SetStateAction<BookingStepKey>>
+  readonly setCustomerName: Dispatch<SetStateAction<string>>
+  readonly setCustomerNotesDraft: Dispatch<SetStateAction<string>>
+  readonly setSelectedDateTime: Dispatch<SetStateAction<string>>
+  readonly setSelectedLocation: Dispatch<
+    SetStateAction<{
+      readonly latitude: number
+      readonly longitude: number
+      readonly displayAddress: string
+    } | null>
+  >
+  readonly setSelectedServiceValue: Dispatch<SetStateAction<string>>
+  readonly setSelectedShopIdentifier: Dispatch<SetStateAction<string | null>>
+  readonly setSelectedVehicleValue: Dispatch<SetStateAction<string>>
+  readonly advanceStep: () => void
+  readonly regressStep: () => void
+  readonly handleConfirmBooking: () => Promise<void>
+  readonly bookingStepDefinitions: readonly BookingStepDefinition<BookingStepKey>[]
+  readonly isLoadingShops: boolean
+}
+
 export function useBookingStepFlow({
   onSubmitBooking,
   isSubmittingBooking,
   defaultCustomerName,
   availableShops,
   isLoadingShops,
-}: UseBookingStepFlowProps) {
+}: UseBookingStepFlowProps): UseBookingStepFlowResult {
   const [activeStepKey, setActiveStepKey] = useState<BookingStepKey>('location')
   const [selectedLocation, setSelectedLocation] = useState<
     | {
@@ -89,6 +150,12 @@ export function useBookingStepFlow({
     [availableShops, selectedShopIdentifier],
   )
 
+  const selectedServicePrice = findShopServicePrice(
+    selectedShopOption,
+    selectedVehicleValue,
+    selectedServiceValue,
+  )
+
   const advanceStep = useCallback(() => {
     if (activeStepKey === 'location') {
       if (!selectedLocation) {
@@ -97,6 +164,14 @@ export function useBookingStepFlow({
       }
       if (selectedLocation.displayAddress.trim().length === 0) {
         applicationToast.error('Please enter an address.')
+        return
+      }
+      if (!selectedShopOption) {
+        applicationToast.error('Please select a shop to see its rates.')
+        return
+      }
+      if (!shopHasCompletePricing(selectedShopOption)) {
+        applicationToast.error('This shop has not finished setting its rates.')
         return
       }
     }
@@ -117,7 +192,7 @@ export function useBookingStepFlow({
       bookingStepDefinitions.length - 1,
     )
     setActiveStepKey(bookingStepDefinitions[nextIndex].key)
-  }, [activeStepKey, currentStepIndex, customerName, selectedDateTime, selectedLocation])
+  }, [activeStepKey, currentStepIndex, customerName, selectedDateTime, selectedLocation, selectedShopOption])
 
   const regressStep = useCallback(() => {
     const previousIndex = Math.max(currentStepIndex - 1, 0)
@@ -130,6 +205,13 @@ export function useBookingStepFlow({
       setActiveStepKey('location')
       return
     }
+    if (!selectedShopOption || selectedServicePrice === null) {
+      applicationToast.error(
+        'The selected shop does not have a rate for this booking.',
+      )
+      setActiveStepKey('location')
+      return
+    }
 
     const trimmedCustomerNotes = customerNotesDraft.trim()
 
@@ -139,13 +221,13 @@ export function useBookingStepFlow({
       serviceType: selectedServiceValue,
       address: selectedLocation.displayAddress.trim(),
       time: new Date(selectedDateTime).toISOString(),
-      shopIdentifier: selectedShopIdentifier,
+      shopIdentifier: selectedShopOption.id,
       latitude: selectedLocation.latitude,
       longitude: selectedLocation.longitude,
       customerNotes:
         trimmedCustomerNotes.length > 0 ? trimmedCustomerNotes : null,
     })
-  }, [customerName, customerNotesDraft, selectedDateTime, selectedLocation, selectedServiceValue, selectedShopIdentifier, selectedVehicleValue, onSubmitBooking])
+  }, [customerName, customerNotesDraft, onSubmitBooking, selectedDateTime, selectedLocation, selectedServicePrice, selectedServiceValue, selectedShopOption, selectedVehicleValue])
 
   return {
     activeStepKey,

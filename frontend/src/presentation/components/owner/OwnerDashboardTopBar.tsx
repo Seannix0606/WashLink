@@ -25,9 +25,9 @@ export function OwnerDashboardTopBar({
           <input
             type="search"
             value={searchInputValue}
-            onChange={(searchChangeEvent) =>
+            onChange={(searchChangeEvent): void => {
               onSearchInputValueChange(searchChangeEvent.target.value)
-            }
+            }}
             placeholder="Search bookings by customer, service, or address"
             className="h-10 w-full rounded-full border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] pl-9 pr-4 text-sm text-[var(--color-ink-900)] outline-none transition-colors placeholder:text-[var(--color-ink-500)] focus:border-[var(--color-brand-600)] focus:bg-white"
           />

@@ -36,7 +36,9 @@ export function OwnerWorkerListItem({
         size="sm"
         leadingIcon={<Trash2 className="h-4 w-4" />}
         isLoading={isDeleting}
-        onClick={() => onRemoveWorker(worker)}
+        onClick={(): void => {
+          onRemoveWorker(worker)
+        }}
         className="text-[var(--color-danger-500)] hover:bg-[var(--color-danger-50)]"
       >
         Remove

@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, SyntheticEvent } from 'react'
 import { Eye, EyeOff, Lock, Mail, Phone, Store, User } from 'lucide-react'
 import type { ApplicationUserRole } from '../../domain/models/AuthenticatedUser'
 import { Button, Card, IconButton, Input } from '../../presentation/design/ui'
@@ -13,7 +13,7 @@ interface SignInFormProps {
   readonly onTogglePasswordVisibility: () => void
   readonly onRequestSignUp: () => void
   readonly onForgotPassword: () => void
-  readonly onSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>
+  readonly onSubmit: (event: SyntheticEvent<HTMLFormElement>) => Promise<void>
 }
 
 export function SignInForm({
@@ -39,7 +39,12 @@ export function SignInForm({
         </p>
       </header>
 
-      <form className="space-y-4" onSubmit={onSubmit}>
+      <form
+        className="space-y-4"
+        onSubmit={(event) => {
+          void onSubmit(event)
+        }}
+      >
         <Input
           name="emailAddress"
           type="email"
@@ -48,7 +53,9 @@ export function SignInForm({
           placeholder="you@example.com"
           required
           value={emailAddress}
-          onChange={(event) => onEmailAddressChanged(event.target.value)}
+          onChange={(event): void => {
+            onEmailAddressChanged(event.target.value)
+          }}
           leadingIcon={<Mail className="h-4 w-4" />}
         />
 
@@ -61,7 +68,9 @@ export function SignInForm({
           required
           minLength={6}
           value={password}
-          onChange={(event) => onPasswordChanged(event.target.value)}
+          onChange={(event): void => {
+            onPasswordChanged(event.target.value)
+          }}
           leadingIcon={<Lock className="h-4 w-4" />}
           trailingAccessory={
             <button
@@ -69,7 +78,9 @@ export function SignInForm({
               aria-label={
                 isPasswordVisible ? 'Hide password' : 'Show password'
               }
-              onClick={onTogglePasswordVisibility}
+              onClick={(): void => {
+                onTogglePasswordVisibility()
+              }}
               className="text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]"
             >
               {isPasswordVisible ? (
@@ -84,7 +95,9 @@ export function SignInForm({
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={onForgotPassword}
+            onClick={(): void => {
+              onForgotPassword()
+            }}
             className="text-xs font-semibold text-[var(--color-brand-700)] hover:text-[var(--color-brand-800)]"
           >
             Forgot password?
@@ -106,7 +119,9 @@ export function SignInForm({
         New to WashLink?{' '}
         <button
           type="button"
-          onClick={onRequestSignUp}
+          onClick={(): void => {
+            onRequestSignUp()
+          }}
           className="font-semibold text-[var(--color-brand-700)] hover:text-[var(--color-brand-800)]"
         >
           Create an account
@@ -130,7 +145,7 @@ interface SignUpFormProps {
   readonly onPasswordChanged: (nextPassword: string) => void
   readonly onTogglePasswordVisibility: () => void
   readonly onRequestSignIn: () => void
-  readonly onSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>
+  readonly onSubmit: (event: SyntheticEvent<HTMLFormElement>) => Promise<void>
   readonly onSelectedRoleChanged: (nextRole: ApplicationUserRole) => void
 }
 
@@ -167,14 +182,21 @@ export function SignUpForm({
         onRoleSelected={onSelectedRoleChanged}
       />
 
-      <form className="space-y-4" onSubmit={onSubmit}>
+      <form
+        className="space-y-4"
+        onSubmit={(event) => {
+          void onSubmit(event)
+        }}
+      >
         <Input
           name="fullName"
           label="Full name"
           placeholder="Juan Dela Cruz"
           required
           value={fullName}
-          onChange={(event) => onFullNameChanged(event.target.value)}
+          onChange={(event): void => {
+            onFullNameChanged(event.target.value)
+          }}
           leadingIcon={<User className="h-4 w-4" />}
         />
 
@@ -185,7 +207,9 @@ export function SignUpForm({
           placeholder="09XX XXX XXXX"
           required
           value={phoneNumber}
-          onChange={(event) => onPhoneNumberChanged(event.target.value)}
+          onChange={(event): void => {
+            onPhoneNumberChanged(event.target.value)
+          }}
           leadingIcon={<Phone className="h-4 w-4" />}
         />
 
@@ -197,7 +221,9 @@ export function SignUpForm({
           placeholder="you@example.com"
           required
           value={emailAddress}
-          onChange={(event) => onEmailAddressChanged(event.target.value)}
+          onChange={(event): void => {
+            onEmailAddressChanged(event.target.value)
+          }}
           leadingIcon={<Mail className="h-4 w-4" />}
         />
 
@@ -210,7 +236,9 @@ export function SignUpForm({
           required
           minLength={6}
           value={password}
-          onChange={(event) => onPasswordChanged(event.target.value)}
+          onChange={(event): void => {
+            onPasswordChanged(event.target.value)
+          }}
           leadingIcon={<Lock className="h-4 w-4" />}
           helperText="Use 6+ characters for better security."
           trailingAccessory={
@@ -219,7 +247,9 @@ export function SignUpForm({
               accessibleLabel={
                 isPasswordVisible ? 'Hide password' : 'Show password'
               }
-              onClick={onTogglePasswordVisibility}
+              onClick={(): void => {
+                onTogglePasswordVisibility()
+              }}
               icon={
                 isPasswordVisible ? (
                   <EyeOff className="h-4 w-4" />
@@ -247,7 +277,9 @@ export function SignUpForm({
         Already have an account?{' '}
         <button
           type="button"
-          onClick={onRequestSignIn}
+          onClick={(): void => {
+            onRequestSignIn()
+          }}
           className="font-semibold text-[var(--color-brand-700)] hover:text-[var(--color-brand-800)]"
         >
           Sign in
@@ -294,7 +326,9 @@ function RolePickerGrid({
           <button
             key={rolePickerOption.value}
             type="button"
-            onClick={() => onRoleSelected(rolePickerOption.value)}
+            onClick={(): void => {
+              onRoleSelected(rolePickerOption.value)
+            }}
             aria-pressed={isSelected}
             className={
               'flex flex-col items-start gap-2 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all ' +

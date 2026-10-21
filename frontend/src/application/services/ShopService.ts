@@ -3,8 +3,10 @@ import type {
   Shop,
   UpdateShopInput,
 } from '../../domain/models/Shop'
+import type { SaveShopPricingInput } from '../../domain/models/ShopPricing'
 import type { ShopRepository } from '../../domain/repositories/ShopRepository'
 import { CreateShopInputSchema, UpdateShopInputSchema } from '../validation/schemas'
+import { SaveShopPricingInputSchema } from '../validation/shopPricingSchemas'
 
 export class ShopService {
   public constructor(private readonly shopRepository: ShopRepository) {}
@@ -47,6 +49,18 @@ export class ShopService {
   ): Promise<Shop> {
     const validatedUpdateShopInput = UpdateShopInputSchema.parse(updateShopInput)
     return this.shopRepository.updateShop(shopIdentifier, validatedUpdateShopInput)
+  }
+
+  public async saveShopPricing(
+    shopIdentifier: string,
+    saveShopPricingInput: SaveShopPricingInput,
+  ): Promise<Shop> {
+    const validatedPricingInput =
+      SaveShopPricingInputSchema.parse(saveShopPricingInput)
+    return this.shopRepository.saveShopPricing(
+      shopIdentifier,
+      validatedPricingInput,
+    )
   }
 
   public async deleteShop(shopIdentifier: string): Promise<void> {

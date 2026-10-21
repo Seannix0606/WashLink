@@ -30,6 +30,7 @@ import { describeBookingStatus } from '../../utilities/bookingStatusDisplay'
 import { BookingNotesBlock } from '../booking/BookingNotesBlock'
 import { BookingRatingSummaryBlock } from '../rating/BookingRatingSummaryBlock'
 import { BookingDetailRow } from './BookingDetailRow'
+import { formatShopPrice } from '../../utilities/formatShopPrice'
 
 interface BookingDetailDrawerBodyProps {
   readonly booking: Booking
@@ -146,6 +147,11 @@ export function BookingDetailDrawerBody({
           value={`${booking.vehicleType} · ${booking.serviceType}`}
         />
         <BookingDetailRow
+          iconNode={<CheckCircle2 className="h-4 w-4" />}
+          label="Quoted price"
+          value={formatShopPrice(booking.quotedPrice)}
+        />
+        <BookingDetailRow
           iconNode={<Calendar className="h-4 w-4" />}
           label="Scheduled"
           value={formatScheduledDateTime(booking.time)}
@@ -199,7 +205,9 @@ export function BookingDetailDrawerBody({
             leadingIcon={<CheckCircle2 className="h-4 w-4" />}
             isLoading={isAcceptingBooking}
             disabled={!canAccept || isAcceptingBooking}
-            onClick={() => void handleAccept()}
+            onClick={(): void => {
+              void handleAccept()
+            }}
           >
             Accept
           </Button>
@@ -208,7 +216,9 @@ export function BookingDetailDrawerBody({
             leadingIcon={<XCircle className="h-4 w-4" />}
             isLoading={isRejectingBooking}
             disabled={!canReject || isRejectingBooking}
-            onClick={() => void handleReject()}
+            onClick={(): void => {
+              void handleReject()
+            }}
           >
             Reject
           </Button>
@@ -224,9 +234,9 @@ export function BookingDetailDrawerBody({
             name="assignWorker"
             options={availableWorkerOptions}
             value={draftSelectedWorkerIdentifier}
-            onChange={(changeEvent) =>
+            onChange={(changeEvent): void => {
               setDraftSelectedWorkerIdentifier(changeEvent.target.value)
-            }
+            }}
           />
           <Button
             isFullWidth
@@ -235,7 +245,9 @@ export function BookingDetailDrawerBody({
             disabled={
               isAssigningWorker || draftSelectedWorkerIdentifier.length === 0
             }
-            onClick={() => void handleAssignWorker()}
+            onClick={(): void => {
+              void handleAssignWorker()
+            }}
           >
             Assign worker
           </Button>

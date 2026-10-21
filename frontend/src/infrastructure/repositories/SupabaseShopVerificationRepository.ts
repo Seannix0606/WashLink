@@ -1,4 +1,8 @@
 import type { Shop } from '../../domain/models/Shop'
+import {
+  mapSupabaseShopPricingRows,
+  type SupabaseShopPricingRow,
+} from '../supabase/supabaseShopPricing'
 import type {
   ShopVerificationDocument,
   ShopVerificationDocumentType,
@@ -17,7 +21,7 @@ const shopVerificationDocumentSelectColumns =
   'id, shop_id, document_type, storage_path, file_name, file_size_bytes, content_type, uploaded_by, uploaded_at'
 
 const shopSelectColumnsForVerification =
-  'id, owner_id, name, address, phone_number, latitude, longitude, is_active, created_at, verification_status, verification_notes, verification_submitted_at, verification_reviewed_at, verification_reviewed_by'
+  'id, owner_id, name, address, phone_number, latitude, longitude, is_active, created_at, verification_status, verification_notes, verification_submitted_at, verification_reviewed_at, verification_reviewed_by, shop_pricing!shop_pricing_shop_id_fkey(vehicle_type, service_type, price)'
 
 interface SupabaseShopVerificationDocumentRow {
   id: string
@@ -46,6 +50,7 @@ interface SupabaseShopRowForVerification {
   verification_submitted_at: string | null
   verification_reviewed_at: string | null
   verification_reviewed_by: string | null
+  shop_pricing: SupabaseShopPricingRow[]
 }
 
 export class SupabaseShopVerificationRepository
@@ -73,6 +78,36 @@ export class SupabaseShopVerificationRepository
     uploadInput: UploadShopVerificationDocumentInput,
   ): Promise<ShopVerificationDocument> {
     const supabaseClient = getSupabaseClient()
+    const {
+      data: { user: signedInUser },
+      error: signedInUserError,
+    } = await supabaseClient.auth.getUser()
+
+    if (signedInUserError) {
+      throw new Error(
+        `Could not verify the signed-in account before uploading: ${signedInUserError.message}`,
+      )
+    }
+    if (!signedInUser) {
+      throw new Error('Sign in again before uploading shop documents.')
+    }
+
+    const { data: shopOwnerRow, error: shopOwnerError } = await supabaseClient
+      .from('shops')
+      .select('owner_id')
+      .eq('id', uploadInput.shopIdentifier)
+      .single()
+
+    if (shopOwnerError) {
+      throw new Error(
+        `Could not verify ownership of this shop before uploading: ${shopOwnerError.message}`,
+      )
+    }
+    if (shopOwnerRow.owner_id !== signedInUser.id) {
+      throw new Error(
+        'The signed-in account does not own this shop, so it cannot upload its verification documents.',
+      )
+    }
 
     const existingDocumentStoragePath = await this.findExistingDocumentStoragePath(
       uploadInput.shopIdentifier,
@@ -92,7 +127,6 @@ export class SupabaseShopVerificationRepository
       .from(shopVerificationDocumentsStorageBucketName)
       .upload(nextStoragePath, uploadInput.fileBlob, {
         contentType: uploadInput.contentType,
-        upsert: true,
       })
 
     if (uploadError) {
@@ -181,7 +215,7 @@ export class SupabaseShopVerificationRepository
     if (error) {
       throw new Error(`Failed to generate document link: ${error.message}`)
     }
-    if (!data?.signedUrl) {
+    if (!data.signedUrl) {
       throw new Error('Document link could not be generated.')
     }
     return data.signedUrl
@@ -346,5 +380,6 @@ function mapShopRowToDomain(shopRow: SupabaseShopRowForVerification): Shop {
     verificationSubmittedAt: shopRow.verification_submitted_at,
     verificationReviewedAt: shopRow.verification_reviewed_at,
     verificationReviewedBy: shopRow.verification_reviewed_by,
+    servicePricing: mapSupabaseShopPricingRows(shopRow.shop_pricing),
   }
 }

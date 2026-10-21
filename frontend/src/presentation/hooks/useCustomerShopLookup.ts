@@ -27,7 +27,7 @@ export function useCustomerShopLookup(
   const referencedShopIdentifiers = useMemo<readonly string[]>(() => {
     const uniqueReferencedShopIdentifierSet = new Set<string>()
     for (const customerBooking of customerBookingList) {
-      if (typeof customerBooking.shopIdentifier === 'string') {
+      if (customerBooking.shopIdentifier !== null) {
         uniqueReferencedShopIdentifierSet.add(customerBooking.shopIdentifier)
       }
     }
@@ -38,7 +38,10 @@ export function useCustomerShopLookup(
     const missingShopIdentifierList = referencedShopIdentifiers
       .filter(
         (referencedShopIdentifier) =>
-          activeShopLookupByIdentifier[referencedShopIdentifier] === undefined,
+          !Object.prototype.hasOwnProperty.call(
+            activeShopLookupByIdentifier,
+            referencedShopIdentifier,
+          ),
       )
       .sort()
     return missingShopIdentifierList.join('|')
@@ -46,7 +49,6 @@ export function useCustomerShopLookup(
 
   useEffect(() => {
     if (missingShopIdentifiersKey.length === 0) {
-      setFetchedHistoricalShops([])
       return
     }
 
@@ -84,7 +86,7 @@ export function useCustomerShopLookup(
       ...activeShopLookupByIdentifier,
     }
     for (const historicalShop of fetchedHistoricalShops) {
-      if (mergedShopLookup[historicalShop.id] === undefined) {
+      if (!(historicalShop.id in mergedShopLookup)) {
         mergedShopLookup[historicalShop.id] = historicalShop
       }
     }

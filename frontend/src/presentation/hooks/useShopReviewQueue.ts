@@ -64,10 +64,10 @@ export function useShopReviewQueue({
   const replaceShopInReviewQueueLocally = useCallback(
     (updatedShop: Shop): void => {
       setShopsInReviewQueue((previousShopsInReviewQueue) => {
-        const alreadyContainsShop = previousShopsInReviewQueue.some(
+        const hasShopInQueue = previousShopsInReviewQueue.some(
           (existingShop) => existingShop.id === updatedShop.id,
         )
-        if (!alreadyContainsShop) {
+        if (!hasShopInQueue) {
           return previousShopsInReviewQueue
         }
         return previousShopsInReviewQueue.map((existingShop) =>

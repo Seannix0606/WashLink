@@ -22,12 +22,12 @@ export async function fetchJson<T>(
   url: string,
   init?: RequestInit,
 ): Promise<T> {
+  const headers = new Headers(init?.headers)
+  headers.set('Accept', 'application/json')
+
   const response = await fetch(url, {
     ...init,
-    headers: {
-      Accept: 'application/json',
-      ...(init?.headers ?? {}),
-    },
+    headers,
   })
 
   const responseText = await response.text()
@@ -47,7 +47,7 @@ export async function fetchJson<T>(
       'message' in responseBody &&
       typeof (responseBody as { message?: unknown }).message === 'string'
         ? (responseBody as { message: string }).message
-        : response.statusText || `Request failed with status ${response.status}`
+        : response.statusText || `Request failed with status ${String(response.status)}`
 
     throw createApiError(response.status, message, responseBody)
   }

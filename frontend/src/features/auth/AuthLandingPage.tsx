@@ -58,8 +58,12 @@ export function AuthLandingPage(): ReactElement {
                   onEmailAddressChanged={setEmailAddress}
                   onPasswordChanged={setPassword}
                   onTogglePasswordVisibility={togglePasswordVisibility}
-                  onRequestSignUp={() => setActiveAuthTab('signUp')}
-                  onForgotPassword={() => setIsForgotPasswordOpen(true)}
+                  onRequestSignUp={(): void => {
+                    setActiveAuthTab('signUp')
+                  }}
+                  onForgotPassword={(): void => {
+                    setIsForgotPasswordOpen(true)
+                  }}
                   onSubmit={handleSignInSubmit}
                 />
               ) : (
@@ -76,7 +80,9 @@ export function AuthLandingPage(): ReactElement {
                   onEmailAddressChanged={setEmailAddress}
                   onPasswordChanged={setPassword}
                   onTogglePasswordVisibility={togglePasswordVisibility}
-                  onRequestSignIn={() => setActiveAuthTab('signIn')}
+                  onRequestSignIn={(): void => {
+                    setActiveAuthTab('signIn')
+                  }}
                   onSubmit={handleSignUpSubmit}
                   onSelectedRoleChanged={setSelectedRole}
                 />
@@ -88,7 +94,9 @@ export function AuthLandingPage(): ReactElement {
 
       <ForgotPasswordModal
         isOpen={isForgotPasswordOpen}
-        onClose={() => setIsForgotPasswordOpen(false)}
+        onClose={(): void => {
+          setIsForgotPasswordOpen(false)
+        }}
         initialEmailAddress={emailAddress.trim()}
       />
     </div>
@@ -193,7 +201,9 @@ function AuthTabSwitcher({
             type="button"
             role="tab"
             aria-selected={isActive}
-            onClick={() => onAuthTabChange(tabDefinition.value)}
+            onClick={(): void => {
+              onAuthTabChange(tabDefinition.value)
+            }}
             className={joinClassNames(
               'flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
               isActive

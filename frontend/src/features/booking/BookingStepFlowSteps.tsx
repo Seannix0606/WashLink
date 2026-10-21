@@ -11,12 +11,15 @@ import {
 } from 'lucide-react'
 import type { SelectedLocationValue } from '../../presentation/components/booking/LocationAndShopStep'
 import type { Shop } from '../../domain/models/Shop'
+import { findShopServicePrice } from '../../domain/utilities/shopPricing'
+import { formatShopPrice } from '../../presentation/utilities/formatShopPrice'
 import type { BookingStepKey } from './useBookingStepFlow'
 import { LocationAndShopStep } from '../../presentation/components/booking/LocationAndShopStep'
 import {
   findServiceOptionByValue,
   findVehicleOptionByValue,
   serviceOptionDefinitions,
+  vehicleOptionDefinitions,
 } from '../../presentation/components/booking/bookingCatalog'
 
 interface BookingStepFlowStepsProps {
@@ -35,7 +38,6 @@ interface BookingStepFlowStepsProps {
   readonly customerNotesPreview: string
   readonly selectedServiceOption?: {
     readonly label: string
-    readonly priceLabel: string
     readonly durationLabel: string
   }
   readonly selectedVehicleOption?: {
@@ -99,7 +101,13 @@ export function BookingStepFlowSteps({
     findVehicleOptionByValue(selectedVehicleValue)?.label ?? ''
   const selectedServiceLabel = selectedServiceOption?.label ??
     findServiceOptionByValue(selectedServiceValue)?.label ?? ''
-  const selectedServicePriceLabel = selectedServiceOption?.priceLabel ?? ''
+  const selectedServicePriceLabel = formatShopPrice(
+    findShopServicePrice(
+      selectedShopOption,
+      selectedVehicleValue,
+      selectedServiceValue,
+    ),
+  )
   const selectedServiceDurationLabel =
     selectedServiceOption?.durationLabel ?? ''
 
@@ -125,6 +133,8 @@ export function BookingStepFlowSteps({
         {activeStepKey === 'service' ? (
           <ServiceSelectionStep
             selectedServiceValue={selectedServiceValue}
+            selectedVehicleValue={selectedVehicleValue}
+            selectedShopOption={selectedShopOption}
             onServiceSelected={onServiceSelected}
           />
         ) : null}
@@ -158,10 +168,10 @@ export function BookingStepFlowSteps({
           type="button"
           variant="secondary"
           onClick={onBackClicked}
-          disabled={isFirstStep || isSubmittingBooking}
+          disabled={isSubmittingBooking}
           leadingIcon={<ArrowLeft className="h-4 w-4" />}
         >
-          Back
+          {isFirstStep ? 'Dashboard' : 'Back'}
         </Button>
         {isLastStep ? (
           <Button
@@ -214,13 +224,15 @@ function VehicleSelectionStep({
         description="Pick the vehicle type so we can estimate time and price."
       />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {serviceOptionDefinitions.map((vehicleOption) => {
+        {vehicleOptionDefinitions.map((vehicleOption) => {
           const isSelected = vehicleOption.value === selectedVehicleValue
           return (
             <button
               key={vehicleOption.value}
               type="button"
-              onClick={() => onVehicleSelected(vehicleOption.value)}
+              onClick={() => {
+                onVehicleSelected(vehicleOption.value)
+              }}
               aria-pressed={isSelected}
               className={joinClassNames(
                 'flex flex-col items-start gap-2 rounded-[var(--radius-surface)] border px-4 py-4 text-left transition-all',
@@ -255,25 +267,36 @@ function VehicleSelectionStep({
 
 function ServiceSelectionStep({
   selectedServiceValue,
+  selectedVehicleValue,
+  selectedShopOption,
   onServiceSelected,
 }: {
   readonly selectedServiceValue: string
+  readonly selectedVehicleValue: string
+  readonly selectedShopOption: Shop | null | undefined
   readonly onServiceSelected: (nextServiceValue: string) => void
 }): ReactElement {
   return (
     <Card elevation="flat" className="space-y-4 p-5">
       <StepHeader
         title="Choose a service"
-        description="Pick a package. Final price is confirmed on arrival."
+        description="Choose a wash package to see this shop's price."
       />
       <ul className="space-y-3">
         {serviceOptionDefinitions.map((serviceOption) => {
           const isSelected = serviceOption.value === selectedServiceValue
+          const servicePrice = findShopServicePrice(
+            selectedShopOption,
+            selectedVehicleValue,
+            serviceOption.value,
+          )
           return (
             <li key={serviceOption.value}>
               <button
                 type="button"
-                onClick={() => onServiceSelected(serviceOption.value)}
+                onClick={() => {
+                  onServiceSelected(serviceOption.value)
+                }}
                 aria-pressed={isSelected}
                 className={joinClassNames(
                   'flex w-full items-start gap-3 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all',
@@ -298,7 +321,7 @@ function ServiceSelectionStep({
                       {serviceOption.label}
                     </span>
                     <span className="text-sm font-semibold text-[var(--color-brand-700)]">
-                      {serviceOption.priceLabel}
+                      {formatShopPrice(servicePrice)}
                     </span>
                   </div>
                   <span className="text-xs text-[var(--color-ink-500)]">
@@ -348,9 +371,9 @@ function ScheduleStep({
           placeholder="Juan Dela Cruz"
           required
           value={customerName}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             onCustomerNameChanged(event.target.value)
-          }
+          }}
           leadingIcon={<UserIcon className="h-4 w-4" />}
         />
         <Input
@@ -359,9 +382,9 @@ function ScheduleStep({
           label="Date and time"
           required
           value={selectedDateTime}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             onSelectedDateTimeChanged(event.target.value)
-          }
+          }}
           leadingIcon={<CalendarClock className="h-4 w-4" />}
         />
         <div className="space-y-1.5">
@@ -384,11 +407,11 @@ function ScheduleStep({
             id="customerNotesInput"
             name="customerNotes"
             value={customerNotesDraft}
-            onChange={(changeEvent: React.ChangeEvent<HTMLTextAreaElement>) =>
+            onChange={(changeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
               onCustomerNotesDraftChanged(
                 changeEvent.target.value.slice(0, customerNotesMaximumLength),
               )
-            }
+            }}
             rows={3}
             placeholder="Gate code, parking slot, car color, anything the worker should know…"
             className={joinClassNames(
@@ -543,18 +566,16 @@ function StickyMobileBookingBar({
             {selectedServicePriceLabel || 'Estimating…'}
           </p>
         </div>
-        {!isFirstStep ? (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={onBackClicked}
-            disabled={isSubmittingBooking}
-            leadingIcon={<ArrowLeft className="h-4 w-4" />}
-          >
-            Back
-          </Button>
-        ) : null}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={onBackClicked}
+          disabled={isSubmittingBooking}
+          leadingIcon={<ArrowLeft className="h-4 w-4" />}
+        >
+          {isFirstStep ? 'Dashboard' : 'Back'}
+        </Button>
         {isLastStep ? (
           <Button
             type="button"

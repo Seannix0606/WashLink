@@ -102,7 +102,9 @@ export function SuperAdminDashboardPage({
         shopUnderReview={shopSelectedForReview}
         reviewerIdentifier={superAdminIdentifier}
         shopVerificationService={shopVerificationService}
-        onClose={() => setShopSelectedForReview(null)}
+        onClose={() => {
+          setShopSelectedForReview(null)
+        }}
         onShopReviewDecisionApplied={handleShopReviewDecisionApplied}
       />
     </AppShell>

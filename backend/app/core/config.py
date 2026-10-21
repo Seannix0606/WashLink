@@ -1,5 +1,6 @@
 from typing import List
-from pydantic import AnyUrl, Field, SecretStr, ConfigDict, field_validator
+
+from pydantic import ConfigDict, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -10,14 +11,14 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
-    
+
     app_name: str = "WashLink Backend"
     app_env: str = Field(default="development")
     debug: bool = Field(default=True)
-    database_url: AnyUrl
-    redis_url: AnyUrl
+    database_url: str = Field(default="sqlite+aiosqlite:///./washlink.db")
+    redis_url: str = Field(default="redis://localhost:6379/0")
     cors_origins: List[str] = Field(default=["http://localhost:5173"])
-    secret_key: SecretStr
+    secret_key: SecretStr = Field(default="dev-secret-key-change-me")
     port: int = Field(default=8000)
 
     @field_validator("cors_origins", mode="before")

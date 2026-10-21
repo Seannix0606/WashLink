@@ -78,7 +78,7 @@ export function useShopVerificationActions({
     async (documentIdentifier: string): Promise<boolean> => {
       setDeletingDocumentIdentifier(documentIdentifier)
       try {
-        const deletionResult = await runServiceActionWithToast(
+        const isDeletionSuccessful = await runServiceActionWithToast(
           async () => {
             await shopVerificationService.deleteDocument(documentIdentifier)
             return true
@@ -88,7 +88,7 @@ export function useShopVerificationActions({
             fallbackErrorMessage: 'Could not remove this document.',
           },
         )
-        return deletionResult === true
+        return isDeletionSuccessful === true
       } finally {
         setDeletingDocumentIdentifier(null)
       }

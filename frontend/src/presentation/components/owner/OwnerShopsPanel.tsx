@@ -3,10 +3,13 @@ import { useState } from 'react'
 import { Plus, Store } from 'lucide-react'
 import type { ShopService } from '../../../application/services/ShopService'
 import type { Shop } from '../../../domain/models/Shop'
+import type { SaveShopPricingInput } from '../../../domain/models/ShopPricing'
 import { Button, Card, EmptyState } from '../../design/ui'
 import { useOwnerShopManagement } from '../../hooks/useOwnerShopManagement'
+import { runServiceActionWithToast } from '../../utilities/runServiceActionWithToast'
 import { AddShopModal } from './AddShopModal'
 import { OwnerShopListItem } from './OwnerShopListItem'
+import { ShopPricingEditor } from './ShopPricingEditor'
 
 interface OwnerShopsPanelProps {
   readonly ownerIdentifier: string
@@ -22,6 +25,8 @@ export function OwnerShopsPanel({
   onOwnerShopListChanged,
 }: OwnerShopsPanelProps): ReactElement {
   const [isAddShopModalOpen, setIsAddShopModalOpen] = useState<boolean>(false)
+  const [shopBeingPriced, setShopBeingPriced] = useState<Shop | null>(null)
+  const [isSavingPricing, setIsSavingPricing] = useState<boolean>(false)
 
   const {
     isSubmittingShopCreation,
@@ -36,6 +41,33 @@ export function OwnerShopsPanel({
     ownerShopList,
     onOwnerShopListChanged,
   })
+
+  const savePricingForShop = async (
+    pricingInput: SaveShopPricingInput,
+  ): Promise<void> => {
+    if (!shopBeingPriced) {
+      return
+    }
+
+    setIsSavingPricing(true)
+    const updatedShop = await runServiceActionWithToast(
+      () => shopService.saveShopPricing(shopBeingPriced.id, pricingInput),
+      {
+        successMessage: 'Shop rates saved.',
+        fallbackErrorMessage: 'Could not save shop rates.',
+      },
+    )
+    setIsSavingPricing(false)
+
+    if (updatedShop) {
+      onOwnerShopListChanged(
+        ownerShopList.map((shop) =>
+          shop.id === updatedShop.id ? updatedShop : shop,
+        ),
+      )
+      setShopBeingPriced(null)
+    }
+  }
 
   return (
     <Card elevation="raised" className="space-y-4">
@@ -52,7 +84,9 @@ export function OwnerShopsPanel({
         <Button
           size="sm"
           leadingIcon={<Plus className="h-4 w-4" />}
-          onClick={() => setIsAddShopModalOpen(true)}
+          onClick={(): void => {
+            setIsAddShopModalOpen(true)
+          }}
         >
           Add shop
         </Button>
@@ -66,7 +100,9 @@ export function OwnerShopsPanel({
           primaryAction={
             <Button
               leadingIcon={<Plus className="h-4 w-4" />}
-              onClick={() => setIsAddShopModalOpen(true)}
+              onClick={(): void => {
+                setIsAddShopModalOpen(true)
+              }}
             >
               Add your first shop
             </Button>
@@ -83,6 +119,7 @@ export function OwnerShopsPanel({
               onToggleActiveStatus={(targetShop) =>
                 void toggleShopActiveStatus(targetShop)
               }
+              onConfigurePricing={setShopBeingPriced}
               onRemoveShop={(targetShop) => void removeShop(targetShop)}
             />
           ))}
@@ -92,13 +129,27 @@ export function OwnerShopsPanel({
       <AddShopModal
         isOpen={isAddShopModalOpen}
         isSubmitting={isSubmittingShopCreation}
-        onClose={() => setIsAddShopModalOpen(false)}
-        onShopSetupSubmitted={async (createShopInput) => {
-          const createdShop = await createShopForOwner(createShopInput)
-          if (createdShop !== null) {
-            setIsAddShopModalOpen(false)
+        onClose={(): void => {
+          setIsAddShopModalOpen(false)
+        }}
+        onShopSetupSubmitted={(createShopInput): void => {
+          void (async (): Promise<void> => {
+            const createdShop = await createShopForOwner(createShopInput)
+            if (createdShop !== null) {
+              setIsAddShopModalOpen(false)
+            }
+          })()
+        }}
+      />
+      <ShopPricingEditor
+        shop={shopBeingPriced}
+        isSaving={isSavingPricing}
+        onClose={(): void => {
+          if (!isSavingPricing) {
+            setShopBeingPriced(null)
           }
         }}
+        onSave={savePricingForShop}
       />
     </Card>
   )

@@ -6,7 +6,7 @@ export const CreateBookingInputSchema = z.object({
   serviceType: z.string().trim().min(1, 'Service type is required').max(100),
   address: z.string().trim().min(1, 'Address is required').max(200),
   time: z.string().trim().min(1, 'Time is required').max(100),
-  shopIdentifier: z.string().uuid().nullable(),
+  shopIdentifier: z.uuid().nullable(),
   latitude: z.number().nullable().refine(
     (value) => value === null || (value >= -90 && value <= 90),
     { message: 'Latitude must be between -90 and 90' },

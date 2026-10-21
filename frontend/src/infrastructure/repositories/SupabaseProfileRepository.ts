@@ -60,7 +60,7 @@ export class SupabaseProfileRepository implements ProfileRepository {
 
     return {
       userIdentifier: profileRow.id,
-      emailAddress: session?.user?.email ?? '',
+      emailAddress: session?.user.email ?? '',
       role: profileRow.role,
       fullName: profileRow.full_name,
       phoneNumber: profileRow.phone_number,

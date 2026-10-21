@@ -52,7 +52,9 @@ export function OwnerWorkersPanel({
             size="sm"
             variant="secondary"
             leadingIcon={<Plus className="h-4 w-4" />}
-            onClick={() => setIsAddingWorker(true)}
+            onClick={(): void => {
+              setIsAddingWorker(true)
+            }}
           >
             Add worker
           </Button>
@@ -62,12 +64,16 @@ export function OwnerWorkersPanel({
       {isAddingWorker ? (
         <AddWorkerInlineForm
           isSubmitting={isSubmittingWorkerCreation}
-          onCancelAddingWorker={() => setIsAddingWorker(false)}
-          onSubmitWorker={async (createWorkerInput) => {
-            const createdWorker = await createWorkerForOwner(createWorkerInput)
-            if (createdWorker !== null) {
-              setIsAddingWorker(false)
-            }
+          onCancelAddingWorker={(): void => {
+            setIsAddingWorker(false)
+          }}
+          onSubmitWorker={(createWorkerInput): void => {
+            void (async (): Promise<void> => {
+              const createdWorker = await createWorkerForOwner(createWorkerInput)
+              if (createdWorker !== null) {
+                setIsAddingWorker(false)
+              }
+            })()
           }}
         />
       ) : null}

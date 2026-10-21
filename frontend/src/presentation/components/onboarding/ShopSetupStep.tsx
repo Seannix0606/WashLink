@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, SyntheticEvent } from 'react'
 import { useCallback, useState } from 'react'
 import {
   Crosshair,
@@ -78,7 +78,7 @@ export function ShopSetupStep({
   })
 
   const handleSubmit = (
-    submitEvent: React.FormEvent<HTMLFormElement>,
+    submitEvent: SyntheticEvent<HTMLFormElement>,
   ): void => {
     submitEvent.preventDefault()
 
@@ -137,9 +137,9 @@ export function ShopSetupStep({
           required
           leadingIcon={<Sparkles className="h-4 w-4" />}
           value={shopName}
-          onChange={(inputChangeEvent) =>
+          onChange={(inputChangeEvent): void => {
             setShopName(inputChangeEvent.target.value)
-          }
+          }}
         />
 
         <Input
@@ -148,9 +148,9 @@ export function ShopSetupStep({
           placeholder="e.g. +63 917 555 0100"
           leadingIcon={<Phone className="h-4 w-4" />}
           value={shopPhoneNumber}
-          onChange={(inputChangeEvent) =>
+          onChange={(inputChangeEvent): void => {
             setShopPhoneNumber(inputChangeEvent.target.value)
-          }
+          }}
         />
       </Card>
 
@@ -181,12 +181,12 @@ export function ShopSetupStep({
               ? { latitude: pickedLatitude, longitude: pickedLongitude }
               : null
           }
-          onPickedLocationChanged={(nextPickedLocation) =>
+          onPickedLocationChanged={(nextPickedLocation): void => {
             void handleCoordinatesSelected(
               nextPickedLocation.latitude,
               nextPickedLocation.longitude,
             )
-          }
+          }}
         />
 
         <Input
@@ -196,9 +196,9 @@ export function ShopSetupStep({
           required
           leadingIcon={<MapPin className="h-4 w-4" />}
           value={shopAddress}
-          onChange={(inputChangeEvent) =>
+          onChange={(inputChangeEvent): void => {
             setShopAddress(inputChangeEvent.target.value)
-          }
+          }}
           helperText={
             isResolvingAddress
               ? 'Resolving address from your pin…'

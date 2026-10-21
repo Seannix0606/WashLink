@@ -23,7 +23,7 @@ export function ResetPasswordPage(): ReactElement {
       return null
     }
     if (newPassword.length < minimumPasswordLength) {
-      return `Password must be at least ${minimumPasswordLength} characters.`
+      return `Password must be at least ${String(minimumPasswordLength)} characters.`
     }
     if (
       confirmedNewPassword.length > 0 &&
@@ -100,11 +100,11 @@ export function ResetPasswordPage(): ReactElement {
               name="newPassword"
               type={passwordInputType}
               value={newPassword}
-              onChange={(changeEvent) =>
+              onChange={(changeEvent): void => {
                 setNewPassword(changeEvent.target.value)
-              }
+              }}
               leadingIcon={<KeyRound className="h-4 w-4" />}
-              helperText={`At least ${minimumPasswordLength} characters.`}
+              helperText={`At least ${String(minimumPasswordLength)} characters.`}
               autoComplete="new-password"
               required
               trailingAccessory={
@@ -113,9 +113,9 @@ export function ResetPasswordPage(): ReactElement {
                   aria-label={
                     isPasswordVisible ? 'Hide passwords' : 'Show passwords'
                   }
-                  onClick={() =>
+                  onClick={(): void => {
                     setIsPasswordVisible((previous) => !previous)
-                  }
+                  }}
                   className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-ink-500)] transition-colors hover:bg-[var(--color-surface-muted)]"
                 >
                   {isPasswordVisible ? (
@@ -132,9 +132,9 @@ export function ResetPasswordPage(): ReactElement {
               name="confirmedNewPassword"
               type={passwordInputType}
               value={confirmedNewPassword}
-              onChange={(changeEvent) =>
+              onChange={(changeEvent): void => {
                 setConfirmedNewPassword(changeEvent.target.value)
-              }
+              }}
               leadingIcon={<KeyRound className="h-4 w-4" />}
               errorText={validationErrorMessage ?? undefined}
               autoComplete="new-password"

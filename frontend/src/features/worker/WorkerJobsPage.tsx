@@ -29,6 +29,7 @@ export function WorkerJobsPage({
 
   const {
     workerIdentifier,
+    workerDisplayName,
     isResolvingWorkerProfile,
     workerResolutionErrorMessage,
     hasResolvedWorkerProfile,
@@ -50,7 +51,7 @@ export function WorkerJobsPage({
 
   return (
     <WorkerJobsPageContent
-      ownerDisplayName={authenticatedUser?.fullName ?? null}
+      workerDisplayName={workerDisplayName ?? authenticatedUser?.fullName ?? null}
       workerIdentifier={workerIdentifier}
       bookingService={bookingService}
       workerService={workerService}
@@ -59,7 +60,7 @@ export function WorkerJobsPage({
 }
 
 interface WorkerJobsPageContentProps {
-  readonly ownerDisplayName: string | null
+  readonly workerDisplayName: string | null
   readonly workerIdentifier: string
   readonly bookingService: ReturnType<
     typeof createWorkerJobsDependencies
@@ -70,7 +71,7 @@ interface WorkerJobsPageContentProps {
 }
 
 function WorkerJobsPageContent({
-  ownerDisplayName,
+  workerDisplayName,
   workerIdentifier,
   bookingService,
   workerService,
@@ -106,7 +107,7 @@ function WorkerJobsPageContent({
     <AppShell topBar={<AuthenticatedTopBar />}>
       <div className="space-y-6">
         <WorkerGreetingBanner
-          workerDisplayName={ownerDisplayName}
+          workerDisplayName={workerDisplayName}
           isAvailableForJobs={isWorkerAvailableForJobs}
           isAvailabilityInteractionDisabled={
             isAvailabilityInteractionDisabled

@@ -4,6 +4,11 @@ import type {
   ShopVerificationStatus,
   UpdateShopInput,
 } from '../../domain/models/Shop'
+import type { SaveShopPricingInput } from '../../domain/models/ShopPricing'
+import {
+  mapSupabaseShopPricingRows,
+  type SupabaseShopPricingRow,
+} from '../supabase/supabaseShopPricing'
 import type { ShopRepository } from '../../domain/repositories/ShopRepository'
 import { getSupabaseClient } from '../supabase/supabaseClient'
 
@@ -22,10 +27,11 @@ interface SupabaseShopRow {
   verification_submitted_at: string | null
   verification_reviewed_at: string | null
   verification_reviewed_by: string | null
+  shop_pricing: SupabaseShopPricingRow[]
 }
 
 const supabaseShopSelectColumns =
-  'id, owner_id, name, address, phone_number, latitude, longitude, is_active, created_at, verification_status, verification_notes, verification_submitted_at, verification_reviewed_at, verification_reviewed_by'
+  'id, owner_id, name, address, phone_number, latitude, longitude, is_active, created_at, verification_status, verification_notes, verification_submitted_at, verification_reviewed_at, verification_reviewed_by, shop_pricing!shop_pricing_shop_id_fkey(vehicle_type, service_type, price)'
 
 const shopVerificationStatusSet: ReadonlySet<ShopVerificationStatus> = new Set<
   ShopVerificationStatus
@@ -189,6 +195,42 @@ export class SupabaseShopRepository implements ShopRepository {
     return mapSupabaseShopRowToShop(data as SupabaseShopRow)
   }
 
+  public async saveShopPricing(
+    shopIdentifier: string,
+    saveShopPricingInput: SaveShopPricingInput,
+  ): Promise<Shop> {
+    const pricingRows = saveShopPricingInput.prices.map((shopServicePrice) => ({
+      shop_id: shopIdentifier,
+      vehicle_type: shopServicePrice.vehicleType,
+      service_type: shopServicePrice.serviceType,
+      price: shopServicePrice.price,
+    }))
+
+    const { error: savePricingError } = await getSupabaseClient()
+      .from('shop_pricing')
+      .upsert(pricingRows, {
+        onConflict: 'shop_id,vehicle_type,service_type',
+      })
+
+    if (savePricingError) {
+      throw new Error(`Failed to save shop pricing: ${savePricingError.message}`)
+    }
+
+    const { data, error: fetchShopError } = await getSupabaseClient()
+      .from('shops')
+      .select(supabaseShopSelectColumns)
+      .eq('id', shopIdentifier)
+      .single()
+
+    if (fetchShopError) {
+      throw new Error(
+        `Pricing was saved, but the shop could not be refreshed: ${fetchShopError.message}`,
+      )
+    }
+
+    return mapSupabaseShopRowToShop(data as SupabaseShopRow)
+  }
+
   public async deleteShop(shopIdentifier: string): Promise<void> {
     const { error } = await getSupabaseClient()
       .from('shops')
@@ -219,5 +261,6 @@ function mapSupabaseShopRowToShop(shopRow: SupabaseShopRow): Shop {
     verificationSubmittedAt: shopRow.verification_submitted_at,
     verificationReviewedAt: shopRow.verification_reviewed_at,
     verificationReviewedBy: shopRow.verification_reviewed_by,
+    servicePricing: mapSupabaseShopPricingRows(shopRow.shop_pricing),
   }
 }

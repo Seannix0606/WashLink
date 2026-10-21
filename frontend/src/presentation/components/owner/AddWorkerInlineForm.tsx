@@ -43,9 +43,9 @@ export function AddWorkerInlineForm({
           placeholder="Full name"
           leadingIcon={<UserCircle2 className="h-4 w-4" />}
           value={workerNameDraft}
-          onChange={(inputChangeEvent) =>
+          onChange={(inputChangeEvent): void => {
             setWorkerNameDraft(inputChangeEvent.target.value)
-          }
+          }}
         />
         <Input
           name="newWorkerPhone"
@@ -53,9 +53,9 @@ export function AddWorkerInlineForm({
           placeholder="e.g. +63 917 555 0101"
           leadingIcon={<Phone className="h-4 w-4" />}
           value={workerPhoneDraft}
-          onChange={(inputChangeEvent) =>
+          onChange={(inputChangeEvent): void => {
             setWorkerPhoneDraft(inputChangeEvent.target.value)
-          }
+          }}
         />
       </div>
       <div className="flex justify-end gap-2">

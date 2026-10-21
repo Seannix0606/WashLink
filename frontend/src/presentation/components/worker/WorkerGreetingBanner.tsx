@@ -28,7 +28,7 @@ export function WorkerGreetingBanner({
       ? 'No active jobs right now.'
       : activeJobCount === 1
         ? 'You have 1 active job today.'
-        : `You have ${activeJobCount} active jobs today.`
+        : `You have ${String(activeJobCount)} active jobs today.`
 
   return (
     <div className="rounded-[var(--radius-surface)] bg-[linear-gradient(135deg,var(--color-brand-700),var(--color-brand-900))] p-5 text-white shadow-[var(--shadow-card)] sm:p-6">

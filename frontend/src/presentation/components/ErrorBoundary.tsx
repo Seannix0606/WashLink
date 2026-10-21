@@ -26,11 +26,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error('ErrorBoundary caught an error', error, errorInfo)
   }
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       return (
         <main className="mx-auto flex min-h-[100dvh] max-w-lg flex-col items-center justify-center px-5 py-8 text-center sm:px-6">
@@ -43,7 +43,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={(): void => {
+                window.location.reload()
+              }}
               className="mt-6 inline-flex rounded-full bg-[var(--color-brand-600)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--color-brand-700)]"
             >
               Reload page

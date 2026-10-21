@@ -36,12 +36,12 @@ export function formatRelativeTimeFromNow(rawTimestamp: string): string {
     return 'just now'
   }
   if (deltaMinutes < 60) {
-    return `${deltaMinutes} min ago`
+    return `${String(deltaMinutes)} min ago`
   }
   const deltaHours = Math.round(deltaMinutes / 60)
   if (deltaHours < 24) {
-    return `${deltaHours} h ago`
+    return `${String(deltaHours)} h ago`
   }
   const deltaDays = Math.round(deltaHours / 24)
-  return `${deltaDays} d ago`
+  return `${String(deltaDays)} d ago`
 }

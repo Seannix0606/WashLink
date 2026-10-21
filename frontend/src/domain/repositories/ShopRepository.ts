@@ -3,6 +3,7 @@ import type {
   Shop,
   UpdateShopInput,
 } from '../models/Shop'
+import type { SaveShopPricingInput } from '../models/ShopPricing'
 
 export interface ShopRepository {
   listActiveShops(): Promise<readonly Shop[]>
@@ -15,5 +16,9 @@ export interface ShopRepository {
     createShopInput: CreateShopInput,
   ): Promise<Shop>
   updateShop(shopIdentifier: string, updateShopInput: UpdateShopInput): Promise<Shop>
+  saveShopPricing(
+    shopIdentifier: string,
+    saveShopPricingInput: SaveShopPricingInput,
+  ): Promise<Shop>
   deleteShop(shopIdentifier: string): Promise<void>
 }

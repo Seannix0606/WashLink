@@ -32,7 +32,7 @@ function formatFileSize(fileSizeBytes: number | null): string {
     return ''
   }
   if (fileSizeBytes < 1024) {
-    return `${fileSizeBytes} B`
+    return `${String(fileSizeBytes)} B`
   }
   if (fileSizeBytes < 1024 * 1024) {
     return `${(fileSizeBytes / 1024).toFixed(1)} KB`
@@ -62,8 +62,8 @@ export function ShopVerificationDocumentSlot({
     }
     if (selectedFile.size > maxFileSizeBytes) {
       window.alert(
-        `File is too large. Please upload a file under ${Math.round(
-          maxFileSizeBytes / (1024 * 1024),
+        `File is too large. Please upload a file under ${String(
+          Math.round(maxFileSizeBytes / (1024 * 1024)),
         )} MB.`,
       )
       return
@@ -91,13 +91,15 @@ export function ShopVerificationDocumentSlot({
         </div>
       </div>
 
-      {hasExistingDocument && existingDocument !== null ? (
+      {hasExistingDocument ? (
         <div className="mt-3 flex items-start justify-between gap-2 rounded-[var(--radius-control)] bg-[var(--color-surface-muted)] p-2.5">
           <div className="min-w-0">
             <button
               type="button"
               className="truncate text-left text-sm font-medium text-[var(--color-brand-800)] underline-offset-2 hover:underline"
-              onClick={() => onRequestPreviewDocument(existingDocument)}
+              onClick={(): void => {
+                onRequestPreviewDocument(existingDocument)
+              }}
             >
               {existingDocument.fileName ?? 'View document'}
             </button>
@@ -116,7 +118,9 @@ export function ShopVerificationDocumentSlot({
               leadingIcon={<Trash2 className="h-4 w-4" />}
               isLoading={isDeletingThisDocument}
               disabled={isDeletingThisDocument || isUploadingThisDocumentType}
-              onClick={() => onRequestDeleteDocument(existingDocument.id)}
+              onClick={(): void => {
+                onRequestDeleteDocument(existingDocument.id)
+              }}
             >
               Remove
             </Button>
@@ -146,12 +150,14 @@ export function ShopVerificationDocumentSlot({
             disabled={
               isUploadingThisDocumentType || isDeletingThisDocument
             }
-            onClick={() => fileInputRef.current?.click()}
+            onClick={(): void => {
+              fileInputRef.current?.click()
+            }}
           >
             {uploadActionLabel} {documentTypeDefinition.displayLabel.toLowerCase()}
           </Button>
           <p className="mt-1 text-[11px] text-[var(--color-ink-500)]">
-            PDF or image, up to {Math.round(maxFileSizeBytes / (1024 * 1024))} MB.
+            PDF or image, up to {String(Math.round(maxFileSizeBytes / (1024 * 1024)))} MB.
           </p>
         </div>
       ) : null}

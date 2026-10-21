@@ -26,7 +26,7 @@ export function CustomerBookingRatingBlock({
     return null
   }
 
-  if (hasExistingRating && booking.customerRatingStars !== null) {
+  if (hasExistingRating) {
     return (
       <div className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] p-3">
         <div className="flex items-center justify-between gap-2">
@@ -72,7 +72,9 @@ export function CustomerBookingRatingBlock({
             leadingIcon={<Star className="h-4 w-4" />}
             isLoading={isSubmittingRatingForThisBooking}
             disabled={isSubmittingRatingForThisBooking}
-            onClick={() => onRequestRateBooking(booking)}
+            onClick={(): void => {
+              onRequestRateBooking(booking)
+            }}
           >
             Rate your wash
           </Button>

@@ -15,6 +15,7 @@ import { BookingDetailDrawer } from './BookingDetailDrawer'
 import { OwnerDashboardBookingsSection } from './OwnerDashboardBookingsSection'
 import { OwnerDashboardKpiStrip } from './OwnerDashboardKpiStrip'
 import { OwnerDashboardTopBar } from './OwnerDashboardTopBar'
+import { OwnerShopSetupNotice } from './OwnerShopSetupNotice'
 import { OwnerShopsPanel } from './OwnerShopsPanel'
 import { OwnerWorkersPanel } from './OwnerWorkersPanel'
 
@@ -134,11 +135,18 @@ export function OwnerDashboardContent({
           </p>
         </header>
 
+        <OwnerShopSetupNotice
+          ownerShopList={ownerShopList}
+          onSetupRequested={(): void => {
+            setSelectedPrimaryTab('shops')
+          }}
+        />
+
         <OwnerVerificationBanner
           ownerShopList={ownerShopList}
-          onReviewVerificationRequested={() =>
+          onReviewVerificationRequested={(): void => {
             setSelectedPrimaryTab('verification')
-          }
+          }}
         />
 
         <OwnerDashboardKpiStrip bookings={bookings} workers={workers} />
@@ -195,7 +203,9 @@ export function OwnerDashboardContent({
         isOpen={selectedBookingIdentifier !== null}
         booking={selectedBooking}
         workers={workers}
-        onClose={() => setSelectedBookingIdentifier(null)}
+        onClose={(): void => {
+          setSelectedBookingIdentifier(null)
+        }}
         onAcceptBooking={acceptOwnerBooking}
         onRejectBooking={rejectOwnerBooking}
         onAssignWorkerToBooking={assignWorkerToOwnerBooking}

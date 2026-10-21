@@ -40,7 +40,7 @@ function resolveOwnerVerificationBannerCopy(
       iconNode: <ShieldAlert className="h-5 w-5" />,
       containerClassName:
         'border-[var(--color-danger-500)] bg-[var(--color-danger-50)] text-[var(--color-danger-600)]',
-      titleText: `${rejectedShopCount} shop${
+      titleText: `${String(rejectedShopCount)} shop${
         rejectedShopCount === 1 ? '' : 's'
       } rejected`,
       descriptionText:
@@ -52,7 +52,7 @@ function resolveOwnerVerificationBannerCopy(
       iconNode: <AlertTriangle className="h-5 w-5" />,
       containerClassName:
         'border-[var(--color-warning-500)] bg-[var(--color-warning-50)] text-[var(--color-warning-600)]',
-      titleText: `Changes requested for ${changesRequestedShopCount} shop${
+      titleText: `Changes requested for ${String(changesRequestedShopCount)} shop${
         changesRequestedShopCount === 1 ? '' : 's'
       }`,
       descriptionText:
@@ -64,7 +64,7 @@ function resolveOwnerVerificationBannerCopy(
       iconNode: <ShieldCheck className="h-5 w-5" />,
       containerClassName:
         'border-[var(--color-brand-400)] bg-[var(--color-brand-50)] text-[var(--color-brand-800)]',
-      titleText: `${pendingShopCount} shop${
+      titleText: `${String(pendingShopCount)} shop${
         pendingShopCount === 1 ? '' : 's'
       } awaiting review`,
       descriptionText:

@@ -7,6 +7,7 @@ interface ShopPickerRowProps {
   readonly subtitle: string
   readonly leadingIcon: ReactElement
   readonly trailingMeta: ReactElement | null
+  readonly isDisabled?: boolean
   readonly onClick: () => void
 }
 
@@ -16,16 +17,20 @@ export function ShopPickerRow({
   subtitle,
   leadingIcon,
   trailingMeta,
+  isDisabled = false,
   onClick,
 }: ShopPickerRowProps): ReactElement {
   return (
     <button
       type="button"
+      disabled={isDisabled}
       onClick={onClick}
       aria-pressed={isSelected}
       className={joinClassNames(
         'flex w-full items-start gap-3 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all',
-        isSelected
+        isDisabled
+          ? 'cursor-not-allowed border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] opacity-60'
+          : isSelected
           ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
           : 'border-[var(--color-ink-200)] bg-white hover:border-[var(--color-brand-300)]',
       )}
@@ -33,7 +38,7 @@ export function ShopPickerRow({
       <span
         className={joinClassNames(
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-          isSelected
+          isSelected && !isDisabled
             ? 'bg-[var(--color-brand-700)] text-white'
             : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]',
         )}

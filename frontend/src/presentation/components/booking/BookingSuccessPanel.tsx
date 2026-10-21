@@ -15,6 +15,7 @@ import {
   findServiceOptionByValue,
   findVehicleOptionByValue,
 } from './bookingCatalog'
+import { formatShopPrice } from '../../utilities/formatShopPrice'
 
 interface BookingSuccessPanelProps {
   readonly submittedBooking: Booking
@@ -92,6 +93,11 @@ export function BookingSuccessPanel({
             icon={<Clock className="h-4 w-4" />}
             label="Estimated duration"
             value={serviceOption?.durationLabel ?? '—'}
+          />
+          <BookingSummaryRow
+            icon={<Sparkles className="h-4 w-4" />}
+            label="Quoted price"
+            value={formatShopPrice(submittedBooking.quotedPrice)}
           />
           <BookingSummaryRow
             icon={<UserCheck className="h-4 w-4" />}

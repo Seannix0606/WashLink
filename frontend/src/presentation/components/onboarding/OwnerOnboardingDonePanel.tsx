@@ -39,7 +39,10 @@ export function OwnerOnboardingDonePanel({
           <CheckCircle2 className="h-4 w-4 text-[var(--color-brand-700)]" />
           <span>
             {createdWorkerCount > 0
-              ? `${createdWorkerCount} worker${createdWorkerCount === 1 ? '' : 's'} added`
+              ? createdWorkerCount.toString() +
+                ' worker' +
+                (createdWorkerCount === 1 ? '' : 's') +
+                ' added'
               : 'Workers can be added anytime from your dashboard'}
           </span>
         </li>

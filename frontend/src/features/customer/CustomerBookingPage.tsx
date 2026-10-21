@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { useCallback, useMemo, useState } from 'react'
-import { Clock3, Sparkles, User } from 'lucide-react'
+import { Clock3, House, Sparkles, User } from 'lucide-react'
 import type { Booking, BookingStatus } from '../../domain/models/Booking'
 import { createCustomerBookingDependencies } from '../../presentation/dependencyInjection/createCustomerBookingDependencies'
 import { useActiveShopsLoader } from '../../presentation/hooks/useActiveShopsLoader'
@@ -10,6 +10,7 @@ import { useSubmitBookingRating } from '../../presentation/hooks/useSubmitBookin
 import { useAuthenticatedUser } from '../../presentation/auth/AuthenticatedUserContext'
 import { AuthenticatedTopBar } from '../../presentation/components/AuthenticatedTopBar'
 import { CustomerBookTab } from '../../presentation/components/customer/CustomerBookTab'
+import { CustomerHomeTab } from '../../presentation/components/customer/CustomerHomeTab'
 import { CustomerHistoryTab } from '../../presentation/components/customer/CustomerHistoryTab'
 import { CustomerProfilePanel } from '../../presentation/components/customer/CustomerProfilePanel'
 import { RateBookingModal } from '../../presentation/components/rating/RateBookingModal'
@@ -20,7 +21,7 @@ import {
   type BottomNavItemDefinition,
 } from '../../presentation/design/ui'
 
-type CustomerNavTabKey = 'book' | 'history' | 'profile'
+type CustomerNavTabKey = 'home' | 'book' | 'history' | 'profile'
 
 const activeBookingStatusSetForBadge: ReadonlySet<BookingStatus> =
   new Set<BookingStatus>(['pending', 'accepted', 'in_progress'])
@@ -33,7 +34,7 @@ export function CustomerBookingPage({
   customerIdentifier,
 }: CustomerBookingPageProps): ReactElement {
   const { authenticatedUser } = useAuthenticatedUser()
-  const [activeNavTab, setActiveNavTab] = useState<CustomerNavTabKey>('book')
+  const [activeNavTab, setActiveNavTab] = useState<CustomerNavTabKey>('home')
 
   const { bookingService, shopService } = useMemo(
     () => createCustomerBookingDependencies(customerIdentifier),
@@ -90,7 +91,7 @@ export function CustomerBookingPage({
     [cancelPendingBooking],
   )
 
-  const handleRebookFromBooking = useCallback((_booking: Booking): void => {
+  const handleRebookFromBooking = useCallback((): void => {
     setActiveNavTab('book')
   }, [])
 
@@ -103,6 +104,7 @@ export function CustomerBookingPage({
   const customerNavItemDefinitions: readonly BottomNavItemDefinition<CustomerNavTabKey>[] =
     useMemo(
       () => [
+        { value: 'home', label: 'Home', icon: <House className="h-5 w-5" /> },
         { value: 'book', label: 'Book', icon: <Sparkles className="h-5 w-5" /> },
         {
           value: 'history',
@@ -128,6 +130,23 @@ export function CustomerBookingPage({
         />
       }
     >
+      {activeNavTab === 'home' ? (
+        <CustomerHomeTab
+          customerFullName={customerFullName}
+          customerBookings={customerBookings}
+          isLoadingBookings={isLoadingCustomerBookings}
+          bookingsLoadErrorMessage={customerBookingsLoadErrorMessage}
+          availableShops={availableShops}
+          isLoadingShops={isLoadingShops}
+          onStartBooking={() => {
+            setActiveNavTab('book')
+          }}
+          onViewBookings={() => {
+            setActiveNavTab('history')
+          }}
+        />
+      ) : null}
+
       {activeNavTab === 'book' ? (
         <CustomerBookTab
           bookingService={bookingService}
@@ -135,6 +154,9 @@ export function CustomerBookingPage({
           customerFullName={customerFullName}
           availableShops={availableShops}
           isLoadingShops={isLoadingShops}
+          onBackToDashboard={() => {
+            setActiveNavTab('home')
+          }}
         />
       ) : null}
 
@@ -159,16 +181,18 @@ export function CustomerBookingPage({
         <CustomerProfilePanel authenticatedUser={authenticatedUser} />
       ) : null}
 
-      <RateBookingModal
-        isOpen={bookingPendingRating !== null}
-        booking={bookingPendingRating}
-        isSubmittingRating={
-          bookingPendingRating !== null &&
-          submittingRatingForBookingIdentifier === bookingPendingRating.id
-        }
-        onClose={handleCloseRateBookingModal}
-        onSubmitRating={submitBookingRating}
-      />
+      {bookingPendingRating !== null ? (
+        <RateBookingModal
+          key={bookingPendingRating.id}
+          isOpen
+          booking={bookingPendingRating}
+          isSubmittingRating={
+            submittingRatingForBookingIdentifier === bookingPendingRating.id
+          }
+          onClose={handleCloseRateBookingModal}
+          onSubmitRating={submitBookingRating}
+        />
+      ) : null}
     </AppShell>
   )
 }

@@ -39,7 +39,9 @@ export function Tabs<TabValue extends string>({
             role="tab"
             type="button"
             aria-selected={isActive}
-            onClick={() => onTabChange(tabItem.value)}
+            onClick={(): void => {
+              onTabChange(tabItem.value)
+            }}
             className={joinClassNames(
               'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
               isActive

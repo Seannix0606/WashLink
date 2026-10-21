@@ -1,5 +1,4 @@
-import type { ReactElement } from 'react'
-import { lazy, Suspense } from 'react'
+import { Fragment, createElement, lazy, Suspense, type ReactElement } from 'react'
 import { isSupabaseConfigured } from './infrastructure/supabase/supabaseClient'
 import {
   AuthenticatedUserProvider,
@@ -28,44 +27,45 @@ const SuperAdminDashboardPage = lazy(async () => ({
 }))
 
 function SupabaseEnvMissingScreen(): ReactElement {
-  return (
-    <main className="mx-auto flex min-h-[100dvh] max-w-lg flex-col justify-center px-5 py-8 sm:px-6">
-      <h1 className="text-2xl font-bold text-[var(--color-ink-900)]">
-        WashLink needs Supabase settings
-      </h1>
-      <p className="mt-3 text-sm leading-relaxed text-[var(--color-ink-500)]">
-        The app was not loading because the Supabase URL and anon key were missing.
-        Copy{' '}
-        <code className="rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-xs">
-          .env.example
-        </code>{' '}
-        to{' '}
-        <code className="rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-xs">
-          .env
-        </code>{' '}
-        in the project root, then set{' '}
-        <code className="rounded bg-[var(--color-warning-50)] px-1.5 py-0.5 text-xs">
-          VITE_SUPABASE_URL
-        </code>{' '}
-        and{' '}
-        <code className="rounded bg-[var(--color-warning-50)] px-1.5 py-0.5 text-xs">
-          VITE_SUPABASE_ANON_KEY
-        </code>
-        . Restart{' '}
-        <code className="rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-xs">
-          npm run dev
-        </code>{' '}
-        after saving.
-      </p>
-    </main>
+  return createElement(
+    'main',
+    { className: 'mx-auto flex min-h-[100dvh] max-w-lg flex-col justify-center px-5 py-8 sm:px-6' },
+    createElement('h1', { className: 'text-2xl font-bold text-[var(--color-ink-900)]' }, 'WashLink needs Supabase settings'),
+    createElement(
+      'p',
+      { className: 'mt-3 text-sm leading-relaxed text-[var(--color-ink-500)]' },
+      'The app was not loading because the Supabase URL and anon key were missing. Copy',
+      ' ',
+      createElement('code', { className: 'rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-xs' }, '.env.example'),
+      ' ',
+      'to',
+      ' ',
+      createElement('code', { className: 'rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-xs' }, '.env'),
+      ' ',
+      'in the project root, then set',
+      ' ',
+      createElement('code', { className: 'rounded bg-[var(--color-warning-50)] px-1.5 py-0.5 text-xs' }, 'VITE_SUPABASE_URL'),
+      ' ',
+      'and',
+      ' ',
+      createElement('code', { className: 'rounded bg-[var(--color-warning-50)] px-1.5 py-0.5 text-xs' }, 'VITE_SUPABASE_ANON_KEY'),
+      '. Restart',
+      ' ',
+      createElement('code', { className: 'rounded bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-xs' }, 'npm run dev'),
+      ' ',
+      'after saving.',
+    ),
   )
 }
 
 function PageLoadingFallback(): ReactElement {
-  return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--color-surface-sunken)]">
-      <span className="inline-flex h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-brand-600)] border-t-transparent" />
-    </div>
+  return createElement(
+    'div',
+    { className: 'flex min-h-[100dvh] items-center justify-center bg-[var(--color-surface-sunken)]' },
+    createElement('span', {
+      className:
+        'inline-flex h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-brand-600)] border-t-transparent',
+    }),
   )
 }
 
@@ -77,72 +77,83 @@ function AppContent(): ReactElement {
   } = useAuthenticatedUser()
 
   if (isInitializingAuthState) {
-    return <PageLoadingFallback />
+    return createElement(PageLoadingFallback)
   }
 
   if (isPasswordRecoveryInProgress) {
-    return (
-      <Suspense fallback={<PageLoadingFallback />}>
-        <ResetPasswordPage />
-      </Suspense>
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(ResetPasswordPage),
     )
   }
 
   if (!authenticatedUser) {
-    return (
-      <Suspense fallback={<PageLoadingFallback />}>
-        <AuthLandingPage />
-      </Suspense>
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(AuthLandingPage),
     )
   }
 
   if (authenticatedUser.role === 'super_admin') {
-    return (
-      <Suspense fallback={<PageLoadingFallback />}>
-        <SuperAdminDashboardPage
-          superAdminIdentifier={authenticatedUser.userIdentifier}
-        />
-      </Suspense>
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(SuperAdminDashboardPage, {
+        superAdminIdentifier: authenticatedUser.userIdentifier,
+      }),
     )
   }
+
   if (authenticatedUser.role === 'owner') {
-    return (
-      <Suspense fallback={<PageLoadingFallback />}>
-        <OwnerDashboardPage ownerIdentifier={authenticatedUser.userIdentifier} />
-      </Suspense>
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(OwnerDashboardPage, {
+        ownerIdentifier: authenticatedUser.userIdentifier,
+      }),
     )
   }
+
   if (authenticatedUser.role === 'worker') {
-    return (
-      <Suspense fallback={<PageLoadingFallback />}>
-        <WorkerJobsPage workerUserIdentifier={authenticatedUser.userIdentifier} />
-      </Suspense>
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(WorkerJobsPage, {
+        workerUserIdentifier: authenticatedUser.userIdentifier,
+      }),
     )
   }
-  return (
-    <Suspense fallback={<PageLoadingFallback />}>
-      <CustomerBookingPage customerIdentifier={authenticatedUser.userIdentifier} />
-    </Suspense>
+
+  return createElement(
+    Suspense,
+    { fallback: createElement(PageLoadingFallback) },
+    createElement(CustomerBookingPage, {
+      customerIdentifier: authenticatedUser.userIdentifier,
+    }),
   )
 }
 
 function App(): ReactElement {
   if (!isSupabaseConfigured) {
-    return (
-      <>
-        <SupabaseEnvMissingScreen />
-        <ApplicationToaster />
-      </>
+    return createElement(
+      Fragment,
+      null,
+      createElement(SupabaseEnvMissingScreen),
+      createElement(ApplicationToaster),
     )
   }
 
-  return (
-    <ErrorBoundary>
-      <AuthenticatedUserProvider>
-        <AppContent />
-        <ApplicationToaster />
-      </AuthenticatedUserProvider>
-    </ErrorBoundary>
+  return createElement(
+    ErrorBoundary,
+    null,
+    createElement(
+      AuthenticatedUserProvider,
+      null,
+      createElement(AppContent),
+      createElement(ApplicationToaster),
+    ),
   )
 }
 

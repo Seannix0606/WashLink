@@ -3,6 +3,7 @@ import type { WorkerService } from '../../application/services/WorkerService'
 
 interface UseWorkerProfileResolutionResult {
   readonly workerIdentifier: string
+  readonly workerDisplayName: string | null
   readonly isResolvingWorkerProfile: boolean
   readonly workerResolutionErrorMessage: string
   readonly hasResolvedWorkerProfile: boolean
@@ -13,6 +14,7 @@ export function useWorkerProfileResolution(
   workerUserIdentifier: string,
 ): UseWorkerProfileResolutionResult {
   const [workerIdentifier, setWorkerIdentifier] = useState<string>('')
+  const [workerDisplayName, setWorkerDisplayName] = useState<string | null>(null)
   const [isResolvingWorkerProfile, setIsResolvingWorkerProfile] =
     useState<boolean>(true)
   const [workerResolutionErrorMessage, setWorkerResolutionErrorMessage] =
@@ -30,11 +32,13 @@ export function useWorkerProfileResolution(
             )
           if (isComponentMounted) {
             setWorkerIdentifier(workerProfile.workerIdentifier)
+            setWorkerDisplayName(workerProfile.workerName)
             setWorkerResolutionErrorMessage('')
           }
         } catch (workerProfileLookupError) {
           if (isComponentMounted) {
             setWorkerIdentifier('')
+            setWorkerDisplayName(null)
             setWorkerResolutionErrorMessage(
               workerProfileLookupError instanceof Error
                 ? workerProfileLookupError.message
@@ -57,6 +61,7 @@ export function useWorkerProfileResolution(
 
   return {
     workerIdentifier,
+    workerDisplayName,
     isResolvingWorkerProfile,
     workerResolutionErrorMessage,
     hasResolvedWorkerProfile: workerIdentifier.length > 0,

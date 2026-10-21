@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { CheckCircle2, Mail } from 'lucide-react'
 import { useAuthenticatedUser } from '../../auth/AuthenticatedUserContext'
 import { Button, Input, Modal } from '../../design/ui'
@@ -21,12 +21,7 @@ export function ForgotPasswordModal({
   const [isSendingResetEmail, setIsSendingResetEmail] = useState<boolean>(false)
   const [didSendResetEmail, setDidSendResetEmail] = useState<boolean>(false)
 
-  useEffect(() => {
-    if (isOpen) {
-      setEmailAddress(initialEmailAddress)
-      setDidSendResetEmail(false)
-    }
-  }, [initialEmailAddress, isOpen])
+  const modalKey = `${isOpen ? 'open' : 'closed'}:${initialEmailAddress}`
 
   const handleSendResetEmailSubmit = async (): Promise<void> => {
     const trimmedEmailAddress = emailAddress.trim()
@@ -52,7 +47,7 @@ export function ForgotPasswordModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Reset password">
+    <Modal key={modalKey} isOpen={isOpen} onClose={onClose} title="Reset password">
       {didSendResetEmail ? (
         <div className="space-y-4">
           <div className="flex items-start gap-3 rounded-[var(--radius-surface)] border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] p-4">
@@ -95,9 +90,9 @@ export function ForgotPasswordModal({
             name="emailAddress"
             type="email"
             value={emailAddress}
-            onChange={(changeEvent) =>
+            onChange={(changeEvent): void => {
               setEmailAddress(changeEvent.target.value)
-            }
+            }}
             leadingIcon={<Mail className="h-4 w-4" />}
             placeholder="you@example.com"
             autoComplete="email"

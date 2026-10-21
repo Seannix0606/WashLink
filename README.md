@@ -26,6 +26,22 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+### Supabase schema
+
+Apply the SQL files in `supabase/migrations/` to the linked Supabase project in
+filename order using the Supabase SQL Editor. Shop pricing and booking quotes
+require the shop verification migration before
+`2026_10_21_shop_pricing_and_booking_quotes.sql`. Owners must configure rates
+for Sedan, SUV, and Pickup across Basic Wash, Full Wash, and Premium Wax before
+customers can book that shop.
+
+Apply `2026_10_22_add_booking_notes_and_ratings.sql` to add the optional booking
+notes and customer rating columns expected by the frontend.
+
+If shop verification document uploads fail with a Storage row-level security
+error, apply `2026_10_22_fix_shop_verification_storage_rls.sql` after the shop
+verification migration.
+
 ## Structure
 
 - `frontend/` contains the complete UI application with Vite, React, and Supabase integration.

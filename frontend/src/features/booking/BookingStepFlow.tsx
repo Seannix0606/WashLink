@@ -10,6 +10,7 @@ interface BookingStepFlowProps {
   readonly onSubmitBooking: (
     createBookingInput: CreateBookingInput,
   ) => Promise<void>
+  readonly onBackToDashboard: () => void
   readonly isSubmittingBooking: boolean
   readonly defaultCustomerName: string
   readonly availableShops: readonly Shop[]
@@ -18,6 +19,7 @@ interface BookingStepFlowProps {
 
 export function BookingStepFlow({
   onSubmitBooking,
+  onBackToDashboard,
   isSubmittingBooking,
   defaultCustomerName,
   availableShops,
@@ -56,7 +58,7 @@ export function BookingStepFlow({
         selectedServiceOption={bookingFlow.selectedServiceOption}
         selectedShopOption={bookingFlow.selectedShopOption}
         selectedShopLabel={
-          bookingFlow.selectedShopOption?.name ?? 'Any available shop'
+          bookingFlow.selectedShopOption?.name ?? 'No shop selected'
         }
         selectedLocation={bookingFlow.selectedLocation}
         customerNotesPreview={bookingFlow.customerNotesDraft.trim()}
@@ -68,9 +70,15 @@ export function BookingStepFlow({
         onCustomerNameChanged={bookingFlow.setCustomerName}
         onSelectedDateTimeChanged={bookingFlow.setSelectedDateTime}
         onCustomerNotesDraftChanged={bookingFlow.setCustomerNotesDraft}
-        onBackClicked={bookingFlow.regressStep}
+        onBackClicked={
+          bookingFlow.isFirstStep
+            ? onBackToDashboard
+            : bookingFlow.regressStep
+        }
         onContinueClicked={bookingFlow.advanceStep}
-        onConfirmClicked={bookingFlow.handleConfirmBooking}
+        onConfirmClicked={() => {
+          void bookingFlow.handleConfirmBooking()
+        }}
       />
     </div>
   )

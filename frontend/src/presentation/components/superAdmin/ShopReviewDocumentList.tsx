@@ -48,7 +48,6 @@ export function ShopReviewDocumentList({
         (documentTypeDefinition: ShopVerificationDocumentTypeDefinition) => {
           const existingDocument =
             documentByType.get(documentTypeDefinition.documentType) ?? null
-          const hasExistingDocument = existingDocument !== null
           return (
             <li
               key={documentTypeDefinition.documentType}
@@ -57,14 +56,14 @@ export function ShopReviewDocumentList({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-ink-900)]">
-                    {hasExistingDocument ? (
+                    {existingDocument ? (
                       <FileText className="h-4 w-4 text-[var(--color-brand-700)]" />
                     ) : (
                       <FileWarning className="h-4 w-4 text-[var(--color-danger-500)]" />
                     )}
                     {documentTypeDefinition.displayLabel}
                   </p>
-                  {hasExistingDocument && existingDocument !== null ? (
+                  {existingDocument ? (
                     <p className="mt-0.5 truncate text-xs text-[var(--color-ink-500)]">
                       {existingDocument.fileName ?? 'Document'} · uploaded{' '}
                       {new Date(existingDocument.uploadedAt).toLocaleDateString()}
@@ -75,7 +74,7 @@ export function ShopReviewDocumentList({
                     </p>
                   )}
                 </div>
-                {hasExistingDocument && existingDocument !== null ? (
+                {existingDocument ? (
                   <Button
                     type="button"
                     variant="secondary"

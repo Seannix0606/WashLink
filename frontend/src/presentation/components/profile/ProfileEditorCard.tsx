@@ -73,7 +73,9 @@ export function ProfileEditorCard({
         label="Full name"
         name="fullName"
         value={draftFullName}
-        onChange={(changeEvent) => setDraftFullName(changeEvent.target.value)}
+        onChange={(changeEvent): void => {
+          setDraftFullName(changeEvent.target.value)
+        }}
         leadingIcon={<User className="h-4 w-4" />}
         errorText={draftValidationErrorMessage ?? undefined}
         required
@@ -84,7 +86,9 @@ export function ProfileEditorCard({
         label="Phone number"
         name="phoneNumber"
         value={draftPhoneNumber}
-        onChange={(changeEvent) => setDraftPhoneNumber(changeEvent.target.value)}
+        onChange={(changeEvent): void => {
+          setDraftPhoneNumber(changeEvent.target.value)
+        }}
         leadingIcon={<Phone className="h-4 w-4" />}
         helperText="Used so your worker can reach you on the day."
         placeholder="e.g. +63 912 345 6789"
@@ -145,16 +149,22 @@ export function ProfileEditorCard({
           variant="secondary"
           size="sm"
           leadingIcon={<KeyRound className="h-4 w-4" />}
-          onClick={() => setIsChangePasswordOpen(true)}
+          onClick={(): void => {
+            setIsChangePasswordOpen(true)
+          }}
         >
           Change password
         </Button>
       </div>
 
-      <ChangePasswordModal
-        isOpen={isChangePasswordOpen}
-        onClose={() => setIsChangePasswordOpen(false)}
-      />
+      {isChangePasswordOpen ? (
+        <ChangePasswordModal
+          isOpen={isChangePasswordOpen}
+          onClose={(): void => {
+            setIsChangePasswordOpen(false)
+          }}
+        />
+      ) : null}
     </div>
   )
 

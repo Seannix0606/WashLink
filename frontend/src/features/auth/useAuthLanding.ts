@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { applicationToast } from '../../presentation/design/ui'
 import { useAuthenticatedUser } from '../../presentation/auth/AuthenticatedUserContext'
 import type { ApplicationUserRole } from '../../domain/models/AuthenticatedUser'
@@ -21,8 +21,8 @@ interface UseAuthLandingResult {
   readonly setSelectedRole: (nextRole: ApplicationUserRole) => void
   readonly togglePasswordVisibility: () => void
   readonly setIsForgotPasswordOpen: (isOpen: boolean) => void
-  readonly handleSignInSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>
-  readonly handleSignUpSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>
+  readonly handleSignInSubmit: (event: SyntheticEvent<HTMLFormElement>) => Promise<void>
+  readonly handleSignUpSubmit: (event: SyntheticEvent<HTMLFormElement>) => Promise<void>
 }
 
 export function useAuthLanding(): UseAuthLandingResult {
@@ -38,7 +38,7 @@ export function useAuthLanding(): UseAuthLandingResult {
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState<boolean>(false)
 
   const handleSignInSubmit = async (
-    event: React.FormEvent<HTMLFormElement>,
+    event: SyntheticEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault()
     setIsSubmitting(true)
@@ -56,7 +56,7 @@ export function useAuthLanding(): UseAuthLandingResult {
   }
 
   const handleSignUpSubmit = async (
-    event: React.FormEvent<HTMLFormElement>,
+    event: SyntheticEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault()
     setIsSubmitting(true)
@@ -102,7 +102,9 @@ export function useAuthLanding(): UseAuthLandingResult {
     setFullName,
     setPhoneNumber,
     setSelectedRole,
-    togglePasswordVisibility: () => setIsPasswordVisible((previous) => !previous),
+    togglePasswordVisibility: (): void => {
+      setIsPasswordVisible((previous) => !previous)
+    },
     setIsForgotPasswordOpen,
     handleSignInSubmit,
     handleSignUpSubmit,

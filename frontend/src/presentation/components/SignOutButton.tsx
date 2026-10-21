@@ -23,7 +23,7 @@ export function SignOutButton({
       size={size}
       isLoading={isSignOutInProgress}
       leadingIcon={<LogOut className="h-4 w-4" />}
-      onClick={() => {
+      onClick={(): void => {
         void signOut()
       }}
       className={className}

@@ -1,3 +1,5 @@
+import type { ShopServicePrice } from './ShopPricing'
+
 export type ShopVerificationStatus =
   | 'pending'
   | 'changes_requested'
@@ -19,6 +21,7 @@ export interface Shop {
   readonly verificationSubmittedAt: string | null
   readonly verificationReviewedAt: string | null
   readonly verificationReviewedBy: string | null
+  readonly servicePricing: readonly ShopServicePrice[]
 }
 
 export interface CreateShopInput {

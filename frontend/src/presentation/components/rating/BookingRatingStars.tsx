@@ -28,14 +28,16 @@ export function BookingRatingStars({
     Math.min(totalStarCount, Math.round(ratingStars)),
   )
   const computedAccessibleLabel =
-    accessibleLabel ?? `Rated ${clampedRatingStars} out of ${totalStarCount} stars`
+    accessibleLabel ??
+    'Rated ' + clampedRatingStars.toString() + ' out of ' + totalStarCount.toString() + ' stars'
   return (
     <span
       className="inline-flex items-center gap-0.5"
       aria-label={computedAccessibleLabel}
       role="img"
     >
-      {Array.from({ length: totalStarCount }).map((_, starIndex) => {
+      {Array.from({ length: totalStarCount }).map((unusedValue, starIndex) => {
+        void unusedValue
         const isFilled = starIndex < clampedRatingStars
         return (
           <Star

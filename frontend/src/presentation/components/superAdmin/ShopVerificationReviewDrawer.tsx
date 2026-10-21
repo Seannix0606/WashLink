@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CheckCircle2, MessageSquare, XCircle } from 'lucide-react'
 import type { ShopVerificationService } from '../../../application/services/ShopVerificationService'
 import type { Shop } from '../../../domain/models/Shop'
@@ -28,14 +28,11 @@ export function ShopVerificationReviewDrawer({
   onClose,
   onShopReviewDecisionApplied,
 }: ShopVerificationReviewDrawerProps): ReactElement {
-  const [draftDecisionNotes, setDraftDecisionNotes] = useState<string>('')
+  const [notesByShopId, setNotesByShopId] = useState<Partial<Record<string, string>>>({})
 
-  useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-    setDraftDecisionNotes(shopUnderReview?.verificationNotes ?? '')
-  }, [isOpen, shopUnderReview?.id, shopUnderReview?.verificationNotes])
+  const activeShopId = shopUnderReview?.id ?? '__none__'
+  const draftDecisionNotes =
+    notesByShopId[activeShopId] ?? shopUnderReview?.verificationNotes ?? ''
 
   const {
     verificationDocuments,
@@ -63,7 +60,7 @@ export function ShopVerificationReviewDrawer({
     return describeShopVerificationStatus(shopUnderReview.verificationStatus)
   }, [shopUnderReview])
 
-  const areNotesRequiredForRejectionOrChanges =
+  const isNotesRequiredForRejectionOrChanges =
     trimmedDecisionNotes.length === 0
 
   const handleApproveClicked = async (): Promise<void> => {
@@ -84,7 +81,7 @@ export function ShopVerificationReviewDrawer({
     if (shopUnderReview === null) {
       return
     }
-    if (areNotesRequiredForRejectionOrChanges) {
+    if (isNotesRequiredForRejectionOrChanges) {
       return
     }
     const rejectedShop = await rejectShop(
@@ -101,7 +98,7 @@ export function ShopVerificationReviewDrawer({
     if (shopUnderReview === null) {
       return
     }
-    if (areNotesRequiredForRejectionOrChanges) {
+    if (isNotesRequiredForRejectionOrChanges) {
       return
     }
     const updatedShop = await requestShopChanges(
@@ -133,7 +130,7 @@ export function ShopVerificationReviewDrawer({
                 isLoading={activeDecisionKind === 'request_changes'}
                 disabled={
                   isAnyDecisionInFlight ||
-                  areNotesRequiredForRejectionOrChanges
+                  isNotesRequiredForRejectionOrChanges
                 }
                 onClick={() => void handleRequestChangesClicked()}
               >
@@ -148,7 +145,7 @@ export function ShopVerificationReviewDrawer({
                 isLoading={activeDecisionKind === 'reject'}
                 disabled={
                   isAnyDecisionInFlight ||
-                  areNotesRequiredForRejectionOrChanges
+                  isNotesRequiredForRejectionOrChanges
                 }
                 onClick={() => void handleRejectClicked()}
               >
@@ -166,7 +163,7 @@ export function ShopVerificationReviewDrawer({
             >
               Approve shop
             </Button>
-            {areNotesRequiredForRejectionOrChanges ? (
+            {isNotesRequiredForRejectionOrChanges ? (
               <p className="text-[11px] text-[var(--color-ink-500)]">
                 Add reviewer notes to reject or request changes.
               </p>
@@ -222,9 +219,12 @@ export function ShopVerificationReviewDrawer({
               rows={4}
               maxLength={decisionNotesCharacterLimit}
               value={draftDecisionNotes}
-              onChange={(changeEvent) =>
-                setDraftDecisionNotes(changeEvent.target.value)
-              }
+              onChange={(changeEvent): void => {
+                setNotesByShopId((previousNotesByShopId) => ({
+                  ...previousNotesByShopId,
+                  [shopUnderReview.id]: changeEvent.target.value,
+                }))
+              }}
               placeholder="Add notes visible to the owner (required for rejection or requesting changes)."
               className="w-full rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:border-[var(--color-brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-200)]"
             />

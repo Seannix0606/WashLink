@@ -85,7 +85,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     if (sessionError) {
       throw new Error(`Failed to read session: ${sessionError.message}`)
     }
-    const currentUserEmailAddress = session?.user?.email ?? ''
+    const currentUserEmailAddress = session?.user.email ?? ''
     if (currentUserEmailAddress.length === 0) {
       throw new Error('You must be signed in to change your password.')
     }

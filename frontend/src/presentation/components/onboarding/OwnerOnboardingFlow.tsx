@@ -89,7 +89,7 @@ export function OwnerOnboardingFlow({
         successMessage: (createdWorkers) =>
           createdWorkers.length === 1
             ? 'Added your first worker.'
-            : `Added ${createdWorkers.length} workers.`,
+            : 'Added ' + createdWorkers.length.toString() + ' workers.',
         shouldShowSuccessToast: workersToCreate.length > 0,
         fallbackErrorMessage:
           'Could not add one or more workers. Please try again.',

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { useEffect, useRef } from 'react'
-import L from 'leaflet'
+import Leaflet from 'leaflet'
 import {
   MapContainer,
   Marker,
@@ -29,7 +29,7 @@ const defaultFallbackCenter: PickedLocationValue = {
   longitude: 120.9842,
 }
 
-const customPinDivIcon = L.divIcon({
+const customPinDivIcon = Leaflet.divIcon({
   className: 'wl-map-pin',
   html: `
     <span class="wl-map-pin__inner">
@@ -67,9 +67,9 @@ export function LocationPickerMap({
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapClickHandler
-          onCoordinatesSelected={(latitude, longitude) =>
+          onCoordinatesSelected={(latitude, longitude): void => {
             onPickedLocationChanged({ latitude, longitude })
-          }
+          }}
         />
         <MapCenterSynchronizer
           latitude={pickedLocation?.latitude ?? null}
@@ -81,8 +81,11 @@ export function LocationPickerMap({
             icon={customPinDivIcon}
             draggable
             eventHandlers={{
-              dragend: (dragEvent) => {
-                const nextLatLng = dragEvent.target.getLatLng()
+              dragend: (dragEvent): void => {
+                const markerTarget = dragEvent.target as {
+                  getLatLng: () => { lat: number; lng: number }
+                }
+                const nextLatLng = markerTarget.getLatLng()
                 onPickedLocationChanged({
                   latitude: nextLatLng.lat,
                   longitude: nextLatLng.lng,
@@ -109,7 +112,7 @@ function MapClickHandler({
   onCoordinatesSelected,
 }: MapClickHandlerProps): null {
   useMapEvents({
-    click: (mapMouseEvent) => {
+    click: (mapMouseEvent): void => {
       onCoordinatesSelected(mapMouseEvent.latlng.lat, mapMouseEvent.latlng.lng)
     },
   })

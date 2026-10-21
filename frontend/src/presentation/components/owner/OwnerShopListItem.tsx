@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { MapPin, Phone, PowerOff, Trash2 } from 'lucide-react'
+import { MapPin, Phone, PowerOff, Settings2, Trash2 } from 'lucide-react'
 import type { Shop } from '../../../domain/models/Shop'
 import { Badge, Button } from '../../design/ui'
 
@@ -8,6 +8,7 @@ interface OwnerShopListItemProps {
   readonly isTogglingActiveStatus: boolean
   readonly isDeleting: boolean
   readonly onToggleActiveStatus: (shop: Shop) => void
+  readonly onConfigurePricing: (shop: Shop) => void
   readonly onRemoveShop: (shop: Shop) => void
 }
 
@@ -16,6 +17,7 @@ export function OwnerShopListItem({
   isTogglingActiveStatus,
   isDeleting,
   onToggleActiveStatus,
+  onConfigurePricing,
   onRemoveShop,
 }: OwnerShopListItemProps): ReactElement {
   return (
@@ -46,9 +48,21 @@ export function OwnerShopListItem({
         <Button
           variant="secondary"
           size="sm"
+          leadingIcon={<Settings2 className="h-4 w-4" />}
+          onClick={(): void => {
+            onConfigurePricing(shop)
+          }}
+        >
+          {shop.servicePricing.length > 0 ? 'Edit rates' : 'Set rates'}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           leadingIcon={<PowerOff className="h-4 w-4" />}
           isLoading={isTogglingActiveStatus}
-          onClick={() => onToggleActiveStatus(shop)}
+          onClick={(): void => {
+            onToggleActiveStatus(shop)
+          }}
         >
           {shop.isActive ? 'Hide' : 'Show'}
         </Button>
@@ -57,7 +71,9 @@ export function OwnerShopListItem({
           size="sm"
           leadingIcon={<Trash2 className="h-4 w-4" />}
           isLoading={isDeleting}
-          onClick={() => onRemoveShop(shop)}
+          onClick={(): void => {
+            onRemoveShop(shop)
+          }}
           className="text-[var(--color-danger-500)] hover:bg-[var(--color-danger-50)]"
         >
           Remove

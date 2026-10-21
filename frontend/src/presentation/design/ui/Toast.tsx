@@ -17,4 +17,5 @@ export function ApplicationToaster(): ReactElement {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const applicationToast = toast

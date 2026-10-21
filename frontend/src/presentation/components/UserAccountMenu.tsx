@@ -72,7 +72,9 @@ export function UserAccountMenu(): ReactElement | null {
     <div ref={menuContainerRef} className="relative">
       <button
         type="button"
-        onClick={() => setIsMenuOpen((previous) => !previous)}
+        onClick={(): void => {
+          setIsMenuOpen((previous) => !previous)
+        }}
         aria-haspopup="menu"
         aria-expanded={isMenuOpen}
         className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-[var(--color-surface-muted)]"
@@ -142,14 +144,20 @@ export function UserAccountMenu(): ReactElement | null {
 
       <ProfileEditorModal
         isOpen={isProfileEditorOpen}
-        onClose={() => setIsProfileEditorOpen(false)}
+        onClose={(): void => {
+          setIsProfileEditorOpen(false)
+        }}
         authenticatedUser={authenticatedUser}
       />
 
-      <ChangePasswordModal
-        isOpen={isChangePasswordOpen}
-        onClose={() => setIsChangePasswordOpen(false)}
-      />
+      {isChangePasswordOpen ? (
+        <ChangePasswordModal
+          isOpen={isChangePasswordOpen}
+          onClose={(): void => {
+            setIsChangePasswordOpen(false)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

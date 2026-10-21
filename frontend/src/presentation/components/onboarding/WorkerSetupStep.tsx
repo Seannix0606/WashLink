@@ -135,9 +135,9 @@ export function WorkerSetupStep({
                   </span>
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(): void => {
                       handleRemoveWorkerRow(draftWorker.draftIdentifier)
-                    }
+                    }}
                     className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-[var(--color-danger-500)] hover:bg-[var(--color-danger-50)]"
                     aria-label="Remove worker"
                   >
@@ -152,13 +152,13 @@ export function WorkerSetupStep({
                     placeholder="Full name"
                     leadingIcon={<UserCircle2 className="h-4 w-4" />}
                     value={draftWorker.workerName}
-                    onChange={(inputChangeEvent) =>
+                    onChange={(inputChangeEvent): void => {
                       handleUpdateDraftWorkerField(
                         draftWorker.draftIdentifier,
                         'workerName',
                         inputChangeEvent.target.value,
                       )
-                    }
+                    }}
                   />
                   <Input
                     name={`workerPhoneNumber-${draftWorker.draftIdentifier}`}
@@ -166,13 +166,13 @@ export function WorkerSetupStep({
                     placeholder="e.g. +63 917 555 0101"
                     leadingIcon={<Phone className="h-4 w-4" />}
                     value={draftWorker.workerPhoneNumber}
-                    onChange={(inputChangeEvent) =>
+                    onChange={(inputChangeEvent): void => {
                       handleUpdateDraftWorkerField(
                         draftWorker.draftIdentifier,
                         'workerPhoneNumber',
                         inputChangeEvent.target.value,
                       )
-                    }
+                    }}
                   />
                 </div>
               </div>
@@ -208,7 +208,10 @@ export function WorkerSetupStep({
         >
           {draftWorkers.length === 0
             ? 'Add at least one worker'
-            : `Save ${draftWorkers.length} worker${draftWorkers.length === 1 ? '' : 's'}`}
+            : 'Save ' +
+              draftWorkers.length.toString() +
+              ' worker' +
+              (draftWorkers.length === 1 ? '' : 's')}
         </Button>
       </div>
     </div>

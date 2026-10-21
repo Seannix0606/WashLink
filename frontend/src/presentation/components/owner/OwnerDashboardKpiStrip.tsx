@@ -69,7 +69,7 @@ export function OwnerDashboardKpiStrip({
       <StatCard
         icon={<Users className="h-5 w-5" />}
         label="Team available"
-        value={`${availableWorkerCount} / ${workers.length}`}
+        value={availableWorkerCount.toString() + ' / ' + workers.length.toString()}
         accentTone="brand"
       />
     </div>

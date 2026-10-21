@@ -4,10 +4,10 @@ import {
   Crosshair,
   MapPin,
   Phone,
-  Sparkles,
   Store,
 } from 'lucide-react'
 import type { Shop } from '../../../domain/models/Shop'
+import { shopHasCompletePricing } from '../../../domain/utilities/shopPricing'
 import { Button, Card, Input } from '../../design/ui'
 import { useGeolocationPicker } from '../../hooks/useGeolocationPicker'
 import { reverseGeocodeCoordinates } from '../../../services/geocodingService'
@@ -121,8 +121,7 @@ export function LocationAndShopStep({
           Where are you?
         </h2>
         <p className="text-sm text-[var(--color-ink-500)]">
-          Drop a pin or use your device location. Optionally pick a specific
-          shop.
+          Set your location, then select a shop to see its rates and book.
         </p>
       </header>
 
@@ -166,9 +165,9 @@ export function LocationAndShopStep({
         label="Address"
         placeholder="Street, city, landmark"
         value={addressInputValue}
-        onChange={(inputChangeEvent) =>
+        onChange={(inputChangeEvent): void => {
           setAddressInputValue(inputChangeEvent.target.value)
-        }
+        }}
         onBlur={handleAddressInputBlur}
         leadingIcon={<MapPin className="h-4 w-4" />}
         helperText={
@@ -184,21 +183,10 @@ export function LocationAndShopStep({
             Choose a shop
           </h3>
           <span className="text-[11px] font-medium text-[var(--color-ink-500)]">
-            Optional
+            Required
           </span>
         </div>
         <ul className="space-y-2">
-          <li>
-            <ShopPickerRow
-              isSelected={selectedShopIdentifier === null}
-              title="Any available shop"
-              subtitle="We'll match you with the nearest available one."
-              trailingMeta={null}
-              onClick={() => onSelectedShopIdentifierChanged(null)}
-              leadingIcon={<Sparkles className="h-5 w-5" />}
-            />
-          </li>
-
           {isLoadingShops ? (
             <li>
               <div className="rounded-[var(--radius-surface)] border border-dashed border-[var(--color-ink-200)] bg-white px-4 py-5 text-center text-xs text-[var(--color-ink-500)]">
@@ -210,7 +198,8 @@ export function LocationAndShopStep({
           {!isLoadingShops && shopsSortedByDistance.length === 0 ? (
             <li>
               <div className="rounded-[var(--radius-surface)] border border-dashed border-[var(--color-ink-200)] bg-white px-4 py-5 text-center text-xs text-[var(--color-ink-500)]">
-                No shops listed yet — we'll dispatch any available crew.
+                No approved shops are available yet. Check back after a shop
+                has published its rates.
               </div>
             </li>
           ) : null}
@@ -220,15 +209,18 @@ export function LocationAndShopStep({
               <ShopPickerRow
                 isSelected={selectedShopIdentifier === shop.id}
                 title={shop.name}
-                subtitle={shop.address}
+                subtitle={shopHasCompletePricing(shop)
+                  ? shop.address
+                  : `${shop.address} · Rates not set up yet`}
+                isDisabled={!shopHasCompletePricing(shop)}
                 leadingIcon={<Store className="h-5 w-5" />}
                 trailingMeta={
                   <div className="flex flex-col items-end gap-1 text-right">
                     {typeof distanceKilometers === 'number' ? (
                       <span className="text-[11px] font-semibold text-[var(--color-brand-700)]">
                         {distanceKilometers < 1
-                          ? `${Math.round(distanceKilometers * 1000)} m`
-                          : `${distanceKilometers.toFixed(1)} km`}
+                          ? String(Math.round(distanceKilometers * 1000)) + ' m'
+                          : distanceKilometers.toFixed(1) + ' km'}
                       </span>
                     ) : null}
                     {shop.phoneNumber ? (
@@ -239,7 +231,9 @@ export function LocationAndShopStep({
                     ) : null}
                   </div>
                 }
-                onClick={() => onSelectedShopIdentifierChanged(shop.id)}
+                onClick={(): void => {
+                  onSelectedShopIdentifierChanged(shop.id)
+                }}
               />
             </li>
           ))}

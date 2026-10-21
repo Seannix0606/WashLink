@@ -131,12 +131,6 @@ export class SupabaseBookingRepository implements BookingRepository {
       throw new Error(`Failed to cancel booking: ${error.message}`)
     }
 
-    if (data === null) {
-      throw new Error(
-        'This booking can no longer be cancelled. It may have already been accepted or cancelled.',
-      )
-    }
-
     const bookingRow: SupabaseBookingRow = data
     return mapSupabaseBookingRowToBooking(bookingRow)
   }
@@ -167,12 +161,6 @@ export class SupabaseBookingRepository implements BookingRepository {
 
     if (error) {
       throw new Error(`Failed to submit rating: ${error.message}`)
-    }
-
-    if (data === null) {
-      throw new Error(
-        'This booking can no longer be rated. It may have already been rated or is not completed yet.',
-      )
     }
 
     const bookingRow: SupabaseBookingRow = data

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Booking } from '../../../domain/models/Booking'
 import { Button, Modal } from '../../design/ui'
 import { BookingRatingStarInput } from './BookingRatingStarInput'
@@ -28,14 +28,6 @@ export function RateBookingModal({
   const [selectedRatingStars, setSelectedRatingStars] = useState<number>(0)
   const [draftRatingComment, setDraftRatingComment] = useState<string>('')
 
-  useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-    setSelectedRatingStars(0)
-    setDraftRatingComment('')
-  }, [isOpen, booking?.id])
-
   const isSubmitRatingDisabled =
     booking === null ||
     selectedRatingStars < 1 ||
@@ -50,13 +42,13 @@ export function RateBookingModal({
       return
     }
     const trimmedRatingComment = draftRatingComment.trim()
-    const wasRatingSubmitted = await onSubmitRating({
+    const didSubmitRating = await onSubmitRating({
       bookingIdentifier: booking.id,
       ratingStars: selectedRatingStars,
       ratingComment:
         trimmedRatingComment.length > 0 ? trimmedRatingComment : null,
     })
-    if (wasRatingSubmitted) {
+    if (didSubmitRating) {
       onClose()
     }
   }
@@ -77,7 +69,9 @@ export function RateBookingModal({
           </Button>
           <Button
             variant="primary"
-            onClick={() => void handleSubmitRating()}
+            onClick={(): void => {
+              void handleSubmitRating()
+            }}
             disabled={isSubmitRatingDisabled}
             isLoading={isSubmittingRating}
           >
@@ -127,7 +121,9 @@ export function RateBookingModal({
             rows={3}
             maxLength={ratingCommentCharacterLimit}
             value={draftRatingComment}
-            onChange={(event) => setDraftRatingComment(event.target.value)}
+            onChange={(event): void => {
+              setDraftRatingComment(event.target.value)
+            }}
             disabled={isSubmittingRating}
             placeholder="Tell us what went well, or what could be better."
             className="w-full rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:border-[var(--color-brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-200)] disabled:cursor-not-allowed disabled:opacity-60"

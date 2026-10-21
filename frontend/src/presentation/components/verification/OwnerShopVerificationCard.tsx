@@ -114,8 +114,8 @@ export function OwnerShopVerificationCard({
 
   const handleDeleteDocument = useCallback(
     async (documentIdentifier: string): Promise<void> => {
-      const wasDeleted = await deleteVerificationDocument(documentIdentifier)
-      if (wasDeleted) {
+      const isDeleted = await deleteVerificationDocument(documentIdentifier)
+      if (isDeleted) {
         replaceVerificationDocumentsLocally(
           verificationDocuments.filter(
             (existingVerificationDocument) =>
@@ -250,7 +250,7 @@ export function OwnerShopVerificationCard({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-[var(--color-ink-500)]">
             {missingRequiredDocumentCount > 0
-              ? `Upload ${missingRequiredDocumentCount} more required document${
+              ? `Upload ${String(missingRequiredDocumentCount)} more required document${
                   missingRequiredDocumentCount === 1 ? '' : 's'
                 } to submit for review.`
               : 'All required documents uploaded. Ready to submit for review.'}

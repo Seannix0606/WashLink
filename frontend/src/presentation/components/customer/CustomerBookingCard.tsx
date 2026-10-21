@@ -21,6 +21,7 @@ import { formatScheduledDateTime } from '../../utilities/datetimeFormatting'
 import { BookingNotesBlock } from '../booking/BookingNotesBlock'
 import { CustomerBookingRatingBlock } from '../rating/CustomerBookingRatingBlock'
 import { CustomerBookingProgressTrack } from './CustomerBookingProgressTrack'
+import { formatShopPrice } from '../../utilities/formatShopPrice'
 
 interface CustomerBookingCardProps {
   readonly booking: Booking
@@ -98,6 +99,17 @@ export function CustomerBookingCard({
             <span className="font-medium text-[var(--color-ink-900)]">
               {booking.vehicleType}
             </span>
+          </p>
+        </div>
+        <div className="flex items-start gap-2">
+          <span className="w-4 shrink-0 text-center font-semibold text-[var(--color-ink-500)]">
+            ₱
+          </span>
+          <p className="min-w-0 flex-1">
+            <span className="font-medium text-[var(--color-ink-900)]">
+              {formatShopPrice(booking.quotedPrice)}
+            </span>
+            <span className="text-[var(--color-ink-500)]"> quoted price</span>
           </p>
         </div>
 

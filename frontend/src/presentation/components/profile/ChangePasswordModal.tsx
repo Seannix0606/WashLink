@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Eye, EyeOff, KeyRound, Lock } from 'lucide-react'
 import { Button, Input, Modal } from '../../design/ui'
 import { useChangePasswordForm } from '../../hooks/useChangePasswordForm'
@@ -25,17 +25,9 @@ export function ChangePasswordModal({
     validationErrorMessage,
     isSubmitEnabled,
     submitPasswordChange,
-    resetChangePasswordForm,
   } = useChangePasswordForm({
     onPasswordChangedSuccessfully: onClose,
   })
-
-  useEffect(() => {
-    if (!isOpen) {
-      resetChangePasswordForm()
-      setIsPasswordVisible(false)
-    }
-  }, [isOpen, resetChangePasswordForm])
 
   const passwordInputType = isPasswordVisible ? 'text' : 'password'
 
@@ -58,9 +50,9 @@ export function ChangePasswordModal({
           name="currentPassword"
           type={passwordInputType}
           value={currentPassword}
-          onChange={(changeEvent) =>
+          onChange={(changeEvent): void => {
             setCurrentPassword(changeEvent.target.value)
-          }
+          }}
           leadingIcon={<Lock className="h-4 w-4" />}
           autoComplete="current-password"
           required
@@ -71,7 +63,9 @@ export function ChangePasswordModal({
           name="newPassword"
           type={passwordInputType}
           value={newPassword}
-          onChange={(changeEvent) => setNewPassword(changeEvent.target.value)}
+          onChange={(changeEvent): void => {
+            setNewPassword(changeEvent.target.value)
+          }}
           leadingIcon={<KeyRound className="h-4 w-4" />}
           helperText="At least 8 characters. Mix letters, numbers, and symbols for extra safety."
           autoComplete="new-password"
@@ -82,7 +76,9 @@ export function ChangePasswordModal({
               aria-label={
                 isPasswordVisible ? 'Hide passwords' : 'Show passwords'
               }
-              onClick={() => setIsPasswordVisible((previous) => !previous)}
+              onClick={(): void => {
+                setIsPasswordVisible((previous) => !previous)
+              }}
               className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-[var(--color-ink-500)] transition-colors hover:bg-[var(--color-surface-muted)]"
             >
               {isPasswordVisible ? (
@@ -99,9 +95,9 @@ export function ChangePasswordModal({
           name="confirmedNewPassword"
           type={passwordInputType}
           value={confirmedNewPassword}
-          onChange={(changeEvent) =>
+          onChange={(changeEvent): void => {
             setConfirmedNewPassword(changeEvent.target.value)
-          }
+          }}
           leadingIcon={<KeyRound className="h-4 w-4" />}
           errorText={validationErrorMessage ?? undefined}
           autoComplete="new-password"

@@ -5,7 +5,7 @@ Follows clean architecture patterns.
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import Column, Float, String, Text, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Numeric, String, Text, DateTime, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.models.base import Base
@@ -18,7 +18,8 @@ class ShopPricing(Base):
     Attributes:
         id: Unique identifier
         shop_id: Reference to shop
-        vehicle_type: Type of vehicle (sedan, suv, motorcycle, etc.)
+        vehicle_type: Type of vehicle (sedan, suv, pickup)
+        service_type: Wash package (basic wash, full wash, wax)
         price: Service price in currency units
         notes: Optional pricing notes
         created_at: Record creation timestamp
@@ -28,8 +29,9 @@ class ShopPricing(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     shop_id = Column(UUID(as_uuid=True), ForeignKey("shops.id", ondelete="CASCADE"), nullable=False)
-    vehicle_type = Column(String(50), nullable=False)  # sedan, suv, motorcycle, truck, van, etc.
-    price = Column(Float, nullable=False)
+    vehicle_type = Column(String(50), nullable=False)
+    service_type = Column(String(50), nullable=False, default="Basic Wash")
+    price = Column(Numeric(10, 2), nullable=False)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -37,7 +39,13 @@ class ShopPricing(Base):
     # Indexes for efficient queries
     __table_args__ = (
         Index("ix_shop_pricing_shop_id", "shop_id"),
-        Index("ix_shop_pricing_vehicle_type", "shop_id", "vehicle_type"),
+        Index(
+            "ix_shop_pricing_shop_vehicle_service",
+            "shop_id",
+            "vehicle_type",
+            "service_type",
+            unique=True,
+        ),
     )
 
     def __repr__(self) -> str:

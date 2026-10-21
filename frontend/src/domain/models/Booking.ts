@@ -21,6 +21,7 @@ export interface Booking {
   readonly latitude: number | null
   readonly longitude: number | null
   readonly customerNotes: string | null
+  readonly quotedPrice: number | null
   readonly customerRatingStars: number | null
   readonly customerRatingComment: string | null
   readonly customerRatedAt: string | null

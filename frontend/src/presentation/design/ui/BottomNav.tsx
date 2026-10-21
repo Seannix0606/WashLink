@@ -34,17 +34,18 @@ export function BottomNav<NavItemValue extends string>({
           const isActive = navItem.value === activeNavItemValue
           const hasBadgeCount =
             typeof navItem.badgeCount === 'number' && navItem.badgeCount > 0
-          const displayBadgeText =
-            hasBadgeCount && navItem.badgeCount !== undefined
-              ? navItem.badgeCount > 9
-                ? '9+'
-                : String(navItem.badgeCount)
-              : null
+          const displayBadgeText = hasBadgeCount
+            ? navItem.badgeCount > 9
+              ? '9+'
+              : String(navItem.badgeCount)
+            : null
           return (
             <li key={navItem.value} className="flex-1">
               <button
                 type="button"
-                onClick={() => onNavItemSelected(navItem.value)}
+                onClick={(): void => {
+                  onNavItemSelected(navItem.value)
+                }}
                 aria-current={isActive ? 'page' : undefined}
                 className={joinClassNames(
                   'flex w-full flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors',

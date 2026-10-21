@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { ReactElement, ReactNode } from 'react'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { AuthService } from '../../application/services/AuthService'

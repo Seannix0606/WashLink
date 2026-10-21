@@ -22,7 +22,7 @@ export function mapDatabaseBookingStatusToBookingStatus(
 }
 
 export const supabaseBookingSelectColumns =
-  'id, customer_name, customer_id, vehicle_type, service_type, address, time, booking_status, created_at, assigned_worker_id, shop_id, latitude, longitude, customer_notes, customer_rating_stars, customer_rating_comment, customer_rated_at'
+  'id, customer_name, customer_id, vehicle_type, service_type, address, time, booking_status, created_at, assigned_worker_id, shop_id, latitude, longitude, customer_notes, quoted_price, customer_rating_stars, customer_rating_comment, customer_rated_at'
 
 export interface SupabaseBookingRow {
   id: string
@@ -39,6 +39,7 @@ export interface SupabaseBookingRow {
   latitude?: number | null
   longitude?: number | null
   customer_notes?: string | null
+  quoted_price?: number | string | null
   customer_rating_stars?: number | null
   customer_rating_comment?: string | null
   customer_rated_at?: string | null
@@ -61,6 +62,10 @@ export function mapSupabaseBookingRowToBooking(
     Number.isFinite(bookingRow.customer_rating_stars)
       ? Math.round(bookingRow.customer_rating_stars)
       : null
+  const parsedQuotedPrice =
+    bookingRow.quoted_price === null || bookingRow.quoted_price === undefined
+      ? null
+      : Number(bookingRow.quoted_price)
 
   const trimmedCustomerRatingComment =
     typeof bookingRow.customer_rating_comment === 'string'
@@ -83,6 +88,10 @@ export function mapSupabaseBookingRowToBooking(
     longitude:
       typeof bookingRow.longitude === 'number' ? bookingRow.longitude : null,
     customerNotes: trimmedCustomerNotes.length > 0 ? trimmedCustomerNotes : null,
+    quotedPrice:
+      typeof parsedQuotedPrice === 'number' && Number.isFinite(parsedQuotedPrice)
+        ? parsedQuotedPrice
+        : null,
     customerRatingStars: parsedCustomerRatingStars,
     customerRatingComment:
       trimmedCustomerRatingComment.length > 0
