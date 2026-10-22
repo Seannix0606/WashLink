@@ -148,6 +148,91 @@ button {
   box-shadow: 0 0 0 1px rgb(15 23 42 / 0.15);
 }
 
+.wl-map-shop-marker {
+  background: transparent;
+  border: 0;
+}
+
+.wl-map-shop-marker__inner {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  border-radius: 50% 50% 50% 12%;
+  background: var(--color-brand-700);
+  box-shadow: 0 3px 10px rgb(15 23 42 / 0.3);
+  color: white;
+  transform: rotate(-45deg);
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.wl-map-shop-marker__inner svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  transform: rotate(45deg);
+}
+
+.wl-map-shop-marker--selected .wl-map-shop-marker__inner {
+  background: var(--color-warning-600);
+  box-shadow: 0 0 0 4px rgb(217 119 6 / 0.2), 0 4px 12px rgb(15 23 42 / 0.35);
+  transform: rotate(-45deg) scale(1.12);
+}
+
+.wl-map-shop-marker--unavailable .wl-map-shop-marker__inner {
+  background: var(--color-ink-500);
+}
+
+.wl-map-customer-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.wl-map-customer-marker__pulse,
+.wl-map-customer-marker__dot {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.wl-map-customer-marker__pulse {
+  width: 26px;
+  height: 26px;
+  background: rgb(15 118 110 / 0.2);
+}
+
+.wl-map-customer-marker__dot {
+  width: 12px;
+  height: 12px;
+  border: 3px solid white;
+  background: var(--color-brand-700);
+  box-shadow: 0 1px 5px rgb(15 23 42 / 0.45);
+}
+
 .leaflet-container {
   font-family: var(--font-sans);
+}
+
+.leaflet-control-zoom {
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 3px 12px rgb(15 23 42 / 0.2) !important;
+}
+
+.leaflet-control-zoom a {
+  width: 36px !important;
+  height: 36px !important;
+  color: var(--color-ink-700) !important;
+  line-height: 36px !important;
 }
