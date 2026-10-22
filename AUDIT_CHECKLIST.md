@@ -15,6 +15,7 @@
 - [x] Final smoke validation completed for backend API, frontend dev server, frontend lint, and production build
 - [x] Product QA improved worker availability and job-loading error states
 - [x] Booking flow rejects invalid or past scheduled times
+- [x] Booking location map displays nearby shop pins and synchronizes map/list selection
 
 ## Findings by severity
 - [x] High: missing environment defaults prevented backend startup in local/dev/test environments
@@ -23,6 +24,7 @@
 - [x] Medium: worker dashboard could display the wrong display name when the authenticated user profile differed from the worker profile
 - [x] Medium: worker availability and assigned-job fetch failures were logged or presented ambiguously instead of clearly to the worker
 - [x] Medium: booking scheduling accepted past or malformed timestamps
+- [x] Medium: customer booking map had no shop markers, making it difficult to identify nearby car washes
 
 ## Fixes implemented
 - Added safe local defaults for database URL, Redis URL, and secret key in backend settings
@@ -33,6 +35,7 @@
 - Updated the worker profile resolution hook to carry the worker display name and prefer it in the jobs page banner
 - Added visible worker availability and assigned-job loading/error states, and availability update success/error feedback
 - Added a future-time minimum to the booking date picker and validated future ISO timestamps at both the flow and service-validation boundaries
+- Added the 12 closest geocoded car-wash markers (plus the selected shop when outside that set), bookability styling, tap-to-select behavior, selected-shop details, viewport fitting, map legend, and clearer touch guidance
 
 ## Verification
 - [x] Backend pytest suite executed successfully: 4 passed
@@ -40,6 +43,7 @@
 - [x] Frontend production build executed successfully with Vite
 - [x] Frontend lint and production build rerun successfully after product QA fixes
 - [x] Backend pytest suite rerun successfully after product QA fixes: 4 passed
+- [x] Frontend lint and production build passed after map usability improvements
 - [x] Backend health endpoint responds successfully at http://127.0.0.1:8000/api/v1/health
 - [x] Frontend dev server serves the app successfully at http://localhost:4173
 

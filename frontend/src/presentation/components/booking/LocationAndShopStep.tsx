@@ -113,6 +113,54 @@ export function LocationAndShopStep({
       ),
     [availableShops, selectedLocation],
   )
+  const shopsForMap = useMemo(
+    () => {
+      const shopsWithCoordinates = shopsSortedByDistance
+        .filter(
+          ({ shop }) =>
+            typeof shop.latitude === 'number' &&
+            typeof shop.longitude === 'number',
+        )
+        .slice(0, 12)
+      if (
+        selectedShopIdentifier !== null &&
+        !shopsWithCoordinates.some(({ shop }) => shop.id === selectedShopIdentifier)
+      ) {
+        const selectedShop = shopsSortedByDistance.find(
+          ({ shop }) => shop.id === selectedShopIdentifier,
+        )
+        if (
+          selectedShop &&
+          typeof selectedShop.shop.latitude === 'number' &&
+          typeof selectedShop.shop.longitude === 'number'
+        ) {
+          return [...shopsWithCoordinates, selectedShop]
+        }
+      }
+      return shopsWithCoordinates
+    },
+    [selectedShopIdentifier, shopsSortedByDistance],
+  )
+  const shopMarkers = useMemo(
+    () => shopsForMap.map(({ shop }) => shop),
+    [shopsForMap],
+  )
+  const pickedMapLocation = useMemo(
+    () =>
+      selectedLocation
+        ? {
+            latitude: selectedLocation.latitude,
+            longitude: selectedLocation.longitude,
+          }
+        : null,
+    [selectedLocation],
+  )
+  const shopsMissingCoordinatesCount = availableShops.length -
+    availableShops.filter(
+      (shop) =>
+        typeof shop.latitude === 'number' &&
+        typeof shop.longitude === 'number',
+    ).length
 
   return (
     <Card elevation="flat" className="space-y-4 p-5">
@@ -126,14 +174,12 @@ export function LocationAndShopStep({
       </header>
 
       <LocationPickerMap
-        pickedLocation={
-          selectedLocation
-            ? {
-                latitude: selectedLocation.latitude,
-                longitude: selectedLocation.longitude,
-              }
-            : null
-        }
+        pickedLocation={pickedMapLocation}
+        nearbyShops={shopMarkers}
+        selectedShopIdentifier={selectedShopIdentifier}
+        onShopSelected={onSelectedShopIdentifierChanged}
+        isLoadingShops={isLoadingShops}
+        isShopPicker
         onPickedLocationChanged={(nextPickedLocation) =>
           void resolveAddressForCoordinates(
             nextPickedLocation.latitude,
@@ -141,6 +187,18 @@ export function LocationAndShopStep({
           )
         }
       />
+      <p className="-mt-2 text-xs text-[var(--color-ink-500)]">
+        {isLoadingShops
+          ? 'Finding approved car washes…'
+          : shopMarkers.length > 0
+          ? selectedLocation
+            ? `Showing ${String(shopMarkers.length)} closest car wash${shopMarkers.length === 1 ? '' : 'es'} to your location.`
+            : `Showing ${String(shopMarkers.length)} car wash${shopMarkers.length === 1 ? '' : 'es'}. Set your location to sort by distance.`
+          : 'No nearby car washes have map coordinates yet; browse the shop list below.'}
+        {shopsMissingCoordinatesCount > 0
+          ? ` ${String(shopsMissingCoordinatesCount)} shop${shopsMissingCoordinatesCount === 1 ? '' : 's'} without a map location are listed below.`
+          : ''}
+      </p>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Button
