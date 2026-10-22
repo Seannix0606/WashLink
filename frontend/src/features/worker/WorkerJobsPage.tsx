@@ -76,13 +76,18 @@ function WorkerJobsPageContent({
   bookingService,
   workerService,
 }: WorkerJobsPageContentProps): ReactElement {
-  const { assignedBookingList, mergeAssignedBookingFromServer } =
-    useWorkerAssignedBookings(bookingService, workerIdentifier)
+  const {
+    assignedBookingList,
+    isLoadingAssignedBookings,
+    assignedBookingsLoadErrorMessage,
+    mergeAssignedBookingFromServer,
+  } = useWorkerAssignedBookings(bookingService, workerIdentifier)
 
   const {
     isWorkerAvailableForJobs,
     hasLoadedWorkerAvailabilityProfile,
     isUpdatingWorkerAvailability,
+    workerAvailabilityLoadErrorMessage,
     updateWorkerAvailabilityForJobs,
   } = useWorkerAvailabilityForJobsPage(workerService, workerIdentifier)
 
@@ -112,6 +117,7 @@ function WorkerJobsPageContent({
           isAvailabilityInteractionDisabled={
             isAvailabilityInteractionDisabled
           }
+          availabilityErrorMessage={workerAvailabilityLoadErrorMessage}
           onAvailabilityChange={(nextAvailability) =>
             void updateWorkerAvailabilityForJobs(nextAvailability)
           }
@@ -123,6 +129,8 @@ function WorkerJobsPageContent({
         <WorkerJobsSection
           assignedBookingList={assignedBookingList}
           workerIdentifier={workerIdentifier}
+          isLoadingAssignedBookings={isLoadingAssignedBookings}
+          assignedBookingsLoadErrorMessage={assignedBookingsLoadErrorMessage}
           onStartWorkerJob={startWorkerJob}
           onCompleteWorkerJob={completeWorkerJob}
         />

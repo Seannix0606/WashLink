@@ -185,6 +185,10 @@ export function useBookingStepFlow({
         applicationToast.error('Please choose a date and time.')
         return
       }
+      if (new Date(selectedDateTime).getTime() <= Date.now()) {
+        applicationToast.error('Choose a booking time in the future.')
+        return
+      }
     }
 
     const nextIndex = Math.min(
@@ -210,6 +214,14 @@ export function useBookingStepFlow({
         'The selected shop does not have a rate for this booking.',
       )
       setActiveStepKey('location')
+      return
+    }
+    if (
+      selectedDateTime.trim().length === 0 ||
+      new Date(selectedDateTime).getTime() <= Date.now()
+    ) {
+      applicationToast.error('Choose a booking time in the future.')
+      setActiveStepKey('schedule')
       return
     }
 

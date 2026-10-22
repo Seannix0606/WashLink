@@ -5,7 +5,13 @@ export const CreateBookingInputSchema = z.object({
   vehicleType: z.string().trim().min(1, 'Vehicle type is required').max(100),
   serviceType: z.string().trim().min(1, 'Service type is required').max(100),
   address: z.string().trim().min(1, 'Address is required').max(200),
-  time: z.string().trim().min(1, 'Time is required').max(100),
+  time: z
+    .iso
+    .datetime({ offset: true })
+    .refine(
+      (bookingTime) => new Date(bookingTime).getTime() > Date.now(),
+      'Choose a booking time in the future.',
+    ),
   shopIdentifier: z.uuid().nullable(),
   latitude: z.number().nullable().refine(
     (value) => value === null || (value >= -90 && value <= 90),

@@ -6,6 +6,8 @@ import { shouldIncludeBookingOnWorkerJobList } from '../workerJobs/workerJobList
 interface UseWorkerAssignedBookingsResult {
   assignedBookingList: Booking[]
   hasWorkerConfigurationError: boolean
+  isLoadingAssignedBookings: boolean
+  assignedBookingsLoadErrorMessage: string | null
   mergeAssignedBookingFromServer: (booking: Booking) => void
 }
 
@@ -14,6 +16,12 @@ export function useWorkerAssignedBookings(
   workerIdentifier: string,
 ): UseWorkerAssignedBookingsResult {
   const [assignedBookingList, setAssignedBookingList] = useState<Booking[]>([])
+  const [isLoadingAssignedBookings, setIsLoadingAssignedBookings] =
+    useState<boolean>(true)
+  const [
+    assignedBookingsLoadErrorMessage,
+    setAssignedBookingsLoadErrorMessage,
+  ] = useState<string | null>(null)
 
   const hasWorkerConfigurationError = workerIdentifier.length === 0
 
@@ -67,6 +75,8 @@ export function useWorkerAssignedBookings(
     let isComponentMounted = true
 
     const loadAssignedBookingsForWorker = async (): Promise<void> => {
+      setIsLoadingAssignedBookings(true)
+      setAssignedBookingsLoadErrorMessage(null)
       try {
         const bookingList = await bookingService.fetchBookingsByWorker(workerIdentifier)
         if (isComponentMounted) {
@@ -74,6 +84,17 @@ export function useWorkerAssignedBookings(
         }
       } catch (error) {
         console.error('Unable to load assigned bookings for worker.', error)
+        if (isComponentMounted) {
+          setAssignedBookingsLoadErrorMessage(
+            error instanceof Error
+              ? error.message
+              : 'Unable to load assigned jobs. Please try again.',
+          )
+        }
+      } finally {
+        if (isComponentMounted) {
+          setIsLoadingAssignedBookings(false)
+        }
       }
     }
 
@@ -109,6 +130,8 @@ export function useWorkerAssignedBookings(
   return {
     assignedBookingList,
     hasWorkerConfigurationError,
+    isLoadingAssignedBookings,
+    assignedBookingsLoadErrorMessage,
     mergeAssignedBookingFromServer,
   }
 }

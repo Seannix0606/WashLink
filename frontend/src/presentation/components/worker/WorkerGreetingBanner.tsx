@@ -7,6 +7,7 @@ interface WorkerGreetingBannerProps {
   readonly workerDisplayName: string | null
   readonly isAvailableForJobs: boolean
   readonly isAvailabilityInteractionDisabled: boolean
+  readonly availabilityErrorMessage: string | null
   readonly onAvailabilityChange: (nextAvailability: boolean) => void
   readonly activeJobCount: number
 }
@@ -15,6 +16,7 @@ export function WorkerGreetingBanner({
   workerDisplayName,
   isAvailableForJobs,
   isAvailabilityInteractionDisabled,
+  availabilityErrorMessage,
   onAvailabilityChange,
   activeJobCount,
 }: WorkerGreetingBannerProps): ReactElement {
@@ -49,6 +51,11 @@ export function WorkerGreetingBanner({
             <Briefcase className="h-4 w-4" />
             {activeJobsSubline}
           </p>
+          {availabilityErrorMessage !== null ? (
+            <p role="alert" className="mt-2 text-xs text-white/90">
+              Could not load availability: {availabilityErrorMessage}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

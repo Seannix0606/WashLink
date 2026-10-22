@@ -357,6 +357,7 @@ function ScheduleStep({
 }): ReactElement {
   const customerNotesRemainingCharacters =
     customerNotesMaximumLength - customerNotesDraft.length
+  const minimumDateTime = formatLocalDateTimeInputValue(new Date())
 
   return (
     <Card elevation="flat" className="space-y-4 p-5">
@@ -381,6 +382,7 @@ function ScheduleStep({
           type="datetime-local"
           label="Date and time"
           required
+          min={minimumDateTime}
           value={selectedDateTime}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             onSelectedDateTimeChanged(event.target.value)
@@ -426,6 +428,15 @@ function ScheduleStep({
       </div>
     </Card>
   )
+}
+
+function formatLocalDateTimeInputValue(dateTime: Date): string {
+  const year = String(dateTime.getFullYear()).padStart(4, '0')
+  const month = String(dateTime.getMonth() + 1).padStart(2, '0')
+  const day = String(dateTime.getDate()).padStart(2, '0')
+  const hours = String(dateTime.getHours()).padStart(2, '0')
+  const minutes = String(dateTime.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
 function ReviewStep({

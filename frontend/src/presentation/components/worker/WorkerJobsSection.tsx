@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { ClipboardList } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Booking } from '../../../domain/models/Booking'
-import { EmptyState, Tabs, type TabItemDefinition } from '../../design/ui'
+import { Card, EmptyState, Tabs, type TabItemDefinition } from '../../design/ui'
 import { WorkerJobCard } from './WorkerJobCard'
 
 type WorkerJobsTabKey = 'active' | 'completed'
@@ -11,6 +11,8 @@ type WorkerJobsTabKey = 'active' | 'completed'
 interface WorkerJobsSectionProps {
   readonly assignedBookingList: readonly Booking[]
   readonly workerIdentifier: string
+  readonly isLoadingAssignedBookings: boolean
+  readonly assignedBookingsLoadErrorMessage: string | null
   readonly onStartWorkerJob: (bookingIdentifier: string) => Promise<void>
   readonly onCompleteWorkerJob: (bookingIdentifier: string) => Promise<void>
 }
@@ -18,6 +20,8 @@ interface WorkerJobsSectionProps {
 export function WorkerJobsSection({
   assignedBookingList,
   workerIdentifier,
+  isLoadingAssignedBookings,
+  assignedBookingsLoadErrorMessage,
   onStartWorkerJob,
   onCompleteWorkerJob,
 }: WorkerJobsSectionProps): ReactElement {
@@ -65,7 +69,23 @@ export function WorkerJobsSection({
         onTabChange={setSelectedTab}
       />
 
-      {visibleBookings.length === 0 ? (
+      {isLoadingAssignedBookings ? (
+        <Card elevation="flat" className="text-sm text-[var(--color-ink-500)]">
+          Loading your assigned jobs…
+        </Card>
+      ) : assignedBookingsLoadErrorMessage !== null ? (
+        <Card
+          elevation="flat"
+          className="border-[var(--color-danger-500)] bg-[var(--color-danger-50)]"
+        >
+          <p className="text-sm font-semibold text-[var(--color-danger-600)]">
+            Couldn&apos;t load your jobs
+          </p>
+          <p className="mt-1 text-sm text-[var(--color-ink-700)]">
+            {assignedBookingsLoadErrorMessage}
+          </p>
+        </Card>
+      ) : visibleBookings.length === 0 ? (
         <EmptyState
           icon={<ClipboardList className="h-5 w-5" />}
           title={
