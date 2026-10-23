@@ -12,6 +12,7 @@ Security: no BLOCKING. Compliance: no BLOCKING. Legal flags: `LEGAL_FLAGS.md` (W
 - S6 → W2: approved shop can edit identity fields without re-review (2026_04_17:40-45).
 - S7 → W2: `svd_*` policies don't bind `storage_path` to own `shop_id` folder (low).
 - S8 note: `is_super_admin()` not revoked from public (harmless).
+- S9 → W2 (added in W1 fix cycle 1): worker self-update of own roster row (`workers_update_own_link`, used by `updateWorkerAvailability`) has no column restriction in the reconstructed baseline; the linked worker can rewrite `owner_id`, `name`, `phone_number`. Restrict to `is_available`. Test `j17_worker_cannot_rewrite_roster_row`.
 
 ## Compliance, NON-BLOCKING (routed)
 - C1 → W7: certification requires NOT NULL enrollment link + approved_by/approved_at/assessor.
@@ -23,3 +24,8 @@ Security: no BLOCKING. Compliance: no BLOCKING. Legal flags: `LEGAL_FLAGS.md` (W
 - C7 → W6/W9: gate roster/booking assignment on training status (training vs productive work).
 - C8 → W2: linking `workers.user_id` needs worker consent; roster rows never count as relationships.
 - C9 → audit: "Legal: none for W0" was inaccurate; superseded by LEGAL_FLAGS.md.
+
+## Carried from W1 security re-review (NON-BLOCKING)
+- S10 → W2: repo `supabase/config.toml` keeps `[db.seed] enabled = true` with `./seed.sql`; stray-SQL guard scans only `supabase/tests/`. Extend guard to all of `supabase/` except `migrations/` and `tests/database/`, or disable seed in repo config and have the stager re-enable it in the staged copy.
+- S11 → W2: test_helpers grants to anon/authenticated + `act_as_service`; add header warning and a stager assertion that staged `project_id` ends in `-local-test`.
+- W2 must `drop policy if exists` the `*_local_test` owner booking policies by name and still account for unknown production policies (D-10).

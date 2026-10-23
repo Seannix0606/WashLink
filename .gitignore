@@ -27,3 +27,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local Supabase test workdir (W1, staged by scripts/supabase-test)
+.local-supabase-test/
+supabase/.temp/

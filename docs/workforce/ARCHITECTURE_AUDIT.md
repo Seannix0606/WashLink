@@ -309,6 +309,7 @@ erDiagram
 | E3 pre-approved shop insert | W2 | `j17_owner_cannot_insert_preapproved_shop` |
 | E4 owner edits submitted_at / is_active | W2 | record; decide if intended |
 | E5 bookings update scope | W2 | `j17_customer_cannot_change_quoted_price` |
+| S9 worker self-update of roster row (added W1 fix cycle 1) | W2 | `workers_update_own_link` (reconstructed in the local baseline; production policy unknown, D-10) has no column restriction: the linked worker can rewrite `owner_id`, `name`, `phone_number` (`user_id` is held by its WITH CHECK). Restrict to `is_available`; `j17_worker_cannot_rewrite_roster_row` |
 | F5 resubmission blocked | W1 test, W2 fix | `j18_owner_can_resubmit_after_changes_requested`; `submit_shop_for_verification(shop_id)` |
 | F6 workers link / `.single()` | W2 | FK + partial unique (owner_id, user_id); list lookup (D-2) |
 | Worker self-registration | W2 | add `worker` to role picker (D-9) |

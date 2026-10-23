@@ -94,8 +94,9 @@ does not depend on it and returns to the blocked one after each later pass.
 | Frontend build | `cd frontend && npm run build` | must pass |
 | Frontend unit tests | `cd frontend && npm test` | added in W1 (Vitest) |
 | Backend tests | `cd backend && pytest` | regression; baseline 4 passed |
-| DB/RLS tests | `supabase test db` against **local** stack | added in W1 (pgTAP) |
-| Migration replay | `supabase db reset` against **local** stack | all migrations apply in order |
+| Stager tests | `node --test scripts/supabase-test/stage-local-workdir.test.mjs` | added in W1; 12 pass (after W1 fix cycle 1) |
+| DB/RLS tests | `node scripts/supabase-test/run-db-tests.mjs` (last step: `npx supabase test db --local --workdir .local-supabase-test`) | added in W1 (pgTAP); must end `Result: PASS`; failing TODOs are W2 placeholders (exactly 8 `todo_start(` after W1 fix cycle 1) |
+| Migration replay | same runner (step: `npx supabase db reset --local --workdir .local-supabase-test`) | local stack only; baseline + all migrations apply in order (staged 14-digit copies, D-11). Never run from the repo root, never `--linked`/`--db-url` |
 
 Until W1 lands, only lint, build and pytest exist; the loop must not claim other checks ran.
 
