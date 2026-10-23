@@ -18,6 +18,7 @@ export function AuthLandingPage(): ReactElement {
     fullName,
     phoneNumber,
     selectedRole,
+    signUpFeedback,
     isPasswordVisible,
     isSubmitting,
     isForgotPasswordOpen,
@@ -75,6 +76,7 @@ export function AuthLandingPage(): ReactElement {
                   isPasswordVisible={isPasswordVisible}
                   isSubmitting={isSubmitting}
                   selectedRole={selectedRole}
+                  signUpFeedback={signUpFeedback}
                   onFullNameChanged={setFullName}
                   onPhoneNumberChanged={setPhoneNumber}
                   onEmailAddressChanged={setEmailAddress}
@@ -82,6 +84,9 @@ export function AuthLandingPage(): ReactElement {
                   onTogglePasswordVisibility={togglePasswordVisibility}
                   onRequestSignIn={(): void => {
                     setActiveAuthTab('signIn')
+                  }}
+                  onRequestPasswordReset={(): void => {
+                    setIsForgotPasswordOpen(true)
                   }}
                   onSubmit={handleSignUpSubmit}
                   onSelectedRoleChanged={setSelectedRole}

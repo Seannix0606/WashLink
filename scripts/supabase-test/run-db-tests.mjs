@@ -6,7 +6,8 @@
 // Every Supabase CLI call is hard-coded to `--local --workdir .local-supabase-test`.
 // It never calls `link` or `push`, and aborts if a remote target is requested (--db-url,
 // --linked, --project-ref, SUPABASE_DB_URL / SUPABASE_ACCESS_TOKEN / SUPABASE_PROJECT_ID / SUPABASE_DB_PASSWORD) or if
-// the workdir holds a .temp/project-ref (linked) before ANY CLI call.
+// the workdir holds a .temp/project-ref (linked) or its config.toml project_id does not end in
+// "-local-test" (W2 S11, exit 2) before ANY CLI call.
 // Exit code = exit code of the first failing step.
 
 import { spawnSync } from 'node:child_process'
@@ -14,7 +15,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { STAGED_DIRECTORY_NAME, stageLocalWorkdir } from './stage-local-workdir.mjs'
+import {
+  assertLocalTestProjectId,
+  STAGED_DIRECTORY_NAME,
+  stageLocalWorkdir,
+} from './stage-local-workdir.mjs'
 
 const FORBIDDEN_ARGUMENTS = ['--db-url', '--linked', '--project-ref']
 const FORBIDDEN_ENVIRONMENT = ['SUPABASE_DB_URL', 'SUPABASE_ACCESS_TOKEN', 'SUPABASE_PROJECT_ID', 'SUPABASE_DB_PASSWORD']
@@ -51,8 +56,23 @@ export function assertWorkdirNotLinked(workdirPath) {
   }
 }
 
+// W2 S11: the workdir config must still name a *-local-test project right before each CLI call.
+export function assertWorkdirIsLocalTestProject(workdirPath) {
+  const configPath = path.join(workdirPath, 'supabase', 'config.toml')
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`refusing to run: ${configPath} not found`)
+  }
+  return assertLocalTestProjectId(fs.readFileSync(configPath, 'utf8'), configPath)
+}
+
 function runSupabase(argumentsList, { quiet = false } = {}) {
   abortIfRemoteRequested()
+  try {
+    assertWorkdirIsLocalTestProject(workdir)
+  } catch (error) {
+    console.error(`run-db-tests: ${error.message}`)
+    process.exit(2)
+  }
   assertWorkdirNotLinked(workdir)
   if (useShell && !SAFE_WORKDIR_PATTERN.test(workdir)) {
     throw new Error(`refusing to pass an unsafe workdir path to the shell: ${workdir}`)

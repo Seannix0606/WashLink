@@ -7,6 +7,13 @@
 -- SECURITY INVOKER: role switching is not allowed inside security definer.
 -- Identity helpers switch with set_config(..., true), i.e. transaction-local;
 -- each test file runs inside begin ... rollback.
+--
+-- W2 S11 WARNING: this file grants EXECUTE on every test_helpers function
+-- to anon and authenticated, and contains act_as_service(), which drops
+-- the JWT claims (a trusted session for public.is_trusted_db_session()).
+-- That is acceptable ONLY on the local Docker stack staged under a
+-- "*-local-test" project_id. Never load it into a real project; the repo
+-- config keeps [db.seed] disabled and only the staged copy enables it.
 -- =============================================================
 
 create schema if not exists test_helpers;

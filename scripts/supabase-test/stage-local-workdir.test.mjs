@@ -9,10 +9,11 @@ import path from 'node:path'
 import { afterEach, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { assertWorkdirNotLinked } from './run-db-tests.mjs'
+import { assertWorkdirIsLocalTestProject, assertWorkdirNotLinked } from './run-db-tests.mjs'
 import {
   BASELINE_MIGRATION_NAME,
   findSqlOutsideTestDatabase,
+  findStraySqlUnderSupabase,
   OWNER_POLICIES_MIGRATION_NAME,
   STAGED_DIRECTORY_NAME,
   stageLocalWorkdir,
@@ -28,7 +29,21 @@ const LEGACY_MIGRATIONS = {
   '2026_10_22_add_booking_notes_and_ratings.sql': '-- notes\n',
   '2026_10_22_fix_shop_verification_storage_rls.sql': '-- storage\n',
 }
+// The repo keeps the seed disabled (W2 S10); the stager enables it only in the staged copy.
+const FAKE_CONFIG =
+  'project_id = "washlink"\n\n[db.seed]\nenabled = false\nsql_paths = ["./seed.sql"]\n\n' +
+  '[db.network_restrictions]\nenabled = false\n'
 const createdRoots = []
+
+// Trimmed lines of one TOML section, e.g. sectionLines(text, '[db.seed]').
+function sectionLines(configText, header) {
+  const lines = configText.split(/\r?\n/).map((line) => line.trim())
+  const start = lines.indexOf(header)
+  assert.notEqual(start, -1, `${header} section exists`)
+  const rest = lines.slice(start + 1)
+  const end = rest.findIndex((line) => line.startsWith('['))
+  return end === -1 ? rest : rest.slice(0, end)
+}
 
 function writeFile(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
@@ -44,7 +59,7 @@ function createFakeRepo(extraMigrations = {}) {
   createdRoots.push(root)
   writeFile(
     path.join(root, 'supabase', 'config.toml'),
-    'project_id = "washlink"\n\n[db.seed]\nenabled = true\nsql_paths = ["./seed.sql"]\n',
+    FAKE_CONFIG,
   )
   for (const [name, content] of Object.entries({ ...LEGACY_MIGRATIONS, ...extraMigrations })) {
     writeFile(path.join(root, 'supabase', 'migrations', name), content)
@@ -248,4 +263,86 @@ test('runner_refuses_linked_workdir', () => {
     assert.throws(() => assertWorkdirNotLinked(result.outputDirectory), /workdir is linked/)
     fs.rmSync(refPath)
   }
+})
+
+// ---------- W2 S10 / S11 ----------
+
+test('stager_enables_seed_only_in_staged_copy', () => {
+  const root = createFakeRepo()
+  const repoConfigPath = path.join(root, 'supabase', 'config.toml')
+  const before = sha256(repoConfigPath)
+  const result = stageLocalWorkdir({ repoRoot: root })
+  const staged = fs.readFileSync(path.join(result.outputDirectory, 'supabase', 'config.toml'), 'utf8')
+  assert.ok(sectionLines(staged, '[db.seed]').includes('enabled = true'))
+  assert.ok(!sectionLines(staged, '[db.seed]').includes('enabled = false'))
+  // Other sections keep their own enabled flags.
+  assert.ok(sectionLines(staged, '[db.network_restrictions]').includes('enabled = false'))
+  assert.equal(sha256(repoConfigPath), before, 'repo config.toml is never rewritten')
+  // A repo config with the seed enabled, or without the enabled line, is refused before staging.
+  for (const badConfig of [
+    FAKE_CONFIG.replace('[db.seed]\nenabled = false', '[db.seed]\nenabled = true'),
+    FAKE_CONFIG.replace('[db.seed]\nenabled = false\n', '[db.seed]\n'),
+  ]) {
+    fs.writeFileSync(repoConfigPath, badConfig)
+    fs.mkdirSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep'), { recursive: true })
+    assert.throws(() => stageLocalWorkdir({ repoRoot: root }), /must keep the seed disabled/)
+    assert.ok(fs.existsSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep')))
+  }
+})
+
+// Read-only check of the REAL repo config.
+test('repo_config_seed_disabled', () => {
+  const config = fs.readFileSync(path.join(REAL_REPO_ROOT, 'supabase', 'config.toml'), 'utf8')
+  const seedSection = sectionLines(config, '[db.seed]')
+  assert.ok(seedSection.includes('enabled = false'))
+  assert.ok(!seedSection.includes('enabled = true'))
+})
+
+test('stager_rejects_sql_anywhere_under_supabase_outside_migrations_and_tests_database', () => {
+  const strays = [
+    ['seed.sql'], ['seeds', 'demo.sql'], ['migrations', 'nested', 'hidden.sql'],
+    ['tests', 'database', 'nested', 'hidden.test.sql'], ['local_test_baseline', 'test_helpers.sql'],
+    ['functions', 'upper_case.SQL'],
+  ]
+  for (const parts of strays) {
+    const root = createFakeRepo()
+    writeFile(path.join(root, 'supabase', ...parts), '-- stray\n')
+    fs.mkdirSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep'), { recursive: true })
+    assert.deepEqual(findStraySqlUnderSupabase(path.join(root, 'supabase')), [parts.join('/')])
+    assert.throws(
+      () => stageLocalWorkdir({ repoRoot: root }),
+      /outside supabase\/tests\/database\/ and supabase\/migrations\//,
+      parts.join('/'),
+    )
+    assert.ok(fs.existsSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep')), parts.join('/'))
+  }
+  const cleanRoot = createFakeRepo()
+  assert.deepEqual(findStraySqlUnderSupabase(path.join(cleanRoot, 'supabase')), [])
+})
+
+// Read-only scan of the REAL repo.
+test('repo_has_no_stray_sql_under_supabase', () => {
+  assert.deepEqual(findStraySqlUnderSupabase(path.join(REAL_REPO_ROOT, 'supabase')), [])
+})
+
+test('stager_staged_project_id_ends_with_local_test', () => {
+  const root = createFakeRepo()
+  const result = stageLocalWorkdir({ repoRoot: root })
+  const staged = fs.readFileSync(path.join(result.outputDirectory, 'supabase', 'config.toml'), 'utf8')
+  const projectLines = staged.split('\n').filter((line) => line.trim().startsWith('project_id'))
+  assert.deepEqual(projectLines, ['project_id = "washlink-local-test"'])
+  assert.equal(assertWorkdirIsLocalTestProject(result.outputDirectory), 'washlink-local-test')
+})
+
+test('runner_refuses_non_local_test_project_id', () => {
+  const root = createFakeRepo()
+  const result = stageLocalWorkdir({ repoRoot: root })
+  const stagedConfig = path.join(result.outputDirectory, 'supabase', 'config.toml')
+  const original = fs.readFileSync(stagedConfig, 'utf8')
+  for (const replacement of ['project_id = "washlink"', 'project_id = "washlink-local-test-x"', '']) {
+    fs.writeFileSync(stagedConfig, original.replace('project_id = "washlink-local-test"', replacement))
+    assert.throws(() => assertWorkdirIsLocalTestProject(result.outputDirectory), /must end with "-local-test"/, replacement)
+  }
+  fs.rmSync(stagedConfig)
+  assert.throws(() => assertWorkdirIsLocalTestProject(result.outputDirectory), /not found/)
 })

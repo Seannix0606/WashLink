@@ -1,8 +1,9 @@
--- J18: existing flows keep working (booking + quote, pricing, verification, ratings).
--- One TODO: F5 (owner resubmission after changes_requested), fixed in W2.
+-- J18: existing flows keep working (booking + quote, pricing, verification, ratings, and the
+-- W2-guarded owner / worker / customer write paths the frontend uses). No TODO blocks:
+-- F5 is fixed in W2 through submit_shop_for_verification(). Profile reads: j18_w2_profile_reads.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(38);
+select plan(64);
 
 -- ---------- fixtures (session superuser) ----------
 select set_config('fx.c1', test_helpers.create_customer('j18-c1@local.test')::text, true);
@@ -34,6 +35,14 @@ values (current_setting('fx.s_o2')::uuid, 'business_permit',
 
 select set_config('fx.bq1', gen_random_uuid()::text, true);
 select set_config('fx.bq2', gen_random_uuid()::text, true);
+select set_config('fx.bq3', gen_random_uuid()::text, true);
+
+-- W2 owner / worker booking flows (all at s1, owned by o1).
+select set_config('fx.uw', test_helpers.create_worker('j18-w1@local.test')::text, true);
+select set_config('fx.w_own', test_helpers.create_roster_worker(current_setting('fx.o1')::uuid, current_setting('fx.uw')::uuid)::text, true);
+select set_config('fx.b_flow', test_helpers.create_booking_fixture(current_setting('fx.c1')::uuid, current_setting('fx.s1')::uuid)::text, true);
+select set_config('fx.b_rej', test_helpers.create_booking_fixture(current_setting('fx.c1')::uuid, current_setting('fx.s1')::uuid)::text, true);
+select set_config('fx.b_acc_rej', test_helpers.create_booking_fixture(current_setting('fx.c1')::uuid, current_setting('fx.s1')::uuid, 'accepted')::text, true);
 
 -- ---------- booking creation and pricing quote ----------
 select test_helpers.act_as_customer('j18-c1@local.test');
@@ -177,22 +186,29 @@ select is((select count(*)::int from public.shop_verification_documents where sh
 select is((select count(*)::int from public.shop_verification_documents where shop_id = current_setting('fx.s_o2')::uuid),
           0, 'j18_owner_cannot_read_other_shop_verification_documents');
 
--- F5 is a genuine failing TODO today: this is the exact UPDATE the frontend sends, and
--- prevent_owner_verification_mutation() rejects it for a changes_requested shop.
--- W2 NOTE: W2 may fix F5 through an RPC (e.g. public.submit_shop_for_verification(shop_id))
--- instead of making this direct UPDATE legal. If so, W2 MUST rewrite this test to exercise the
--- real resubmission path the frontend then uses (call the RPC as the owner, assert status
--- 'pending' and verification_submitted_at set), and keep a check that the direct UPDATE of
--- verification_status by an owner is still rejected. Do not just delete the todo wrapper.
-select todo_start('F5: blocked by prevent_owner_verification_mutation; fixed in W2 by submit_shop_for_verification(); remove this todo in W2');
-select lives_ok($$
-  update public.shops set verification_status = 'pending', verification_submitted_at = now()
-  where id = current_setting('fx.s_cr')::uuid and owner_id = auth.uid()
-    and verification_status in ('pending', 'changes_requested')
-$$, 'j18_owner_can_resubmit_after_changes_requested');
-select is((select verification_status from public.shops where id = current_setting('fx.s_cr')::uuid),
+-- F5 (fixed in W2b): the owner resubmits a changes_requested shop through the RPC the
+-- frontend now calls (SupabaseShopVerificationRepository -> rpc submit_shop_for_verification).
+-- The direct UPDATE stays rejected: j17_owner_cannot_directly_resubmit_changes_requested_shop.
+select lives_ok($$ select public.submit_shop_for_verification(current_setting('fx.s_cr')::uuid) $$,
+                'j18_owner_can_resubmit_after_changes_requested');
+select is((select row(verification_status, verification_submitted_at is not null)::text
+           from public.shops where id = current_setting('fx.s_cr')::uuid),
+          row('pending'::text, true)::text, 'j18_owner_can_resubmit_after_changes_requested');
+select is((select verification_status from public.submit_shop_for_verification(current_setting('fx.s_pending')::uuid)),
           'pending', 'j18_owner_can_resubmit_after_changes_requested');
-select todo_end();
+
+-- Admin reviews the resubmitted shop with the same UPDATE as applyReviewDecision.
+select test_helpers.act_as_admin('j18-admin@local.test');
+select lives_ok($$
+  update public.shops
+  set verification_status = 'approved', verification_notes = null,
+      verification_reviewed_at = now(), verification_reviewed_by = auth.uid()
+  where id = current_setting('fx.s_cr')::uuid
+$$, 'j18_super_admin_can_review_resubmitted_shop');
+select is((select row(verification_status, verification_reviewed_by)::text
+           from public.shops where id = current_setting('fx.s_cr')::uuid),
+          row('approved'::text, current_setting('fx.admin')::uuid)::text,
+          'j18_super_admin_can_review_resubmitted_shop');
 
 -- ---------- ratings (same UPDATE as SupabaseBookingRepository.rateBooking) ----------
 select test_helpers.act_as_customer('j18-c1@local.test');
@@ -222,6 +238,106 @@ $$, 'j18_customer_cannot_rate_other_customer_booking');
 select test_helpers.act_as_service();
 select is((select customer_rating_stars from public.bookings where id = current_setting('fx.b_done2')::uuid),
           null::smallint, 'j18_customer_cannot_rate_other_customer_booking');
+
+-- ---------- W2-guarded write paths (same payloads as the repositories) ----------
+-- SupabaseBookingRepository.createBooking (mapCreateBookingInputToCreateBookingRow).
+select test_helpers.act_as_customer('j18-c1@local.test');
+select lives_ok($$
+  insert into public.bookings (id, customer_name, vehicle_type, service_type, address, time, booking_status,
+                               customer_id, shop_id, latitude, longitude, customer_notes)
+  values (current_setting('fx.bq3')::uuid, 'J18 Customer', 'SUV', 'Basic Wash', 'J18 address',
+          now() + interval '2 days', 'pending', auth.uid(), current_setting('fx.s1')::uuid,
+          14.5995, 120.9842, 'Gate code at the guard house')
+$$, 'j18_customer_booking_insert_with_frontend_payload');
+select is((select row(booking_status, quoted_price)::text from public.bookings where id = current_setting('fx.bq3')::uuid),
+          row('pending'::text, 300.00::numeric)::text, 'j18_customer_booking_insert_with_frontend_payload');
+
+-- updateBookingStatus (owner) and assignWorkerToBooking.
+select test_helpers.act_as_owner('j18-o1@local.test');
+select lives_ok($$ update public.bookings set booking_status = 'accepted' where id = current_setting('fx.b_flow')::uuid $$,
+                'j18_owner_can_accept_and_reject_pending_booking');
+select lives_ok($$ update public.bookings set booking_status = 'rejected' where id = current_setting('fx.b_rej')::uuid $$,
+                'j18_owner_can_accept_and_reject_pending_booking');
+select lives_ok($$ update public.bookings set booking_status = 'rejected' where id = current_setting('fx.b_acc_rej')::uuid $$,
+                'j18_owner_can_accept_and_reject_pending_booking');
+select is((select array_agg(booking_status order by id = current_setting('fx.b_flow')::uuid desc, id = current_setting('fx.b_rej')::uuid desc)
+           from public.bookings
+           where id in (current_setting('fx.b_flow')::uuid, current_setting('fx.b_rej')::uuid, current_setting('fx.b_acc_rej')::uuid)),
+          array['accepted', 'rejected', 'rejected']::text[], 'j18_owner_can_accept_and_reject_pending_booking');
+
+select lives_ok($$ update public.bookings set assigned_worker_id = current_setting('fx.w_own')::uuid where id = current_setting('fx.b_flow')::uuid $$,
+                'j18_owner_can_assign_own_roster_worker');
+select is((select assigned_worker_id from public.bookings where id = current_setting('fx.b_flow')::uuid),
+          current_setting('fx.w_own')::uuid, 'j18_owner_can_assign_own_roster_worker');
+
+-- updateBookingStatusForAssignedWorker: accepted -> in_progress -> completed.
+select test_helpers.act_as_worker('j18-w1@local.test');
+select lives_ok($$
+  update public.bookings set booking_status = 'in_progress'
+  where id = current_setting('fx.b_flow')::uuid and assigned_worker_id = current_setting('fx.w_own')::uuid
+$$, 'j18_assigned_worker_can_progress_booking');
+select lives_ok($$
+  update public.bookings set booking_status = 'completed'
+  where id = current_setting('fx.b_flow')::uuid and assigned_worker_id = current_setting('fx.w_own')::uuid
+$$, 'j18_assigned_worker_can_progress_booking');
+select is((select booking_status from public.bookings where id = current_setting('fx.b_flow')::uuid),
+          'completed', 'j18_assigned_worker_can_progress_booking');
+-- updateWorkerAvailability by the linked worker.
+select lives_ok($$ update public.workers set is_available = false where id = current_setting('fx.w_own')::uuid $$,
+                'j18_assigned_worker_can_progress_booking');
+
+-- SupabaseShopRepository.updateShop on an approved shop: phone / pin edits keep approval (R6).
+select test_helpers.act_as_owner('j18-o1@local.test');
+select lives_ok($$
+  update public.shops set phone_number = '+63 900 000 0301', latitude = 14.6, longitude = 121.0
+  where id = current_setting('fx.s1')::uuid
+$$, 'j18_owner_can_edit_approved_shop_phone_without_rereview');
+select is((select row(verification_status, phone_number)::text from public.shops where id = current_setting('fx.s1')::uuid),
+          row('approved'::text, '+63 900 000 0301'::text)::text,
+          'j18_owner_can_edit_approved_shop_phone_without_rereview');
+
+-- SupabaseShopRepository.createShop payload.
+select lives_ok($$
+  insert into public.shops (owner_id, name, address, phone_number, latitude, longitude)
+  values (auth.uid(), 'J18 new shop', 'J18 new address', '+63 900 000 0302', 14.5, 121.0)
+$$, 'j18_owner_can_register_shop_with_frontend_payload');
+select is((select verification_status from public.shops where name = 'J18 new shop' and owner_id = auth.uid()),
+          'pending', 'j18_owner_can_register_shop_with_frontend_payload');
+
+-- SupabaseShopVerificationRepository upload: upsert on (shop_id, document_type), twice.
+select lives_ok($$
+  insert into public.shop_verification_documents (shop_id, document_type, storage_path, file_name,
+                                                  file_size_bytes, content_type, uploaded_by, uploaded_at)
+  values (current_setting('fx.s_cr')::uuid, 'business_permit', current_setting('fx.s_cr') || '/business_permit-a.pdf',
+          'permit.pdf', 1024, 'application/pdf', auth.uid(), now())
+  on conflict (shop_id, document_type) do update
+  set storage_path = excluded.storage_path, file_name = excluded.file_name, uploaded_by = excluded.uploaded_by
+$$, 'j18_owner_can_upsert_verification_document_with_frontend_payload');
+select lives_ok($$
+  insert into public.shop_verification_documents (shop_id, document_type, storage_path, file_name,
+                                                  file_size_bytes, content_type, uploaded_by, uploaded_at)
+  values (current_setting('fx.s_cr')::uuid, 'business_permit', current_setting('fx.s_cr') || '/business_permit-b.pdf',
+          'permit-v2.pdf', 2048, 'application/pdf', auth.uid(), now())
+  on conflict (shop_id, document_type) do update
+  set storage_path = excluded.storage_path, file_name = excluded.file_name, uploaded_by = excluded.uploaded_by
+$$, 'j18_owner_can_upsert_verification_document_with_frontend_payload');
+select is((select row(file_name, uploaded_by)::text from public.shop_verification_documents
+           where shop_id = current_setting('fx.s_cr')::uuid and document_type = 'business_permit'),
+          row('permit-v2.pdf'::text, current_setting('fx.o1')::uuid)::text,
+          'j18_owner_can_upsert_verification_document_with_frontend_payload');
+
+-- SupabaseWorkerRepository.createWorkerForOwner payload, then owner edits and deletes it.
+select lives_ok($$
+  insert into public.workers (owner_id, name, phone_number, is_available)
+  values (auth.uid(), 'J18 roster worker', '+63 900 000 0303', true)
+$$, 'j18_owner_can_add_unlinked_roster_worker');
+select is((select count(*)::int from public.workers
+           where owner_id = auth.uid() and name = 'J18 roster worker' and user_id is null),
+          1, 'j18_owner_can_add_unlinked_roster_worker');
+select lives_ok($$ update public.workers set is_available = false where name = 'J18 roster worker' $$,
+                'j18_owner_can_add_unlinked_roster_worker');
+select lives_ok($$ delete from public.workers where name = 'J18 roster worker' $$,
+                'j18_owner_can_add_unlinked_roster_worker');
 
 select * from finish();
 rollback;

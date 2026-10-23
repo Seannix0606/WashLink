@@ -94,9 +94,10 @@ does not depend on it and returns to the blocked one after each later pass.
 | Frontend build | `cd frontend && npm run build` | must pass |
 | Frontend unit tests | `cd frontend && npm test` | added in W1 (Vitest) |
 | Backend tests | `cd backend && pytest` | regression; baseline 4 passed |
-| Stager tests | `node --test scripts/supabase-test/stage-local-workdir.test.mjs` | added in W1; 12 pass (after W1 fix cycle 1) |
-| DB/RLS tests | `node scripts/supabase-test/run-db-tests.mjs` (last step: `npx supabase test db --local --workdir .local-supabase-test`) | added in W1 (pgTAP); must end `Result: PASS`; failing TODOs are W2 placeholders (exactly 8 `todo_start(` after W1 fix cycle 1) |
-| Migration replay | same runner (step: `npx supabase db reset --local --workdir .local-supabase-test`) | local stack only; baseline + all migrations apply in order (staged 14-digit copies, D-11). Never run from the repo root, never `--linked`/`--db-url` |
+| Stager tests | `node --test scripts/supabase-test/stage-local-workdir.test.mjs` | added in W1; 18 pass (after W2: +6 S10/S11 tests) |
+| DB/RLS tests | `node scripts/supabase-test/run-db-tests.mjs` (last step: `npx supabase test db --local --workdir .local-supabase-test`) | added in W1 (pgTAP); must end `Result: PASS`; 0 `todo_start(` after W2 (any TODO line is a FAIL); W2 build: 8 files, 268 tests; W2 fix cycle 1: 10 files, 341 tests |
+| W2 API smoke | `node scripts/supabase-test/w2-api-smoke.mjs` (local stack only; run right after run-db-tests.mjs, before stopping the stack) | W2: GoTrue signup/updateUser role (R4) + PostgREST RPCs; must end `0 failed` (48 checks since W2 fix cycle 1: + no-JWT anon, review stamping, GoTrue deleteUser cascades) |
+| Migration replay | same runner (step: `npx supabase db reset --local --workdir .local-supabase-test`) | local stack only; baseline + all migrations apply in order (staged 14-digit copies, D-11; 13 after W2). Never run from the repo root, never `--linked`/`--db-url` |
 
 Until W1 lands, only lint, build and pytest exist; the loop must not claim other checks ran.
 

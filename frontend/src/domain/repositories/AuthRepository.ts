@@ -1,7 +1,7 @@
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type {
-  ApplicationUserRole,
   AuthenticatedUser,
+  SignUpRole,
 } from '../models/AuthenticatedUser'
 
 export interface SignUpInput {
@@ -10,6 +10,9 @@ export interface SignUpInput {
   readonly fullName: string
   readonly phoneNumber: string
 }
+
+/** 'confirmation_required' when the project requires email confirmation (no session yet). */
+export type SignUpOutcome = 'can_sign_in' | 'confirmation_required'
 
 export interface ChangePasswordInput {
   readonly currentPassword: string
@@ -22,7 +25,8 @@ export interface SendPasswordResetEmailInput {
 }
 
 export interface AuthRepository {
-  signUp(signUpInput: SignUpInput, role: ApplicationUserRole): Promise<void>
+  /** Throws DuplicateAccountError when the email already has an account. */
+  signUp(signUpInput: SignUpInput, role: SignUpRole): Promise<SignUpOutcome>
   signIn(emailAddress: string, password: string): Promise<void>
   signOut(): Promise<void>
   getCurrentSessionUserWithProfile(): Promise<AuthenticatedUser | null>

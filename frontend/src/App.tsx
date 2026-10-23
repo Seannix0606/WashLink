@@ -13,8 +13,8 @@ const CustomerBookingPage = lazy(async () => ({
 const OwnerDashboardPage = lazy(async () => ({
   default: (await import('./presentation/pages/OwnerDashboardPage')).OwnerDashboardPage,
 }))
-const WorkerJobsPage = lazy(async () => ({
-  default: (await import('./presentation/pages/WorkerJobsPage')).WorkerJobsPage,
+const WorkerWorkspaceGate = lazy(async () => ({
+  default: (await import('./presentation/pages/WorkerWorkspacePage')).WorkerWorkspaceGate,
 }))
 const AuthLandingPage = lazy(async () => ({
   default: (await import('./presentation/pages/AuthLandingPage')).AuthLandingPage,
@@ -120,7 +120,7 @@ function AppContent(): ReactElement {
     return createElement(
       Suspense,
       { fallback: createElement(PageLoadingFallback) },
-      createElement(WorkerJobsPage, {
+      createElement(WorkerWorkspaceGate, {
         workerUserIdentifier: authenticatedUser.userIdentifier,
       }),
     )

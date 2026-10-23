@@ -1,4 +1,4 @@
-# Local test harness (W1)
+# Local test harness (W1, hardened in W2)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,9 +20,10 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected: the reset applies 7 migrations (baseline `00000000000000`, the 2026_04_17 copy,
-owner-policies baseline `20260417000002`, then the other 4 copies) and seeds the helpers;
-`test db` ends with `Result: PASS`. Lines `Failed (TODO)` are the W2 placeholders (below), not failures.
+Expected (after W2): the reset applies 13 migrations (baseline `00000000000000`, the
+2026_04_17 copy, owner-policies baseline `20260417000002`, the other 4 pre-W2 copies, then the
+6 W2 copies `20261024000001..06`) and seeds the helpers; `test db` runs 10 files and ends with
+`Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
 ## Why a staged workdir
 
@@ -31,9 +32,17 @@ owner-policies baseline `20260417000002`, then the other 4 copies) and seeds the
   them (from code + migrations, see `ARCHITECTURE_AUDIT.md`). The baseline files live outside
   the repo's `supabase/` folder entirely: in `supabase/migrations/` `db push` would send them to
   a real project, and `supabase test db` (also with `--linked`/`--db-url`) runs EVERY `.sql`
-  under `supabase/tests/`. The stager refuses to run, and the stager test
-  `repo_has_no_sql_under_supabase_tests_outside_database` fails, if any `.sql` exists under
-  `supabase/tests/` outside `database/`.
+  under `supabase/tests/`. Since W2 (S11) the stager refuses to run, and the stager test
+  `repo_has_no_stray_sql_under_supabase` fails, if any `.sql` exists anywhere under
+  `supabase/` other than `supabase/migrations/*.sql` and `supabase/tests/database/*.sql`
+  (no `seed.sql`, no nested folders).
+- Seed rule (W2, S10): the repo `supabase/config.toml` keeps `[db.seed] enabled = false`, so a
+  reset run from the repo root by mistake never seeds anything. The stager rewrites it to
+  `enabled = true` (with the staged `sql_paths`) in the staged copy only, and refuses to stage
+  if the `enabled = false` line is missing from the repo config.
+- Project id rule (W2, S11): the stager asserts the staged `project_id` ends in `-local-test`;
+  `run-db-tests.mjs` re-reads `.local-supabase-test/supabase/config.toml` before every CLI call
+  and exits 2 if it does not.
 - Baseline sources (`scripts/supabase-test/baseline/`):
   `local_test_baseline.sql` -> staged migration `00000000000000` (profiles, workers, bookings,
   signup trigger); `local_test_baseline_owner_policies.sql` -> staged migration
@@ -49,7 +58,7 @@ owner-policies baseline `20260417000002`, then the other 4 copies) and seeds the
   renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no
   `.temp/project-ref` and no `.env`, so the CLI cannot target a remote project from it.
-  Layout: `supabase/migrations/` (the 2 baseline migrations + the 5 copies),
+  Layout: `supabase/migrations/` (the 2 baseline migrations + the 11 copies),
   `supabase/local_test_baseline/test_helpers.sql` (seed; kept outside `tests/` because
   `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env`
@@ -69,15 +78,27 @@ owner-policies baseline `20260417000002`, then the other 4 copies) and seeds the
 
 ## TODO placeholders (honesty rule)
 
-Exactly 8 `todo_start(` calls exist: F5 in `j18_existing_flows.test.sql` and E1, E2, E3, E5,
-S1, S2, S9 in `j17_authorization_harness.test.sql` (22 assertions in total: j17 20, j18 2).
-The assertions are real and fail against the baseline, which reproduces those weaknesses on
-purpose. Each forbidden write is attempted separately and asserted per column, so a partial W2
-fix leaves assertions failing. Parts that already hold today (worker reassigning a job, worker
-re-pointing `workers.user_id`, worker availability toggle) are regular tests that W2 must keep
-passing. W2 removes the wrappers when it fixes them; if W2 fixes F5 through an RPC it must
-rewrite that test to call the RPC. A "TODO passed" line, or any other failing assertion, is a
-finding.
+W1 shipped 8 `todo_start(` wrappers (F5 in j18; E1, E2, E3, E5, S1, S2, S9 in j17). W2 removed
+all of them: `grep -c "todo_start(" supabase/tests/database/*.sql` is 0 for every file. The j17
+assertions are unchanged; F5 was rewritten to call `submit_shop_for_verification()` (the
+direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_requested_shop`).
+The baseline still reproduces the weaknesses on purpose, so those assertions only pass
+because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
+
+## pgTAP files (after W2 fix cycle 1: 10 files, 341 assertions)
+
+| File | Plan | Covers |
+|---|---|---|
+| `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
+| `001_migration_replay.test.sql` | 15 | replay of 13 migrations, W2 objects, RLS on, definer search_path |
+| `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
+| `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
+| `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
+| `j17_w2_shop_booking_guards.test.sql` | 32 | E3/C3, S6, S7, F5 guard, gate helper, trusted session, booking transitions |
+| `j17_w2_worker_data_guards.test.sql` | 34 | worker profile / contact privacy, link-code RPC authorization |
+| `j18_existing_flows.test.sql` | 64 | W1 J18 + F5 RPC + every W2-guarded frontend write path |
+| `j18_w2_profile_reads.test.sql` | 19 | R2: profile and counterparty-name reads, phone_number privacy |
+| `j1_worker_registration_and_profile.test.sql` | 55 | J1 signup roles, worker profile, roster link codes |
 
 ## Safety rules
 
@@ -110,3 +131,16 @@ cd frontend && npm run test:watch
   `it.fails` with the reason in the title if a known-failing test is ever needed.
 - Tests are excluded from the production `tsconfig.app.json` and type-checked via
   `tsconfig.test.json` (`npm run build` runs `tsc -b`).
+
+## W2 API smoke (local stack only)
+
+```sh
+node scripts/supabase-test/w2-api-smoke.mjs   # needs the stack left running by run-db-tests.mjs
+```
+
+Signs up synthetic `@local.test` users through the local GoTrue HTTP API with metadata roles,
+calls the W2 RPCs through PostgREST (supabase-js) and deletes the users afterwards. The API URL
+and keys come from `supabase status -o env --workdir .local-supabase-test`, stay in memory, and a
+non-loopback URL is refused. Note: the baseline signup trigger has no metadata-sync on update, so
+the `updateUser` assertions prove the profile never follows metadata; the GoTrue silent-restore
+branch itself (R4) is still only covered by review.

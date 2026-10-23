@@ -65,8 +65,9 @@ enabled = true
 schema_paths = []
 
 [db.seed]
+enabled = false
+# Disabled in the repo (W2 S10): the local test stager re-enables it in the staged copy only.
 # If enabled, seeds the database after migrations during a db reset.
-enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
 sql_paths = ["./seed.sql"]

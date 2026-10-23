@@ -7,6 +7,7 @@ import type {
   UpdateProfileInput,
 } from '../../domain/repositories/ProfileRepository'
 import { getSupabaseClient } from '../supabase/supabaseClient'
+import { toUserFacingError } from '../supabase/supabaseErrorMessages'
 
 interface ProfileRow {
   id: string
@@ -44,7 +45,7 @@ export class SupabaseProfileRepository implements ProfileRepository {
       .single()
 
     if (profileError) {
-      throw new Error(`Failed to update profile: ${profileError.message}`)
+      throw toUserFacingError(profileError, 'Could not update your profile. Please try again.')
     }
 
     const profileRow = profileData as ProfileRow
@@ -55,7 +56,7 @@ export class SupabaseProfileRepository implements ProfileRepository {
     } = await supabaseClient.auth.getSession()
 
     if (sessionError) {
-      throw new Error(`Failed to read session: ${sessionError.message}`)
+      throw toUserFacingError(sessionError, 'Could not read your session. Sign in again.')
     }
 
     return {

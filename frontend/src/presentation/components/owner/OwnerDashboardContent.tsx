@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { useCallback, useMemo, useState } from 'react'
 import type { BookingService } from '../../../application/services/BookingService'
+import type { RosterLinkService } from '../../../application/services/RosterLinkService'
 import type { ShopService } from '../../../application/services/ShopService'
 import type { ShopVerificationService } from '../../../application/services/ShopVerificationService'
 import type { WorkerService } from '../../../application/services/WorkerService'
@@ -9,6 +10,7 @@ import type { Shop } from '../../../domain/models/Shop'
 import { AppShell, Tabs, type TabItemDefinition } from '../../design/ui'
 import { useOwnerBookingDashboard } from '../../hooks/useOwnerBookingDashboard'
 import { useOwnerDashboardBookingFilterSelection } from '../../hooks/useOwnerDashboardBookingFilterSelection'
+import { OwnerOnboardingChecklist } from '../onboarding/OwnerOnboardingChecklist'
 import { OwnerVerificationBanner } from '../verification/OwnerVerificationBanner'
 import { OwnerVerificationPanel } from '../verification/OwnerVerificationPanel'
 import { BookingDetailDrawer } from './BookingDetailDrawer'
@@ -31,6 +33,7 @@ interface OwnerDashboardContentProps {
   readonly workerService: WorkerService
   readonly shopService: ShopService
   readonly shopVerificationService: ShopVerificationService
+  readonly rosterLinkService: RosterLinkService
   readonly ownerShopList: Shop[]
   readonly onOwnerShopListChanged: (nextOwnerShopList: Shop[]) => void
 }
@@ -41,6 +44,7 @@ export function OwnerDashboardContent({
   workerService,
   shopService,
   shopVerificationService,
+  rosterLinkService,
   ownerShopList,
   onOwnerShopListChanged,
 }: OwnerDashboardContentProps): ReactElement {
@@ -142,6 +146,11 @@ export function OwnerDashboardContent({
           }}
         />
 
+        <OwnerOnboardingChecklist
+          ownerShopList={ownerShopList}
+          shopVerificationService={shopVerificationService}
+        />
+
         <OwnerVerificationBanner
           ownerShopList={ownerShopList}
           onReviewVerificationRequested={(): void => {
@@ -182,6 +191,7 @@ export function OwnerDashboardContent({
           <OwnerWorkersPanel
             ownerIdentifier={ownerIdentifier}
             workerService={workerService}
+            rosterLinkService={rosterLinkService}
             workers={workers}
             onWorkersChanged={replaceLocalWorkerList}
           />

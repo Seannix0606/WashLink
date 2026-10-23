@@ -1,7 +1,9 @@
 import type { ReactElement, SyntheticEvent } from 'react'
-import { Eye, EyeOff, Lock, Mail, Phone, Store, User } from 'lucide-react'
-import type { ApplicationUserRole } from '../../domain/models/AuthenticatedUser'
+import { Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react'
+import type { SignUpRole } from '../../domain/models/AuthenticatedUser'
 import { Button, Card, IconButton, Input } from '../../presentation/design/ui'
+import { RolePickerGrid } from './RolePickerGrid'
+import { SignUpFeedbackNotice, type SignUpFeedback } from './SignUpFeedbackNotice'
 
 interface SignInFormProps {
   readonly emailAddress: string
@@ -138,15 +140,17 @@ interface SignUpFormProps {
   readonly password: string
   readonly isPasswordVisible: boolean
   readonly isSubmitting: boolean
-  readonly selectedRole: ApplicationUserRole
+  readonly selectedRole: SignUpRole
+  readonly signUpFeedback: SignUpFeedback | null
   readonly onFullNameChanged: (nextFullName: string) => void
   readonly onPhoneNumberChanged: (nextPhoneNumber: string) => void
   readonly onEmailAddressChanged: (nextEmail: string) => void
   readonly onPasswordChanged: (nextPassword: string) => void
   readonly onTogglePasswordVisibility: () => void
   readonly onRequestSignIn: () => void
+  readonly onRequestPasswordReset: () => void
   readonly onSubmit: (event: SyntheticEvent<HTMLFormElement>) => Promise<void>
-  readonly onSelectedRoleChanged: (nextRole: ApplicationUserRole) => void
+  readonly onSelectedRoleChanged: (nextRole: SignUpRole) => void
 }
 
 export function SignUpForm({
@@ -157,12 +161,14 @@ export function SignUpForm({
   isPasswordVisible,
   isSubmitting,
   selectedRole,
+  signUpFeedback,
   onFullNameChanged,
   onPhoneNumberChanged,
   onEmailAddressChanged,
   onPasswordChanged,
   onTogglePasswordVisibility,
   onRequestSignIn,
+  onRequestPasswordReset,
   onSubmit,
   onSelectedRoleChanged,
 }: SignUpFormProps): ReactElement {
@@ -173,7 +179,7 @@ export function SignUpForm({
           Create your account
         </h1>
         <p className="text-sm text-[var(--color-ink-500)]">
-          Join as a customer or list your car wash shop.
+          Book a wash, list your car wash shop, or find car wash work.
         </p>
       </header>
 
@@ -181,6 +187,14 @@ export function SignUpForm({
         selectedRole={selectedRole}
         onRoleSelected={onSelectedRoleChanged}
       />
+
+      {signUpFeedback !== null ? (
+        <SignUpFeedbackNotice
+          signUpFeedback={signUpFeedback}
+          onRequestSignIn={onRequestSignIn}
+          onRequestPasswordReset={onRequestPasswordReset}
+        />
+      ) : null}
 
       <form
         className="space-y-4"
@@ -286,76 +300,5 @@ export function SignUpForm({
         </button>
       </p>
     </Card>
-  )
-}
-
-interface RolePickerGridProps {
-  readonly selectedRole: ApplicationUserRole
-  readonly onRoleSelected: (nextRole: ApplicationUserRole) => void
-}
-
-function RolePickerGrid({
-  selectedRole,
-  onRoleSelected,
-}: RolePickerGridProps): ReactElement {
-  const rolePickerOptions: readonly {
-    readonly value: ApplicationUserRole
-    readonly title: string
-    readonly description: string
-    readonly icon: ReactElement
-  }[] = [
-    {
-      value: 'customer',
-      title: 'I need a wash',
-      description: 'Book a professional car wash near you.',
-      icon: <User className="h-5 w-5" />,
-    },
-    {
-      value: 'owner',
-      title: 'I own a car wash',
-      description: 'Manage bookings, workers, and schedules.',
-      icon: <Store className="h-5 w-5" />,
-    },
-  ]
-
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {rolePickerOptions.map((rolePickerOption) => {
-        const isSelected = rolePickerOption.value === selectedRole
-        return (
-          <button
-            key={rolePickerOption.value}
-            type="button"
-            onClick={(): void => {
-              onRoleSelected(rolePickerOption.value)
-            }}
-            aria-pressed={isSelected}
-            className={
-              'flex flex-col items-start gap-2 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all ' +
-              (isSelected
-                ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
-                : 'border-[var(--color-ink-200)] bg-white hover:border-[var(--color-brand-300)]')
-            }
-          >
-            <span
-              className={
-                'flex h-9 w-9 items-center justify-center rounded-full ' +
-                (isSelected
-                  ? 'bg-[var(--color-brand-700)] text-white'
-                  : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]')
-              }
-            >
-              {rolePickerOption.icon}
-            </span>
-            <span className="text-sm font-semibold text-[var(--color-ink-900)]">
-              {rolePickerOption.title}
-            </span>
-            <span className="text-xs text-[var(--color-ink-500)]">
-              {rolePickerOption.description}
-            </span>
-          </button>
-        )
-      })}
-    </div>
   )
 }

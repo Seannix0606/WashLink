@@ -1,73 +1,118 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useMemo } from 'react'
+import type { RosterLinkService } from '../../application/services/RosterLinkService'
 import { createWorkerJobsDependencies } from '../../presentation/dependencyInjection/createWorkerJobsDependencies'
 import { useAuthenticatedUser } from '../../presentation/auth/AuthenticatedUserContext'
+import type { UseMyRosterLinksResult } from '../../presentation/hooks/useMyRosterLinks'
 import { useWorkerAssignedBookings } from '../../presentation/hooks/useWorkerAssignedBookings'
 import { useWorkerAvailabilityForJobsPage } from '../../presentation/hooks/useWorkerAvailabilityForJobsPage'
 import { useWorkerJobActions } from '../../presentation/hooks/useWorkerJobActions'
-import { useWorkerProfileResolution } from '../../presentation/hooks/useWorkerProfileResolution'
 import { AppShell } from '../../presentation/design/ui'
 import { AuthenticatedTopBar } from '../../presentation/components/AuthenticatedTopBar'
+import { LoadErrorNotice } from '../../presentation/components/shared/LoadErrorNotice'
 import { WorkerDailyStatsStrip } from '../../presentation/components/worker/WorkerDailyStatsStrip'
 import { WorkerGreetingBanner } from '../../presentation/components/worker/WorkerGreetingBanner'
-import { WorkerJobsLoadingShell } from '../../presentation/components/worker/WorkerJobsLoadingShell'
 import { WorkerJobsSection } from '../../presentation/components/worker/WorkerJobsSection'
 import { WorkerNoProfileNotice } from '../../presentation/components/worker/WorkerNoProfileNotice'
+import { WorkerRosterEntryPicker } from '../../presentation/components/worker/WorkerRosterEntryPicker'
+import { WorkerRosterLinksPanel } from '../../presentation/components/worker/WorkerRosterLinksPanel'
 
 interface WorkerJobsPageProps {
   readonly workerUserIdentifier: string
+  readonly rosterLinks: UseMyRosterLinksResult
+  readonly rosterLinkService: RosterLinkService
+  /** Profile banner or summary card, shown above the jobs. */
+  readonly workerProfileSlot: ReactNode
 }
 
 export function WorkerJobsPage({
   workerUserIdentifier,
+  rosterLinks,
+  rosterLinkService,
+  workerProfileSlot,
 }: WorkerJobsPageProps): ReactElement {
   const { authenticatedUser } = useAuthenticatedUser()
   const { bookingService, workerService } = useMemo(
     () => createWorkerJobsDependencies(workerUserIdentifier),
     [workerUserIdentifier],
   )
-
   const {
-    workerIdentifier,
-    workerDisplayName,
-    isResolvingWorkerProfile,
-    workerResolutionErrorMessage,
-    hasResolvedWorkerProfile,
-  } = useWorkerProfileResolution(workerService, workerUserIdentifier)
+    rosterLinkEntries,
+    selectedRosterEntry,
+    rosterLinksErrorMessage,
+    unlinkingWorkerRowIdentifier,
+    selectRosterEntry,
+    reloadRosterLinks,
+    unlinkRosterEntry,
+  } = rosterLinks
 
-  if (isResolvingWorkerProfile) {
-    return <WorkerJobsLoadingShell />
+  const reloadRosterLinksInBackground = (): void => {
+    void reloadRosterLinks()
   }
 
-  if (!hasResolvedWorkerProfile) {
+  if (selectedRosterEntry === null) {
     return (
       <AppShell topBar={<AuthenticatedTopBar />}>
-        <WorkerNoProfileNotice
-          workerResolutionErrorMessage={workerResolutionErrorMessage}
-        />
+        <div className="space-y-6">
+          {workerProfileSlot}
+          {rosterLinksErrorMessage !== null ? (
+            <LoadErrorNotice
+              title="Could not load your shop rosters"
+              errorMessage={rosterLinksErrorMessage}
+              onRetry={reloadRosterLinksInBackground}
+            />
+          ) : (
+            <WorkerNoProfileNotice
+              rosterLinkService={rosterLinkService}
+              onRosterLinked={reloadRosterLinksInBackground}
+            />
+          )}
+        </div>
       </AppShell>
     )
   }
 
   return (
-    <WorkerJobsPageContent
-      workerDisplayName={workerDisplayName ?? authenticatedUser?.fullName ?? null}
-      workerIdentifier={workerIdentifier}
-      bookingService={bookingService}
-      workerService={workerService}
-    />
+    <AppShell topBar={<AuthenticatedTopBar />}>
+      <div className="space-y-6">
+        <WorkerRosterEntryPicker
+          rosterLinkEntries={rosterLinkEntries}
+          selectedWorkerRowIdentifier={selectedRosterEntry.workerRowIdentifier}
+          onRosterEntrySelected={selectRosterEntry}
+        />
+        <WorkerJobsPageContent
+          key={selectedRosterEntry.workerRowIdentifier}
+          workerDisplayName={
+            selectedRosterEntry.rosterDisplayName.length > 0
+              ? selectedRosterEntry.rosterDisplayName
+              : (authenticatedUser?.fullName ?? null)
+          }
+          workerIdentifier={selectedRosterEntry.workerRowIdentifier}
+          bookingService={bookingService}
+          workerService={workerService}
+        />
+        {workerProfileSlot}
+        <WorkerRosterLinksPanel
+          rosterLinkEntries={rosterLinkEntries}
+          unlinkingWorkerRowIdentifier={unlinkingWorkerRowIdentifier}
+          rosterLinkService={rosterLinkService}
+          onUnlinkRosterEntry={(workerRowIdentifier): void => {
+            void unlinkRosterEntry(workerRowIdentifier)
+          }}
+          onRosterLinked={reloadRosterLinksInBackground}
+        />
+      </div>
+    </AppShell>
   )
 }
+
+type WorkerJobsDependencies = ReturnType<typeof createWorkerJobsDependencies>
 
 interface WorkerJobsPageContentProps {
   readonly workerDisplayName: string | null
   readonly workerIdentifier: string
-  readonly bookingService: ReturnType<
-    typeof createWorkerJobsDependencies
-  >['bookingService']
-  readonly workerService: ReturnType<
-    typeof createWorkerJobsDependencies
-  >['workerService']
+  readonly bookingService: WorkerJobsDependencies['bookingService']
+  readonly workerService: WorkerJobsDependencies['workerService']
 }
 
 function WorkerJobsPageContent({
@@ -109,32 +154,28 @@ function WorkerJobsPageContent({
   ).length
 
   return (
-    <AppShell topBar={<AuthenticatedTopBar />}>
-      <div className="space-y-6">
-        <WorkerGreetingBanner
-          workerDisplayName={workerDisplayName}
-          isAvailableForJobs={isWorkerAvailableForJobs}
-          isAvailabilityInteractionDisabled={
-            isAvailabilityInteractionDisabled
-          }
-          availabilityErrorMessage={workerAvailabilityLoadErrorMessage}
-          onAvailabilityChange={(nextAvailability) =>
-            void updateWorkerAvailabilityForJobs(nextAvailability)
-          }
-          activeJobCount={activeJobCount}
-        />
+    <div className="space-y-6">
+      <WorkerGreetingBanner
+        workerDisplayName={workerDisplayName}
+        isAvailableForJobs={isWorkerAvailableForJobs}
+        isAvailabilityInteractionDisabled={isAvailabilityInteractionDisabled}
+        availabilityErrorMessage={workerAvailabilityLoadErrorMessage}
+        onAvailabilityChange={(nextAvailability) =>
+          void updateWorkerAvailabilityForJobs(nextAvailability)
+        }
+        activeJobCount={activeJobCount}
+      />
 
-        <WorkerDailyStatsStrip assignedBookingList={assignedBookingList} />
+      <WorkerDailyStatsStrip assignedBookingList={assignedBookingList} />
 
-        <WorkerJobsSection
-          assignedBookingList={assignedBookingList}
-          workerIdentifier={workerIdentifier}
-          isLoadingAssignedBookings={isLoadingAssignedBookings}
-          assignedBookingsLoadErrorMessage={assignedBookingsLoadErrorMessage}
-          onStartWorkerJob={startWorkerJob}
-          onCompleteWorkerJob={completeWorkerJob}
-        />
-      </div>
-    </AppShell>
+      <WorkerJobsSection
+        assignedBookingList={assignedBookingList}
+        workerIdentifier={workerIdentifier}
+        isLoadingAssignedBookings={isLoadingAssignedBookings}
+        assignedBookingsLoadErrorMessage={assignedBookingsLoadErrorMessage}
+        onStartWorkerJob={startWorkerJob}
+        onCompleteWorkerJob={completeWorkerJob}
+      />
+    </div>
   )
 }

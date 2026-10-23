@@ -14,6 +14,9 @@
 //                     migrations can drop or replace these policies)
 //   test_helpers.sql is the staged seed (helpers only).
 // - The staged dir never contains `.temp/project-ref`, so the CLI cannot target a linked project.
+// - W2 (S10/S11): the repo config keeps [db.seed] enabled = false (only the staged copy enables
+//   it), the staged project_id must end in "-local-test", and no .sql may exist under supabase/
+//   except supabase/migrations/*.sql and supabase/tests/database/*.sql.
 //
 // Node 24, no dependencies. Never writes inside the repo's supabase/ folder.
 
@@ -34,6 +37,12 @@ const HELPERS_SOURCE_NAME = 'test_helpers.sql'
 const PROJECT_ID_LINE = 'project_id = "washlink"'
 const STAGED_PROJECT_ID_LINE = 'project_id = "washlink-local-test"'
 const SEED_PATHS_LINE = 'sql_paths = ["./seed.sql"]'
+// W2 S10: the repo keeps the seed disabled; only the staged copy enables it.
+const SEED_SECTION_LINE = '[db.seed]'
+const SEED_DISABLED_LINE = 'enabled = false'
+const SEED_ENABLED_LINE = 'enabled = true'
+export const LOCAL_TEST_PROJECT_ID_SUFFIX = '-local-test'
+const PROJECT_ID_PATTERN = /^project_id\s*=\s*"([^"]*)"$/
 // The helpers seed is staged OUTSIDE supabase/tests/: `supabase test db` runs every .sql file
 // under tests/ as a pgTAP file, which would execute the helpers as tests.
 export const STAGED_BASELINE_DIRECTORY = 'local_test_baseline'
@@ -96,9 +105,30 @@ export function planBaselineMigrations(plannedMigrations) {
 // `supabase test db` runs every .sql file under supabase/tests/ (also with --linked/--db-url),
 // so the repo may hold .sql files only under supabase/tests/database/.
 export function findSqlOutsideTestDatabase(sourceTests) {
-  const offenders = []
-  if (!fs.existsSync(sourceTests)) {
-    return offenders
+  return listSqlFiles(sourceTests)
+    .filter((parts) => parts.length < 2 || parts[0] !== 'database')
+    .map((parts) => parts.join('/'))
+    .sort()
+}
+
+// W2 S11: the whole supabase/ folder may hold .sql only as supabase/migrations/*.sql and
+// supabase/tests/database/*.sql (no seed.sql, no nested folders). Anything else could be
+// picked up by db reset (seed), db push or test db when the CLI runs from the repo root.
+export function findStraySqlUnderSupabase(sourceSupabase) {
+  return listSqlFiles(sourceSupabase)
+    .filter((parts) => {
+      const isMigration = parts.length === 2 && parts[0] === 'migrations'
+      const isPgTap = parts.length === 3 && parts[0] === 'tests' && parts[1] === 'database'
+      return !isMigration && !isPgTap
+    })
+    .map((parts) => parts.join('/'))
+    .sort()
+}
+
+function listSqlFiles(rootDirectory) {
+  const found = []
+  if (!fs.existsSync(rootDirectory)) {
+    return found
   }
   const walk = (directory) => {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -106,15 +136,33 @@ export function findSqlOutsideTestDatabase(sourceTests) {
       if (entry.isDirectory()) {
         walk(fullPath)
       } else if (entry.name.toLowerCase().endsWith('.sql')) {
-        const relativeParts = path.relative(sourceTests, fullPath).split(path.sep)
-        if (relativeParts.length < 2 || relativeParts[0] !== 'database') {
-          offenders.push(relativeParts.join('/'))
-        }
+        found.push(path.relative(rootDirectory, fullPath).split(path.sep))
       }
     }
   }
-  walk(sourceTests)
-  return offenders.sort()
+  walk(rootDirectory)
+  return found
+}
+
+export function readProjectId(configText) {
+  for (const line of configText.split(/\r?\n/)) {
+    const match = PROJECT_ID_PATTERN.exec(line.trim())
+    if (match) {
+      return match[1]
+    }
+  }
+  return null
+}
+
+// W2 S11: a staged (or about-to-be-used) config must name a *-local-test project.
+export function assertLocalTestProjectId(configText, label = 'staged config.toml') {
+  const projectId = readProjectId(configText)
+  if (!projectId || !projectId.endsWith(LOCAL_TEST_PROJECT_ID_SUFFIX)) {
+    throw new Error(
+      `${label}: project_id must end with "${LOCAL_TEST_PROJECT_ID_SUFFIX}", found ${JSON.stringify(projectId)}`,
+    )
+  }
+  return projectId
 }
 
 export function computeStagedMigrationNames(migrationFileNames) {
@@ -182,9 +230,29 @@ function rewriteConfig(configText) {
   if (seedIndex === -1) {
     throw new Error(`supabase/config.toml is missing the line: ${SEED_PATHS_LINE}`)
   }
+  const sectionIndex = lines.findIndex((line) => line.trim() === SEED_SECTION_LINE)
+  let enabledIndex = -1
+  for (let index = sectionIndex + 1; sectionIndex !== -1 && index < lines.length; index += 1) {
+    const trimmed = lines[index].trim()
+    if (trimmed.startsWith('[')) {
+      break
+    }
+    if (trimmed === SEED_DISABLED_LINE) {
+      enabledIndex = index
+      break
+    }
+  }
+  if (enabledIndex === -1) {
+    throw new Error(
+      `supabase/config.toml must keep the seed disabled: "${SEED_DISABLED_LINE}" missing under ${SEED_SECTION_LINE}`,
+    )
+  }
   lines[projectIndex] = STAGED_PROJECT_ID_LINE
   lines[seedIndex] = STAGED_SEED_PATHS_LINE
-  return lines.join('\n')
+  lines[enabledIndex] = SEED_ENABLED_LINE
+  const stagedText = lines.join('\n')
+  assertLocalTestProjectId(stagedText)
+  return stagedText
 }
 
 function copyFileVerified(sourcePath, targetPath) {
@@ -218,10 +286,10 @@ export function stageLocalWorkdir({ repoRoot, outputDirectory } = {}) {
       throw new Error(`Local test baseline file not found: ${path.join(sourceBaseline, name)}`)
     }
   }
-  const straySql = findSqlOutsideTestDatabase(sourceTests)
+  const straySql = findStraySqlUnderSupabase(sourceSupabase)
   if (straySql.length > 0) {
     throw new Error(
-      `Refusing to stage: .sql outside supabase/tests/database/ would run under test db: ${straySql.join(', ')}`,
+      `Refusing to stage: .sql outside supabase/tests/database/ and supabase/migrations/: ${straySql.join(', ')}`,
     )
   }
 

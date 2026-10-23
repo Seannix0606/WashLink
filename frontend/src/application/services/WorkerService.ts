@@ -29,10 +29,6 @@ export class WorkerService {
     return this.workerRepository.fetchWorkerByIdentifier(workerIdentifier)
   }
 
-  public async fetchWorkerByUserIdentifier(workerUserIdentifier: string): Promise<Worker> {
-    return this.workerRepository.fetchWorkerByUserIdentifier(workerUserIdentifier)
-  }
-
   public async updateAvailability(
     workerIdentifier: string,
     isAvailableForNewJobs: boolean,

@@ -11,7 +11,10 @@ type RecordedQueryCall = readonly [methodName: string, methodArguments: unknown[
 
 const supabaseClientDouble = vi.hoisted(() => {
   const recordedQueryCalls: RecordedQueryCall[] = []
-  const singleResult: { data: unknown; error: { message: string } | null } = {
+  const singleResult: {
+    data: unknown
+    error: { code?: string; message: string } | null
+  } = {
     data: null,
     error: null,
   }
@@ -132,5 +135,25 @@ describe('SupabaseBookingRepository (J18 ratings)', () => {
     ])
     expect(ratedBooking.customerRatingStars).toBe(4)
     expect(ratedBooking.quotedPrice).toBe(250)
+  })
+
+  it('j18_raw_postgres_error_is_not_shown_to_users', async () => {
+    supabaseClientDouble.singleResult.error = {
+      code: 'XX000',
+      message: 'column "customer_rating_stars" of relation "bookings" internal detail',
+    }
+    const bookingRepository = new SupabaseBookingRepository()
+
+    const ratingPromise = bookingRepository.submitBookingRatingForCustomer(
+      testBookingIdentifier,
+      testCustomerIdentifier,
+      4,
+      null,
+    )
+
+    await expect(ratingPromise).rejects.toThrow(
+      'Could not submit your rating. Please try again.',
+    )
+    await expect(ratingPromise).rejects.not.toThrow(/relation|column|internal/)
   })
 })

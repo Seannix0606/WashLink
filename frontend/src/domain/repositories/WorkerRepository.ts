@@ -5,7 +5,6 @@ import type { CreateWorkerInput, Worker } from '../models/Worker'
 export interface WorkerRepository {
   fetchWorkersByOwner(ownerIdentifier: string): Promise<Worker[]>
   fetchWorkerByIdentifier(workerIdentifier: string): Promise<Worker>
-  fetchWorkerByUserIdentifier(workerUserIdentifier: string): Promise<Worker>
   createWorkerForOwner(
     ownerIdentifier: string,
     createWorkerInput: CreateWorkerInput,

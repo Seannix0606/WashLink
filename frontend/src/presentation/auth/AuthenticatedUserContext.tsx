@@ -4,7 +4,10 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { AuthService } from '../../application/services/AuthService'
 import { ProfileService } from '../../application/services/ProfileService'
 import type { AuthenticatedUser } from '../../domain/models/AuthenticatedUser'
-import type { SignUpInput } from '../../domain/repositories/AuthRepository'
+import type {
+  SignUpInput,
+  SignUpOutcome,
+} from '../../domain/repositories/AuthRepository'
 import type { UpdateProfileInput } from '../../domain/repositories/ProfileRepository'
 import { SupabaseAuthRepository } from '../../infrastructure/repositories/SupabaseAuthRepository'
 import { SupabaseProfileRepository } from '../../infrastructure/repositories/SupabaseProfileRepository'
@@ -17,8 +20,9 @@ interface AuthenticatedUserContextValue {
   readonly isSignOutInProgress: boolean
   readonly isPasswordRecoveryInProgress: boolean
   signIn: (emailAddress: string, password: string) => Promise<void>
-  signUpCustomer: (signUpInput: SignUpInput) => Promise<void>
-  signUpOwner: (signUpInput: SignUpInput) => Promise<void>
+  signUpCustomer: (signUpInput: SignUpInput) => Promise<SignUpOutcome>
+  signUpOwner: (signUpInput: SignUpInput) => Promise<SignUpOutcome>
+  signUpWorker: (signUpInput: SignUpInput) => Promise<SignUpOutcome>
   signOut: () => Promise<void>
   updateAuthenticatedUserProfile: (
     updateProfileInput: UpdateProfileInput,
@@ -97,12 +101,12 @@ export function AuthenticatedUserProvider({
       const refreshedUser = await authService.getCurrentSessionUserWithProfile()
       setAuthenticatedUser(refreshedUser)
     },
-    signUpCustomer: async (signUpInput: SignUpInput): Promise<void> => {
-      await authService.signUpCustomer(signUpInput)
-    },
-    signUpOwner: async (signUpInput: SignUpInput): Promise<void> => {
-      await authService.signUpOwner(signUpInput)
-    },
+    signUpCustomer: (signUpInput: SignUpInput): Promise<SignUpOutcome> =>
+      authService.signUpCustomer(signUpInput),
+    signUpOwner: (signUpInput: SignUpInput): Promise<SignUpOutcome> =>
+      authService.signUpOwner(signUpInput),
+    signUpWorker: (signUpInput: SignUpInput): Promise<SignUpOutcome> =>
+      authService.signUpWorker(signUpInput),
     signOut: async (): Promise<void> => {
       setIsSignOutInProgress(true)
       try {
