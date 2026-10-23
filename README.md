@@ -8,6 +8,31 @@ This repository contains both the frontend and backend for the WashLink platform
 
 ## Getting Started
 
+### Run frontend and backend with Docker Compose
+
+Install Docker Desktop, then from the repository root copy `.env.example` to
+`.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from your
+Supabase project. These are the public client URL and anon key; never put a
+Supabase service-role key in the frontend environment.
+
+Start both services with:
+
+```bash
+docker compose up --build
+```
+
+- Frontend: <http://localhost:5173>
+- Backend API health: <http://localhost:8000/api/v1/health>
+- Backend API docs: <http://localhost:8000/docs>
+
+The frontend and backend source folders are mounted for live development. Redis
+is started as a supporting service, and the backend uses a Docker-managed
+SQLite data volume by default. Stop the services with `Ctrl+C`, or run
+`docker compose down` in another terminal. To rebuild after changing a
+dependency manifest, use `docker compose up --build` again.
+This Compose setup is for local development; it does not deploy the app or
+provide production secrets, a production database, or a production web server.
+
 ### Frontend
 
 ```bash
