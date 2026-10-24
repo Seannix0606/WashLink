@@ -23,7 +23,7 @@ select set_config('fx.uw2', test_helpers.create_worker('j1-w2@local.test')::text
 select set_config('fx.uw_rate', test_helpers.create_worker('j1-wrate@local.test')::text, true);
 select set_config('fx.c1', test_helpers.create_customer('j1-c1@local.test')::text, true);
 select set_config('fx.o2', test_helpers.create_owner('j1-o2@local.test')::text, true);
-select test_helpers.create_shop(current_setting('fx.o1')::uuid);
+select test_helpers.create_verified_shop(current_setting('fx.o1')::uuid, test_helpers.create_super_admin('j1-admin@local.test'));
 select test_helpers.create_shop(current_setting('fx.o1')::uuid, 'pending');
 select test_helpers.create_shop(current_setting('fx.o2')::uuid);
 select set_config('fx.wa', test_helpers.create_roster_worker(current_setting('fx.o1')::uuid)::text, true);

@@ -296,6 +296,50 @@ begin
 end;
 $$;
 
+-- W4: a shop approved BY A RECORDED REVIEW (reviewed_by + reviewed_at), i.e. it passes
+-- public.shop_has_recorded_verification(). Inserted as a trusted session (fixture only).
+create or replace function test_helpers.create_verified_shop(p_owner uuid, p_reviewer uuid)
+returns uuid
+language plpgsql
+security invoker
+as $$
+declare
+  new_shop_id uuid;
+begin
+  perform test_helpers.assert_service_session();
+  insert into public.shops (owner_id, name, address, is_active, verification_status,
+                            verification_reviewed_by, verification_reviewed_at)
+  values (p_owner, 'Local Test Verified Shop ' || left(gen_random_uuid()::text, 8),
+          'Local test address', true, 'approved', p_reviewer, now())
+  returning id into new_shop_id;
+  return new_shop_id;
+end;
+$$;
+
+-- W4: a complete draft job opening (every required-for-publish field set; no pay or terms).
+create or replace function test_helpers.create_job_opening(p_shop uuid, p_title text)
+returns uuid
+language plpgsql
+security invoker
+as $$
+declare
+  new_opening_id uuid;
+begin
+  perform test_helpers.assert_service_session();
+  insert into public.job_openings (shop_id, owner_id, title, description, work_location,
+                                   openings_count, job_type, applicant_requirement)
+  select s.id, s.owner_id, p_title, 'Local test job opening description', 'Local test location',
+         1, 'part_time', 'trainees_welcome'
+  from public.shops s
+  where s.id = p_shop
+  returning id into new_opening_id;
+  if new_opening_id is null then
+    raise exception 'test_helpers.create_job_opening: no shop %', p_shop;
+  end if;
+  return new_opening_id;
+end;
+$$;
+
 grant usage on schema test_helpers to anon, authenticated;
 grant execute on all functions in schema test_helpers to anon, authenticated;
 
