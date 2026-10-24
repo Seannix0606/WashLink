@@ -1,10 +1,12 @@
 import { vi, type Mock } from 'vitest'
+import type { StoredNotification } from '../domain/models/AppNotification'
 import type { Booking } from '../domain/models/Booking'
 import type { RosterLinkEntry } from '../domain/models/RosterLink'
 import type { WorkerProfile } from '../domain/models/WorkerProfile'
 import type { Shop } from '../domain/models/Shop'
 import type { AuthRepository } from '../domain/repositories/AuthRepository'
 import type { BookingRepository } from '../domain/repositories/BookingRepository'
+import type { NotificationRepository } from '../domain/repositories/NotificationRepository'
 import type { RosterLinkRepository } from '../domain/repositories/RosterLinkRepository'
 import type { ShopVerificationRepository } from '../domain/repositories/ShopVerificationRepository'
 import type { WorkerProfileRepository } from '../domain/repositories/WorkerProfileRepository'
@@ -170,5 +172,30 @@ export function createMockRosterLinkRepository(): MockedRepository<RosterLinkRep
     previewRosterLinkCode: vi.fn(),
     acceptRosterLinkCode: vi.fn(),
     unlinkMyRosterEntry: vi.fn(),
+  }
+}
+
+export const testNotificationIdentifier = '88888888-8888-4888-8888-888888888888'
+export const testSecondNotificationIdentifier = '99999999-9999-4999-8999-999999999999'
+
+export function buildStoredNotification(
+  overrides: Partial<StoredNotification> = {},
+): StoredNotification {
+  return {
+    identifier: testNotificationIdentifier,
+    category: 'shop_verification.status_changed',
+    title: 'Shop verification updated',
+    body: 'Test Shop is now Approved.',
+    createdAt: '2026-10-24T00:00:00+00:00',
+    readAt: null,
+    ...overrides,
+  }
+}
+
+export function createMockNotificationRepository(): MockedRepository<NotificationRepository> {
+  return {
+    listMyNotifications: vi.fn(),
+    countMyUnread: vi.fn(),
+    markRead: vi.fn(),
   }
 }

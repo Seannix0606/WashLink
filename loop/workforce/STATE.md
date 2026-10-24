@@ -1,7 +1,7 @@
 # Loop State
 
 Loop status: **RUNNING** (started 2026-10-24) · mode: **continuous until Completion criteria met**
-Next increment: **W3 — Audit events & notification foundation**
+Next increment: **W4 — Job openings (owner)**
 Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 
 | ID | Status | Branch | Fix cycles | Checks (actual) | Verifier |
@@ -9,7 +9,7 @@ Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 | W0 | passed | feature/workforce | 0 | lint exit 0 · build exit 0 · pytest 4 passed | PASS (increments/W0/VERDICT.md) |
 | W1 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 16/16 · pytest 4 · stager 12/12 · pgTAP 91, PASS (22 TODO-fail in 8 W2 blocks) | PASS (increments/W1/VERDICT.md) |
 | W2 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 36/36 · pytest 4 · stager 18/18 · pgTAP 341 PASS (0 TODO) · smoke 48/48 | PASS (increments/W2/VERDICT.md) |
-| W3 | pending | — | 0 | — | — |
+| W3 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 46/46 · pytest 4 · stager 18/18 · pgTAP 546 PASS (18 migrations) · smoke W2 48/48, W3 33/33 | PASS (increments/W3/VERDICT.md) |
 | W4 | pending | — | 0 | — | — |
 | W5 | pending | — | 0 | — | — |
 | W6 | pending | — | 0 | — | — |

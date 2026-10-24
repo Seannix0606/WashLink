@@ -1,4 +1,4 @@
-# Local test harness (W1, hardened in W2)
+# Local test harness (W1, hardened in W2, extended in W3)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,10 +20,10 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after W2): the reset applies 13 migrations (baseline `00000000000000`, the
-2026_04_17 copy, owner-policies baseline `20260417000002`, the other 4 pre-W2 copies, then the
-6 W2 copies `20261024000001..06`) and seeds the helpers; `test db` runs 10 files and ends with
-`Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
+Expected (after W3): the reset applies 18 migrations (baseline `00000000000000`, the
+2026_04_17 copy, owner-policies baseline `20260417000002`, the other 4 pre-W2 copies, the
+6 W2 copies `20261024000001..06`, then the 5 W3 copies `20261024000007..11`: w3a, w3b, w3c, w3d0 preflight, w3d) and seeds the
+helpers; `test db` runs 15 files (546 assertions after W3 review polish) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
 ## Why a staged workdir
 
@@ -58,7 +58,7 @@ Expected (after W2): the reset applies 13 migrations (baseline `00000000000000`,
   renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no
   `.temp/project-ref` and no `.env`, so the CLI cannot target a remote project from it.
-  Layout: `supabase/migrations/` (the 2 baseline migrations + the 11 copies),
+  Layout: `supabase/migrations/` (the 2 baseline migrations + the 15 copies),
   `supabase/local_test_baseline/test_helpers.sql` (seed; kept outside `tests/` because
   `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env`
@@ -85,19 +85,23 @@ direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_reques
 The baseline still reproduces the weaknesses on purpose, so those assertions only pass
 because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (after W2 fix cycle 1: 10 files, 341 assertions)
+## pgTAP files (after W3 build: 14 files, 515 assertions)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 15 | replay of 13 migrations, W2 objects, RLS on, definer search_path |
+| `001_migration_replay.test.sql` | 16 | replay of 18 migrations, W2 objects, W2 and W3 RLS on, definer search_path |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
 | `j17_w2_shop_booking_guards.test.sql` | 32 | E3/C3, S6, S7, F5 guard, gate helper, trusted session, booking transitions |
 | `j17_w2_worker_data_guards.test.sql` | 34 | worker profile / contact privacy, link-code RPC authorization |
+| `j17_w3_audit_events.test.sql` | 60 | W3 audit table: server-only insert, append-only for every role, trusted retention purge, derived actor fields, super_admin read, payload rules, realtime exclusion, R-1 `pg_temp` pinning and temp-table shadowing |
+| `j17_w3_audit_wiring.test.sql` | 31 | every wired W2 action writes its event (shop decision / submission / S6 reset, link code, link, worker / owner unlink, linked row delete, worker profile delete, trusted role change), review log survives reviewer deletion and is super_admin only, no private data in payloads |
+| `j17_w3_notifications.test.sql` | 61 | recipient isolation, no direct insert / enqueue / edit, mark-read rules and idempotency, producer once-only, text rules and safe label, deleted recipients |
 | `j18_existing_flows.test.sql` | 64 | W1 J18 + F5 RPC + every W2-guarded frontend write path |
 | `j18_w2_profile_reads.test.sql` | 19 | R2: profile and counterparty-name reads, phone_number privacy |
+| `j18_w3_flows.test.sql` | 21 | W2 review / link / unlink flows and shop, owner and worker deletes still work with the W3 AFTER triggers and leave sensible audit rows (j18_existing_flows is at the 350-line limit) |
 | `j1_worker_registration_and_profile.test.sql` | 55 | J1 signup roles, worker profile, roster link codes |
 
 ## Safety rules
@@ -144,3 +148,21 @@ and keys come from `supabase status -o env --workdir .local-supabase-test`, stay
 non-loopback URL is refused. Note: the baseline signup trigger has no metadata-sync on update, so
 the `updateUser` assertions prove the profile never follows metadata; the GoTrue silent-restore
 branch itself (R4) is still only covered by review.
+
+## W3 API smoke (local stack only)
+
+```sh
+node scripts/supabase-test/w3-api-smoke.mjs   # after run-db-tests.mjs (and w2-api-smoke.mjs), before stopping the stack
+```
+
+Same safety rules as the W2 smoke script (loopback URL only, keys from `supabase status` held in
+memory and never printed, no `.env`, synthetic `@local.test` users deleted with the result
+asserted). Checks through PostgREST / GoTrue: direct inserts into `workforce_audit_events` and
+`notifications` fail (42501); `rpc('record_workforce_audit_event')` and
+`rpc('enqueue_notification')` fail with 42501 (also for the service_role key);
+`rpc('set_config')` is not exposed; non-admin audit and review-log reads return 0 rows; a super
+admin approves a shop and the owner lists exactly 1 notification; `mark_notifications_read`
+returns 1, then 0; the service_role key cannot insert, update or delete audit rows; a GoTrue
+`deleteUser` of a linked worker writes a `roster.unlinked` event with `account_deleted` and
+`actor_kind = system`; the review log survives owner and shop deletion. Must end `0 failed`
+(W3 build: 33 checks).

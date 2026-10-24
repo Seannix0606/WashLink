@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { Bell, Search } from 'lucide-react'
+import { BellRing, Search } from 'lucide-react'
 import { IconButton } from '../../design/ui'
 import { joinClassNames } from '../../design/classNames'
 import { AuthenticatedTopBar } from '../AuthenticatedTopBar'
@@ -36,8 +36,8 @@ export function OwnerDashboardTopBar({
       trailingSlot={
         <div className="relative">
           <IconButton
-            accessibleLabel="Notifications"
-            icon={<Bell className="h-4 w-4" />}
+            accessibleLabel="Show new booking requests"
+            icon={<BellRing className="h-4 w-4" />}
             onClick={onNotificationButtonClick}
           />
           {hasNewNotification ? (

@@ -1,0 +1,149 @@
+# Audit events and notifications (W3)
+
+Scope: what `supabase/migrations/2026_10_24_w3a..w3d_*.sql` add. Everything here was proven
+on the local Docker stack only (pgTAP files `j17_w3_*`, `j18_w3_flows`, and
+`scripts/supabase-test/w3-api-smoke.mjs`). It says nothing about production until the D-10
+rows 17-20 in `ROLE_AND_PROFILE_SECURITY.md` are answered (D-10).
+
+## Design principles (continue P1-P9 of ROLE_AND_PROFILE_SECURITY.md)
+
+| | Principle |
+|---|---|
+| P10 | Every SECURITY DEFINER function pins `set search_path = public, pg_temp` (storage helper `public, auth, pg_temp`). If `pg_temp` is not listed, Postgres searches the temp schema FIRST for relations, so a session that can create temp tables could shadow `profiles` / `shops`. W3a re-pins the W2 and pre-W2 functions with `alter function` only (a listed signature that does not exist aborts the migration), then aborts if any SECURITY DEFINER function in `public` / `washlink_private` still lacks `pg_temp`; W3 functions are created with it. A later `create or replace` must keep it. The local-only `handle_new_user()` is not altered and is the only exclusion (D-10 row 17). |
+| P11 | Audit rows have NO foreign keys: `actor_id`, `subject_id`, `subject_profile_id` are plain uuids plus a role snapshot. Deleting a user, shop or roster row never nulls or removes history (R-4) and the table takes no part in cascades (P9 untouched). |
+| P12 | Writes to `workforce_audit_events` / `notifications` happen only inside definer functions that set a transaction-local flag (`washlink.audit_writer` / `washlink.notification_writer` = `on`), checked by a BEFORE INSERT trigger in every session (superuser and service_role included). No client role has a write privilege, and the write policies are explicit deny-all. PostgREST does not expose `set_config` (smoke `rpc_set_config_not_exposed`). |
+| P13 | Payloads and notification texts carry identifiers, statuses and field NAMES only: never contact data, notes, document paths, link codes or hashes, or contract text. Enforced by CHECK functions (below), not only by convention. |
+| P14 | Producers are AFTER triggers on the W2 tables, not edits of W2 RPC bodies: one place catches every path (RPC, direct update, FK cascade, trusted SQL). A notification DATA problem never fails the business action: `enqueue_notification_safely` catches only `check_violation`, `unique_violation`, `foreign_key_violation` and `not_null_violation`, logs a WARNING and returns null (a null/unknown recipient already returns null); every other class (42501, 42703, ...) is a defect and is re-raised. Free-text names go through `notification_safe_label`. An audit write failure does fail the action (the trail is required), so the separate migration `2026_10_24_w3d0_producer_schema_preflight.sql` (applied right before w3d) aborts if any column or function the producers read is missing (D-10 row 20). |
+
+## workforce_audit_events
+
+Columns: `id` bigint identity (insertion order), `created_at` (forced to `now()`), `actor_id`,
+`actor_role`, `actor_kind` (`user` / `trusted_session` / `system`), `action`
+(`^[a-z_]+(\.[a-z_]+)+$`, max 64), `subject_type` (`^[a-z_]{1,40}$`), `subject_id`,
+`subject_profile_id` (the person the event is about), `payload` (jsonb object).
+
+| Operation | Rule |
+|---|---|
+| INSERT | Only `record_workforce_audit_event(p_action, p_subject_type, p_subject_id, p_subject_profile_id, p_payload)` (definer, revoked from public, anon, authenticated, service_role). Actor fields are derived: `actor_id = auth.uid()`; `actor_kind` = user if uid, else trusted_session if `is_trusted_db_session()`, else system (e.g. GoTrue `deleteUser`); a trusted SQL session that sets `request.jwt.claims` is recorded as `user` (see Limitations); `actor_role = current_user_profile_role()`. Direct INSERT -> 42501 `Audit events are written only by the server.` (trigger) or permission denied. |
+| UPDATE | Never: 42501 `Audit events are append-only.` for every session, super_admin, service_role and trusted SQL included. |
+| DELETE / TRUNCATE | 42501 unless the trusted retention path below holds. |
+| SELECT | super_admin only (`wae_select_super_admin`). An event about one party may carry the other party's id (reviewer, owner), so W11 adds redacted per-user functions instead of widening this policy. |
+
+Payload rule `workforce_audit_payload_is_safe(jsonb)` (CHECK, 23514 on violation): at most 2048
+bytes, nesting depth at most 3; no key (recursive) matching
+`phone|e_?mail|contact|address|note|password|token|secret|code|storage_path|document_path|body|message|text|clause|signature`
+(case-insensitive); no string over 120 chars, containing `@`, or phone-shaped (spaces,
+parentheses and hyphens removed, matches `^\+?[0-9]{7,15}$`); no number with absolute value
+1e6 or more. Times are emitted as timestamptz strings (they contain `:`).
+
+### Trusted retention purge (human procedure, W13 defines the period)
+
+Only in the SQL editor / psql (a trusted session; PostgREST clients, service_role JWTs and end
+users cannot do this), inside one transaction:
+
+```sql
+begin;
+set local washlink.audit_retention_purge = on;
+delete from public.workforce_audit_events where created_at < '<cut-off chosen by the retention policy>';
+commit;
+```
+
+No retention period is claimed (W3-L1). Export before purging if a record is required.
+
+## Action catalogue (W3d producers)
+
+| Trigger | Condition | Action; subject_type / subject_id / subject_profile_id | Payload | Notification |
+|---|---|---|---|---|
+| `shops_audit_verification` AFTER UPDATE (WHEN status or submitted_at changed, or the submit flag names the row) | flag `washlink.submit_shop` = shop id | `shop.verification_submitted`; shop / shop id / owner_id | from_status, to_status | none |
+| same | status changed by super_admin or trusted session | `shop.verification_decided`; same | from_status, to_status, reviewed_by, reviewed_at (the W2b server-stamped columns: for a super_admin decision reviewed_by = `auth.uid()` = actor_id, whatever the client sent; for a trusted session it is whatever that SQL set) | owner: `shop_verification.status_changed` |
+| same | approved -> pending by a non-admin (S6 reset; W2b skips S6 for super_admin and trusted sessions, so it can never land in the decided row) | `shop.verification_reset_by_identity_change`; same | from_status, to_status, changed_fields (`name`, `address`) | none (the owner made the edit; never a `verification_decided` event or a "Pending review" decision notice) |
+| `worker_roster_link_codes_audit_issue` AFTER INSERT | always | `roster.link_code_issued`; roster_entry / workers.id / null | expires_at (never the code or code_hash) | none |
+| `workers_audit_link` AFTER UPDATE (WHEN user_id changed) | null -> account | `roster.linked`; roster_entry / workers.id / new user_id | owner_id | owner: `roster.linked` |
+| same | account -> null | `roster.unlinked`; roster_entry / workers.id / old user_id | owner_id, unlinked_by = `account_deleted` (profile gone; checked first) / `worker` / `owner` / `trusted_session` | worker unlinked: owner; owner unlinked: worker; others: none |
+| `workers_audit_linked_delete` AFTER DELETE (WHEN old user_id not null) | always | `roster.unlinked`; same | owner_id, unlinked_by = `owner_account_deleted` (owner profile gone, cascade) / `roster_entry_deleted` | worker (distinct neutral text when the owner account was closed) |
+| `worker_profiles_audit_delete` AFTER DELETE | always | `worker_profile.deleted`; worker_profile / profile_id / profile_id | deleted_by = `account_deleted` / `self` / `trusted_session` / `other` | none |
+| `profiles_audit_role_change` AFTER UPDATE (WHEN role changed) | only trusted sessions can (W2a) | `profile.role_changed`; profile / id / id | from_role, to_role | none |
+
+WHEN clauses are used instead of `UPDATE OF <column>`: a BEFORE trigger change (S6 sets the
+status to pending on a name edit) is not in the UPDATE target list, so `UPDATE OF` would miss
+it. FK `on delete set null` cascades (reviewing admin deleted) change neither status nor
+submitted_at and write no shop event.
+
+`shop_verification_review_log` (view, `security_invoker = true`, super_admin only through the
+base-table RLS): `event_id, shop_id, action, from_status, to_status, reviewed_by (= actor_id),
+actor_role, created_at` over `shop.verification_%` events. This is the R-4 append-only review
+log; it survives deletion of the reviewer, the owner and the shop. W7/W10 still snapshot
+verification at issue time.
+
+## notifications
+
+Columns: `id` uuid, `recipient_id` (FK profiles, `on delete cascade`: the recipient's own data),
+`category`, `title` (1..120), `body` (1..400), `subject_type` / `subject_id` (no FK, future deep
+link), `idempotency_key` (`^[a-z_]+:[A-Za-z0-9:_-]{1,180}$`, unique per recipient),
+`created_at` (forced to `now()`), `read_at`. No jsonb payload column.
+
+State machine: `unread (read_at null) -> read (read_at = now())`, recipient only, through
+`mark_notifications_read`. Any other UPDATE -> 42501 `Notifications cannot be edited.`
+(trigger, every session). No client DELETE; rows go with the recipient's profile; trusted SQL
+may purge (retention, W13).
+
+Text rule `notification_text_is_safe(text)` (CHECK on title and body, 23514): no `@`, and no
+run of `[+0-9 ()-]` holding 7 or more digits. `notification_safe_label(label, fallback)` returns
+the trimmed label if it is 1..60 chars and safe, else the fallback, so an owner-typed roster
+name holding a phone number becomes "A roster entry" and the link still succeeds.
+
+| Function | Who | Contract |
+|---|---|---|
+| `enqueue_notification(p_recipient_id, p_category, p_title, p_body, p_idempotency_key, p_subject_type default null, p_subject_id default null) returns uuid` | definer producers and trusted SQL only (revoked from public, anon, authenticated, service_role) | Null and no write if the recipient profile does not exist. `on conflict (recipient_id, idempotency_key) do nothing`; a repeat returns the existing id (first write wins). |
+| `mark_notifications_read(p_notification_ids uuid[] default null) returns integer` | authenticated | 42501 if `auth.uid()` is null; 22023 for more than 200 ids; null = every unread row of the caller; only `recipient_id = auth.uid() and read_at is null` rows change; returns the number changed; foreign or unknown ids are silently ignored. |
+
+Producer idempotency keys embed the audit event id (`shop_verification:<shop>:<event>`,
+`roster_link:<row>:<event>`), so one event yields at most one notification per recipient.
+
+Notification texts (in-app only, W3-L2):
+
+| Category | Recipient | Title | Body |
+|---|---|---|---|
+| `shop_verification.status_changed` | shop owner | Shop verification updated | `<shop name or "Your shop"> is now Approved.` / `Rejected.` / `Changes requested.` / `Pending review.` |
+| `roster.linked` | roster owner | Roster worker linked | `<roster name or "A roster entry"> is now linked to a worker account.` |
+| `roster.unlinked` (worker unlinked) | roster owner | Roster link removed | `<roster name or "A roster entry"> is no longer linked to a worker account.` |
+| `roster.unlinked` (owner unlinked, or owner deleted the linked row) | worker | Roster link removed | `A shop removed the link between your account and its roster.` |
+| `roster.unlinked` (owner account closed, row cascade-deleted) | worker | Roster link removed | `A roster link ended because the shop's account was closed.` |
+
+### Realtime decision
+
+Neither table is in `supabase_realtime` (W3b/W3c drop them if present; a FOR ALL TABLES
+publication is NOTICE-logged for D-10 row 19). Reason: postgres_changes authorization depends
+on production Realtime/RLS settings that are unknown (D-10), and one missed check would
+broadcast inboxes. The client polls (W3 PLAN section 5: every 60 s while visible, and on
+focus). W12 may add Realtime Broadcast with `realtime.messages` policies, proven by tests.
+
+## Limitations
+
+- Rejected actions are not audited (e.g. a refused role change): the guard raises, which rolls
+  back any audit row in the same transaction. Needs an autonomous transaction (new extension
+  surface); not done.
+- Append-only holds for every application role and service_role, not for a database superuser
+  or table owner, who can disable triggers or drop the table (W3 R2). Not a tamper-proof,
+  hash-chained or certified legal record (W3-L3); never present it as evidence-grade.
+- `actor_kind` is derived from `auth.uid()` first: a trusted SQL session (SQL editor, psql,
+  test harness) that sets `request.jwt.claims` to impersonate a user is recorded as
+  `actor_kind = 'user'` with that user's id and role, not as `trusted_session`. The trail cannot
+  tell such impersonation apart from the real user (W3-L3: internal operational log only).
+- The decision payload `reviewed_by` equals `actor_id` only for super_admin decisions (W2b
+  stamps it); for a trusted-session decision it is whatever that SQL wrote. The review-log view
+  uses `actor_id` (W3-L5).
+- Payload and text filters are heuristics (keys, `@`, phone shapes), not complete (R5);
+  producers stay hand-written and reviewed, and no client can write.
+- Up to 60 s polling delay (R6). Audit rows keep pseudonymous user ids after account deletion
+  (R7, by design for R-4; retention is a legal question, W3-L1).
+- Audit read for actors/subjects and an admin audit UI are W11; email/SMS/push and W4-W10
+  events are W12.
+
+## Rollback
+
+Per-file `-- ROLLBACK` blocks in reverse order d..a, local stack only. d: drop the producer
+triggers, their functions and the view (rows already written stay). c: drop the notification
+objects (inbox loss). b: drop the audit objects (history loss; export first with a trusted
+`copy`; apart from the purge above this is the only way audit rows disappear). a: set
+`search_path = public` again (re-opens R-1).

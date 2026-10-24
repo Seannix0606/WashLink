@@ -24,6 +24,8 @@ const userFacingDatabaseMessages: ReadonlySet<string> = new Set([
   'Only a completed, unrated booking can be rated by its customer.',
   'New bookings start as pending, unassigned and unrated.',
   'Your role and verification fields cannot be changed from the app.',
+  'Sign in to manage notifications.',
+  'Mark at most 200 notifications at a time.',
 ])
 
 const userFacingMessageByErrorCode: ReadonlyMap<string, string> = new Map([

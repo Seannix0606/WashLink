@@ -16,7 +16,7 @@ says nothing about the production project until the D-10 checklist at the end is
 | P5 | `public.is_trusted_db_session()` fails closed (fix cycle 1): true iff the JWT role is `service_role`, OR there are no `request.jwt` claims at all AND `session_user` is not `authenticator` (PostgREST), `supabase_auth_admin` (GoTrue) or `supabase_storage_admin` (Storage). True: SQL editor/psql/migrations, service_role requests, test `act_as_service()`. False: every end-user JWT (including super_admin), anon with or without a JWT, any other claims, GoTrue's DB session. GUC + `session_user` based, so correct inside SECURITY DEFINER code. |
 | P6 | RPC-only transitions set a transaction-local flag (`washlink.submit_shop`, `washlink.roster_link`) to the row id; the guard trigger accepts the flag only for that row and only for the one transition; the RPC resets it before returning. PostgREST clients cannot set `washlink.*` GUCs (risk R3). |
 | P7 | No pgcrypto: link codes come from `gen_random_uuid()`, hashes from built-in `sha256()`. |
-| P8 | Every new function pins `set search_path = public`; `revoke all ... from public, anon`; `grant execute ... to authenticated` only where the app calls it. Trigger functions are revoked from `authenticated` too (triggers do not need EXECUTE). |
+| P8 | Every new function pins `set search_path = public, pg_temp` (since W3a / R-1; the storage helper `public, auth, pg_temp`; W3 PLAN P10: without `pg_temp` listed last, the temp schema is searched FIRST for relations); W3a re-pinned every W2 and pre-W2 definer function with `alter function` (bodies unchanged). Any later `create or replace` must keep this value (it resets proconfig); `revoke all ... from public, anon`; `grant execute ... to authenticated` only where the app calls it. Trigger functions are revoked from `authenticated` too (triggers do not need EXECUTE). |
 | P9 | FK cascades (fix cycle 1, S-B1): every UPDATE guard first calls `public.is_orphaned_fk_set_null(table, old, new)`, true iff the ONLY changed columns are single-column FKs declared `on delete set null`, each going value -> null while the referenced row no longer exists. So deleting a customer, a linked worker account, a reviewing super admin, an owner (shops cascade) or a roster row with bookings in any status never fails, and the same null written by hand while the parent exists is still rejected. Internal (no client EXECUTE). |
 
 ## Guard matrix
@@ -36,6 +36,9 @@ says nothing about the production project until the D-10 checklist at the end is
 | `worker_private_contacts` | RLS `wpc_*_self` | Worker self only; no admin, no owner. |
 | `worker_roster_link_codes`, `worker_roster_link_attempts` | RLS on, deny-all policies, no table privileges | RPC only. |
 | `washlink_private.roster_link_code_pepper` | schema not exposed, no schema/table privileges, RLS on, deny-all policies | Read only by the definer hash function. |
+| `workforce_audit_events` (W3b) | insert / update / delete / truncate triggers (all sessions), no client write privilege, deny-all write policies | INSERT only through `record_workforce_audit_event()` (internal; writer flag), never UPDATE, DELETE/TRUNCATE only on the trusted retention path. SELECT: super_admin only (`wae_select_super_admin`). See `AUDIT_AND_NOTIFICATIONS.md`. |
+| `notifications` (W3c) | insert / update triggers (all sessions), no client write privilege, deny-all write policies | INSERT only through `enqueue_notification()` (internal). SELECT: recipient only. The only change is `read_at` null -> now(), through `mark_notifications_read()`. |
+| AFTER triggers on `shops`, `workers`, `worker_roster_link_codes`, `worker_profiles`, `profiles` (W3d) | `shops_audit_verification`, `workers_audit_link`, `workers_audit_linked_delete`, `worker_roster_link_codes_audit_issue`, `worker_profiles_audit_delete`, `profiles_audit_role_change` | Write audit events (and two notification producers) after the W2 BEFORE guards accepted the change. They never change the row; FK cascades still pass (P9, `j17_w2_fix1_fk_cascades`, `j18_w3_flows`). |
 | `is_verified_shop_owner(shop)` | gate helper (W4/W7/W10) | Caller is an owner account and owns the shop, AND `verification_status = 'approved'` AND `verification_reviewed_by` / `verification_reviewed_at` not null AND `is_active` (C-B1b, compliance N3 adopted as the default). Deleting the reviewing super admin nulls `reviewed_by` (P9), so the shop stops counting as verified until re-reviewed: deactivate reviewers rather than delete them. |
 
 Booking status transitions (`guard_booking_update`):
@@ -82,7 +85,7 @@ returns only `full_name` for an existing booking/roster relationship; never wide
   runs a trusted UPDATE.
 - E4 accepted as intended: owners may edit `verification_submitted_at` and `is_active`.
 - The GoTrue silent-restore branch cannot run in pgTAP (R4); covered by review and the checklist.
-- W2 writes no audit events (W3).
+- W2 wrote no audit events; W3 adds them (`AUDIT_AND_NOTIFICATIONS.md`). Rejected role changes are still not audited (the raise rolls the audit row back).
 - `approved_shop_names_for_owner()` (link-code preview, roster list) still uses `approved` + `is_active` only, not the recorded-review rule; align it if W4+ treats these names as a trust signal.
 - Link codes (fix cycle 1): stored as `sha256(pepper || ':' || code)`. A server-side pepper (one 244-bit random row in `washlink_private`) was chosen over per-row salts because it keeps the hash an exact unique-index lookup; per-row salts would need a scan of all active codes. Rate limits per rolling hour: 5 failed attempts per user and 10 lookups of the same code hash by anyone (both return `rate_limited`), counted under a per-user `pg_advisory_xact_lock`; attempts older than the window are pruned in bounded `skip locked` batches on each call.
 - `worker_profiles.availability_status` is NOT NULL without a default (fix cycle 1): an insert without it fails with 23502; the frontend always sends the chosen value.
@@ -90,7 +93,7 @@ returns only `full_name` for an existing booking/roster relationship; never wide
 ## D-10 checklist (mandatory human step before any production apply)
 
 A human takes a schema-only dump of the production project (read-only, outside this loop) and
-diffs it against the local stack. Do not apply W2 until every row is answered and recorded.
+diffs it against the local stack. Do not apply W2 (rows 1-16) or W3 (rows 17-20) until every row is answered and recorded.
 
 | # | Check | Why |
 |---|---|---|
@@ -110,6 +113,10 @@ diffs it against the local stack. Do not apply W2 until every row is answered an
 | 14 | Audit approved shops without a super-admin reviewer before deploy: `select id, name, verification_reviewed_by, verification_reviewed_at from public.shops s where verification_status = 'approved' and (verification_reviewed_by is null or verification_reviewed_at is null or not exists (select 1 from public.profiles p where p.id = s.verification_reviewed_by and p.role::text = 'super_admin'));` Every hit is re-reviewed by a super admin (or knowingly accepted and recorded) before W2; after W2 they are not verified for `is_verified_shop_owner`. | C-B1 |
 | 15 | `supabase_realtime` publication: not `FOR ALL TABLES`, and none of `worker_private_contacts`, `worker_profiles`, `worker_roster_link_*` in it (W2f drops them, or NOTICE-logs a FOR ALL TABLES publication). | W2-L1 |
 | 16 | `washlink_private` schema: not in the PostgREST exposed schemas (`api.schemas`); the pepper row is created per database by W2e and is part of DB backups (treat backups as secret). Rotating it invalidates every active link code. | R8 |
+| 17 | W3a (R-1): production signup function (row 1) and any other SECURITY DEFINER function not in the W3a list must also pin `search_path = public, pg_temp`. W3a now ABORTS if a listed signature is missing, and its final assertion aborts if any SECURITY DEFINER function in `public` / `washlink_private` lacks `pg_temp` (only the local-only `handle_new_user()` is excluded; the production signup function, if named differently, must be pinned first). | R-1, P8 |
+| 18 | No pre-existing `public.notifications` / `public.workforce_audit_events` tables, `shop_verification_review_log` view, or same-named functions (`record_workforce_audit_event`, `enqueue_notification`, `mark_notifications_read`, `notification_*`, `audit_*`). `create table if not exists` would silently keep a different table. | W3 R1 |
+| 19 | `supabase_realtime` excludes `notifications` and `workforce_audit_events` (W3b/W3c drop them, or NOTICE-log a FOR ALL TABLES publication). | W3 realtime decision |
+| 20 | Columns read by the W3d producers exist with these names: `shops.{id, owner_id, name, address, verification_status, verification_submitted_at, verification_reviewed_by, verification_reviewed_at}`, `worker_roster_link_codes.{worker_row_id, expires_at}`, `workers.{id, owner_id, user_id, name}`, `worker_profiles.profile_id`, `profiles.{id, role}`. The W3d0 preflight migration (`2026_10_24_w3d0_producer_schema_preflight.sql`, staged right before w3d) aborts naming any missing column/function; without it a drift would break shop updates, unlinks and account deletions at run time (audit failures abort the action). | W3 review polish |
 
 ## Risks (from the W2 plan)
 
