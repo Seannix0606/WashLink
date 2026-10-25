@@ -1,4 +1,4 @@
-# Local test harness (W1, hardened in W2, extended in W3)
+# Local test harness (W1, hardened in W2, extended in W3 and W4)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,10 +20,11 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after W3): the reset applies 18 migrations (baseline `00000000000000`, the
+Expected (after W4): the reset applies 22 migrations (baseline `00000000000000`, the
 2026_04_17 copy, owner-policies baseline `20260417000002`, the other 4 pre-W2 copies, the
-6 W2 copies `20261024000001..06`, then the 5 W3 copies `20261024000007..11`: w3a, w3b, w3c, w3d0 preflight, w3d) and seeds the
-helpers; `test db` runs 15 files (546 assertions after W3 review polish) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
+6 W2 copies `20261024000001..06`, then the 5 W3 copies `20261024000007..11`: w3a, w3b, w3c, w3d0 preflight, w3d, then the 4 W4 copies
+`20261024000012..15`: w4a preflight, w4b, w4c, w4d) and seeds the
+helpers; `test db` runs 20 files (749 assertions after W4 build) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
 ## Why a staged workdir
 
@@ -58,7 +59,7 @@ helpers; `test db` runs 15 files (546 assertions after W3 review polish) and end
   renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no
   `.temp/project-ref` and no `.env`, so the CLI cannot target a remote project from it.
-  Layout: `supabase/migrations/` (the 2 baseline migrations + the 15 copies),
+  Layout: `supabase/migrations/` (the 2 baseline migrations + the 20 copies),
   `supabase/local_test_baseline/test_helpers.sql` (seed; kept outside `tests/` because
   `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env`
@@ -71,7 +72,9 @@ helpers; `test db` runs 15 files (546 assertions after W3 review polish) and end
 - Helpers (`test_helpers` schema, seed only): `create_user/customer/owner/worker/super_admin`,
   `act_as(uuid)`, `act_as_customer/owner/worker/admin(email)`, `act_as_anon()`,
   `act_as_service()`, `attempt(sql)`, fixtures `create_shop`, `set_shop_price`,
-  `create_roster_worker`, `create_booking_fixture` (fixtures require `act_as_service()`).
+  `create_roster_worker`, `create_booking_fixture`, W4 `create_verified_shop(owner, reviewer)`
+  (approved with a recorded review) and `create_job_opening(shop, title)` (complete draft)
+  (fixtures require `act_as_service()`).
 - Ids are passed between statements with `set_config('fx.<name>', ..., true)` /
   `current_setting('fx.<name>')`, readable under any role.
 - Never print a bare `ok` from a plain `select`: TAP counts it as a test.
@@ -85,12 +88,12 @@ direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_reques
 The baseline still reproduces the weaknesses on purpose, so those assertions only pass
 because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (after W3 build: 14 files, 515 assertions)
+## pgTAP files (after W4 build: 20 files, 749 assertions)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 16 | replay of 18 migrations, W2 objects, W2 and W3 RLS on, definer search_path |
+| `001_migration_replay.test.sql` | 17 | replay of 22 migrations, W2 objects, W2, W3 and W4 RLS on, definer search_path |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
@@ -102,7 +105,13 @@ because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a pla
 | `j18_existing_flows.test.sql` | 64 | W1 J18 + F5 RPC + every W2-guarded frontend write path |
 | `j18_w2_profile_reads.test.sql` | 19 | R2: profile and counterparty-name reads, phone_number privacy |
 | `j18_w3_flows.test.sql` | 21 | W2 review / link / unlink flows and shop, owner and worker deletes still work with the W3 AFTER triggers and leave sensible audit rows (j18_existing_flows is at the 350-line limit) |
-| `j1_worker_registration_and_profile.test.sql` | 55 | J1 signup roles, worker profile, roster link codes |
+| `j1_worker_registration_and_profile.test.sql` | 55 | J1 signup roles, worker profile, roster link codes (W4: the linked owner's shop is a `create_verified_shop` fixture, R-2) |
+| `j17_w3_idempotency_and_leaks.test.sql` | 24 | W3 producer idempotency and payload leaks |
+| `j2_owner_can_create_and_manage_only_own_job_openings.test.sql` | 63 | J2: own-shop create / edit / delete, drafts private, worker-only published reads, pay stored as entered, no defaults, limits, 50 per shop |
+| `j2_job_opening_lifecycle.test.sql` | 48 | J2 lifecycle matrix, stale 55000, RPC-only status, read-only closed/archived, published edit rules, audit without content, no notifications |
+| `j3_unverified_owner_cannot_publish_job_openings.test.sql` | 42 | J3: publish / resume need a recorded verification; losing it (decision, S6, reviewer deletion) hides openings from workers |
+| `j17_w4_job_opening_authorization.test.sql` | 35 | privileges, internal functions, super_admin write denial, pinning, realtime, R-2 shared rule, cascades, trusted repair |
+| `j18_w4_flows.test.sql` | 14 | shop edit / delete, admin review, roster preview and bookings unaffected by W4 |
 
 ## Safety rules
 
@@ -166,3 +175,20 @@ returns 1, then 0; the service_role key cannot insert, update or delete audit ro
 `deleteUser` of a linked worker writes a `roster.unlinked` event with `account_deleted` and
 `actor_kind = system`; the review log survives owner and shop deletion. Must end `0 failed`
 (W3 build: 33 checks).
+
+## W4 API smoke (local stack only)
+
+```sh
+node scripts/supabase-test/w4-api-smoke.mjs   # after run-db-tests.mjs (and the W2 / W3 smokes), before stopping the stack
+```
+
+Same safety rules as the W2 / W3 smoke scripts (loopback URL only, keys from `supabase status` held in
+memory and never printed, no `.env`, synthetic `@local.test` users deleted with the result asserted).
+Checks through PostgREST / GoTrue: anon read fails or returns 0 rows; the owner inserts a draft without
+sending owner_id / status / stamps; publish is rejected with `Only a verified shop can publish job openings.`
+until a super admin approves the shop; the worker then lists 1 opening, customer and other owner 0; the other
+owner's update changes 0 rows and its RPC gets 42501; direct status and stamp PATCHes fail; `set_config` is
+not exposed; a stale transition gets 55000; deleting a published opening removes nothing; pause / resume /
+close / archive succeed; archived cannot be reopened or edited; a draft delete works; 5 status events are
+audited; the owner has no job-opening notifications; a GoTrue `deleteUser` of the owner cascades the opening
+and writes `job_opening.deleted` with `owner_account_deleted`. Must end `0 failed` (W4 build: 35 checks).

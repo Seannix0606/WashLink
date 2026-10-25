@@ -332,10 +332,7 @@ begin
          1, 'part_time', 'trainees_welcome'
   from public.shops s
   where s.id = p_shop
-  returning id into new_opening_id;
-  if new_opening_id is null then
-    raise exception 'test_helpers.create_job_opening: no shop %', p_shop;
-  end if;
+  returning id into strict new_opening_id;   -- no shop -> error
   return new_opening_id;
 end;
 $$;

@@ -26,6 +26,20 @@ const userFacingDatabaseMessages: ReadonlySet<string> = new Set([
   'Your role and verification fields cannot be changed from the app.',
   'Sign in to manage notifications.',
   'Mark at most 200 notifications at a time.',
+  // W4 job openings (guard trigger and transition_job_opening).
+  'Only owner accounts can create job openings.',
+  'You can create job openings only for your own shop.',
+  'Job openings start as drafts.',
+  'A shop can have at most 50 job openings that are not archived.',
+  'Job opening not found.',
+  'This job opening field cannot be changed.',
+  'This job opening status change is not allowed.',
+  'Closed or archived job openings cannot be edited.',
+  'Complete the required job opening fields before publishing.',
+  'The application deadline has passed.',
+  'Only draft job openings can be deleted.',
+  'Only a verified shop can publish job openings.',
+  'This job opening changed. Refresh and try again.',
 ])
 
 const userFacingMessageByErrorCode: ReadonlyMap<string, string> = new Map([

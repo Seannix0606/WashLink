@@ -1,13 +1,14 @@
 import type { ReactElement } from 'react'
-import { useCallback, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import type { BookingService } from '../../../application/services/BookingService'
+import type { JobOpeningService } from '../../../application/services/JobOpeningService'
 import type { RosterLinkService } from '../../../application/services/RosterLinkService'
 import type { ShopService } from '../../../application/services/ShopService'
 import type { ShopVerificationService } from '../../../application/services/ShopVerificationService'
 import type { WorkerService } from '../../../application/services/WorkerService'
 import type { Booking } from '../../../domain/models/Booking'
 import type { Shop } from '../../../domain/models/Shop'
-import { AppShell, Tabs, type TabItemDefinition } from '../../design/ui'
+import { AppShell, Skeleton, Tabs, type TabItemDefinition } from '../../design/ui'
 import { useOwnerBookingDashboard } from '../../hooks/useOwnerBookingDashboard'
 import { useOwnerDashboardBookingFilterSelection } from '../../hooks/useOwnerDashboardBookingFilterSelection'
 import { OwnerOnboardingChecklist } from '../onboarding/OwnerOnboardingChecklist'
@@ -21,10 +22,17 @@ import { OwnerShopSetupNotice } from './OwnerShopSetupNotice'
 import { OwnerShopsPanel } from './OwnerShopsPanel'
 import { OwnerWorkersPanel } from './OwnerWorkersPanel'
 
+// W4: the job openings tab is loaded only when the owner opens it.
+const OwnerJobOpeningsPanel = lazy(async () => {
+  const jobOpeningsModule = await import('./jobOpenings/OwnerJobOpeningsPanel')
+  return { default: jobOpeningsModule.OwnerJobOpeningsPanel }
+})
+
 type OwnerDashboardPrimaryTabKey =
   | 'bookings'
   | 'shops'
   | 'team'
+  | 'jobs'
   | 'verification'
 
 interface OwnerDashboardContentProps {
@@ -34,6 +42,7 @@ interface OwnerDashboardContentProps {
   readonly shopService: ShopService
   readonly shopVerificationService: ShopVerificationService
   readonly rosterLinkService: RosterLinkService
+  readonly jobOpeningService: JobOpeningService
   readonly ownerShopList: Shop[]
   readonly onOwnerShopListChanged: (nextOwnerShopList: Shop[]) => void
 }
@@ -45,6 +54,7 @@ export function OwnerDashboardContent({
   shopService,
   shopVerificationService,
   rosterLinkService,
+  jobOpeningService,
   ownerShopList,
   onOwnerShopListChanged,
 }: OwnerDashboardContentProps): ReactElement {
@@ -91,6 +101,7 @@ export function OwnerDashboardContent({
     { value: 'bookings', label: 'Bookings', badgeContent: bookings.length },
     { value: 'shops', label: 'My shops', badgeContent: ownerShopList.length },
     { value: 'team', label: 'My team', badgeContent: workers.length },
+    { value: 'jobs', label: 'Job openings' },
     {
       value: 'verification',
       label: 'Verification',
@@ -195,6 +206,15 @@ export function OwnerDashboardContent({
             workers={workers}
             onWorkersChanged={replaceLocalWorkerList}
           />
+        ) : null}
+
+        {selectedPrimaryTab === 'jobs' ? (
+          <Suspense fallback={<Skeleton heightClassName="h-40" />}>
+            <OwnerJobOpeningsPanel
+              jobOpeningService={jobOpeningService}
+              ownerShopList={ownerShopList}
+            />
+          </Suspense>
         ) : null}
 
         {selectedPrimaryTab === 'verification' ? (

@@ -66,6 +66,11 @@ and must leave the existing booking, pricing, verification and rating flows work
   draft/submitted/under_review/shortlisted/accepted/rejected/withdrawn/closed enforced in a DB
   function; owner pipeline UI; worker search/filter, apply, withdraw, track.
 - Qualifications shown to owners come only from verified certification records.
+- Carry-forwards (W4 review): snapshot the job opening's content at application time (owners can edit
+  published openings, C-W4-1); refuse applications after the opening's deadline (W4 R4); show the
+  free-training notice and the training-vs-paid-work distinction before workers see openings (C7);
+  only openings at shops passing `shop_has_recorded_verification` are applicable. Resolve legal flag
+  W4-L10 (DOLE recruitment registration) in the legal-review register before production.
 
 ### W6 — Training
 - `training_programs` (≥3 distinct training days, objectives, terms, `worker_fee` forced to 0
@@ -79,6 +84,7 @@ and must leave the existing booking, pricing, verification and rating flows work
 - `certifications` issued only via function that checks W6 evidence and verified shop;
   records approver + timestamp; expiry/renewal; suspend/revoke with reason + audit + review.
 - Labelled "shop-issued", never "government-recognized".
+- Carry-forwards: certification half of J3 (W4); snapshot shop verification at issue (W2 R-4).
 
 ### W8 — Contract templates
 - Platform starter template (15 sections from spec E), marked "Draft — requires review by a

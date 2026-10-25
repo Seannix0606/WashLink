@@ -1,11 +1,13 @@
 import { vi, type Mock } from 'vitest'
 import type { StoredNotification } from '../domain/models/AppNotification'
 import type { Booking } from '../domain/models/Booking'
+import type { JobOpening } from '../domain/models/JobOpening'
 import type { RosterLinkEntry } from '../domain/models/RosterLink'
 import type { WorkerProfile } from '../domain/models/WorkerProfile'
 import type { Shop } from '../domain/models/Shop'
 import type { AuthRepository } from '../domain/repositories/AuthRepository'
 import type { BookingRepository } from '../domain/repositories/BookingRepository'
+import type { JobOpeningRepository } from '../domain/repositories/JobOpeningRepository'
 import type { NotificationRepository } from '../domain/repositories/NotificationRepository'
 import type { RosterLinkRepository } from '../domain/repositories/RosterLinkRepository'
 import type { ShopVerificationRepository } from '../domain/repositories/ShopVerificationRepository'
@@ -197,5 +199,57 @@ export function createMockNotificationRepository(): MockedRepository<Notificatio
     listMyNotifications: vi.fn(),
     countMyUnread: vi.fn(),
     markRead: vi.fn(),
+  }
+}
+
+export const testJobOpeningIdentifier = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+
+/** A complete, publishable draft with no pay, benefits or terms entered. */
+export function buildJobOpening(overrides: Partial<JobOpening> = {}): JobOpening {
+  return {
+    id: testJobOpeningIdentifier,
+    shopId: testShopIdentifier,
+    status: 'draft',
+    title: 'Car wash attendant',
+    description: 'Wash and dry vehicles.',
+    duties: [],
+    workLocation: '2 Test Avenue',
+    openingsCount: 2,
+    jobType: 'part_time',
+    requiredSkills: [],
+    minimumYearsExperience: null,
+    experienceRequirement: null,
+    availabilityRequirement: null,
+    scheduleDetails: null,
+    compensationMinAmount: null,
+    compensationMaxAmount: null,
+    compensationCurrency: null,
+    compensationPeriod: null,
+    compensationDetails: null,
+    benefits: null,
+    otherTerms: null,
+    minimumQualifications: [],
+    preferredQualifications: [],
+    requiredTraining: null,
+    applicantRequirement: 'trainees_welcome',
+    certificationExpectations: null,
+    applicationDeadline: null,
+    applicationInstructions: null,
+    firstPublishedAt: null,
+    statusChangedAt: null,
+    createdAt: '2026-10-24T00:00:00+00:00',
+    updatedAt: '2026-10-24T00:00:00.123456+00:00',
+    ...overrides,
+  }
+}
+
+export function createMockJobOpeningRepository(): MockedRepository<JobOpeningRepository> {
+  return {
+    listOwnJobOpenings: vi.fn(),
+    createDraft: vi.fn(),
+    updateJobOpening: vi.fn(),
+    deleteDraft: vi.fn(),
+    transition: vi.fn(),
+    isShopVerifiedForPublishing: vi.fn(),
   }
 }

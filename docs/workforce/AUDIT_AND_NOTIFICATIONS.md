@@ -1,4 +1,4 @@
-# Audit events and notifications (W3)
+# Audit events and notifications (W3, job openings W4)
 
 Scope: what `supabase/migrations/2026_10_24_w3a..w3d_*.sql` add. Everything here was proven
 on the local Docker stack only (pgTAP files `j17_w3_*`, `j18_w3_flows`, and
@@ -63,6 +63,10 @@ No retention period is claimed (W3-L1). Export before purging if a record is req
 | `workers_audit_linked_delete` AFTER DELETE (WHEN old user_id not null) | always | `roster.unlinked`; same | owner_id, unlinked_by = `owner_account_deleted` (owner profile gone, cascade) / `roster_entry_deleted` | worker (distinct neutral text when the owner account was closed) |
 | `worker_profiles_audit_delete` AFTER DELETE | always | `worker_profile.deleted`; worker_profile / profile_id / profile_id | deleted_by = `account_deleted` / `self` / `trusted_session` / `other` | none |
 | `profiles_audit_role_change` AFTER UPDATE (WHEN role changed) | only trusted sessions can (W2a) | `profile.role_changed`; profile / id / id | from_role, to_role | none |
+| `job_openings_audit` AFTER INSERT (W4d) | always | `job_opening.created`; job_opening / job_openings.id / owner_id | shop_id, status | none |
+| `job_openings_audit` AFTER UPDATE | status changed (RPC or trusted repair) | `job_opening.status_changed`; same | shop_id, from_status, to_status | none |
+| same | content changed while not draft, status unchanged | `job_opening.updated`; same | shop_id, status, changed_fields (column NAMES only) | none |
+| `job_openings_audit` AFTER DELETE | always (draft delete or cascade) | `job_opening.deleted`; same | shop_id, from_status, deleted_by = `owner_account_deleted` / `shop_deleted` / `owner` / `trusted_session` (checked in that order) | none |
 
 WHEN clauses are used instead of `UPDATE OF <column>`: a BEFORE trigger change (S6 sets the
 status to pending on a name edit) is not in the UPDATE target list, so `UPDATE OF` would miss
@@ -147,3 +151,7 @@ triggers, their functions and the view (rows already written stay). c: drop the 
 objects (inbox loss). b: drop the audit objects (history loss; export first with a trusted
 `copy`; apart from the purge above this is the only way audit rows disappear). a: set
 `search_path = public` again (re-opens R-1).
+
+## W4 job openings
+
+Job opening payloads never carry titles, descriptions, amounts, benefits or terms (C-W3-1; test `j2_audit_payload_has_no_opening_content`). Draft content edits are not audited. A rejected transition writes nothing. W4 enqueues no notifications: every W4 action is the owner acting on their own opening and there is no counterparty until W5 applications (`w4_job_opening_actions_enqueue_no_notifications`). W5/W12 notify applicants when an opening they applied to is paused or closed, keyed `job_opening:<id>:<audit_id>`.

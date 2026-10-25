@@ -7,40 +7,14 @@ import {
   type SaveWorkerPrivateContactInput,
   type SaveWorkerProfileInput,
 } from '../../domain/models/WorkerProfile'
+import {
+  collectFieldErrors,
+  optionalText,
+  textList,
+  type FormFieldErrors,
+} from './formFieldSchemas'
 
 // Mirrors the database limits (W2f) so people see errors before any request is sent.
-
-function optionalText(maximumLength: number, fieldLabel: string): z.ZodType<string | null> {
-  return z
-    .string()
-    .trim()
-    .max(maximumLength, `${fieldLabel} must be ${String(maximumLength)} characters or fewer.`)
-    .nullable()
-    .transform((value) => (value === null || value.length === 0 ? null : value))
-}
-
-function textList(options: {
-  readonly maximumCount: number
-  readonly maximumItemLength: number
-  readonly listLabel: string
-  readonly itemLabel: string
-}): z.ZodType<string[]> {
-  return z
-    .array(
-      z
-        .string()
-        .trim()
-        .min(1, `${options.itemLabel} cannot be empty.`)
-        .max(
-          options.maximumItemLength,
-          `Each ${options.itemLabel.toLowerCase()} must be ${String(options.maximumItemLength)} characters or fewer.`,
-        ),
-    )
-    .max(
-      options.maximumCount,
-      `Add at most ${String(options.maximumCount)} ${options.listLabel}.`,
-    )
-}
 
 export const workerProfileAboutSchema = z.object({
   headline: z
@@ -111,17 +85,9 @@ export const saveWorkerPrivateContactInputSchema: z.ZodType<SaveWorkerPrivateCon
     preferredContactMethod: z.enum(workerPreferredContactMethods).nullable(),
   })
 
-export type WorkerProfileFieldErrors = Readonly<Partial<Record<string, string>>>
+export type WorkerProfileFieldErrors = FormFieldErrors
 
-/** First error message per top-level field, for inline form errors. */
-export function collectFieldErrors(validationError: z.ZodError): WorkerProfileFieldErrors {
-  const fieldErrors: Partial<Record<string, string>> = {}
-  for (const validationIssue of validationError.issues) {
-    const fieldName = String(validationIssue.path.at(0) ?? 'form')
-    fieldErrors[fieldName] ??= validationIssue.message
-  }
-  return fieldErrors
-}
+export { collectFieldErrors }
 
 export function isWorkerPrivateContactEmpty(
   workerPrivateContactInput: SaveWorkerPrivateContactInput,
