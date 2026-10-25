@@ -5,6 +5,7 @@ import type { JobApplicationService } from '../../../../application/services/Job
 import type { MarketplaceService } from '../../../../application/services/MarketplaceService'
 import type { JobOpening } from '../../../../domain/models/JobOpening'
 import type { MarketplaceJobOpening } from '../../../../domain/models/MarketplaceJobOpening'
+import type { WorkerVerifiedCertificationState } from '../../../../domain/models/VerifiedCertification'
 import { Button, Card, EmptyState, Skeleton } from '../../../design/ui'
 import { useApplyToJobOpening } from '../../../hooks/useApplyToJobOpening'
 import { useMarketplaceSearch } from '../../../hooks/useMarketplaceSearch'
@@ -21,6 +22,8 @@ interface WorkerMarketplacePanelProps {
   readonly jobApplicationService: JobApplicationService
   readonly hasWorkerProfile: boolean
   readonly onCreateProfileRequested: () => void
+  /** The worker's real certification state (D-20) for certification-required openings. */
+  readonly workerCertificationState?: WorkerVerifiedCertificationState
 }
 
 /** Apply always starts from the loaded opening, so its requirements are in the dialog. */
@@ -41,6 +44,7 @@ export function WorkerMarketplacePanel({
   jobApplicationService,
   hasWorkerProfile,
   onCreateProfileRequested,
+  workerCertificationState,
 }: WorkerMarketplacePanelProps): ReactElement {
   const {
     jobOpenings,
@@ -153,6 +157,7 @@ export function WorkerMarketplacePanel({
         onClose={(): void => {
           setDetailJobOpening(null)
         }}
+        workerCertificationState={workerCertificationState}
       />
 
       <ApplyToOpeningModal
@@ -171,6 +176,7 @@ export function WorkerMarketplacePanel({
         onClose={(): void => {
           setApplyTarget(null)
         }}
+        workerCertificationState={workerCertificationState}
       />
     </Card>
   )

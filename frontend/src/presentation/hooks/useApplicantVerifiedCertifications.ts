@@ -18,7 +18,7 @@ export interface UseApplicantVerifiedCertificationsResult {
   readonly reloadCertifications: () => void
 }
 
-/** Workflow-issued certifications of one applicant; always empty until W7. */
+/** Current shop-issued certifications of one applicant (W7 real rows). */
 export function useApplicantVerifiedCertifications(
   applicantPipelineService: ApplicantPipelineService,
   applicationId: string,

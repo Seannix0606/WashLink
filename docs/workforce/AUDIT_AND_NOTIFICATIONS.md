@@ -1,4 +1,4 @@
-# Audit events and notifications (W3, job openings W4, job applications W5)
+# Audit events and notifications (W3, job openings W4, job applications W5, training W6, certifications W7)
 
 Scope: what `supabase/migrations/2026_10_24_w3a..w3d_*.sql` add. Everything here was proven
 on the local Docker stack only (pgTAP files `j17_w3_*`, `j18_w3_flows`, and
@@ -234,3 +234,44 @@ Keys: `training_invite:`, `training_response:`, `training_cancel:`, `training_sc
 `training_trainer:`, `training_attendance:`, `training_assessment:` + `<row id>:<audit event id>`, so every
 recipient gets one notification per event (`w6_notifications_idempotent_one_per_event`). Trusted fixtures and
 repairs notify nobody.
+
+## W7 certifications (`2026_10_26_w7h`)
+
+Producers: `certifications_audit`, `certification_review_requests_audit`, `certification_reassessments_audit`
+and `shop_certification_policies_audit` AFTER INSERT / UPDATE / DELETE on those four tables, plus the
+AFTER INSERT trigger `training_evidence_flag_certifications` on `training_attendance_records` and
+`training_assessments` (the only W6-side object W7 adds, D-24). All definer, pinned `public, pg_temp`,
+revoked from every client role. `certification_status_events` is itself the per-certificate history; its rows
+mirror audited `certifications` changes and are not audited a second time. subject_type `certification`
+(subject_id = certification, subject_profile_id = worker) or `shop_certification_policy` (subject_id = shop,
+subject_profile_id = current shop owner). Payload keys only: `certification_id`, `enrollment_id`,
+`program_id`, `shop_id`, `renews_certification_id`, `from_status`, `to_status`, `decision`, `result`,
+`validity_months`, `attended_training_days`, `required_training_days`, `items_met_count`, `items_total`,
+`changed_by`, `deleted_by` (never reasons, statements, comments, names or ISO dates; test
+`w7_audit_payload_has_no_reasons_names_or_dates`). `changed_by`: `owner` (an RPC with `auth.uid()`),
+`review_decision` (status change made by `decide_certification_review`, transaction-local
+`washlink.certification_change_source`), `trusted_session` (no `auth.uid()`), `shop_removed`. Refused actions
+write nothing (`w7_refused_action_writes_nothing`).
+
+| Event | Audit action | Notification (category: recipient, body) |
+|---|---|---|
+| issued (owner) | `certification.issued` | `certification.issued`: worker, `<shop> issued you a shop-issued certification for <program>.` |
+| renewed (owner) | `certification.renewed` (old row: `.status_changed` active -> superseded, no notification) | `certification.renewed`: worker, `<shop> renewed your shop-issued certification for <program>.` |
+| suspended / revoked (owner) | `certification.status_changed` | `certification.suspended` / `.revoked`: worker, `<shop> suspended / revoked your certification for <program>. Open it to see the reason and ask for a review.` |
+| reinstated from suspended (owner) | `certification.status_changed` | `certification.reinstated`: worker, `<shop> reinstated your certification for <program>.` |
+| review requested (worker) | `certification.review_requested` | `certification.review_requested`: current issuing owner, `A worker asked for a review of a certification decision for <program>.` |
+| review decided (owner) | `certification.review_decided` (decision reinstated / upheld); a reinstatement also writes `.status_changed` with changed_by review_decision | `certification.review_decided`: worker, `<shop> reviewed your request for <program>: reinstated.` / `: decision kept.` (no separate reinstated notice) |
+| review withdrawn (worker) | `certification.review_withdrawn` | none |
+| re-assessment recorded | `certification.reassessment_recorded` (result, item counts, changed_by owner / trainer) | none |
+| training record changed after issue (D-24) | `certification.training_record_changed` | `certification.training_record_changed`: current issuing owner, `A training record for <program> changed after a certification was issued. Review it.` |
+| shop validity set | `shop_certification_policy.updated` (validity_months) | none |
+| D-23 shop removal (shop_id -> null) | `certification.shop_removed` | none (nothing changed for the worker) |
+| worker account deletion (cascade) | `certification.deleted` (deleted_by worker_profile_deleted / trusted_session) | none |
+| expiry notices (D-25, `enqueue_certification_expiry_notices`) | none | `certification.expiring`: worker, `Your certification for <program> expires within 30 days.`; `certification.expired`: `Your certification for <program> has expired.` |
+
+Labels: `notification_safe_label(program_title_snapshot, 'your training')` and
+`(shop_name_snapshot, 'The shop')`. Keys: `certification:<certification id>:<audit event id>` (one notification
+per recipient per event, `w7_notifications_idempotent_one_per_event`) and, for expiry notices,
+`certification_expiry:<id>:due` / `:expired` (idempotent: the function counts only newly created notices and
+refuses a past `p_as_of`, 22023). The expiry function is internal (no client role may execute it); W12 schedules
+it. Trusted SQL (no `auth.uid()`) and cascades notify nobody.

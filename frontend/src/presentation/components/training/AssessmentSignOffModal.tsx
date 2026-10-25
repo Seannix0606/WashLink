@@ -25,11 +25,13 @@ interface AssessmentSignOffModalProps {
   readonly isSubmitting: boolean
   readonly onSubmit: (decision: AssessmentDecision) => Promise<boolean>
   readonly onClose: () => void
+  /** Overrides the dialog title (for example a W7 renewal re-assessment). */
+  readonly dialogTitle?: string
 }
 
 const failureReasonError = 'Give a reason for the fail of 10 to 300 characters.'
 
-type AssessmentFormProps = Omit<AssessmentSignOffModalProps, 'isOpen'>
+type AssessmentFormProps = Omit<AssessmentSignOffModalProps, 'isOpen' | 'dialogTitle'>
 
 function AssessmentForm({ traineeName, checklist, isCorrection, isSubmitting, onSubmit, onClose }: AssessmentFormProps): ReactElement {
   const formId = useId()
@@ -183,12 +185,12 @@ function AssessmentForm({ traineeName, checklist, isCorrection, isSubmitting, on
 }
 
 /** The owner's or trainer's recorded assessment decision ("signed off" = recorded by them). */
-export function AssessmentSignOffModal({ isOpen, ...formProps }: AssessmentSignOffModalProps): ReactElement {
+export function AssessmentSignOffModal({ isOpen, dialogTitle, ...formProps }: AssessmentSignOffModalProps): ReactElement {
   return (
     <Modal
       isOpen={isOpen}
       onClose={formProps.onClose}
-      title={formProps.isCorrection ? 'Correct the assessment' : 'Record the assessment'}
+      title={dialogTitle ?? (formProps.isCorrection ? 'Correct the assessment' : 'Record the assessment')}
       maxWidthClassName="max-w-lg"
     >
       {isOpen ? <AssessmentForm {...formProps} /> : null}

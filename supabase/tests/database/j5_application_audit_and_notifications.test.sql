@@ -149,7 +149,7 @@ select is(pg_temp.audits(current_setting('fx.app1')::uuid),
 select is((select count(*)::int from public.workforce_audit_events
            where id > current_setting('fx.events_before')::bigint and subject_type = 'job_application'
              and (payload::text ilike '%cover%' or payload::text ilike '%note%' or payload::text like '%Secret%'
-                  or payload::text like '%650%' or payload::text like '%J5N%' or payload::text like '%Local Test%'
+                  or regexp_replace(payload::text, '[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}', '<uuid>', 'gi') like '%650%' or payload::text like '%J5N%' or payload::text like '%Local Test%'
                   or exists (select 1 from jsonb_object_keys(payload) k
                              where k not in ('job_opening_id', 'shop_id', 'status', 'from_status', 'to_status', 'changed_by', 'deleted_by')))),
           0, 'j5_audit_payload_has_no_cover_note_or_opening_content');

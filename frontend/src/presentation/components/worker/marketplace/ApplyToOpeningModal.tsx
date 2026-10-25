@@ -4,12 +4,16 @@ import { AlertTriangle, Lock, Send, UserPlus } from 'lucide-react'
 import { coverNoteTooLongMessage } from '../../../../application/validation/jobApplicationSchemas'
 import { jobApplicationLimits } from '../../../../domain/models/JobApplication'
 import type { JobOpeningApplicantRequirement } from '../../../../domain/models/JobOpening'
-import { currentWorkerVerifiedCertificationState } from '../../../../domain/models/VerifiedCertification'
+import {
+  loadingWorkerCertificationState,
+  type WorkerVerifiedCertificationState,
+} from '../../../../domain/models/VerifiedCertification'
 import { Button, Modal } from '../../../design/ui'
 import {
   contactsNotSharedNotice,
   coverNoteGuidanceText,
   describeWorkerCertificationWarning,
+  isApplyBlockedByCertification,
   trainingAndWorkNoticeAcknowledgementLabel,
 } from '../../../utilities/workforceNoticeCopy'
 import { WorkerProfileTextArea } from '../../workerProfile/WorkerProfileTextArea'
@@ -38,6 +42,8 @@ interface ApplyToOpeningModalProps {
   readonly onClose: () => void
   /** Retries loading the opening requirements when they could not be shown. */
   readonly onReloadOpeningRequirements?: () => void
+  /** The worker's real certification state (D-20); only read for certification-required openings. */
+  readonly workerCertificationState?: WorkerVerifiedCertificationState
 }
 
 /**
@@ -53,13 +59,18 @@ export function ApplyToOpeningModal({
   onCreateProfileRequested,
   onClose,
   onReloadOpeningRequirements,
+  workerCertificationState = loadingWorkerCertificationState,
 }: ApplyToOpeningModalProps): ReactElement {
   const [coverNoteInput, setCoverNoteInput] = useState<string>(applyTarget?.initialCoverNote ?? '')
   const [hasAcknowledgedNotice, setHasAcknowledgedNotice] = useState<boolean>(false)
   const isCoverNoteTooLong = coverNoteInput.trim().length > jobApplicationLimits.coverNoteMaxLength
   const isRequirementsShown = applyTarget?.openingRequirements.kind === 'loaded'
-  const canSubmit = hasWorkerProfile && isRequirementsShown && hasAcknowledgedNotice && !isCoverNoteTooLong
-  const certificationWarning = describeWorkerCertificationWarning(currentWorkerVerifiedCertificationState)
+  const applicantRequirement = applyTarget?.applicantRequirement ?? null
+  const isBlockedByCertification = isApplyBlockedByCertification(applicantRequirement, workerCertificationState)
+  const canSubmit =
+    hasWorkerProfile && isRequirementsShown && hasAcknowledgedNotice && !isCoverNoteTooLong && !isBlockedByCertification
+  const certificationWarning =
+    applicantRequirement === 'certification_required' ? describeWorkerCertificationWarning(workerCertificationState) : null
 
   return (
     <Modal
@@ -125,7 +136,7 @@ export function ApplyToOpeningModal({
                 </label>
               </TrainingAndWorkNotice>
 
-              {applyTarget.applicantRequirement === 'certification_required' && certificationWarning !== null ? (
+              {certificationWarning !== null ? (
                 <p
                   role="note"
                   className="flex items-start gap-2 rounded-[var(--radius-control)] bg-[var(--color-warning-50)] px-3 py-2 text-[var(--color-warning-600)]"

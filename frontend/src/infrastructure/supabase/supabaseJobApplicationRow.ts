@@ -130,6 +130,8 @@ export interface SupabaseVerifiedCertificationRow {
   issuing_shop_name: string
   issued_at: string
   expires_at: string | null
+  /** Optional issuer status flag; absent on reads that do not return it. */
+  issuing_shop_currently_verified?: boolean | null
 }
 
 export function mapVerifiedCertificationRow(
@@ -141,5 +143,6 @@ export function mapVerifiedCertificationRow(
     issuingShopName: verifiedCertificationRow.issuing_shop_name,
     issuedAt: verifiedCertificationRow.issued_at,
     expiresAt: verifiedCertificationRow.expires_at,
+    isIssuingShopCurrentlyVerified: verifiedCertificationRow.issuing_shop_currently_verified ?? null,
   }
 }

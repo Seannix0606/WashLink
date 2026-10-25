@@ -49,11 +49,11 @@ describe('Applicant profile drawer (W5)', () => {
 
   it('w5_applicant_verified_certifications_shows_none_yet', async () => {
     const drawer = renderDrawer(buildApplicantProfile(), false)
-    const certificationsSection = within(drawer).getByRole('region', { name: 'Verified certifications' })
-    expect(await within(certificationsSection).findByText('Verified certifications: not available yet')).toBeInTheDocument()
-    // Until W7 the copy says why there are none, so an empty list is not read as a negative signal.
+    const certificationsSection = within(drawer).getByRole('region', { name: 'Shop-issued certifications' })
+    expect(await within(certificationsSection).findByText('Verified certifications: none')).toBeInTheDocument()
+    // W7 real state: no current shop-issued certificate is recorded, and skills stay self-reported.
     expect(certificationsSection).toHaveTextContent(
-      'WashLink certifications are not available yet, so no applicant has a verified certification.',
+      'No current shop-issued certification is recorded on WashLink for this applicant. Skills above are self-reported.',
     )
     // Accept is unavailable for an unverified shop, with the database's reason.
     expect(within(drawer).getByRole('button', { name: 'Accept' })).toBeDisabled()

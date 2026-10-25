@@ -96,7 +96,7 @@ returns only `full_name` for an existing booking/roster relationship; never wide
 ## D-10 checklist (mandatory human step before any production apply)
 
 A human takes a schema-only dump of the production project (read-only, outside this loop) and
-diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), W4 (rows 21-23) or W5 (rows 24-26) until every row is answered and recorded.
+diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), W4 (rows 21-23), W5 (rows 24-26), W6 (rows 27-32) or W7 (rows 33-35) until every row is answered and recorded.
 
 | # | Check | Why |
 |---|---|---|
@@ -132,6 +132,9 @@ diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), 
 | 30 | Columns / functions checked by the W6a preflight exist with these names: `shops.{id, owner_id, name, address}`, `workers.{id, owner_id, user_id}`, `bookings.{id, shop_id, assigned_worker_id, booking_status}`, `worker_profiles.profile_id`, `profiles.{id, role, full_name}`, `job_applications.{id, shop_id, owner_id, worker_id, status}`, `workforce_audit_events.{id, action, subject_type, subject_id}`; `record_workforce_audit_event`, `enqueue_notification_safely`, `notification_safe_label`, `is_verified_shop_owner`, `shop_has_recorded_verification`, `current_user_profile_role`, `is_trusted_db_session`, `is_orphaned_fk_set_null`, `normalize_worker_text_list`. | W6 R1 |
 | 31 | New BEFORE UPDATE trigger `bookings_guard_update_training_gate` (W6h, C7 gate, function `bookings_guard_training_assignment`; sorts after `bookings_guard_update`, whose body is unchanged). It refuses (23514) assigning a roster row of the booking shop's owner whose linked worker is mid-way through required training with that owner, and that worker starting the booking; trusted sessions bypass, super_admin does not. Check every production booking client (owner dashboard, any admin tool, scripts) for paths that assign workers or set `in_progress`, and that `booking_status` compares as text. | W6 R1, R2 |
 | 32 | D-18 (orchestrator override): new BEFORE DELETE trigger `shops_remove_unenrolled_training_programs` on `shops` deletes the shop's training programs that have NO enrollment; programs with enrollments, their enrollments, attendance and assessments are kept with `shop_id` / `owner_id` set null (FK `on delete set null`, passed by `is_orphaned_fk_set_null` in the W6 guards) and `training_enrollments.program_id` is `on delete restrict`. Check production shop / account deletion paths (app, GoTrue, admin) for conflicts and confirm the retention decision with the W6-L5 legal review. | W6 D-18 |
+| 33 | No pre-existing certification objects: production has no `public.certification*` table or view and no `public.shop_certification_policies` that W7 did not create (the w7a preflight aborts on any such relation whose comment does not start `W7`). If production already stores certificates anywhere else (another table, profile JSON, storage files), decide whether they are migrated, shown or ignored before W7 is applied; W7 never reads worker-entered qualification text. | W7 R1 |
+| 34 | Columns / functions checked by the W7a preflight exist with these names: `shops.{id, owner_id, name, verification_status, verification_reviewed_by, verification_reviewed_at, is_active}`, `training_enrollments.{id, program_id, shop_id, owner_id, worker_id, status, accepted_at}`, `training_programs.{id, title, min_training_days, assessment_checklist, status}`, `training_assessments.{id, enrollment_id, result, assessed_by, assessor_role, assessor_display_name, assessed_on, items_met, checklist_snapshot, supersedes_id}`, `training_attendance_records.{id, session_date, supersedes_id}`, `job_openings.applicant_requirement`, `job_applications.submitted_at`, `worker_profiles.profile_id`, `profiles.full_name`; `training_enrollment_is_completed`, `training_enrollment_attended_days`, `lock_training_enrollment_for_recorder`, `is_current_training_program_owner`, `shop_has_recorded_verification`, `is_verified_shop_owner`, `job_application_apply_checks`, `applicant_verified_certifications`, `is_current_job_opening_owner`, `record_workforce_audit_event`, `enqueue_notification_safely`, `notification_safe_label`, `current_user_profile_role`, `is_orphaned_fk_set_null`. | W7 R1 |
+| 35 | Two W5 function BODIES are replaced by `create or replace` in w7g with the same signatures: `applicant_verified_certifications(uuid)` (now returns current certificates; authorisation unchanged) and `job_application_apply_checks(uuid, uuid, uuid)` (every W5 check in the same order plus the D-20 refusal right after the deadline check). Diff both against production first: if production bodies differ from the w5c / w5d versions, the W7 replacement would silently drop those differences. The w7g ROLLBACK block holds the verbatim W5 bodies. Also confirm no production client relies on certification-required openings accepting applications without a certificate (D-12 -> D-20). | W7 R1, R3 |
 
 ## W5 job applications guard matrix (`2026_10_25_w5b`)
 
@@ -154,6 +157,16 @@ diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), 
 | FK cascade delete (worker profile / program gone) | enrollment: worker profile gone; sessions / designations: program or trainer gone | allowed only when the enrollment row is gone | n/a |
 | Trusted SQL session (repair) | allowed, audited `trusted_session` (`program_id` RESTRICT protects enrollments) | UPDATE / DELETE / unflagged INSERT refused (42501) | never (42501) |
 | Bookings (`bookings_guard_update_training_gate`) | read-only gate: assignment / start refused for a same-owner trainee mid-way through required training | n/a | n/a |
+
+## W7 certification guard matrix (`2026_10_26_w7b`, `w7c`)
+
+| Session | Certifications | Status events / re-assessments | Review requests | Policies |
+|---|---|---|---|---|
+| anon, authenticated, service_role via PostgREST | no table privilege (42501); deny-all write policies; only the W7 RPCs write | same | same | same |
+| W7 RPC (flag `washlink.certification_write` = row id; certification id for events, shop id for policies) | INSERT: stamps, validity, expiry, status forced server-side (P32); UPDATE: only status, status_reason, status_changed_at / _by, updated_at; superseded is final | INSERT only; actor id / role and created_at server-set | INSERT open; UPDATE open -> reinstated / upheld / withdrawn once | upsert of validity_months; updated_by server-set |
+| Trusted SQL session | NO bypass: issued facts immutable (42501 `Certification records cannot be edited.`); status change only with the flag (not tamper-proof, W6-L5 / R5) | UPDATE / DELETE always refused | flag required | flag required |
+| FK set-null cascade (shop, owner, approver, decider gone) | allowed through `is_orphaned_fk_set_null` (D-18 / D-23, nothing else may change) | n/a | `decided_by` only | `updated_by` only |
+| FK cascade delete | only when the worker profile or the enrollment row is already gone | only when the certification is gone | when the certification or worker profile is gone | when the shop is gone |
 
 ## Risks (from the W2 plan)
 

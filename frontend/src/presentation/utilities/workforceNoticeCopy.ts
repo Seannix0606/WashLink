@@ -1,5 +1,11 @@
 import { jobApplicationNoticeVersion } from '../../domain/models/JobApplication'
+import type { JobOpeningApplicantRequirement } from '../../domain/models/JobOpening'
 import type { WorkerVerifiedCertificationState } from '../../domain/models/VerifiedCertification'
+import {
+  certificationRequiredApplyBlockedText,
+  certificationStateLoadingText,
+  certificationStateUnavailableText,
+} from './certificationCopy'
 
 /**
  * The training and work notice (C7). A WashLink product rule, not legal advice and not a
@@ -21,21 +27,36 @@ export const contactsNotSharedNotice = 'Your phone and email are not shared with
 export const coverNoteGuidanceText =
   'Optional. Do not include ID numbers, health details or contact details.'
 
-export const certificationsNotAvailableYetWarning =
-  'WashLink certifications are not available yet, so shops will not see any verified certifications for any applicant.'
-
-export const noVerifiedCertificationWarning =
-  'You have no verified WashLink certification yet; the shop will see that.'
-
 /**
- * The certification note for a certification-required opening, or null when there is nothing
- * to warn about. W7 supplies the real state; until then the workflow is unavailable.
+ * The certification note for a certification-required opening, from the worker's real
+ * my_certifications state (D-20), or null when the worker holds a current certificate.
  */
 export function describeWorkerCertificationWarning(
   certificationState: WorkerVerifiedCertificationState,
 ): string | null {
-  if (!certificationState.isWorkflowAvailable) {
-    return certificationsNotAvailableYetWarning
+  if (certificationState.kind === 'loading') {
+    return certificationStateLoadingText
   }
-  return certificationState.hasVerifiedCertifications ? null : noVerifiedCertificationWarning
+  if (certificationState.kind === 'unavailable') {
+    return certificationStateUnavailableText
+  }
+  return certificationState.hasCurrentCertification ? null : certificationRequiredApplyBlockedText
+}
+
+/**
+ * D-20: Apply stays disabled for a certification-required opening while the worker's state
+ * is loading or known to hold no current certificate. If the state could not be read the
+ * database still refuses the application, so Apply is not blocked on a read failure.
+ */
+export function isApplyBlockedByCertification(
+  applicantRequirement: JobOpeningApplicantRequirement | null,
+  certificationState: WorkerVerifiedCertificationState,
+): boolean {
+  if (applicantRequirement !== 'certification_required') {
+    return false
+  }
+  return (
+    certificationState.kind === 'loading' ||
+    (certificationState.kind === 'loaded' && !certificationState.hasCurrentCertification)
+  )
 }

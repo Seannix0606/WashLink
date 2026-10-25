@@ -40,7 +40,13 @@ export function decideWorkerWorkspaceView({
   return 'jobs'
 }
 
-export type WorkerWorkspaceTabKey = 'find_work' | 'applications' | 'training' | 'training_i_run' | 'bookings'
+export type WorkerWorkspaceTabKey =
+  | 'find_work'
+  | 'applications'
+  | 'training'
+  | 'certifications'
+  | 'training_i_run'
+  | 'bookings'
 
 export interface WorkerWorkspaceTabDefinition {
   readonly value: WorkerWorkspaceTabKey
@@ -53,6 +59,7 @@ export function workerWorkspaceTabDefinitions(isDesignatedTrainer: boolean): rea
     { value: 'find_work', label: 'Find work' },
     { value: 'applications', label: 'My applications' },
     { value: 'training', label: 'My training' },
+    { value: 'certifications', label: 'My certifications' },
     ...(isDesignatedTrainer ? [{ value: 'training_i_run' as const, label: 'Training I run' }] : []),
     { value: 'bookings', label: 'Assigned bookings' },
   ]

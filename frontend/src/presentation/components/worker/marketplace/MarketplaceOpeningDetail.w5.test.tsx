@@ -11,7 +11,8 @@ import { MarketplaceOpeningDetail } from './MarketplaceOpeningDetail'
 
 const disclaimer = 'Details as entered by the shop. WashLink does not verify pay or employment terms.'
 const certificationWarning =
-  'WashLink certifications are not available yet, so shops will not see any verified certifications for any applicant.'
+  'This opening needs a current shop-issued certification recorded on WashLink. You do not have one, so you cannot apply yet. Openings that welcome trainees are open to you.'
+const noCurrentCertification = { kind: 'loaded', hasCurrentCertification: false } as const
 
 function renderDetail(applicantRequirement: 'certification_required' | 'trainees_welcome'): void {
   const marketplaceRepository = createMockMarketplaceRepository()
@@ -28,6 +29,7 @@ function renderDetail(applicantRequirement: 'certification_required' | 'trainees
       selectedJobOpening={buildMarketplaceJobOpening({ applicantRequirement })}
       onApplyRequested={vi.fn()}
       onClose={vi.fn()}
+      workerCertificationState={noCurrentCertification}
     />,
   )
 }
@@ -50,6 +52,8 @@ describe('Marketplace opening detail (W5)', () => {
     const dialog = screen.getByRole('dialog', { name: 'Job opening details' })
     expect(await within(dialog).findByText(certificationWarning)).toBeInTheDocument()
     expect(within(dialog).getByText('Shop-issued certification required')).toBeInTheDocument()
+    // D-20: without a current certificate Apply is disabled.
+    expect(within(dialog).getByRole('button', { name: 'Apply' })).toBeDisabled()
 
     // The apply dialog repeats the warning before the worker sends anything.
     render(
@@ -71,9 +75,11 @@ describe('Marketplace opening detail (W5)', () => {
         onSubmit={vi.fn()}
         onCreateProfileRequested={vi.fn()}
         onClose={vi.fn()}
+        workerCertificationState={noCurrentCertification}
       />,
     )
     const applyDialog = screen.getByRole('dialog', { name: 'Apply to this job opening' })
     expect(within(applyDialog).getByText(certificationWarning)).toBeInTheDocument()
+    expect(within(applyDialog).getByRole('button', { name: 'Send application' })).toBeDisabled()
   })
 })

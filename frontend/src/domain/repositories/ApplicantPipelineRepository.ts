@@ -16,7 +16,7 @@ export interface ApplicantPipelineRepository {
   listApplicationsForOpening(jobOpeningId: string): Promise<JobApplication[]>
   /** Profiles only for applications in a sharing status (submitted .. accepted). */
   listApplicantProfiles(jobOpeningId: string): Promise<ApplicantProfile[]>
-  /** Workflow-issued certifications only; empty until W7. */
+  /** Current shop-issued certifications only (W7). */
   listVerifiedCertifications(applicationId: string): Promise<VerifiedCertification[]>
   countApplicationsByOpening(jobOpeningIds: readonly string[]): Promise<JobOpeningApplicationCount[]>
   transition(

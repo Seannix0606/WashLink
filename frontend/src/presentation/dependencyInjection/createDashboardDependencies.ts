@@ -12,6 +12,7 @@ import { SupabaseRosterLinkRepository } from '../../infrastructure/repositories/
 import { SupabaseShopRepository } from '../../infrastructure/repositories/SupabaseShopRepository'
 import { SupabaseShopVerificationRepository } from '../../infrastructure/repositories/SupabaseShopVerificationRepository'
 import { SupabaseWorkerRepository } from '../../infrastructure/repositories/SupabaseWorkerRepository'
+import { createCertificationDependencies, type CertificationDependencies } from './createCertificationDependencies'
 import { createTrainingDependencies, type TrainingDependencies } from './createTrainingDependencies'
 
 interface DashboardDependencies {
@@ -23,6 +24,7 @@ interface DashboardDependencies {
   jobOpeningService: JobOpeningService
   applicantPipelineService: ApplicantPipelineService
   trainingDependencies: TrainingDependencies
+  certificationDependencies: CertificationDependencies
   ownerIdentifier: string
 }
 
@@ -62,6 +64,7 @@ export function createDashboardDependencies(
     jobOpeningService,
     applicantPipelineService,
     trainingDependencies: createTrainingDependencies(),
+    certificationDependencies: createCertificationDependencies(),
     ownerIdentifier,
   }
 }

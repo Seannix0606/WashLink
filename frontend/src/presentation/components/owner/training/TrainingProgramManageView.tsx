@@ -3,11 +3,13 @@ import { ArrowLeft } from 'lucide-react'
 import type { TrainingProgram } from '../../../../domain/models/TrainingProgram'
 import type { TrainingSession } from '../../../../domain/models/TrainingSession'
 import type { Worker } from '../../../../domain/models/Worker'
+import type { CertificationDependencies } from '../../../dependencyInjection/createCertificationDependencies'
 import type { TrainingDependencies } from '../../../dependencyInjection/createTrainingDependencies'
 import { Badge, Button } from '../../../design/ui'
 import { describeTrainingProgramStatus } from '../../../utilities/trainingDisplay'
 import { TrainingVersusPaidWorkNote } from '../../training/TrainingNotices'
 import { TrainingRosterPanel } from '../../training/TrainingRosterPanel'
+import { CertifiableTraineesSection } from '../certifications/CertifiableTraineesSection'
 import { TrainingSessionsEditor } from './TrainingSessionsEditor'
 import { TrainingTrainersSection } from './TrainingTrainersSection'
 
@@ -19,9 +21,12 @@ interface TrainingProgramManageViewProps {
   readonly rosterWorkers: readonly Worker[]
   readonly onScheduleChanged: () => void
   readonly onBack: () => void
+  /** W7: offers "Issue certification" for trainees the server reports as completed. */
+  readonly certificationDependencies?: CertificationDependencies
+  readonly isShopVerified?: boolean
 }
 
-/** One program: training days, trainers and trainees (attendance and assessment). */
+/** One program: training days, trainers, trainees (attendance and assessment) and certification. */
 export function TrainingProgramManageView({
   trainingDependencies,
   program,
@@ -30,6 +35,8 @@ export function TrainingProgramManageView({
   rosterWorkers,
   onScheduleChanged,
   onBack,
+  certificationDependencies,
+  isShopVerified = false,
 }: TrainingProgramManageViewProps): ReactElement {
   const statusDisplay = describeTrainingProgramStatus(program.status)
   return (
@@ -66,6 +73,13 @@ export function TrainingProgramManageView({
           isOwnerView
         />
       )}
+      {program.status !== 'draft' && certificationDependencies !== undefined ? (
+        <CertifiableTraineesSection
+          certificationDependencies={certificationDependencies}
+          program={program}
+          isShopVerified={isShopVerified}
+        />
+      ) : null}
     </section>
   )
 }

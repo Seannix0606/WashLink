@@ -14,6 +14,7 @@ import {
   BASELINE_MIGRATION_NAME,
   findSqlOutsideTestDatabase,
   findStraySqlUnderSupabase,
+  HELPERS_SOURCE_NAMES,
   OWNER_POLICIES_MIGRATION_NAME,
   STAGED_DIRECTORY_NAME,
   stageLocalWorkdir,
@@ -72,7 +73,7 @@ function createFakeRepo(extraMigrations = {}) {
     path.join(root, ...BASELINE_DIRECTORY, 'local_test_baseline_owner_policies.sql'),
     '-- LOCAL TEST BASELINE ONLY - owner policies\n',
   )
-  writeFile(path.join(root, ...BASELINE_DIRECTORY, 'test_helpers.sql'), '-- helpers\n')
+  for (const name of HELPERS_SOURCE_NAMES) writeFile(path.join(root, ...BASELINE_DIRECTORY, name), `-- helpers ${name}\n`)
   writeFile(path.join(root, 'supabase', 'tests', 'database', 'a.test.sql'), 'select 1;\n')
   writeFile(path.join(root, 'supabase', '.temp', 'project-ref'), 'fake-ref-for-test\n')
   return root
@@ -135,14 +136,13 @@ test('stager_puts_baseline_first', () => {
   )
   const config = fs.readFileSync(path.join(result.outputDirectory, 'supabase', 'config.toml'), 'utf8')
   assert.match(config, /^project_id = "washlink-local-test"$/m)
-  assert.match(config, /^sql_paths = \["\.\/local_test_baseline\/test_helpers\.sql"\]$/m)
+  assert.match(config, /^sql_paths = \["\.\/local_test_baseline\/test_helpers\.sql", /m)
   const stagedSupabase = path.join(result.outputDirectory, 'supabase')
-  assert.equal(
-    sha256(path.join(stagedSupabase, 'local_test_baseline', 'test_helpers.sql')),
-    sha256(path.join(root, ...BASELINE_DIRECTORY, 'test_helpers.sql')),
-  )
-  // Only the helpers seed is staged outside migrations/; the baseline migrations are not.
-  assert.deepEqual(fs.readdirSync(path.join(stagedSupabase, 'local_test_baseline')), ['test_helpers.sql'])
+  for (const name of HELPERS_SOURCE_NAMES) {
+    assert.equal(sha256(path.join(stagedSupabase, 'local_test_baseline', name)), sha256(path.join(root, ...BASELINE_DIRECTORY, name)))
+  }
+  // Only the helper seeds are staged outside migrations/; the baseline migrations are not.
+  assert.deepEqual(fs.readdirSync(path.join(stagedSupabase, 'local_test_baseline')).sort(), [...HELPERS_SOURCE_NAMES].sort())
   assert.ok(fs.existsSync(path.join(stagedSupabase, 'tests', 'database', 'a.test.sql')))
   // test db runs every .sql under tests/, so the baseline must not be staged there.
   assert.ok(!fs.existsSync(path.join(stagedSupabase, 'tests', 'baseline')))
@@ -162,14 +162,8 @@ test('stager_never_writes_into_supabase_migrations', () => {
   const before = snapshotDirectory(migrationsDirectory)
   stageLocalWorkdir({ repoRoot: root })
   assert.deepEqual(snapshotDirectory(migrationsDirectory), before)
-  assert.throws(
-    () => stageLocalWorkdir({ repoRoot: root, outputDirectory: migrationsDirectory }),
-    /Refusing to stage inside supabase\/migrations/,
-  )
-  assert.throws(
-    () => stageLocalWorkdir({ repoRoot: root, outputDirectory: path.join(root, 'elsewhere') }),
-    /Refusing to stage outside/,
-  )
+  assert.throws(() => stageLocalWorkdir({ repoRoot: root, outputDirectory: migrationsDirectory }), /Refusing to stage inside supabase\/migrations/)
+  assert.throws(() => stageLocalWorkdir({ repoRoot: root, outputDirectory: path.join(root, 'elsewhere') }), /Refusing to stage outside/)
   assert.deepEqual(snapshotDirectory(migrationsDirectory), before)
 })
 
@@ -230,10 +224,7 @@ test('stager_rejects_sql_outside_tests_database', () => {
   writeFile(path.join(root, 'supabase', 'tests', 'baseline', 'local_test_baseline.sql'), '-- stray\n')
   writeFile(path.join(root, 'supabase', 'tests', 'top.sql'), '-- stray\n')
   fs.mkdirSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep'), { recursive: true })
-  assert.deepEqual(findSqlOutsideTestDatabase(path.join(root, 'supabase', 'tests')), [
-    'baseline/local_test_baseline.sql',
-    'top.sql',
-  ])
+  assert.deepEqual(findSqlOutsideTestDatabase(path.join(root, 'supabase', 'tests')), ['baseline/local_test_baseline.sql', 'top.sql'])
   assert.throws(() => stageLocalWorkdir({ repoRoot: root }), /outside supabase\/tests\/database/)
   assert.ok(fs.existsSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep')))
 })
@@ -244,11 +235,7 @@ test('repo_has_no_sql_under_supabase_tests_outside_database', () => {
   const realTests = path.join(REAL_REPO_ROOT, 'supabase', 'tests')
   assert.ok(fs.existsSync(path.join(realTests, 'database')))
   assert.deepEqual(findSqlOutsideTestDatabase(realTests), [])
-  for (const name of [
-    'local_test_baseline.sql',
-    'local_test_baseline_owner_policies.sql',
-    'test_helpers.sql',
-  ]) {
+  for (const name of ['local_test_baseline.sql', 'local_test_baseline_owner_policies.sql', ...HELPERS_SOURCE_NAMES]) {
     assert.ok(fs.existsSync(path.join(REAL_REPO_ROOT, ...BASELINE_DIRECTORY, name)), name)
   }
 })
@@ -263,6 +250,19 @@ test('runner_refuses_linked_workdir', () => {
     assert.throws(() => assertWorkdirNotLinked(result.outputDirectory), /workdir is linked/)
     fs.rmSync(refPath)
   }
+})
+
+// W7: every helper file is seeded, in order, and a missing one is refused before staging.
+test('stager_seeds_every_helper_file_in_order', () => {
+  assert.deepEqual(HELPERS_SOURCE_NAMES, ['test_helpers.sql', 'test_helpers_certifications.sql'])
+  const root = createFakeRepo()
+  const result = stageLocalWorkdir({ repoRoot: root })
+  const seed = sectionLines(fs.readFileSync(path.join(result.outputDirectory, 'supabase', 'config.toml'), 'utf8'), '[db.seed]')
+  assert.ok(seed.includes('sql_paths = ["./local_test_baseline/test_helpers.sql", "./local_test_baseline/test_helpers_certifications.sql"]'))
+  fs.rmSync(path.join(root, ...BASELINE_DIRECTORY, 'test_helpers_certifications.sql'))
+  fs.mkdirSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep'), { recursive: true })
+  assert.throws(() => stageLocalWorkdir({ repoRoot: root }), /Local test baseline file not found/)
+  assert.ok(fs.existsSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep')))
 })
 
 // ---------- W2 S10 / S11 ----------

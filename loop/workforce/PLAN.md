@@ -110,5 +110,8 @@ and must leave the existing booking, pricing, verification and rating flows work
 
 ### W11–W13
 - Dashboards prioritizing next action; admin queues only for `super_admin`.
+- W11 carry-forwards: independent certification review decider + escalation after "upheld" (D-21 conflict,
+  W7-L12); handling of suspensions stranded when the issuer loses verification or is removed (W7-L13);
+  moderation/reporting of discriminatory postings (W4); approved shops with no recorded reviewer (D-10).
 - Notification wiring with idempotency keys.
 - Final regression, `docs/workforce/` docs, rollback guide, `LEGAL_REVIEW_REGISTER.md`.

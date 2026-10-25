@@ -12,7 +12,7 @@
 //     20260417000002  local_test_baseline_owner_policies.sql (needs bookings.shop_id from
 //                     2026_04_17 = 20260417000001; a migration, not the seed, so later W2
 //                     migrations can drop or replace these policies)
-//   test_helpers.sql is the staged seed (helpers only).
+//   test_helpers.sql then test_helpers_certifications.sql (W7) are the staged seed (helpers only), in order.
 // - The staged dir never contains `.temp/project-ref`, so the CLI cannot target a linked project.
 // - W2 (S10/S11): the repo config keeps [db.seed] enabled = false (only the staged copy enables
 //   it), the staged project_id must end in "-local-test", and no .sql may exist under supabase/
@@ -33,7 +33,8 @@ export const OWNER_POLICIES_PREDECESSOR = '2026_04_17_add_shops_and_booking_loca
 export const BASELINE_SOURCE_DIRECTORY = path.join('scripts', 'supabase-test', 'baseline')
 const BASELINE_SOURCE_NAME = 'local_test_baseline.sql'
 const OWNER_POLICIES_SOURCE_NAME = 'local_test_baseline_owner_policies.sql'
-const HELPERS_SOURCE_NAME = 'test_helpers.sql'
+// Seeded in this order (second file: W7 certification helpers; test_helpers.sql is at its size limit).
+export const HELPERS_SOURCE_NAMES = ['test_helpers.sql', 'test_helpers_certifications.sql']
 const PROJECT_ID_LINE = 'project_id = "washlink"'
 const STAGED_PROJECT_ID_LINE = 'project_id = "washlink-local-test"'
 const SEED_PATHS_LINE = 'sql_paths = ["./seed.sql"]'
@@ -46,7 +47,7 @@ const PROJECT_ID_PATTERN = /^project_id\s*=\s*"([^"]*)"$/
 // The helpers seed is staged OUTSIDE supabase/tests/: `supabase test db` runs every .sql file
 // under tests/ as a pgTAP file, which would execute the helpers as tests.
 export const STAGED_BASELINE_DIRECTORY = 'local_test_baseline'
-const STAGED_SEED_PATHS_LINE = `sql_paths = ["./${STAGED_BASELINE_DIRECTORY}/test_helpers.sql"]`
+const STAGED_SEED_PATHS_LINE = `sql_paths = [${HELPERS_SOURCE_NAMES.map((name) => `"./${STAGED_BASELINE_DIRECTORY}/${name}"`).join(', ')}]`
 const LEGACY_NAME_PATTERN = /^(\d{4})_(\d{2})_(\d{2})_([a-z0-9_]+)\.sql$/
 const TIMESTAMP_NAME_PATTERN = /^\d{14}_[a-z0-9_]+\.sql$/
 const MARKER_TEXT = [
@@ -281,7 +282,7 @@ export function stageLocalWorkdir({ repoRoot, outputDirectory } = {}) {
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
   const plannedMigrations = planBaselineMigrations(computeStagedMigrationNames(migrationNames))
-  for (const name of [BASELINE_SOURCE_NAME, OWNER_POLICIES_SOURCE_NAME, HELPERS_SOURCE_NAME]) {
+  for (const name of [BASELINE_SOURCE_NAME, OWNER_POLICIES_SOURCE_NAME, ...HELPERS_SOURCE_NAMES]) {
     if (!fs.existsSync(path.join(sourceBaseline, name))) {
       throw new Error(`Local test baseline file not found: ${path.join(sourceBaseline, name)}`)
     }
@@ -305,10 +306,9 @@ export function stageLocalWorkdir({ repoRoot, outputDirectory } = {}) {
       : path.join(sourceMigrations, sourceName)
     copyFileVerified(sourcePath, path.join(stagedMigrations, stagedName))
   }
-  copyFileVerified(
-    path.join(sourceBaseline, HELPERS_SOURCE_NAME),
-    path.join(stagedSupabase, STAGED_BASELINE_DIRECTORY, HELPERS_SOURCE_NAME),
-  )
+  for (const name of HELPERS_SOURCE_NAMES) {
+    copyFileVerified(path.join(sourceBaseline, name), path.join(stagedSupabase, STAGED_BASELINE_DIRECTORY, name))
+  }
   fs.cpSync(path.join(sourceTests, 'database'), path.join(stagedSupabase, 'tests', 'database'), {
     recursive: true,
   })

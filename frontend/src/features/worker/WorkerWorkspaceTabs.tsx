@@ -3,6 +3,7 @@ import { lazy, Suspense, useState } from 'react'
 import type { TrainingDependencies } from '../../presentation/dependencyInjection/createTrainingDependencies'
 import type { WorkerMarketplaceDependencies } from '../../presentation/dependencyInjection/createWorkerMarketplaceDependencies'
 import { Skeleton, Tabs } from '../../presentation/design/ui'
+import { useWorkerCertificationState } from '../../presentation/hooks/useMyCertifications'
 import { useTrainerPrograms } from '../../presentation/hooks/useTrainerPrograms'
 import { workerWorkspaceTabDefinitions, type WorkerWorkspaceTabKey } from './workerWorkspaceView'
 
@@ -29,6 +30,12 @@ const TrainerProgramsPanel = lazy(async () => {
   return { default: trainerModule.TrainerProgramsPanel }
 })
 
+// W7: My certifications loads only when the worker opens it.
+const MyCertificationsPanel = lazy(async () => {
+  const certificationsModule = await import('../../presentation/components/worker/certifications/MyCertificationsPanel')
+  return { default: certificationsModule.MyCertificationsPanel }
+})
+
 interface WorkerWorkspaceTabsProps {
   readonly initialTab: WorkerWorkspaceTabKey
   readonly marketplaceDependencies: WorkerMarketplaceDependencies
@@ -49,6 +56,9 @@ export function WorkerWorkspaceTabs({
 }: WorkerWorkspaceTabsProps): ReactElement {
   const [activeTab, setActiveTab] = useState<WorkerWorkspaceTabKey>(initialTab)
   const trainerPrograms = useTrainerPrograms(trainingDependencies.trainingProgramService)
+  const workerCertificationState = useWorkerCertificationState(
+    marketplaceDependencies.certificationDependencies.certificationService,
+  )
   const tabItems = workerWorkspaceTabDefinitions(trainerPrograms.isDesignatedTrainer)
   // A revoked trainer role hides the tab; fall back to My training instead of an empty view.
   const visibleTab = tabItems.some((tabItem) => tabItem.value === activeTab) ? activeTab : 'training'
@@ -72,6 +82,7 @@ export function WorkerWorkspaceTabs({
             jobApplicationService={marketplaceDependencies.jobApplicationService}
             hasWorkerProfile={hasWorkerProfile}
             onCreateProfileRequested={onCreateProfileRequested}
+            workerCertificationState={workerCertificationState}
           />
         </Suspense>
       ) : null}
@@ -83,6 +94,7 @@ export function WorkerWorkspaceTabs({
             marketplaceService={marketplaceDependencies.marketplaceService}
             hasWorkerProfile={hasWorkerProfile}
             onCreateProfileRequested={onCreateProfileRequested}
+            workerCertificationState={workerCertificationState}
           />
         </Suspense>
       ) : null}
@@ -90,6 +102,12 @@ export function WorkerWorkspaceTabs({
       {visibleTab === 'training' ? (
         <Suspense fallback={panelFallback}>
           <MyTrainingsPanel trainingDependencies={trainingDependencies} />
+        </Suspense>
+      ) : null}
+
+      {visibleTab === 'certifications' ? (
+        <Suspense fallback={panelFallback}>
+          <MyCertificationsPanel certificationDependencies={marketplaceDependencies.certificationDependencies} />
         </Suspense>
       ) : null}
 

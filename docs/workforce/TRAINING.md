@@ -170,6 +170,15 @@ is FOR ALL TABLES or lists a `training_*` table.
   a trusted cleanup can delete it. The shop-removal trigger locks the shop's programs FOR UPDATE before the
   no-enrollment check, so a concurrent invite cannot make the delete hit the RESTRICT FK (23503).
 - No reminders, email / SMS / push or Realtime (W12); no optional / refresher training kinds or fees (D-19).
+- W7 carry-forward closed: completion is not monotonic, so `issue_certification` / `renew_certification`
+  re-read `training_enrollment_is_completed` AFTER taking the W6 lock chain (program FOR SHARE, enrollment
+  FOR SHARE, advisory `training_evidence:<enrollment>`), which serialises an issue with any concurrent
+  evidence write or correction (`docs/workforce/CERTIFICATIONS.md`).
+- W7 adds ONE object on the W6 side: the AFTER INSERT trigger `training_evidence_flag_certifications` on
+  `training_attendance_records` and `training_assessments`. When the enrollment holds an active or suspended
+  certification and the new evidence leaves it not completed, it writes `certification.training_record_changed`
+  and notifies the issuing owner. It never changes the certificate (D-24) and does nothing for enrollments
+  without a certification (every W6 test stays unchanged).
 
 ## Rollback
 

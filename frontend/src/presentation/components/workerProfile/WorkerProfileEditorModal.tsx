@@ -7,6 +7,10 @@ import type {
   WorkerProfile,
 } from '../../../domain/models/WorkerProfile'
 import { Button, Modal } from '../../design/ui'
+import {
+  workerProfileDeleteCertificationNote,
+  workerProfileDeleteConfirmText,
+} from '../../utilities/workerProfileDeleteCopy'
 import { WorkerProfileOnboardingFlow } from './WorkerProfileOnboardingFlow'
 
 interface WorkerProfileEditorModalProps {
@@ -43,7 +47,7 @@ export function WorkerProfileEditorModal({
         isCreatingWorkerProfile ? undefined : (
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-[var(--color-ink-500)]">
-              Deleting removes your profile and private contact details.
+              Deleting removes your profile and private contact details. {workerProfileDeleteCertificationNote}
             </p>
             <Button
               size="sm"
@@ -52,7 +56,7 @@ export function WorkerProfileEditorModal({
               leadingIcon={<Trash2 className="h-4 w-4" />}
               className="text-[var(--color-danger-500)] hover:bg-[var(--color-danger-50)]"
               onClick={(): void => {
-                if (!window.confirm('Delete your worker profile? This cannot be undone.')) {
+                if (!window.confirm(workerProfileDeleteConfirmText)) {
                   return
                 }
                 void (async (): Promise<void> => {

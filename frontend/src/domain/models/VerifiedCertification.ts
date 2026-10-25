@@ -1,6 +1,7 @@
 /**
  * A shop-issued certification recorded by the WashLink certification workflow (W7).
- * Never worker-entered text. applicant_verified_certifications returns none in W5.
+ * Never worker-entered text. applicant_verified_certifications returns the applicant's
+ * CURRENT certificates from any shop.
  */
 export interface VerifiedCertification {
   readonly certificationId: string
@@ -8,24 +9,20 @@ export interface VerifiedCertification {
   readonly issuingShopName: string
   readonly issuedAt: string
   readonly expiresAt: string | null
+  /**
+   * Whether the issuing shop is verified and active on WashLink right now. Optional:
+   * undefined or null when the read does not report it; never inferred by the client.
+   */
+  readonly isIssuingShopCurrentlyVerified?: boolean | null
 }
 
-/** Whether the WashLink certification workflow can issue certifications yet. */
-export interface CertificationWorkflowStatus {
-  readonly isAvailable: boolean
-}
+/**
+ * What the apply flow knows about the worker's own certificates (my_certifications).
+ * "Current" means at least one row with effective_status 'active' (D-20).
+ */
+export type WorkerVerifiedCertificationState =
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'unavailable' }
+  | { readonly kind: 'loaded'; readonly hasCurrentCertification: boolean }
 
-/** The certification workflow arrives in W7; until then no applicant can hold a verified certification. */
-export const certificationWorkflowStatus: CertificationWorkflowStatus = { isAvailable: false }
-
-/** What the apply flow knows about the worker's own verified certifications. */
-export interface WorkerVerifiedCertificationState {
-  readonly isWorkflowAvailable: boolean
-  readonly hasVerifiedCertifications: boolean
-}
-
-/** Until W7 supplies the real state, every worker has none and the workflow is unavailable. */
-export const currentWorkerVerifiedCertificationState: WorkerVerifiedCertificationState = {
-  isWorkflowAvailable: certificationWorkflowStatus.isAvailable,
-  hasVerifiedCertifications: false,
-}
+export const loadingWorkerCertificationState: WorkerVerifiedCertificationState = { kind: 'loading' }

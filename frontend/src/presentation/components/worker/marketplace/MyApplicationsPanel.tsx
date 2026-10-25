@@ -4,6 +4,7 @@ import { ClipboardList } from 'lucide-react'
 import type { JobApplicationService } from '../../../../application/services/JobApplicationService'
 import type { MarketplaceService } from '../../../../application/services/MarketplaceService'
 import type { MyJobApplication } from '../../../../domain/models/JobApplication'
+import type { WorkerVerifiedCertificationState } from '../../../../domain/models/VerifiedCertification'
 import { isWorkerDeletableDraft } from '../../../../domain/utilities/jobApplicationLifecycle'
 import { Card, EmptyState, Modal, Skeleton } from '../../../design/ui'
 import { useApplyToJobOpening } from '../../../hooks/useApplyToJobOpening'
@@ -26,6 +27,8 @@ interface MyApplicationsPanelProps {
   readonly marketplaceService: MarketplaceService
   readonly hasWorkerProfile: boolean
   readonly onCreateProfileRequested: () => void
+  /** The worker's real certification state (D-20) for certification-required openings. */
+  readonly workerCertificationState?: WorkerVerifiedCertificationState
 }
 
 /** "My applications": status tracking, the frozen snapshot, withdraw and drafts. */
@@ -34,6 +37,7 @@ export function MyApplicationsPanel({
   marketplaceService,
   hasWorkerProfile,
   onCreateProfileRequested,
+  workerCertificationState,
 }: MyApplicationsPanelProps): ReactElement {
   const {
     myApplications,
@@ -202,6 +206,7 @@ export function MyApplicationsPanel({
           setDraftToSubmit(null)
         }}
         onReloadOpeningRequirements={reloadJobOpening}
+        workerCertificationState={workerCertificationState}
       />
     </Card>
   )

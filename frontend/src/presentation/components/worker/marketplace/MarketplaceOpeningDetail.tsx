@@ -6,8 +6,14 @@ import type { MarketplaceJobOpening } from '../../../../domain/models/Marketplac
 import { Button, Modal, Skeleton } from '../../../design/ui'
 import { useMarketplaceOpeningDetail } from '../../../hooks/useMarketplaceOpeningDetail'
 import { jobOpeningDetailsDisclaimer } from '../../../utilities/jobOpeningDisplay'
-import { currentWorkerVerifiedCertificationState } from '../../../../domain/models/VerifiedCertification'
-import { describeWorkerCertificationWarning } from '../../../utilities/workforceNoticeCopy'
+import {
+  loadingWorkerCertificationState,
+  type WorkerVerifiedCertificationState,
+} from '../../../../domain/models/VerifiedCertification'
+import {
+  describeWorkerCertificationWarning,
+  isApplyBlockedByCertification,
+} from '../../../utilities/workforceNoticeCopy'
 import { JobApplicationStatusBadge } from '../../jobOpenings/JobApplicationStatusBadge'
 import { JobOpeningDetailsView } from '../../jobOpenings/JobOpeningDetailsView'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
@@ -18,6 +24,8 @@ interface MarketplaceOpeningDetailProps {
   readonly selectedJobOpening: MarketplaceJobOpening | null
   readonly onApplyRequested: (selectedJobOpening: MarketplaceJobOpening, jobOpening: JobOpening) => void
   readonly onClose: () => void
+  /** The worker's real certification state (D-20); only read for certification-required openings. */
+  readonly workerCertificationState?: WorkerVerifiedCertificationState
 }
 
 /** The full current opening, shown exactly as the shop entered it. */
@@ -26,11 +34,15 @@ export function MarketplaceOpeningDetail({
   selectedJobOpening,
   onApplyRequested,
   onClose,
+  workerCertificationState = loadingWorkerCertificationState,
 }: MarketplaceOpeningDetailProps): ReactElement {
   const { jobOpening, isLoadingJobOpening, jobOpeningErrorMessage, reloadJobOpening } =
     useMarketplaceOpeningDetail(marketplaceService, selectedJobOpening?.jobOpeningId ?? null)
   const myApplicationStatus = selectedJobOpening?.myApplicationStatus ?? null
-  const certificationWarning = describeWorkerCertificationWarning(currentWorkerVerifiedCertificationState)
+  const applicantRequirement = jobOpening?.applicantRequirement ?? null
+  const certificationWarning =
+    applicantRequirement === 'certification_required' ? describeWorkerCertificationWarning(workerCertificationState) : null
+  const isBlockedByCertification = isApplyBlockedByCertification(applicantRequirement, workerCertificationState)
   const canApply = jobOpening !== null && jobOpening.status === 'published' && myApplicationStatus === null
 
   return (
@@ -51,6 +63,7 @@ export function MarketplaceOpeningDetail({
             {canApply ? (
               <Button
                 leadingIcon={<Send className="h-4 w-4" />}
+                disabled={isBlockedByCertification}
                 onClick={(): void => {
                   onApplyRequested(selectedJobOpening, jobOpening)
                 }}
@@ -85,7 +98,7 @@ export function MarketplaceOpeningDetail({
               <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               {jobOpeningDetailsDisclaimer}
             </p>
-            {jobOpening.applicantRequirement === 'certification_required' && certificationWarning !== null ? (
+            {certificationWarning !== null ? (
               <p
                 role="note"
                 className="flex items-start gap-2 rounded-[var(--radius-control)] bg-[var(--color-warning-50)] px-3 py-2 text-sm text-[var(--color-warning-600)]"

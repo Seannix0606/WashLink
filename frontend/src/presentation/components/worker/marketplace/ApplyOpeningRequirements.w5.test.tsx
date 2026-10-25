@@ -3,10 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { JobApplicationService } from '../../../../application/services/JobApplicationService'
 import { MarketplaceService } from '../../../../application/services/MarketplaceService'
-import {
-  certificationWorkflowStatus,
-  currentWorkerVerifiedCertificationState,
-} from '../../../../domain/models/VerifiedCertification'
+import { loadingWorkerCertificationState } from '../../../../domain/models/VerifiedCertification'
 import { buildJobOpening, testJobOpeningIdentifier } from '../../../../test/fixtures'
 import {
   buildMarketplaceJobOpening,
@@ -15,9 +12,13 @@ import {
 } from '../../../../test/jobApplicationFixtures'
 import { describeNoVerifiedCertifications } from '../../../utilities/jobApplicationDisplay'
 import {
-  certificationsNotAvailableYetWarning,
+  certificationRequiredApplyBlockedText,
+  certificationStateLoadingText,
+  certificationStateUnavailableText,
+} from '../../../utilities/certificationCopy'
+import {
   describeWorkerCertificationWarning,
-  noVerifiedCertificationWarning,
+  isApplyBlockedByCertification,
 } from '../../../utilities/workforceNoticeCopy'
 import { ApplyToOpeningModal } from './ApplyToOpeningModal'
 import { WorkerMarketplacePanel } from './WorkerMarketplacePanel'
@@ -100,23 +101,21 @@ describe('Apply flow shows qualifications and required training (W5 spec C)', ()
   })
 
   it('w5_certification_copy_depends_on_certification_state', () => {
-    // Until W7 the workflow is unavailable for everyone, and the copy says exactly that.
-    expect(certificationWorkflowStatus.isAvailable).toBe(false)
-    expect(describeWorkerCertificationWarning(currentWorkerVerifiedCertificationState)).toBe(
-      certificationsNotAvailableYetWarning,
+    // W7 supplies the real my_certifications state; the copy follows it.
+    expect(describeWorkerCertificationWarning(loadingWorkerCertificationState)).toBe(certificationStateLoadingText)
+    expect(describeWorkerCertificationWarning({ kind: 'unavailable' })).toBe(certificationStateUnavailableText)
+    expect(describeWorkerCertificationWarning({ kind: 'loaded', hasCurrentCertification: false })).toBe(
+      certificationRequiredApplyBlockedText,
     )
-    expect(certificationsNotAvailableYetWarning).toBe(
-      'WashLink certifications are not available yet, so shops will not see any verified certifications for any applicant.',
+    expect(certificationRequiredApplyBlockedText).toBe(
+      'This opening needs a current shop-issued certification recorded on WashLink. You do not have one, so you cannot apply yet. Openings that welcome trainees are open to you.',
     )
-    // Once W7 supplies the real state.
-    expect(
-      describeWorkerCertificationWarning({ isWorkflowAvailable: true, hasVerifiedCertifications: false }),
-    ).toBe(noVerifiedCertificationWarning)
-    expect(
-      describeWorkerCertificationWarning({ isWorkflowAvailable: true, hasVerifiedCertifications: true }),
-    ).toBeNull()
-    // The owner side mirrors it.
-    expect(describeNoVerifiedCertifications(false).title).toBe('Verified certifications: not available yet')
-    expect(describeNoVerifiedCertifications(true).title).toBe('Verified certifications: none yet')
+    expect(describeWorkerCertificationWarning({ kind: 'loaded', hasCurrentCertification: true })).toBeNull()
+    // D-20 gate applies only to certification-required openings.
+    expect(isApplyBlockedByCertification('trainees_welcome', { kind: 'loaded', hasCurrentCertification: false })).toBe(false)
+    expect(isApplyBlockedByCertification('certification_required', { kind: 'loaded', hasCurrentCertification: false })).toBe(true)
+    expect(isApplyBlockedByCertification('certification_required', { kind: 'loaded', hasCurrentCertification: true })).toBe(false)
+    // The owner side mirrors it with the real empty state.
+    expect(describeNoVerifiedCertifications().title).toBe('Verified certifications: none')
   })
 })

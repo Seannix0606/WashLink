@@ -82,6 +82,7 @@ offer of employment or a guarantee (W9 creates contracts).
 | opening closed / archived | 23514 `This job opening is closed.` |
 | shop fails P15 | 23514 `This shop cannot receive applications until its verification is reviewed.` |
 | deadline before today (Asia/Manila; the deadline day itself is accepted) | 23514 `The application deadline for this opening has passed.` |
+| W7 (D-20): opening is `certification_required` and the worker holds no CURRENT (effective active) shop-issued certification from any shop | 23514 `This opening needs a current shop-issued certification recorded on WashLink.` |
 | 3 rows for (opening, worker), withdrawn included | 23514 `You cannot apply to this job opening again.` |
 | 50 live (submitted, under_review, shortlisted) for the worker (also refuses new drafts) | 23514 `You have reached the limit of 50 open applications.` |
 | 500 sent (submitted_at set), non-withdrawn rows on the opening | 23514 `This job opening is not accepting more applications.` |
@@ -164,7 +165,7 @@ pause and opening removal. Draft edits write nothing. Keys embed the audit event
 - Flags rely on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`, R6). An audit failure aborts the action, cascades included (R9); w5a reduces drift risk.
 - The guard message `A submitted application cannot be edited.` is defence in depth: the RPCs never change a non-draft cover note and no client has UPDATE.
 - The 500-per-opening cap is tested with 499 trusted fixtures (`j4_w5_opening_application_cap`); the advisory-lock race fix is checked structurally (lock order in the function body, `j17_w5_fix1_closed_drafts_and_current_owner`), not with two concurrent sessions.
-- `applicant_verified_certifications` returns zero rows until W7. No contact exchange (D-14), no interview scheduling, no super_admin moderation (W11), no email / SMS / push or Realtime (W12).
+- `applicant_verified_certifications` (P22) is real since W7 (`2026_10_26_w7g`, same signature and authorisation): the applicant's CURRENT shop-issued certifications from any shop, never suspended, revoked, expired or superseded rows, reasons or history (W7-L4). The D-20 apply check reads certificate state without a lock (W7 R3); applications sent earlier are never touched by a later suspension or revocation. No contact exchange (D-14), no interview scheduling, no super_admin moderation (W11), no email / SMS / push or Realtime (W12).
 
 ## Rollback
 

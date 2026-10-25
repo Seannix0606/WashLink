@@ -3,8 +3,8 @@ import { BadgeCheck } from 'lucide-react'
 import type { ApplicantPipelineService } from '../../../../application/services/ApplicantPipelineService'
 import { Skeleton } from '../../../design/ui'
 import { useApplicantVerifiedCertifications } from '../../../hooks/useApplicantVerifiedCertifications'
-import { formatShortDateTime } from '../../../utilities/datetimeFormatting'
-import { certificationWorkflowStatus } from '../../../../domain/models/VerifiedCertification'
+import { applicantIssuingShopNoLongerVerifiedText, shopIssuedDisclaimer } from '../../../utilities/certificationCopy'
+import { formatCertificationDate } from '../../../utilities/certificationDisplay'
 import { describeNoVerifiedCertifications } from '../../../utilities/jobApplicationDisplay'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 
@@ -13,28 +13,28 @@ interface ApplicantVerifiedCertificationsSectionProps {
   readonly applicationId: string
 }
 
-/** Only workflow-issued, shop-issued certifications; never anything the worker typed. */
+/** The applicant's CURRENT shop-issued certifications from any shop; never anything the worker typed. */
 export function ApplicantVerifiedCertificationsSection({
   applicantPipelineService,
   applicationId,
 }: ApplicantVerifiedCertificationsSectionProps): ReactElement {
   const { certifications, isLoadingCertifications, certificationsErrorMessage, reloadCertifications } =
     useApplicantVerifiedCertifications(applicantPipelineService, applicationId)
-  const noCertificationsCopy = describeNoVerifiedCertifications(certificationWorkflowStatus.isAvailable)
+  const noCertificationsCopy = describeNoVerifiedCertifications()
 
   return (
-    <section aria-label="Verified certifications" className="space-y-2">
+    <section aria-label="Shop-issued certifications" className="space-y-2">
       <h4 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-ink-900)]">
         <BadgeCheck className="h-4 w-4 text-[var(--color-brand-700)]" aria-hidden="true" />
-        Verified certifications
+        Shop-issued certifications
       </h4>
       {isLoadingCertifications ? (
-        <div aria-busy="true" aria-label="Loading verified certifications">
+        <div aria-busy="true" aria-label="Loading shop-issued certifications">
           <Skeleton heightClassName="h-6" />
         </div>
       ) : certificationsErrorMessage !== null ? (
         <LoadErrorNotice
-          title="Verified certifications could not be loaded"
+          title="Shop-issued certifications could not be loaded"
           errorMessage={certificationsErrorMessage}
           onRetry={(): void => {
             reloadCertifications()
@@ -46,17 +46,21 @@ export function ApplicantVerifiedCertificationsSection({
           <p className="text-xs text-[var(--color-ink-500)]">{noCertificationsCopy.detail}</p>
         </div>
       ) : (
-        <ul className="space-y-1 text-sm text-[var(--color-ink-700)]">
-          {certifications.map((certification) => (
-            <li key={certification.certificationId} className="break-words">
-              {certification.certificationTitle} (shop-issued by {certification.issuingShopName}),
-              issued {formatShortDateTime(certification.issuedAt)}
-              {certification.expiresAt === null
-                ? null
-                : `, expires ${formatShortDateTime(certification.expiresAt)}`}
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-1">
+          <ul aria-label="Current shop-issued certifications" className="space-y-1 text-sm text-[var(--color-ink-700)]">
+            {certifications.map((certification) => (
+              <li key={certification.certificationId} className="break-words">
+                {certification.certificationTitle} (shop-issued by {certification.issuingShopName}), issued{' '}
+                {formatCertificationDate(certification.issuedAt)}
+                {certification.expiresAt === null ? null : `, expires ${formatCertificationDate(certification.expiresAt)}`}
+                {certification.isIssuingShopCurrentlyVerified === false ? (
+                  <span className="block text-xs text-[var(--color-ink-500)]">{applicantIssuingShopNoLongerVerifiedText}</span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-[var(--color-ink-500)]">{shopIssuedDisclaimer}</p>
+        </div>
       )}
     </section>
   )

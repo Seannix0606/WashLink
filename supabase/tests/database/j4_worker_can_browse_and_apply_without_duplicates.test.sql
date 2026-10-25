@@ -25,6 +25,8 @@ select set_config('fx.s_in', test_helpers.create_verified_shop(current_setting('
 select set_config('fx.s_rv', test_helpers.create_verified_shop(current_setting('fx.o1')::uuid, current_setting('fx.a2')::uuid)::text, true);
 select set_config('fx.s_s6', test_helpers.create_verified_shop(current_setting('fx.o1')::uuid, current_setting('fx.a1')::uuid)::text, true);
 select set_config('fx.today', (now() at time zone 'Asia/Manila')::date::text, true);
+-- W7 (D-20): opening b is certification_required, so w1 first receives a current shop-issued certification.
+select test_helpers.issue_test_certification(current_setting('fx.s1')::uuid, current_setting('fx.w1')::uuid, 'j4-o1@local.test') is not null as w1_certified;
 
 create temporary table j4_openings (label text primary key, id uuid) on commit drop;
 grant all on j4_openings to public;

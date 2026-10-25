@@ -4,6 +4,7 @@ import { GraduationCap, Info, Plus, Store } from 'lucide-react'
 import type { Shop } from '../../../../domain/models/Shop'
 import { trainingProgramLimits, type TrainingProgram } from '../../../../domain/models/TrainingProgram'
 import type { Worker } from '../../../../domain/models/Worker'
+import type { CertificationDependencies } from '../../../dependencyInjection/createCertificationDependencies'
 import type { TrainingDependencies } from '../../../dependencyInjection/createTrainingDependencies'
 import { Button, Card, EmptyState, Modal, Skeleton } from '../../../design/ui'
 import { useOwnerTrainingPrograms } from '../../../hooks/useOwnerTrainingPrograms'
@@ -38,9 +39,16 @@ interface OwnerTrainingProgramsPanelProps {
   readonly trainingDependencies: TrainingDependencies
   readonly ownerShopList: readonly Shop[]
   readonly rosterWorkers: readonly Worker[]
+  /** W7: issue certifications from completed enrollments. */
+  readonly certificationDependencies?: CertificationDependencies
 }
 
-export function OwnerTrainingProgramsPanel({ trainingDependencies, ownerShopList, rosterWorkers }: OwnerTrainingProgramsPanelProps): ReactElement {
+export function OwnerTrainingProgramsPanel({
+  trainingDependencies,
+  ownerShopList,
+  rosterWorkers,
+  certificationDependencies,
+}: OwnerTrainingProgramsPanelProps): ReactElement {
   const ownerShopIds = useMemo(() => ownerShopList.map((ownerShop) => ownerShop.id), [ownerShopList])
   const programsState = useOwnerTrainingPrograms(trainingDependencies.trainingProgramService, ownerShopIds)
   const { programs, sessions, shopEligibility, loadedAt, pendingProgramId } = programsState
@@ -116,6 +124,8 @@ export function OwnerTrainingProgramsPanel({ trainingDependencies, ownerShopList
           shopName={shopNameOf(managedProgram.shopId)}
           sessions={sessions}
           rosterWorkers={rosterWorkers}
+          certificationDependencies={certificationDependencies}
+          isShopVerified={managedProgram.shopId !== null && shopEligibility[managedProgram.shopId] === true}
           onScheduleChanged={(): void => { void programsState.refreshPrograms() }}
           onBack={(): void => { setManagedProgramId(null) }}
         />

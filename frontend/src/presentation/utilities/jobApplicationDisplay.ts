@@ -176,28 +176,19 @@ export const acceptRequiresVerifiedShopReason = 'Only a verified shop can accept
 
 export const selfReportedProfileHeading = 'Self-reported by the worker, not verified by WashLink'
 
-export const verifiedCertificationsNoneYetText = 'Verified certifications: none yet'
-
-export const verifiedCertificationsNotAvailableYetText = 'Verified certifications: not available yet'
+export const verifiedCertificationsNoneText = 'Verified certifications: none'
 
 export interface VerifiedCertificationsEmptyCopy {
   readonly title: string
   readonly detail: string
 }
 
-/** Owner-side copy when an applicant has no verified certification; mirrors the worker side. */
-export function describeNoVerifiedCertifications(isWorkflowAvailable: boolean): VerifiedCertificationsEmptyCopy {
-  if (!isWorkflowAvailable) {
-    return {
-      title: verifiedCertificationsNotAvailableYetText,
-      detail:
-        'WashLink certifications are not available yet, so no applicant has a verified certification. Skills above are self-reported.',
-    }
-  }
+/** Owner-side copy when an applicant holds no current shop-issued certification (W7 real state). */
+export function describeNoVerifiedCertifications(): VerifiedCertificationsEmptyCopy {
   return {
-    title: verifiedCertificationsNoneYetText,
+    title: verifiedCertificationsNoneText,
     detail:
-      'Shop-issued certifications appear here only after the WashLink certification workflow records them. Skills above are self-reported.',
+      'No current shop-issued certification is recorded on WashLink for this applicant. Skills above are self-reported.',
   }
 }
 
