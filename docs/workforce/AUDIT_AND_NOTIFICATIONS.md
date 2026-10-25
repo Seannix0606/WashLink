@@ -200,3 +200,37 @@ Application keys are `job_application:<application id>:<audit event id>`. Labels
 Texts never contain the cover note, snapshot, pay, terms, the applicant's name or contact data
 (`j5_notification_text_has_no_cover_note_pay_name_or_contact`). Closing an opening writes up to
 500 application events and notifications in the owner's transaction (W5 R2).
+
+## W6 training (`2026_10_25_w6i`)
+
+Producers: `training_programs_audit`, `training_sessions_audit`, `training_program_trainers_audit`,
+`training_enrollments_audit` and `training_evidence_audit` (attendance and assessments) AFTER INSERT /
+UPDATE / DELETE on the six training tables; definer, pinned, revoked from every client role. Labels come
+from `training_labels` (`notification_safe_label(title, 'A training program')`, `(shop name, 'The shop')`,
+falling back to the enrollment's snapshots after a D-18 shop removal). subject_type `training_program`
+(program, session and trainer events; subject_profile_id = owner, or the trainer for designation events)
+or `training_enrollment` (enrollment and evidence events; subject_profile_id = worker). Payload keys only:
+`training_program_id`, `shop_id`, `enrollment_id`, `session_id`, `from_status`, `to_status`, `session_kind`,
+`attendance_status`, `result`, `recorder_role`, `is_correction`, `attended_training_days`,
+`required_training_days`, `items_met_count`, `items_total`, `changed_by`, `deleted_by` (never ISO dates,
+notes, comments, reasons, terms, pay or names; test `w6_audit_payload_has_no_dates_notes_reasons_terms_or_names`).
+`changed_by`: `owner` / `worker` when the write flag is the row id and `auth.uid()` matches, else
+`trusted_session`. Draft content edits, stamp-only updates and refused actions write nothing.
+
+| Event | Audit action | Notification (category: recipient, body) |
+|---|---|---|
+| program created / status changed / deleted | `training_program.created`, `.status_changed`, `.deleted` (deleted_by owner / shop_removed / trusted_session) | none |
+| session added / cancelled (owner, program open) | `training_session.added`, `.cancelled`; `.deleted` (owner / program_removed / trusted_session) | `training.schedule_changed`: each invited or accepted worker, `<program> at <shop> has a schedule change. Check the dates.` |
+| trainer designated / revoked (owner) | `training_trainer.designated`, `.revoked`; `.deleted` (program_removed / trainer_account_deleted / trusted_session) | `training.trainer_role`: trainer, `You are a trainer for <program>.` / `You are no longer a trainer for <program>.` |
+| invited (owner) | `training_enrollment.invited` | `training.invited`: worker, `<shop> invited you to <program>. Read the free-training notice before you decide.` |
+| accepted / declined / withdrawn (worker) | `training_enrollment.status_changed`, changed_by worker | `training.response`: current shop owner (= enrollment owner), `A worker accepted / declined / left <program>.` |
+| cancelled (owner) | same, changed_by owner | `training.cancelled`: worker, `<shop> cancelled your enrollment in <program>.` |
+| attendance recorded / corrected | `training_attendance.recorded` / `.corrected` | correction only, `training.record_corrected`: worker, `A training record for <program> was corrected.` |
+| assessment recorded / corrected | `training_assessment.recorded` / `.corrected` | `training.assessment`: worker, `<program>: assessment recorded, Passed. Training completed.` / `Not passed.`; owner too when a trainer recorded it, `A trainer recorded an assessment for <program>.` |
+| D-18 shop removal (enrollment shop_id -> null) | `training_enrollment.shop_removed` (from_status) | none |
+| worker account deletion | `training_enrollment.deleted` (worker_profile_deleted), `training_attendance.deleted` / `training_assessment.deleted` (enrollment_removed) | none (W6-L5) |
+
+Keys: `training_invite:`, `training_response:`, `training_cancel:`, `training_schedule:<session>:`,
+`training_trainer:`, `training_attendance:`, `training_assessment:` + `<row id>:<audit event id>`, so every
+recipient gets one notification per event (`w6_notifications_idempotent_one_per_event`). Trusted fixtures and
+repairs notify nobody.

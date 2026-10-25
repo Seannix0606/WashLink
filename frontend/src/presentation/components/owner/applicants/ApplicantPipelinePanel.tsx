@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { ArrowLeft, Info, Users } from 'lucide-react'
 import type { ApplicantPipelineService } from '../../../../application/services/ApplicantPipelineService'
 import { jobApplicationStatuses, type JobApplicationStatus } from '../../../../domain/models/JobApplication'
@@ -12,6 +12,14 @@ import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 import { ApplicantListItem } from './ApplicantListItem'
 import { ApplicantProfileDrawer } from './ApplicantProfileDrawer'
 import { ApplicantTransitionConfirmModal } from './ApplicantTransitionConfirmModal'
+import type { TrainingDependencies } from '../../../dependencyInjection/createTrainingDependencies'
+import type { JobApplication } from '../../../../domain/models/JobApplication'
+
+// W6: the invitation dialog loads only when the owner invites an accepted applicant.
+const InviteToTrainingModal = lazy(async () => {
+  const inviteModule = await import('../training/InviteToTrainingModal')
+  return { default: inviteModule.InviteToTrainingModal }
+})
 
 type ApplicantStatusFilter = 'all' | JobApplicationStatus
 
@@ -23,6 +31,8 @@ interface ApplicantPipelinePanelProps {
   readonly jobOpening: JobOpening
   readonly shopName: string
   readonly isShopVerified: boolean
+  /** W6: when present, accepted applicants can be invited to training. */
+  readonly trainingDependencies?: TrainingDependencies
   readonly onBack: () => void
 }
 
@@ -37,6 +47,7 @@ export function ApplicantPipelinePanel({
   jobOpening,
   shopName,
   isShopVerified,
+  trainingDependencies,
   onBack,
 }: ApplicantPipelinePanelProps): ReactElement {
   const {
@@ -51,6 +62,7 @@ export function ApplicantPipelinePanel({
   const [statusFilter, setStatusFilter] = useState<ApplicantStatusFilter>('all')
   const [openApplicationId, setOpenApplicationId] = useState<string | null>(null)
   const [pendingTransition, setPendingTransition] = useState<PendingTransition | null>(null)
+  const [applicationToInvite, setApplicationToInvite] = useState<JobApplication | null>(null)
 
   const { applications, applicantProfileByApplicationId } = pipeline
   const openApplication = applications.find((application) => application.id === openApplicationId) ?? null
@@ -153,7 +165,7 @@ export function ApplicantPipelinePanel({
 
       <ApplicantProfileDrawer
         applicantPipelineService={applicantPipelineService}
-        application={pendingTransition === null ? openApplication : null}
+        application={pendingTransition === null && applicationToInvite === null ? openApplication : null}
         applicantProfile={
           openApplication === null ? null : (applicantProfileByApplicationId.get(openApplication.id) ?? null)
         }
@@ -163,6 +175,7 @@ export function ApplicantPipelinePanel({
         onTransitionRequested={(application, toStatus): void => {
           setPendingTransition({ applicationId: application.id, toStatus })
         }}
+        onInviteToTrainingRequested={trainingDependencies === undefined ? undefined : setApplicationToInvite}
         onClose={(): void => {
           setOpenApplicationId(null)
         }}
@@ -179,6 +192,18 @@ export function ApplicantPipelinePanel({
           setPendingTransition(null)
         }}
       />
+      {trainingDependencies !== undefined && applicationToInvite !== null ? (
+        <Suspense fallback={null}>
+          <InviteToTrainingModal
+            trainingDependencies={trainingDependencies}
+            jobApplication={applicationToInvite}
+            applicantName={applicantNameOf(applicationToInvite.id)}
+            onClose={(): void => {
+              setApplicationToInvite(null)
+            }}
+          />
+        </Suspense>
+      ) : null}
     </section>
   )
 }

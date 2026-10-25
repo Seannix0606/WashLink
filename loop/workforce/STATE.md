@@ -1,7 +1,7 @@
 # Loop State
 
 Loop status: **RUNNING** (resumed 2026-10-25, continuous) · mode: **continuous until Completion criteria met**
-Next increment: **W6 — Training programs, attendance, assessment, free-training rule**
+Next increment: **W7 — Certifications: issue, expire, suspend, revoke**
 Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 
 | ID | Status | Branch | Fix cycles | Checks (actual) | Verifier |
@@ -12,7 +12,7 @@ Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 | W3 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 46/46 · pytest 4 · stager 18/18 · pgTAP 546 PASS (18 migrations) · smoke W2 48/48, W3 33/33 | PASS (increments/W3/VERDICT.md) |
 | W4 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 64/64 · pytest 4 · stager 18/18 · pgTAP 749 PASS (22 migrations) · smoke W2 48, W3 33, W4 43 | PASS (increments/W4/VERDICT.md) |
 | W5 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 92/92 · pytest 4 · stager 18/18 · pgTAP 1094 PASS (27 migrations) · smoke W2 48, W3 33, W4 43, W5 39 | PASS (increments/W5/VERDICT.md) |
-| W6 | pending | — | 0 | — | — |
+| W6 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 128/128 · pytest 4 · stager 18/18 · pgTAP 1408 PASS (36 migrations) · smoke W2 48, W3 33, W4 43, W5 39, W6 40 | PASS (increments/W6/VERDICT.md) |
 | W7 | pending | — | 0 | — | — |
 | W8 | pending | — | 0 | — | — |
 | W9 | pending | — | 0 | — | — |

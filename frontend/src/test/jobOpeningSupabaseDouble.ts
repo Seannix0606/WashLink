@@ -34,7 +34,7 @@ type QueryBuilderDouble = Record<string, (...methodArguments: unknown[]) => unkn
 
 function createQueryBuilder(): QueryBuilderDouble {
   const queryBuilder: QueryBuilderDouble = {}
-  for (const methodName of ['select', 'eq', 'neq', 'not', 'in', 'order', 'limit', 'insert', 'update', 'delete']) {
+  for (const methodName of ['select', 'eq', 'neq', 'not', 'is', 'in', 'order', 'limit', 'insert', 'update', 'delete']) {
     queryBuilder[methodName] = (...methodArguments: unknown[]): unknown => {
       jobOpeningSupabaseDouble.recordedCalls.push([methodName, methodArguments])
       return queryBuilder

@@ -9,6 +9,7 @@ import type { ShopVerificationService } from '../../../application/services/Shop
 import type { WorkerService } from '../../../application/services/WorkerService'
 import type { Booking } from '../../../domain/models/Booking'
 import type { Shop } from '../../../domain/models/Shop'
+import type { TrainingDependencies } from '../../dependencyInjection/createTrainingDependencies'
 import { AppShell, Skeleton, Tabs, type TabItemDefinition } from '../../design/ui'
 import { useOwnerBookingDashboard } from '../../hooks/useOwnerBookingDashboard'
 import { useOwnerDashboardBookingFilterSelection } from '../../hooks/useOwnerDashboardBookingFilterSelection'
@@ -29,11 +30,18 @@ const OwnerJobOpeningsPanel = lazy(async () => {
   return { default: jobOpeningsModule.OwnerJobOpeningsPanel }
 })
 
+// W6: the training tab is loaded only when the owner opens it.
+const OwnerTrainingProgramsPanel = lazy(async () => {
+  const trainingModule = await import('./training/OwnerTrainingProgramsPanel')
+  return { default: trainingModule.OwnerTrainingProgramsPanel }
+})
+
 type OwnerDashboardPrimaryTabKey =
   | 'bookings'
   | 'shops'
   | 'team'
   | 'jobs'
+  | 'training'
   | 'verification'
 
 interface OwnerDashboardContentProps {
@@ -45,6 +53,7 @@ interface OwnerDashboardContentProps {
   readonly rosterLinkService: RosterLinkService
   readonly jobOpeningService: JobOpeningService
   readonly applicantPipelineService: ApplicantPipelineService
+  readonly trainingDependencies: TrainingDependencies
   readonly ownerShopList: Shop[]
   readonly onOwnerShopListChanged: (nextOwnerShopList: Shop[]) => void
 }
@@ -58,6 +67,7 @@ export function OwnerDashboardContent({
   rosterLinkService,
   jobOpeningService,
   applicantPipelineService,
+  trainingDependencies,
   ownerShopList,
   onOwnerShopListChanged,
 }: OwnerDashboardContentProps): ReactElement {
@@ -105,6 +115,7 @@ export function OwnerDashboardContent({
     { value: 'shops', label: 'My shops', badgeContent: ownerShopList.length },
     { value: 'team', label: 'My team', badgeContent: workers.length },
     { value: 'jobs', label: 'Job openings' },
+    { value: 'training', label: 'Training' },
     {
       value: 'verification',
       label: 'Verification',
@@ -217,6 +228,17 @@ export function OwnerDashboardContent({
               jobOpeningService={jobOpeningService}
               applicantPipelineService={applicantPipelineService}
               ownerShopList={ownerShopList}
+              trainingDependencies={trainingDependencies}
+            />
+          </Suspense>
+        ) : null}
+
+        {selectedPrimaryTab === 'training' ? (
+          <Suspense fallback={<Skeleton heightClassName="h-40" />}>
+            <OwnerTrainingProgramsPanel
+              trainingDependencies={trainingDependencies}
+              ownerShopList={ownerShopList}
+              rosterWorkers={workers}
             />
           </Suspense>
         ) : null}

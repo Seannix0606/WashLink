@@ -40,7 +40,23 @@ export function decideWorkerWorkspaceView({
   return 'jobs'
 }
 
-export type WorkerWorkspaceTabKey = 'find_work' | 'applications' | 'bookings'
+export type WorkerWorkspaceTabKey = 'find_work' | 'applications' | 'training' | 'training_i_run' | 'bookings'
+
+export interface WorkerWorkspaceTabDefinition {
+  readonly value: WorkerWorkspaceTabKey
+  readonly label: string
+}
+
+/** "Training I run" is offered only to a worker who is a current designated trainer (D-16). */
+export function workerWorkspaceTabDefinitions(isDesignatedTrainer: boolean): readonly WorkerWorkspaceTabDefinition[] {
+  return [
+    { value: 'find_work', label: 'Find work' },
+    { value: 'applications', label: 'My applications' },
+    { value: 'training', label: 'My training' },
+    ...(isDesignatedTrainer ? [{ value: 'training_i_run' as const, label: 'Training I run' }] : []),
+    { value: 'bookings', label: 'Assigned bookings' },
+  ]
+}
 
 /**
  * Linked workers land on their assigned bookings as before; everyone else starts on

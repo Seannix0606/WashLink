@@ -1,8 +1,10 @@
 import type { ReactElement, ReactNode } from 'react'
 import { lazy, Suspense, useState } from 'react'
+import type { TrainingDependencies } from '../../presentation/dependencyInjection/createTrainingDependencies'
 import type { WorkerMarketplaceDependencies } from '../../presentation/dependencyInjection/createWorkerMarketplaceDependencies'
-import { Skeleton, Tabs, type TabItemDefinition } from '../../presentation/design/ui'
-import type { WorkerWorkspaceTabKey } from './workerWorkspaceView'
+import { Skeleton, Tabs } from '../../presentation/design/ui'
+import { useTrainerPrograms } from '../../presentation/hooks/useTrainerPrograms'
+import { workerWorkspaceTabDefinitions, type WorkerWorkspaceTabKey } from './workerWorkspaceView'
 
 // W5: the marketplace and application panels load only when the worker opens them.
 const WorkerMarketplacePanel = lazy(async () => {
@@ -17,16 +19,20 @@ const MyApplicationsPanel = lazy(async () => {
   )
   return { default: applicationsModule.MyApplicationsPanel }
 })
-
-const workerWorkspaceTabItems: readonly TabItemDefinition<WorkerWorkspaceTabKey>[] = [
-  { value: 'find_work', label: 'Find work' },
-  { value: 'applications', label: 'My applications' },
-  { value: 'bookings', label: 'Assigned bookings' },
-]
+// W6: the training panels load only when the worker opens them.
+const MyTrainingsPanel = lazy(async () => {
+  const trainingModule = await import('../../presentation/components/worker/training/MyTrainingsPanel')
+  return { default: trainingModule.MyTrainingsPanel }
+})
+const TrainerProgramsPanel = lazy(async () => {
+  const trainerModule = await import('../../presentation/components/worker/training/TrainerProgramsPanel')
+  return { default: trainerModule.TrainerProgramsPanel }
+})
 
 interface WorkerWorkspaceTabsProps {
   readonly initialTab: WorkerWorkspaceTabKey
   readonly marketplaceDependencies: WorkerMarketplaceDependencies
+  readonly trainingDependencies: TrainingDependencies
   readonly hasWorkerProfile: boolean
   readonly onCreateProfileRequested: () => void
   /** The assigned-bookings view (roster picker, jobs, roster links). */
@@ -36,11 +42,16 @@ interface WorkerWorkspaceTabsProps {
 export function WorkerWorkspaceTabs({
   initialTab,
   marketplaceDependencies,
+  trainingDependencies,
   hasWorkerProfile,
   onCreateProfileRequested,
   bookingsContent,
 }: WorkerWorkspaceTabsProps): ReactElement {
   const [activeTab, setActiveTab] = useState<WorkerWorkspaceTabKey>(initialTab)
+  const trainerPrograms = useTrainerPrograms(trainingDependencies.trainingProgramService)
+  const tabItems = workerWorkspaceTabDefinitions(trainerPrograms.isDesignatedTrainer)
+  // A revoked trainer role hides the tab; fall back to My training instead of an empty view.
+  const visibleTab = tabItems.some((tabItem) => tabItem.value === activeTab) ? activeTab : 'training'
   const panelFallback = <Skeleton heightClassName="h-40" />
 
   return (
@@ -48,13 +59,13 @@ export function WorkerWorkspaceTabs({
       <div className="overflow-x-auto">
         <Tabs
           accessibleLabel="Worker workspace sections"
-          tabItems={workerWorkspaceTabItems}
-          activeTabValue={activeTab}
+          tabItems={tabItems}
+          activeTabValue={visibleTab}
           onTabChange={setActiveTab}
         />
       </div>
 
-      {activeTab === 'find_work' ? (
+      {visibleTab === 'find_work' ? (
         <Suspense fallback={panelFallback}>
           <WorkerMarketplacePanel
             marketplaceService={marketplaceDependencies.marketplaceService}
@@ -65,7 +76,7 @@ export function WorkerWorkspaceTabs({
         </Suspense>
       ) : null}
 
-      {activeTab === 'applications' ? (
+      {visibleTab === 'applications' ? (
         <Suspense fallback={panelFallback}>
           <MyApplicationsPanel
             jobApplicationService={marketplaceDependencies.jobApplicationService}
@@ -76,7 +87,27 @@ export function WorkerWorkspaceTabs({
         </Suspense>
       ) : null}
 
-      {activeTab === 'bookings' ? bookingsContent : null}
+      {visibleTab === 'training' ? (
+        <Suspense fallback={panelFallback}>
+          <MyTrainingsPanel trainingDependencies={trainingDependencies} />
+        </Suspense>
+      ) : null}
+
+      {visibleTab === 'training_i_run' ? (
+        <Suspense fallback={panelFallback}>
+          <TrainerProgramsPanel
+            trainingDependencies={trainingDependencies}
+            designatedPrograms={trainerPrograms.designatedPrograms}
+            isLoadingDesignatedPrograms={trainerPrograms.isLoadingDesignatedPrograms}
+            designatedProgramsErrorMessage={trainerPrograms.designatedProgramsErrorMessage}
+            onRetry={(): void => {
+              void trainerPrograms.reloadDesignatedPrograms()
+            }}
+          />
+        </Suspense>
+      ) : null}
+
+      {visibleTab === 'bookings' ? bookingsContent : null}
     </div>
   )
 }

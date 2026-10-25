@@ -1,4 +1,4 @@
-# Local test harness (W1, hardened in W2, extended in W3, W4 and W5)
+# Local test harness (W1, hardened in W2, extended in W3, W4, W5 and W6)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,11 +20,12 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after W5): the reset applies 27 migrations (baseline `00000000000000`, the
+Expected (after W6): the reset applies 36 migrations (baseline `00000000000000`, the
 2026_04_17 copy, owner-policies baseline `20260417000002`, the other 4 pre-W2 copies, the
 6 W2 copies `20261024000001..06`, then the 5 W3 copies `20261024000007..11`: w3a, w3b, w3c, w3d0 preflight, w3d, then the 4 W4 copies
-`20261024000012..15`: w4a preflight, w4b, w4c, w4d, then the 5 W5 copies `20261025000001..05`: w5a preflight, w5b, w5c, w5d, w5e) and seeds the
-helpers; `test db` runs 29 files (1094 assertions after W5) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
+`20261024000012..15`: w4a preflight, w4b, w4c, w4d, then the 5 W5 copies `20261025000001..05`: w5a preflight, w5b, w5c, w5d, w5e, then the 9 W6 copies
+`20261025000006..14`: w6a preflight, w6b..w6i) and seeds the helpers; `test db` runs 37 files (1374 assertions
+after the W6 build) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
 ## Why a staged workdir
 
@@ -59,7 +60,7 @@ helpers; `test db` runs 29 files (1094 assertions after W5) and ends with `Resul
   renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no
   `.temp/project-ref` and no `.env`, so the CLI cannot target a remote project from it.
-  Layout: `supabase/migrations/` (the 2 baseline migrations + the 25 copies),
+  Layout: `supabase/migrations/` (the 2 baseline migrations + the 34 copies),
   `supabase/local_test_baseline/test_helpers.sql` (seed; kept outside `tests/` because
   `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env`
@@ -76,8 +77,13 @@ helpers; `test db` runs 29 files (1094 assertions after W5) and ends with `Resul
   (approved with a recorded review) and `create_job_opening(shop, title)` (complete draft), W5
   `create_worker_profile(worker)`, `publish_job_opening(opening)` (trusted, skips the publish gate)
   and `create_job_application(opening, worker, status default 'submitted')` (trusted insert with
-  the stamps and snapshot the status requires; audited `trusted_session`, no notification)
-  (fixtures require `act_as_service()`).
+  the stamps and snapshot the status requires; audited `trusted_session`, no notification), W6
+  `manila_today()`, `create_training_program(shop, days default 3)` (complete draft, 2-item checklist),
+  `add_training_session(program, date, kind default supervised_training)` (any date: past sessions are a
+  TEST-ONLY time shift), `open_training_program(program)` (trusted, skips the open gate),
+  `designate_trainer(program, roster row)` and `create_accepted_enrollment(program, worker, accepted_at
+  default now() - 10 days)` (backdated acceptance with notice and snapshot); evidence is never seeded, tests
+  record it through the real RPCs as the owner or a trainer (fixtures require `act_as_service()`).
 - Ids are passed between statements with `set_config('fx.<name>', ..., true)` /
   `current_setting('fx.<name>')`, readable under any role.
 - Never print a bare `ok` from a plain `select`: TAP counts it as a test.
@@ -91,12 +97,12 @@ direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_reques
 The baseline still reproduces the weaknesses on purpose, so those assertions only pass
 because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (after W5: 29 files, 1094 assertions)
+## pgTAP files (after the W6 build: 37 files, 1374 assertions)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 18 | replay of 27 migrations, W2 objects, W2, W3, W4 and W5 RLS on, definer search_path |
+| `001_migration_replay.test.sql` | 19 | replay of 36 migrations, W2 objects, W2..W6 RLS on, definer search_path |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
@@ -120,6 +126,14 @@ because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a pla
 | `j5_application_audit_and_notifications.test.sql` | 38 | audit per action, payload and text rules, owner / worker notifications, pause once, idempotent keys, unsafe title label, cascades notify the surviving party |
 | `j17_w5_application_authorization.test.sql` | 56 | privileges and RLS, cross-tenant reads and writes, applicant profiles (sharing statuses, no contact columns), no private contacts or worker_profiles for owners, certifications empty until W7, applicant opening read, internal functions, anon, pinning, realtime, invoker search, cascades |
 | `j18_w5_flows.test.sql` | 20 | W4 lifecycle, published edits, worker profile self-service, roster links and bookings with applications present |
+| `j6_worker_cannot_complete_training_without_three_days_and_assessment.test.sql` | 40 | J6 training part / C2: derived completion (>= 3 distinct attended supervised days + passed assessment), one row per day, absent and assessment days do not count, corrections, recording windows, predicate = view |
+| `j6_w6_training_program_and_enrollment_lifecycle.test.sql` | 53 | program and enrollment state machines per actor, open gate (verified shop, 3 days, attestation), frozen content, stale 55000, invitations from accepted applications, notice + schedule check, write-once terms snapshot, session cancel rules |
+| `j6_w6_training_audit_and_notifications.test.sql` | 23 | audit per action, payload keys and leaks, worker / owner / trainer notifications, schedule change once per event, idempotency, refused actions write nothing |
+| `j7_required_initial_training_is_free_to_the_worker.test.sql` | 23 | J7: fee forced to 0 for every session, no fee / charge parameter or column, no FK or write path to bookings / pricing, pay optional / verbatim / all-or-nothing, notice and snapshot, trainee not assignable |
+| `j8_unauthorized_users_cannot_alter_training_evidence.test.sql` | 41 | J8 training part: only owner or designated linked trainer records; trainee, other owner, revoked / unlinked trainer, customer, super_admin, anon refused; server stamps; linear corrections; append-only for every session; cascade-only delete |
+| `j17_w6_training_authorization.test.sql` | 45 | privileges and policies, per-audience reads, no contact columns, invoker view, internal functions, anon, pinning, realtime, worker-account cascade |
+| `j18_w6_flows.test.sql` | 24 | C7 gate scope (assign / start), other owners and finished trainees unaffected, quotes, ratings, W5 flow, shop and account deletion |
+| `j18_w6_d18_training_evidence_retention.test.sql` | 30 | D-18: shop and owner-account deletion (untrusted) succeed and retain enrollments / evidence with snapshots, unenrolled programs removed, `shop_removed` progress, no recorder left, gate lifts, trusted program delete restricted |
 
 ## Safety rules
 
@@ -220,3 +234,28 @@ transition gets 55000; withdraw then reapply works; an owner edit leaves the sna
 opening closes the application and the applicant still reads the opening; notifications exist for both
 parties without the cover note or terms; a GoTrue `deleteUser` of the worker removes its applications and
 writes `job_application.deleted` with `worker_profile_deleted`. Must end `0 failed` (W5 build: 39 checks).
+
+## W6 API smoke (local stack only)
+
+```sh
+node scripts/supabase-test/w6-api-smoke.mjs   # after run-db-tests.mjs (and the W2..W5 smokes), before stopping the stack
+```
+
+Same safety rules as the earlier smoke scripts (loopback URL only, keys from `supabase status` held in
+memory and never printed, no `.env`, synthetic `@local.test` users deleted with the result asserted). One
+addition, the TEST-ONLY time shift (W6 R3): two past sessions and an earlier `accepted_at` are written
+through `docker exec supabase_db_<staged project_id> psql` as a trusted local session calling the seeded
+`test_helpers` (container name derived from the asserted `*-local-test` project_id; only validated uuids /
+dates are interpolated); all evidence is then recorded through the real RPCs. Checks through PostgREST /
+GoTrue: anon reads of the six tables and the progress view fail or return 0 rows; direct inserts by owner,
+worker and service_role fail (42501); draft program with pay and sessions via RPC (worker_fee 0); a worker
+cannot see the draft; open refused without the attestation, then opened; designation of a roster-linked
+trainer (link-code flow); invitations from accepted applications; accept refused without the notice, then
+accepted with the snapshot (fee 0, pay as entered); worker_fee PATCH denied and still 0; the trainee's
+booking assignment refused (23514); trainee and other-owner recording denied; trainer records; same-day
+duplicate 23505; assessment before 3 days refused; after the time shift 3 days give `awaiting_assessment`,
+a correction without reason is refused, a pass gives `completed`; evidence PATCH / DELETE denied;
+notifications exist without dates, names or pay; `set_config` not exposed; GoTrue `deleteUser` of the owner
+keeps the other worker's enrollment (`shop_removed`, D-18); `deleteUser` of the trainee removes its
+enrollment and keeps the audit rows; the retained program is removed by a trusted cleanup. Must end
+`0 failed` (W6 build: 40 checks).

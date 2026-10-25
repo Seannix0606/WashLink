@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react'
-import { Info, UserRound } from 'lucide-react'
+import { GraduationCap, Info, UserRound } from 'lucide-react'
 import type { ApplicantPipelineService } from '../../../../application/services/ApplicantPipelineService'
 import type { ApplicantProfile } from '../../../../domain/models/ApplicantProfile'
 import type { JobApplication } from '../../../../domain/models/JobApplication'
@@ -29,6 +29,8 @@ interface ApplicantProfileDrawerProps {
   readonly isShopVerified: boolean
   readonly isActionPending: boolean
   readonly onTransitionRequested: (application: JobApplication, toStatus: OwnerJobApplicationTransition) => void
+  /** W6 (D-15): offered for accepted applications when training is available. */
+  readonly onInviteToTrainingRequested?: (application: JobApplication) => void
   readonly onClose: () => void
 }
 
@@ -56,6 +58,7 @@ export function ApplicantProfileDrawer({
   isShopVerified,
   isActionPending,
   onTransitionRequested,
+  onInviteToTrainingRequested,
   onClose,
 }: ApplicantProfileDrawerProps): ReactElement {
   const transitions =
@@ -106,6 +109,18 @@ export function ApplicantProfileDrawer({
               <p className="text-xs text-[var(--color-ink-700)]">
                 You recorded acceptance. This is not a contract or a job guarantee.
               </p>
+            ) : null}
+            {application.status === 'accepted' && onInviteToTrainingRequested !== undefined ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                leadingIcon={<GraduationCap className="h-4 w-4" />}
+                onClick={(): void => {
+                  onInviteToTrainingRequested(application)
+                }}
+              >
+                Invite to training
+              </Button>
             ) : null}
           </div>
 

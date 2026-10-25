@@ -10,6 +10,7 @@ import {
   type JobOpeningStatus,
 } from '../../../../domain/models/JobOpening'
 import type { Shop } from '../../../../domain/models/Shop'
+import type { TrainingDependencies } from '../../../dependencyInjection/createTrainingDependencies'
 import { Button, Card, EmptyState, Modal, Skeleton, Tabs, type TabItemDefinition } from '../../../design/ui'
 import { useJobOpeningApplicationCounts } from '../../../hooks/useJobOpeningApplicationCounts'
 import { useOwnerJobOpenings } from '../../../hooks/useOwnerJobOpenings'
@@ -49,12 +50,15 @@ interface OwnerJobOpeningsPanelProps {
   readonly jobOpeningService: JobOpeningService
   readonly applicantPipelineService: ApplicantPipelineService
   readonly ownerShopList: readonly Shop[]
+  /** W6: lets the applicant drawer invite accepted applicants to training. */
+  readonly trainingDependencies?: TrainingDependencies
 }
 
 export function OwnerJobOpeningsPanel({
   jobOpeningService,
   applicantPipelineService,
   ownerShopList,
+  trainingDependencies,
 }: OwnerJobOpeningsPanelProps): ReactElement {
   const ownerShopIds = useMemo(() => ownerShopList.map((ownerShop) => ownerShop.id), [ownerShopList])
   const {
@@ -160,6 +164,7 @@ export function OwnerJobOpeningsPanel({
             jobOpening={pipelineJobOpening}
             shopName={shopNameOf(pipelineJobOpening.shopId)}
             isShopVerified={shopPublishEligibility[pipelineJobOpening.shopId] === true}
+            trainingDependencies={trainingDependencies}
             onBack={(): void => {
               setPipelineJobOpeningId(null)
               refreshApplicationCounts()

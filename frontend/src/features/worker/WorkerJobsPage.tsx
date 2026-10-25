@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { useMemo } from 'react'
 import type { RosterLinkService } from '../../application/services/RosterLinkService'
 import { createWorkerJobsDependencies } from '../../presentation/dependencyInjection/createWorkerJobsDependencies'
+import { createTrainingDependencies } from '../../presentation/dependencyInjection/createTrainingDependencies'
 import { createWorkerMarketplaceDependencies } from '../../presentation/dependencyInjection/createWorkerMarketplaceDependencies'
 import { useAuthenticatedUser } from '../../presentation/auth/AuthenticatedUserContext'
 import type { UseMyRosterLinksResult } from '../../presentation/hooks/useMyRosterLinks'
@@ -44,6 +45,7 @@ export function WorkerJobsPage({
     [workerUserIdentifier],
   )
   const marketplaceDependencies = useMemo(() => createWorkerMarketplaceDependencies(), [])
+  const trainingDependencies = useMemo(() => createTrainingDependencies(), [])
   const {
     rosterLinkEntries,
     selectedRosterEntry,
@@ -109,6 +111,7 @@ export function WorkerJobsPage({
         <WorkerWorkspaceTabs
           initialTab={defaultWorkerWorkspaceTab(rosterLinkEntries.length > 0)}
           marketplaceDependencies={marketplaceDependencies}
+          trainingDependencies={trainingDependencies}
           hasWorkerProfile={hasWorkerProfile}
           onCreateProfileRequested={onCreateProfileRequested}
           bookingsContent={bookingsContent}
