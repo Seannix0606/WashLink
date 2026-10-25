@@ -1,4 +1,4 @@
-# Local test harness (W1, hardened in W2, extended in W3 and W4)
+# Local test harness (W1, hardened in W2, extended in W3, W4 and W5)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,11 +20,11 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after W4): the reset applies 22 migrations (baseline `00000000000000`, the
+Expected (after W5): the reset applies 27 migrations (baseline `00000000000000`, the
 2026_04_17 copy, owner-policies baseline `20260417000002`, the other 4 pre-W2 copies, the
 6 W2 copies `20261024000001..06`, then the 5 W3 copies `20261024000007..11`: w3a, w3b, w3c, w3d0 preflight, w3d, then the 4 W4 copies
-`20261024000012..15`: w4a preflight, w4b, w4c, w4d) and seeds the
-helpers; `test db` runs 20 files (749 assertions after W4 build) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
+`20261024000012..15`: w4a preflight, w4b, w4c, w4d, then the 5 W5 copies `20261025000001..05`: w5a preflight, w5b, w5c, w5d, w5e) and seeds the
+helpers; `test db` runs 29 files (1094 assertions after W5) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
 ## Why a staged workdir
 
@@ -59,7 +59,7 @@ helpers; `test db` runs 20 files (749 assertions after W4 build) and ends with `
   renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no
   `.temp/project-ref` and no `.env`, so the CLI cannot target a remote project from it.
-  Layout: `supabase/migrations/` (the 2 baseline migrations + the 20 copies),
+  Layout: `supabase/migrations/` (the 2 baseline migrations + the 25 copies),
   `supabase/local_test_baseline/test_helpers.sql` (seed; kept outside `tests/` because
   `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env`
@@ -73,7 +73,10 @@ helpers; `test db` runs 20 files (749 assertions after W4 build) and ends with `
   `act_as(uuid)`, `act_as_customer/owner/worker/admin(email)`, `act_as_anon()`,
   `act_as_service()`, `attempt(sql)`, fixtures `create_shop`, `set_shop_price`,
   `create_roster_worker`, `create_booking_fixture`, W4 `create_verified_shop(owner, reviewer)`
-  (approved with a recorded review) and `create_job_opening(shop, title)` (complete draft)
+  (approved with a recorded review) and `create_job_opening(shop, title)` (complete draft), W5
+  `create_worker_profile(worker)`, `publish_job_opening(opening)` (trusted, skips the publish gate)
+  and `create_job_application(opening, worker, status default 'submitted')` (trusted insert with
+  the stamps and snapshot the status requires; audited `trusted_session`, no notification)
   (fixtures require `act_as_service()`).
 - Ids are passed between statements with `set_config('fx.<name>', ..., true)` /
   `current_setting('fx.<name>')`, readable under any role.
@@ -88,12 +91,12 @@ direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_reques
 The baseline still reproduces the weaknesses on purpose, so those assertions only pass
 because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (after W4 build: 20 files, 749 assertions)
+## pgTAP files (after W5: 29 files, 1094 assertions)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 17 | replay of 22 migrations, W2 objects, W2, W3 and W4 RLS on, definer search_path |
+| `001_migration_replay.test.sql` | 18 | replay of 27 migrations, W2 objects, W2, W3, W4 and W5 RLS on, definer search_path |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
@@ -112,6 +115,11 @@ because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a pla
 | `j3_unverified_owner_cannot_publish_job_openings.test.sql` | 42 | J3: publish / resume need a recorded verification; losing it (decision, S6, reviewer deletion) hides openings from workers |
 | `j17_w4_job_opening_authorization.test.sql` | 35 | privileges, internal functions, super_admin write denial, pinning, realtime, R-2 shared rule, cascades, trusted repair |
 | `j18_w4_flows.test.sql` | 14 | shop edit / delete, admin review, roster preview and bookings unaffected by W4 |
+| `j4_worker_can_browse_and_apply_without_duplicates.test.sql` | 90 | J4: worker-only search (filters, escaping, limits, stated pay only), apply with / without cover note, profile and notice required, duplicates, reapply and open-application limits, deadline (Manila), status and P15 refusals, write-once snapshot for every session |
+| `j5_application_status_transitions_are_validated.test.sql` | 73 | J5: owner pipeline, worker submit / withdraw, full (from, to, actor) matrix incl. super_admin, stale 55000, draft edit / delete, direct writes denied, accept needs a verified shop, auto-close on close / trusted archive, pause keeps applications open, trusted repair audited |
+| `j5_application_audit_and_notifications.test.sql` | 38 | audit per action, payload and text rules, owner / worker notifications, pause once, idempotent keys, unsafe title label, cascades notify the surviving party |
+| `j17_w5_application_authorization.test.sql` | 56 | privileges and RLS, cross-tenant reads and writes, applicant profiles (sharing statuses, no contact columns), no private contacts or worker_profiles for owners, certifications empty until W7, applicant opening read, internal functions, anon, pinning, realtime, invoker search, cascades |
+| `j18_w5_flows.test.sql` | 20 | W4 lifecycle, published edits, worker profile self-service, roster links and bookings with applications present |
 
 ## Safety rules
 
@@ -192,3 +200,23 @@ not exposed; a stale transition gets 55000; deleting a published opening removes
 close / archive succeed; archived cannot be reopened or edited; a draft delete works; 5 status events are
 audited; the owner has no job-opening notifications; a GoTrue `deleteUser` of the owner cascades the opening
 and writes `job_opening.deleted` with `owner_account_deleted`. Must end `0 failed` (W4 build: 35 checks).
+
+## W5 API smoke (local stack only)
+
+```sh
+node scripts/supabase-test/w5-api-smoke.mjs   # after run-db-tests.mjs (and the W2 / W3 / W4 smokes), before stopping the stack
+```
+
+Same safety rules as the earlier smoke scripts (loopback URL only, keys from `supabase status` held in
+memory and never printed, no `.env`, synthetic `@local.test` users deleted with the result asserted).
+Checks through PostgREST / GoTrue: anon read of `job_applications` fails or returns 0 rows; worker direct
+insert / patch / delete fail (42501); `search_job_openings` returns 1 row for the worker and 0 for the
+customer and owner; apply without the notice version is refused; apply through `create_job_application`
+returns a submitted row with the snapshot; a duplicate gets 23505 `You have already applied to this job
+opening.`; `set_config` is not exposed; the other worker sees 0 rows, the owner 1, the other owner 0 and
+its transition gets 42501; the owner reads 0 `worker_private_contacts`; `applicant_profiles_for_job_opening`
+keys contain no contact / phone / email; `applicant_verified_certifications` returns an empty list; a stale
+transition gets 55000; withdraw then reapply works; an owner edit leaves the snapshot unchanged; closing the
+opening closes the application and the applicant still reads the opening; notifications exist for both
+parties without the cover note or terms; a GoTrue `deleteUser` of the worker removes its applications and
+writes `job_application.deleted` with `worker_profile_deleted`. Must end `0 failed` (W5 build: 39 checks).

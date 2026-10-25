@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { Briefcase, Info, Plus, Store } from 'lucide-react'
+import type { ApplicantPipelineService } from '../../../../application/services/ApplicantPipelineService'
 import type { JobOpeningService } from '../../../../application/services/JobOpeningService'
 import {
   jobOpeningLimits,
@@ -10,6 +11,7 @@ import {
 } from '../../../../domain/models/JobOpening'
 import type { Shop } from '../../../../domain/models/Shop'
 import { Button, Card, EmptyState, Modal, Skeleton, Tabs, type TabItemDefinition } from '../../../design/ui'
+import { useJobOpeningApplicationCounts } from '../../../hooks/useJobOpeningApplicationCounts'
 import { useOwnerJobOpenings } from '../../../hooks/useOwnerJobOpenings'
 import {
   targetStatusByTransitionAction,
@@ -25,6 +27,12 @@ import { JobOpeningListItem } from './JobOpeningListItem'
 import { JobOpeningPreview } from './JobOpeningPreview'
 import { JobOpeningTransitionConfirmModal } from './JobOpeningTransitionConfirmModal'
 
+// W5: the applicant pipeline loads only when the owner opens it.
+const ApplicantPipelinePanel = lazy(async () => {
+  const applicantsModule = await import('../applicants/ApplicantPipelinePanel')
+  return { default: applicantsModule.ApplicantPipelinePanel }
+})
+
 type JobOpeningStatusFilter = 'all' | JobOpeningStatus
 
 /** Archived openings are not loaded, so they get no filter tab. */
@@ -39,11 +47,13 @@ interface PendingConfirmation {
 
 interface OwnerJobOpeningsPanelProps {
   readonly jobOpeningService: JobOpeningService
+  readonly applicantPipelineService: ApplicantPipelineService
   readonly ownerShopList: readonly Shop[]
 }
 
 export function OwnerJobOpeningsPanel({
   jobOpeningService,
+  applicantPipelineService,
   ownerShopList,
 }: OwnerJobOpeningsPanelProps): ReactElement {
   const ownerShopIds = useMemo(() => ownerShopList.map((ownerShop) => ownerShop.id), [ownerShopList])
@@ -66,6 +76,12 @@ export function OwnerJobOpeningsPanel({
   const [editorTarget, setEditorTarget] = useState<JobOpeningEditorTarget | null>(null)
   const [previewedJobOpening, setPreviewedJobOpening] = useState<JobOpening | null>(null)
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null)
+  const [pipelineJobOpeningId, setPipelineJobOpeningId] = useState<string | null>(null)
+  const jobOpeningIds = useMemo(() => jobOpenings.map((jobOpening) => jobOpening.id), [jobOpenings])
+  const { applicationCountByOpening, hasLoadedApplicationCounts, refreshApplicationCounts } =
+    useJobOpeningApplicationCounts(applicantPipelineService, jobOpeningIds)
+  const pipelineJobOpening =
+    jobOpenings.find((jobOpening) => jobOpening.id === pipelineJobOpeningId) ?? null
 
   const shopNameById = useMemo(
     () => new Map(ownerShopList.map((ownerShop) => [ownerShop.id, ownerShop.name])),
@@ -137,7 +153,20 @@ export function OwnerJobOpeningsPanel({
         </p>
       ) : null}
 
-      {hasNoShops ? (
+      {pipelineJobOpening !== null ? (
+        <Suspense fallback={<Skeleton heightClassName="h-40" />}>
+          <ApplicantPipelinePanel
+            applicantPipelineService={applicantPipelineService}
+            jobOpening={pipelineJobOpening}
+            shopName={shopNameOf(pipelineJobOpening.shopId)}
+            isShopVerified={shopPublishEligibility[pipelineJobOpening.shopId] === true}
+            onBack={(): void => {
+              setPipelineJobOpeningId(null)
+              refreshApplicationCounts()
+            }}
+          />
+        </Suspense>
+      ) : hasNoShops ? (
         <EmptyState
           icon={<Store className="h-5 w-5" />}
           title="Add a shop first"
@@ -195,6 +224,12 @@ export function OwnerJobOpeningsPanel({
                     setEditorTarget({ mode: 'edit', jobOpening: selectedJobOpening })
                   }}
                   onPreviewRequested={setPreviewedJobOpening}
+                  applicationCount={
+                    hasLoadedApplicationCounts ? (applicationCountByOpening[jobOpening.id] ?? 0) : undefined
+                  }
+                  onApplicantsRequested={(selectedJobOpening): void => {
+                    setPipelineJobOpeningId(selectedJobOpening.id)
+                  }}
                   onActionRequested={(selectedJobOpening, action): void => {
                     if (action !== 'save_published') {
                       setPendingConfirmation({ jobOpening: selectedJobOpening, action })

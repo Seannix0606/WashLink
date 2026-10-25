@@ -3,6 +3,7 @@ import type {
   JobOpeningApplicantRequirement,
   JobOpeningCompensationCurrency,
   JobOpeningCompensationPeriod,
+  JobOpeningContent,
   JobOpeningJobType,
   JobOpeningStatus,
   SaveJobOpeningInput,
@@ -86,40 +87,50 @@ export type SupabaseJobOpeningContentPayload = Omit<
   'id' | 'shop_id' | 'status' | 'first_published_at' | 'status_changed_at' | 'created_at' | 'updated_at'
 >
 
-function toAmount(storedAmount: number | string | null): number | null {
+/** numeric values may arrive as numbers or numeric strings; they are converted, never rounded. */
+export function toAmount(storedAmount: number | string | null): number | null {
   return storedAmount === null ? null : Number(storedAmount)
+}
+
+/** Maps the owner-written content columns; the W5 opening snapshot uses the same keys. */
+export function mapJobOpeningContentRow(
+  contentRow: SupabaseJobOpeningContentPayload,
+): JobOpeningContent {
+  return {
+    title: contentRow.title,
+    description: contentRow.description,
+    duties: contentRow.duties ?? [],
+    workLocation: contentRow.work_location,
+    openingsCount: contentRow.openings_count,
+    jobType: contentRow.job_type,
+    requiredSkills: contentRow.required_skills ?? [],
+    minimumYearsExperience: contentRow.minimum_years_experience,
+    experienceRequirement: contentRow.experience_requirement,
+    availabilityRequirement: contentRow.availability_requirement,
+    scheduleDetails: contentRow.schedule_details,
+    compensationMinAmount: toAmount(contentRow.compensation_min_amount),
+    compensationMaxAmount: toAmount(contentRow.compensation_max_amount),
+    compensationCurrency: contentRow.compensation_currency,
+    compensationPeriod: contentRow.compensation_period,
+    compensationDetails: contentRow.compensation_details,
+    benefits: contentRow.benefits,
+    otherTerms: contentRow.other_terms,
+    minimumQualifications: contentRow.minimum_qualifications ?? [],
+    preferredQualifications: contentRow.preferred_qualifications ?? [],
+    requiredTraining: contentRow.required_training,
+    applicantRequirement: contentRow.applicant_requirement,
+    certificationExpectations: contentRow.certification_expectations,
+    applicationDeadline: contentRow.application_deadline,
+    applicationInstructions: contentRow.application_instructions,
+  }
 }
 
 export function mapJobOpeningRow(jobOpeningRow: SupabaseJobOpeningRow): JobOpening {
   return {
+    ...mapJobOpeningContentRow(jobOpeningRow),
     id: jobOpeningRow.id,
     shopId: jobOpeningRow.shop_id,
     status: jobOpeningRow.status,
-    title: jobOpeningRow.title,
-    description: jobOpeningRow.description,
-    duties: jobOpeningRow.duties ?? [],
-    workLocation: jobOpeningRow.work_location,
-    openingsCount: jobOpeningRow.openings_count,
-    jobType: jobOpeningRow.job_type,
-    requiredSkills: jobOpeningRow.required_skills ?? [],
-    minimumYearsExperience: jobOpeningRow.minimum_years_experience,
-    experienceRequirement: jobOpeningRow.experience_requirement,
-    availabilityRequirement: jobOpeningRow.availability_requirement,
-    scheduleDetails: jobOpeningRow.schedule_details,
-    compensationMinAmount: toAmount(jobOpeningRow.compensation_min_amount),
-    compensationMaxAmount: toAmount(jobOpeningRow.compensation_max_amount),
-    compensationCurrency: jobOpeningRow.compensation_currency,
-    compensationPeriod: jobOpeningRow.compensation_period,
-    compensationDetails: jobOpeningRow.compensation_details,
-    benefits: jobOpeningRow.benefits,
-    otherTerms: jobOpeningRow.other_terms,
-    minimumQualifications: jobOpeningRow.minimum_qualifications ?? [],
-    preferredQualifications: jobOpeningRow.preferred_qualifications ?? [],
-    requiredTraining: jobOpeningRow.required_training,
-    applicantRequirement: jobOpeningRow.applicant_requirement,
-    certificationExpectations: jobOpeningRow.certification_expectations,
-    applicationDeadline: jobOpeningRow.application_deadline,
-    applicationInstructions: jobOpeningRow.application_instructions,
     firstPublishedAt: jobOpeningRow.first_published_at,
     statusChangedAt: jobOpeningRow.status_changed_at,
     createdAt: jobOpeningRow.created_at,

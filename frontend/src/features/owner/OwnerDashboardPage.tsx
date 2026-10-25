@@ -19,6 +19,7 @@ export function OwnerDashboardPage({
     shopVerificationService,
     rosterLinkService,
     jobOpeningService,
+    applicantPipelineService,
   } = useMemo(
       () => createDashboardDependencies(ownerIdentifier),
       [ownerIdentifier],
@@ -43,6 +44,7 @@ export function OwnerDashboardPage({
       shopVerificationService={shopVerificationService}
       rosterLinkService={rosterLinkService}
       jobOpeningService={jobOpeningService}
+      applicantPipelineService={applicantPipelineService}
       ownerShopList={ownerShopList}
       onOwnerShopListChanged={setOwnerShopList}
     />

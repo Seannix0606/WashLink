@@ -8,12 +8,10 @@
 -- Identity helpers switch with set_config(..., true), i.e. transaction-local;
 -- each test file runs inside begin ... rollback.
 --
--- W2 S11 WARNING: this file grants EXECUTE on every test_helpers function
--- to anon and authenticated, and contains act_as_service(), which drops
--- the JWT claims (a trusted session for public.is_trusted_db_session()).
--- That is acceptable ONLY on the local Docker stack staged under a
--- "*-local-test" project_id. Never load it into a real project; the repo
--- config keeps [db.seed] disabled and only the staged copy enables it.
+-- W2 S11 WARNING: grants EXECUTE on every test_helpers function to anon and authenticated;
+-- act_as_service() drops the JWT claims (a trusted session for is_trusted_db_session()).
+-- Acceptable ONLY on the local Docker stack staged under a "*-local-test" project_id. Never
+-- load it into a real project; the repo config keeps [db.seed] disabled (staged copy only).
 -- =============================================================
 
 create schema if not exists test_helpers;
@@ -21,14 +19,8 @@ create schema if not exists test_helpers;
 -- -------------------------------------------------------------
 -- Users (the baseline signup trigger creates the profile)
 -- -------------------------------------------------------------
-create or replace function test_helpers.create_user(
-  p_email text,
-  p_role text default 'customer',
-  p_full_name text default null
-)
-returns uuid
-language plpgsql
-security invoker
+create or replace function test_helpers.create_user(p_email text, p_role text default 'customer', p_full_name text default null)
+returns uuid language plpgsql security invoker
 as $$
 declare
   new_user_id uuid := gen_random_uuid();
@@ -38,17 +30,10 @@ begin
     raw_app_meta_data, raw_user_meta_data, created_at, updated_at
   )
   values (
-    new_user_id,
-    '00000000-0000-0000-0000-000000000000',
-    'authenticated',
-    'authenticated',
-    lower(p_email),
-    extensions.crypt('local-test-password', extensions.gen_salt('bf')),
-    now(),
+    new_user_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+    lower(p_email), extensions.crypt('local-test-password', extensions.gen_salt('bf')), now(),
     '{"provider": "email", "providers": ["email"]}'::jsonb,
-    jsonb_build_object('role', p_role, 'full_name', p_full_name),
-    now(),
-    now()
+    jsonb_build_object('role', p_role, 'full_name', p_full_name), now(), now()
   );
   return new_user_id;
 end;
@@ -68,9 +53,7 @@ as $$ select test_helpers.create_user(p_email, 'worker', 'Local Test Worker') $$
 
 -- Mirrors D-8: super_admin is only granted by SQL run as a non-JWT session.
 create or replace function test_helpers.create_super_admin(p_email text)
-returns uuid
-language plpgsql
-security invoker
+returns uuid language plpgsql security invoker
 as $$
 declare
   new_user_id uuid;
@@ -85,9 +68,7 @@ $$;
 -- Identity switching
 -- -------------------------------------------------------------
 create or replace function test_helpers.act_as_service()
-returns void
-language plpgsql
-security invoker
+returns void language plpgsql security invoker
 as $$
 begin
   perform set_config('role', 'none', true);
@@ -97,9 +78,7 @@ end;
 $$;
 
 create or replace function test_helpers.act_as(p_user_id uuid)
-returns void
-language plpgsql
-security invoker
+returns void language plpgsql security invoker
 as $$
 declare
   user_email text;
@@ -109,19 +88,14 @@ begin
   if user_email is null then
     raise exception 'test_helpers.act_as: no auth user with id %', p_user_id;
   end if;
-  perform set_config(
-    'request.jwt.claims',
-    json_build_object('sub', p_user_id, 'role', 'authenticated', 'email', user_email)::text,
-    true
-  );
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', p_user_id, 'role', 'authenticated', 'email', user_email)::text, true);
   perform set_config('role', 'authenticated', true);
 end;
 $$;
 
 create or replace function test_helpers.act_as_role(p_email text, p_expected_role text)
-returns void
-language plpgsql
-security invoker
+returns void language plpgsql security invoker
 as $$
 declare
   found_user_id uuid;
@@ -159,9 +133,7 @@ returns void language sql security invoker
 as $$ select test_helpers.act_as_role(p_email, 'super_admin') $$;
 
 create or replace function test_helpers.act_as_anon()
-returns void
-language plpgsql
-security invoker
+returns void language plpgsql security invoker
 as $$
 begin
   perform test_helpers.act_as_service();
@@ -175,9 +147,7 @@ $$;
 -- Lets W2-placeholder assertions check the OUTCOME regardless of whether
 -- the fix rejects with an error or silently filters the write.
 create or replace function test_helpers.attempt(p_sql text)
-returns text
-language plpgsql
-security invoker
+returns text language plpgsql security invoker
 as $$
 begin
   execute p_sql;
@@ -191,9 +161,7 @@ $$;
 -- Fixtures (must run as the session superuser; they bypass RLS)
 -- -------------------------------------------------------------
 create or replace function test_helpers.assert_service_session()
-returns void
-language plpgsql
-security invoker
+returns void language plpgsql security invoker
 as $$
 begin
   if current_user::text in ('authenticated', 'anon') then
@@ -202,14 +170,8 @@ begin
 end;
 $$;
 
-create or replace function test_helpers.create_shop(
-  p_owner uuid,
-  p_status text default 'approved',
-  p_active boolean default true
-)
-returns uuid
-language plpgsql
-security invoker
+create or replace function test_helpers.create_shop(p_owner uuid, p_status text default 'approved', p_active boolean default true)
+returns uuid language plpgsql security invoker
 as $$
 declare
   new_shop_id uuid;
@@ -229,9 +191,7 @@ create or replace function test_helpers.set_shop_price(
   p_service text,
   p_price numeric
 )
-returns void
-language plpgsql
-security invoker
+returns void language plpgsql security invoker
 as $$
 begin
   perform test_helpers.assert_service_session();
@@ -245,9 +205,7 @@ create or replace function test_helpers.create_roster_worker(
   p_owner uuid,
   p_user uuid default null
 )
-returns uuid
-language plpgsql
-security invoker
+returns uuid language plpgsql security invoker
 as $$
 declare
   new_worker_id uuid;
@@ -267,27 +225,19 @@ create or replace function test_helpers.create_booking_fixture(
   p_shop uuid,
   p_status text default 'pending'
 )
-returns uuid
-language plpgsql
-security invoker
+returns uuid language plpgsql security invoker
 as $$
 declare
   new_booking_id uuid;
 begin
   perform test_helpers.assert_service_session();
-  if not exists (
-    select 1 from public.shop_pricing
-    where shop_id = p_shop and vehicle_type = 'Sedan' and service_type = 'Basic Wash'
-  ) then
+  if not exists (select 1 from public.shop_pricing
+                 where shop_id = p_shop and vehicle_type = 'Sedan' and service_type = 'Basic Wash') then
     perform test_helpers.set_shop_price(p_shop, 'Sedan', 'Basic Wash', 250.00);
   end if;
-  insert into public.bookings (
-    customer_name, customer_id, vehicle_type, service_type, address, time, shop_id
-  )
-  values (
-    'Local Test Customer', p_customer, 'Sedan', 'Basic Wash', 'Local test address',
-    now() + interval '1 day', p_shop
-  )
+  insert into public.bookings (customer_name, customer_id, vehicle_type, service_type, address, time, shop_id)
+  values ('Local Test Customer', p_customer, 'Sedan', 'Basic Wash', 'Local test address',
+          now() + interval '1 day', p_shop)
   returning id into new_booking_id;
   if p_status <> 'pending' then
     update public.bookings set booking_status = p_status where id = new_booking_id;
@@ -299,9 +249,7 @@ $$;
 -- W4: a shop approved BY A RECORDED REVIEW (reviewed_by + reviewed_at), i.e. it passes
 -- public.shop_has_recorded_verification(). Inserted as a trusted session (fixture only).
 create or replace function test_helpers.create_verified_shop(p_owner uuid, p_reviewer uuid)
-returns uuid
-language plpgsql
-security invoker
+returns uuid language plpgsql security invoker
 as $$
 declare
   new_shop_id uuid;
@@ -318,9 +266,7 @@ $$;
 
 -- W4: a complete draft job opening (every required-for-publish field set; no pay or terms).
 create or replace function test_helpers.create_job_opening(p_shop uuid, p_title text)
-returns uuid
-language plpgsql
-security invoker
+returns uuid language plpgsql security invoker
 as $$
 declare
   new_opening_id uuid;
@@ -337,12 +283,60 @@ begin
 end;
 $$;
 
+-- W5: a worker profile (no private contacts), a published opening (trusted, bypasses the
+-- publish gate) and an application in any status with the stamps its status requires
+-- (trusted insert: audited as trusted_session, no notification).
+create or replace function test_helpers.create_worker_profile(p_worker uuid)
+returns uuid language plpgsql security invoker
+as $$
+begin
+  perform test_helpers.assert_service_session();
+  insert into public.worker_profiles (profile_id, headline, skills, availability_status)
+  values (p_worker, 'Local test car wash worker', array['Hand wash', 'Drying'], 'flexible');
+  return p_worker;
+end;
+$$;
+
+create or replace function test_helpers.publish_job_opening(p_opening uuid)
+returns uuid language plpgsql security invoker
+as $$
+begin
+  perform test_helpers.assert_service_session();
+  update public.job_openings
+  set status = 'published', first_published_at = coalesce(first_published_at, now()), status_changed_at = now()
+  where id = p_opening;
+  return p_opening;
+end;
+$$;
+
+create or replace function test_helpers.create_job_application(p_opening uuid, p_worker uuid, p_status text default 'submitted')
+returns uuid language plpgsql security invoker
+as $$
+declare
+  o public.job_openings;
+  sent boolean := p_status <> 'draft';
+  new_id uuid;
+begin
+  perform test_helpers.assert_service_session();
+  select * into strict o from public.job_openings where id = p_opening;
+  insert into public.job_applications (job_opening_id, worker_id, shop_id, owner_id, status, notice_version,
+    notice_acknowledged_at, submitted_at, opening_snapshot, opening_snapshot_taken_at, decided_at, withdrawn_at,
+    closed_at, status_changed_at)
+  values (o.id, p_worker, o.shop_id, o.owner_id, p_status, case when sent then 'w5_v1' end,
+    case when sent then now() end, case when sent then now() end,
+    case when sent then public.job_opening_application_snapshot(o) end, case when sent then now() end,
+    case when p_status in ('accepted', 'rejected') then now() end, case when p_status = 'withdrawn' then now() end,
+    case when p_status = 'closed' then now() end, now())
+  returning id into new_id;
+  return new_id;
+end;
+$$;
+
 grant usage on schema test_helpers to anon, authenticated;
 grant execute on all functions in schema test_helpers to anon, authenticated;
 
--- Shop-owner booking policies are NOT created here: they are the staged
--- migration 20260417000002 (local_test_baseline_owner_policies.sql), so
--- W2 migrations can drop or replace them. This seed holds helpers only.
+-- Shop-owner booking policies are NOT created here: they are the staged migration
+-- 20260417000002 (local_test_baseline_owner_policies.sql). This seed holds helpers only.
 
 -- -------------------------------------------------------------
 -- ROLLBACK (local test stack only)

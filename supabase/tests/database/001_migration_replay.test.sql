@@ -1,9 +1,9 @@
--- W1/W2/W3/W4 migration replay: objects from each committed migration exist after
--- baseline + 20 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4) replayed in order, with the owner-policies
--- baseline (20260417000002) applied right after 2026_04_17 (W1 AC2, W2 AC2, W3 AC2, W4 AC2).
+-- W1/W2/W3/W4/W5 migration replay: objects from each committed migration exist after
+-- baseline + 25 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5) replayed in order, with the owner-policies
+-- baseline (20260417000002) applied right after 2026_04_17 (W1..W5 AC2).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(18);
 
 -- 2026_04_17
 select has_table('public', 'shops', 'replay_shops_created');
@@ -68,8 +68,9 @@ select results_eq(
             ('20261024000004'), ('20261024000005'), ('20261024000006'),
             ('20261024000007'), ('20261024000008'), ('20261024000009'), ('20261024000010'),
             ('20261024000011'), ('20261024000012'), ('20261024000013'), ('20261024000014'),
-            ('20261024000015') $$,
-  'replay_schema_migrations_has_baseline_w2_w3_w4'
+            ('20261024000015'), ('20261025000001'), ('20261025000002'), ('20261025000003'),
+            ('20261025000004'), ('20261025000005') $$,
+  'replay_schema_migrations_has_baseline_w2_w3_w4_w5'
 );
 
 -- The local-test owner booking policies come from the staged MIGRATION 20260417000002, not
@@ -155,6 +156,12 @@ select ok(
   (select c.relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relname = 'job_openings'),
   'replay_w4_job_openings_rls_enabled'
+);
+-- The W5 table has RLS enabled.
+select ok(
+  (select c.relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relname = 'job_applications'),
+  'replay_w5_job_applications_rls_enabled'
 );
 -- No public SECURITY DEFINER function runs without a pinned search_path.
 select is(

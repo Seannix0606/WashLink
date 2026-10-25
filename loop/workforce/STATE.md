@@ -1,7 +1,7 @@
 # Loop State
 
-Loop status: **PAUSED by user after W4** (2026-10-25) — resume with `/workforce-loop` · mode: **continuous until Completion criteria met**
-Next increment: **W5 — Marketplace & applications**
+Loop status: **RUNNING** (resumed 2026-10-25, continuous) · mode: **continuous until Completion criteria met**
+Next increment: **W6 — Training programs, attendance, assessment, free-training rule**
 Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 
 | ID | Status | Branch | Fix cycles | Checks (actual) | Verifier |
@@ -11,7 +11,7 @@ Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 | W2 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 36/36 · pytest 4 · stager 18/18 · pgTAP 341 PASS (0 TODO) · smoke 48/48 | PASS (increments/W2/VERDICT.md) |
 | W3 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 46/46 · pytest 4 · stager 18/18 · pgTAP 546 PASS (18 migrations) · smoke W2 48/48, W3 33/33 | PASS (increments/W3/VERDICT.md) |
 | W4 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 64/64 · pytest 4 · stager 18/18 · pgTAP 749 PASS (22 migrations) · smoke W2 48, W3 33, W4 43 | PASS (increments/W4/VERDICT.md) |
-| W5 | pending | — | 0 | — | — |
+| W5 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 92/92 · pytest 4 · stager 18/18 · pgTAP 1094 PASS (27 migrations) · smoke W2 48, W3 33, W4 43, W5 39 | PASS (increments/W5/VERDICT.md) |
 | W6 | pending | — | 0 | — | — |
 | W7 | pending | — | 0 | — | — |
 | W8 | pending | — | 0 | — | — |
@@ -32,7 +32,7 @@ Not run. Requires all increments passed, then whole-branch verifier → `FINAL_V
 - DB tests: `node scripts/supabase-test/run-db-tests.mjs` (local stack, staged `.local-supabase-test` workdir). Never run supabase CLI from repo root (auto-loads root `.env`).
 
 ## Open findings
-- W5 carry-forwards from W4 recorded in PLAN.md (snapshot at apply, deadline refusal, free-training notice before workers see openings). `increments/W4/REVIEW.md`.
+- W5 closed the W4 carry-forwards. Carry-forwards to W7/W9: `increments/W5/REVIEW.md`. Legal register: `docs/workforce/LEGAL_REVIEW_REGISTER.md`.
 - Non-blocking, routed to later increments: `increments/W0/REVIEW.md` (S1–S8, C1–C9).
 - Legal flags: `increments/W0/LEGAL_FLAGS.md` (W0-L1…L7).
 - W2 closed E1, E2, E3, E5, S1, S2, S4–S11, F5, F6 locally (tests passing). Carry-forwards: `increments/W2/REVIEW.md` R-1…R-6.

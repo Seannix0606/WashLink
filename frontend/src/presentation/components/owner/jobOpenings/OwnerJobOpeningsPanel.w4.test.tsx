@@ -1,8 +1,10 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { ApplicantPipelineService } from '../../../../application/services/ApplicantPipelineService'
 import { JobOpeningService } from '../../../../application/services/JobOpeningService'
 import { buildJobOpening, buildShop, createMockJobOpeningRepository } from '../../../../test/fixtures'
+import { createMockApplicantPipelineRepository } from '../../../../test/jobApplicationFixtures'
 import { OwnerJobOpeningsPanel } from './OwnerJobOpeningsPanel'
 
 const draftOpening = buildJobOpening({ id: 'opening-draft', title: 'Draft opening' })
@@ -31,6 +33,7 @@ describe('Owner job openings panel (W4)', () => {
     render(
       <OwnerJobOpeningsPanel
         jobOpeningService={new JobOpeningService(jobOpeningRepository)}
+        applicantPipelineService={new ApplicantPipelineService(createMockApplicantPipelineRepository())}
         ownerShopList={[buildShop()]}
       />,
     )
@@ -85,6 +88,7 @@ describe('Owner job openings panel (W4)', () => {
     const { unmount } = render(
       <OwnerJobOpeningsPanel
         jobOpeningService={new JobOpeningService(jobOpeningRepository)}
+        applicantPipelineService={new ApplicantPipelineService(createMockApplicantPipelineRepository())}
         ownerShopList={[buildShop()]}
       />,
     )
@@ -101,6 +105,7 @@ describe('Owner job openings panel (W4)', () => {
     render(
       <OwnerJobOpeningsPanel
         jobOpeningService={new JobOpeningService(jobOpeningRepository)}
+        applicantPipelineService={new ApplicantPipelineService(createMockApplicantPipelineRepository())}
         ownerShopList={[buildShop()]}
       />,
     )

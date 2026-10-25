@@ -1,6 +1,6 @@
 import { testOwnerIdentifier } from './fixtures'
 
-// In-memory stand-in for the Supabase client used by SupabaseJobOpeningRepository tests.
+// In-memory stand-in for the Supabase client used by the W4 and W5 repository tests.
 // Every builder call is recorded; awaiting a builder resolves `queryResult`.
 
 export type RecordedCall = readonly [methodName: string, methodArguments: unknown[]]
@@ -34,7 +34,7 @@ type QueryBuilderDouble = Record<string, (...methodArguments: unknown[]) => unkn
 
 function createQueryBuilder(): QueryBuilderDouble {
   const queryBuilder: QueryBuilderDouble = {}
-  for (const methodName of ['select', 'eq', 'neq', 'order', 'limit', 'insert', 'update', 'delete']) {
+  for (const methodName of ['select', 'eq', 'neq', 'not', 'in', 'order', 'limit', 'insert', 'update', 'delete']) {
     queryBuilder[methodName] = (...methodArguments: unknown[]): unknown => {
       jobOpeningSupabaseDouble.recordedCalls.push([methodName, methodArguments])
       return queryBuilder

@@ -1,9 +1,11 @@
+import { ApplicantPipelineService } from '../../application/services/ApplicantPipelineService'
 import { BookingService } from '../../application/services/BookingService'
 import { JobOpeningService } from '../../application/services/JobOpeningService'
 import { RosterLinkService } from '../../application/services/RosterLinkService'
 import { ShopService } from '../../application/services/ShopService'
 import { ShopVerificationService } from '../../application/services/ShopVerificationService'
 import { WorkerService } from '../../application/services/WorkerService'
+import { SupabaseApplicantPipelineRepository } from '../../infrastructure/repositories/SupabaseApplicantPipelineRepository'
 import { SupabaseBookingRepository } from '../../infrastructure/repositories/SupabaseBookingRepository'
 import { SupabaseJobOpeningRepository } from '../../infrastructure/repositories/SupabaseJobOpeningRepository'
 import { SupabaseRosterLinkRepository } from '../../infrastructure/repositories/SupabaseRosterLinkRepository'
@@ -18,6 +20,7 @@ interface DashboardDependencies {
   shopVerificationService: ShopVerificationService
   rosterLinkService: RosterLinkService
   jobOpeningService: JobOpeningService
+  applicantPipelineService: ApplicantPipelineService
   ownerIdentifier: string
 }
 
@@ -44,6 +47,9 @@ export function createDashboardDependencies(
   const jobOpeningService = new JobOpeningService(
     new SupabaseJobOpeningRepository(),
   )
+  const applicantPipelineService = new ApplicantPipelineService(
+    new SupabaseApplicantPipelineRepository(),
+  )
 
   return {
     bookingService,
@@ -52,6 +58,7 @@ export function createDashboardDependencies(
     shopVerificationService,
     rosterLinkService,
     jobOpeningService,
+    applicantPipelineService,
     ownerIdentifier,
   }
 }

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
+import type { ApplicantPipelineService } from '../../../application/services/ApplicantPipelineService'
 import type { BookingService } from '../../../application/services/BookingService'
 import type { JobOpeningService } from '../../../application/services/JobOpeningService'
 import type { RosterLinkService } from '../../../application/services/RosterLinkService'
@@ -43,6 +44,7 @@ interface OwnerDashboardContentProps {
   readonly shopVerificationService: ShopVerificationService
   readonly rosterLinkService: RosterLinkService
   readonly jobOpeningService: JobOpeningService
+  readonly applicantPipelineService: ApplicantPipelineService
   readonly ownerShopList: Shop[]
   readonly onOwnerShopListChanged: (nextOwnerShopList: Shop[]) => void
 }
@@ -55,6 +57,7 @@ export function OwnerDashboardContent({
   shopVerificationService,
   rosterLinkService,
   jobOpeningService,
+  applicantPipelineService,
   ownerShopList,
   onOwnerShopListChanged,
 }: OwnerDashboardContentProps): ReactElement {
@@ -212,6 +215,7 @@ export function OwnerDashboardContent({
           <Suspense fallback={<Skeleton heightClassName="h-40" />}>
             <OwnerJobOpeningsPanel
               jobOpeningService={jobOpeningService}
+              applicantPipelineService={applicantPipelineService}
               ownerShopList={ownerShopList}
             />
           </Suspense>

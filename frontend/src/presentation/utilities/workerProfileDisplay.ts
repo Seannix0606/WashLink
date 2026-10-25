@@ -41,5 +41,6 @@ export const workerPreferredContactMethodOptions: readonly SelectOption[] = [
 export const workerPrivateContactVisibilityNotice =
   'In the app, these contact details are visible only to you.'
 
+/** D-13: shops see the profile only while an application is submitted, in review, shortlisted or accepted. */
 export const workerProfileVisibilityNotice =
-  'Who can see your profile: you and WashLink administrators. Shops you apply to will also see it once applications are available.'
+  'Who can see your profile: you and WashLink administrators, plus shops you apply to while your application is active or accepted. Your private contact details are not shared with shops.'

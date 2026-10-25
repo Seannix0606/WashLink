@@ -39,3 +39,13 @@ export function decideWorkerWorkspaceView({
   }
   return 'jobs'
 }
+
+export type WorkerWorkspaceTabKey = 'find_work' | 'applications' | 'bookings'
+
+/**
+ * Linked workers land on their assigned bookings as before; everyone else starts on
+ * Find work (the marketplace does not need a roster link).
+ */
+export function defaultWorkerWorkspaceTab(hasRosterLink: boolean): WorkerWorkspaceTabKey {
+  return hasRosterLink ? 'bookings' : 'find_work'
+}

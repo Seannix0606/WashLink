@@ -94,7 +94,8 @@ type CompensationContent = Pick<
   | 'compensationDetails'
 >
 
-function formatCompensationAmountLine(compensation: CompensationContent): string | null {
+/** The stated amounts only (no owner wording); null when no amount and period are stored. */
+export function formatCompensationAmountLine(compensation: CompensationContent): string | null {
   const { compensationMinAmount: minimumAmount, compensationMaxAmount: maximumAmount } = compensation
   if (compensation.compensationCurrency === null || compensation.compensationPeriod === null) {
     return null

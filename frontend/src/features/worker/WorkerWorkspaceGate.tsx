@@ -131,6 +131,8 @@ export function WorkerWorkspaceGate({
         rosterLinks={rosterLinks}
         rosterLinkService={rosterLinkService}
         workerProfileSlot={workerProfileSlot}
+        hasWorkerProfile={workerProfile !== null}
+        onCreateProfileRequested={openProfileEditor}
       />
       <WorkerProfileEditorModal
         isOpen={isProfileEditorOpen}

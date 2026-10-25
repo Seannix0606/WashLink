@@ -96,7 +96,9 @@ and must leave the existing booking, pricing, verification and rating flows work
   `contract_acceptances` (who, when, version hash). Statuses draft → sent_for_review →
   accepted/declined → active → expired/terminated. Amendments = new version requiring
   consent. Diff vs standard template. Clearly labelled draft-and-acceptance workflow, not an
-  e-signature; no fabricated signatures. Problem-term flagging (keyword/rule based) without
+  e-signature; no fabricated signatures. Carry-forward (W5 review, W5-L10): deleting a
+  shop or owner account must not delete accepted applications' snapshots or contract records
+  (retain worker-facing records; no cascade delete of evidence). Problem-term flagging (keyword/rule based) without
   claiming legal validation. Classification never defaults to independent contractor.
 
 ### W10 — Owner relationships

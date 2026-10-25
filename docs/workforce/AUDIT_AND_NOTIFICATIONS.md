@@ -1,4 +1,4 @@
-# Audit events and notifications (W3, job openings W4)
+# Audit events and notifications (W3, job openings W4, job applications W5)
 
 Scope: what `supabase/migrations/2026_10_24_w3a..w3d_*.sql` add. Everything here was proven
 on the local Docker stack only (pgTAP files `j17_w3_*`, `j18_w3_flows`, and
@@ -154,4 +154,49 @@ objects (inbox loss). b: drop the audit objects (history loss; export first with
 
 ## W4 job openings
 
-Job opening payloads never carry titles, descriptions, amounts, benefits or terms (C-W3-1; test `j2_audit_payload_has_no_opening_content`). Draft content edits are not audited. A rejected transition writes nothing. W4 enqueues no notifications: every W4 action is the owner acting on their own opening and there is no counterparty until W5 applications (`w4_job_opening_actions_enqueue_no_notifications`). W5/W12 notify applicants when an opening they applied to is paused or closed, keyed `job_opening:<id>:<audit_id>`.
+Job opening payloads never carry titles, descriptions, amounts, benefits or terms (C-W3-1; test `j2_audit_payload_has_no_opening_content`). Draft content edits are not audited. A rejected transition writes nothing. W4 enqueues no notifications: every W4 action is the owner acting on their own opening and there is no counterparty until W5 applications (`w4_job_opening_actions_enqueue_no_notifications`). W5 notifies applicants when an opening they applied to is paused (`job_opening:<id>:<audit_id>`) or closed (through the application events below).
+
+## W5 job applications (`2026_10_25_w5e`)
+
+Producers: `job_applications_audit` AFTER INSERT / UPDATE / DELETE on `job_applications`;
+`job_openings_close_applications` and `job_openings_notify_applicants_on_pause` AFTER UPDATE on
+`job_openings` (names sort after `job_openings_audit`, so the opening event exists first). All are
+definer, pinned, revoked from every client role. subject_type `job_application`, subject_id the
+application id, subject_profile_id the worker. Payload keys only: `job_opening_id`, `shop_id`,
+`status`, `from_status`, `to_status`, `changed_by`, `deleted_by` (P23; test
+`j5_audit_payload_has_no_cover_note_or_opening_content`). `changed_by` is derived from the write
+flag: `worker` / `owner` (flag = row id and `auth.uid()` matches), `opening_closed` (flag
+`opening:<id>`), else `trusted_session`. Draft cover-note edits and refused actions write nothing.
+Owner recipients (fix cycle 1): the CURRENT `shops.owner_id` of the opening's shop, and only when
+it equals the application's `owner_id`; otherwise no owner notification (the audit row is still
+written). Test `j5_w5_fix1_owner_notifications_and_lock_order`.
+
+| Event | Action; payload | Notification (category: recipient) |
+|---|---|---|
+| insert as draft (or a trusted insert in a later status) | `job_application.created`; job_opening_id, shop_id, status, changed_by | none |
+| insert as submitted, or draft -> submitted | `job_application.submitted`; job_opening_id, shop_id, from_status (null on insert), changed_by | `job_application.submitted`: owner (worker actions only) |
+| owner transition | `job_application.status_changed`; job_opening_id, shop_id, from_status, to_status, changed_by = owner | `job_application.status_changed`: worker |
+| worker withdraw | same, changed_by = worker | `job_application.withdrawn`: owner |
+| opening closed / archived (auto-close) | same, changed_by = opening_closed | `job_application.closed`: worker, sent rows only (`submitted_at` set; a draft becomes a never-sent closed draft, no notification) |
+| trusted repair | same, changed_by = trusted_session | none |
+| draft or closed-draft delete | `job_application.deleted`; job_opening_id, shop_id, from_status (`draft` / `closed`), deleted_by = worker | none |
+| cascade / trusted delete | same, deleted_by = `worker_profile_deleted` (checked first) / `opening_removed` (opening, shop or owner profile gone) / `trusted_session` | `worker_profile_deleted` and row was submitted / under_review / shortlisted / accepted: owner `job_application.removed`; `opening_removed` and row sent (`submitted_at` set) and not withdrawn: worker `job_application.removed` |
+| opening published -> paused | (the W4 `job_opening.status_changed` event) | `job_opening.paused`: each worker with a submitted / under_review / shortlisted application, key `job_opening:<opening>:<event>` |
+
+Application keys are `job_application:<application id>:<audit event id>`. Labels:
+`notification_safe_label(title, 'A job opening')`, `notification_safe_label(shop name, 'The shop')`
+(`'the shop'` mid-sentence).
+
+| Category | Recipient | Title | Body |
+|---|---|---|---|
+| `job_application.submitted` | owner | New job application | `<opening> has a new application.` |
+| `job_application.status_changed` | worker | Application update | `<shop>: your application for <opening> is now Under review.` / `Shortlisted.` / `Accepted. This is not a contract.` / `Not selected.` |
+| `job_application.withdrawn` | owner | Application withdrawn | `An applicant withdrew from <opening>.` |
+| `job_application.closed` | worker | Application closed | `<opening> at <shop> has closed, so your application was closed.` |
+| `job_opening.paused` | worker | Opening paused | `<opening> at <shop> is paused. Your application stays open.` |
+| `job_application.removed` | owner | Application removed | `An application was removed because the applicant deleted their profile.` |
+| `job_application.removed` | worker | Application ended | `An application ended because the shop or its job opening was removed.` |
+
+Texts never contain the cover note, snapshot, pay, terms, the applicant's name or contact data
+(`j5_notification_text_has_no_cover_note_pay_name_or_contact`). Closing an opening writes up to
+500 application events and notifications in the owner's transaction (W5 R2).

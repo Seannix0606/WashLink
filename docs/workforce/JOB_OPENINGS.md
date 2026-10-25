@@ -50,7 +50,7 @@ read-only. Trusted SQL sessions bypass the guard for support / repair and are au
 | Role | Sees |
 |---|---|
 | Owning owner | every own opening, every status |
-| Worker | `published` openings of shops that currently pass P15 |
+| Worker | `published` openings of shops that currently pass P15; since W5 also any non-draft opening they hold a non-draft application to (same policy name, `2026_10_25_w5b`) |
 | super_admin | every non-draft opening (read only) |
 | Customer, other owners | nothing |
 | anon | no table privilege (permission denied) |
@@ -63,7 +63,7 @@ the shop is reviewed again; resuming a paused opening needs verification again.
 
 Four actions (`AUDIT_AND_NOTIFICATIONS.md`): `job_opening.created`, `.status_changed`,
 `.updated` (non-draft content edits; column names only), `.deleted`. Payloads never contain
-titles, descriptions, amounts or terms. W4 sends no notifications.
+titles, descriptions, amounts or terms. W4 sends no notifications; W5 notifies applicants on pause and closes their open applications on close / archive (`MARKETPLACE_AND_APPLICATIONS.md`).
 
 ## Display rule (frontend)
 
@@ -74,8 +74,8 @@ pay or employment terms." The form never pre-fills pay, benefits or schedule.
 
 ## Limitations
 
-- No auto-close on the deadline (no scheduler); it is checked at publish, resume and edit. W5 apply must refuse after it (R4).
-- Editing a published opening changes what earlier applicants saw; W5 snapshots the opening on each application (C-W4-1).
+- No auto-close on the deadline (no scheduler); it is checked at publish, resume and edit. W5 apply refuses after it (R4 closed in W5).
+- Editing a published opening changes what earlier applicants saw; W5 keeps a write-once snapshot on each application (C-W4-1 closed in W5).
 - Deleting a non-draft opening through PostgREST affects 0 rows (RLS filters it before the guard), so no error is returned; the guard message `Only draft job openings can be deleted.` is defence in depth.
 - The RPC flag relies on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`; R6).
 - Owner free text is length-checked only; no moderation until W11 (W4-L4).

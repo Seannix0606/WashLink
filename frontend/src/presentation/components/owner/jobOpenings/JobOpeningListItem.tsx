@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { Eye, EyeOff, PencilLine, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, PencilLine, Trash2, Users } from 'lucide-react'
 import type { JobOpening } from '../../../../domain/models/JobOpening'
 import {
   isJobOpeningContentEditable,
@@ -12,6 +12,7 @@ import {
   type JobOpeningConfirmableAction,
 } from '../../../utilities/jobOpeningActionDisplay'
 import { formatShortDateTime } from '../../../utilities/datetimeFormatting'
+import { formatApplicantCountLabel } from '../../../utilities/jobApplicationDisplay'
 import { describeJobOpeningStatus, formatCompensationAsEntered } from '../../../utilities/jobOpeningDisplay'
 import { JobOpeningStatusBadge } from './JobOpeningStatusBadge'
 
@@ -25,6 +26,9 @@ interface JobOpeningListItemProps {
   readonly onEditRequested: (jobOpening: JobOpening) => void
   readonly onPreviewRequested: (jobOpening: JobOpening) => void
   readonly onActionRequested: (jobOpening: JobOpening, action: JobOpeningConfirmableAction) => void
+  /** W5: number of applications (undefined while unknown). Drafts never have applicants. */
+  readonly applicationCount?: number
+  readonly onApplicantsRequested?: (jobOpening: JobOpening) => void
 }
 
 export function JobOpeningListItem({
@@ -36,6 +40,8 @@ export function JobOpeningListItem({
   onEditRequested,
   onPreviewRequested,
   onActionRequested,
+  applicationCount,
+  onApplicantsRequested,
 }: JobOpeningListItemProps): ReactElement {
   const transitionOptions = listJobOpeningTransitionOptions(
     jobOpening,
@@ -89,6 +95,18 @@ export function JobOpeningListItem({
         >
           Preview
         </Button>
+        {onApplicantsRequested !== undefined && jobOpening.status !== 'draft' ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            leadingIcon={<Users className="h-4 w-4" />}
+            onClick={(): void => {
+              onApplicantsRequested(jobOpening)
+            }}
+          >
+            {formatApplicantCountLabel(applicationCount)}
+          </Button>
+        ) : null}
         {isJobOpeningContentEditable(jobOpening.status) ? (
           <Button
             size="sm"
