@@ -1,7 +1,7 @@
 # Loop State
 
 Loop status: **RUNNING** (resumed 2026-10-25, continuous) · mode: **continuous until Completion criteria met**
-Next increment: **W8 — Contract templates & template versions**
+Next increment: **W9 — Worker contracts, acceptance, snapshots, amendments**
 Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 
 | ID | Status | Branch | Fix cycles | Checks (actual) | Verifier |
@@ -14,7 +14,7 @@ Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 | W5 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 92/92 · pytest 4 · stager 18/18 · pgTAP 1094 PASS (27 migrations) · smoke W2 48, W3 33, W4 43, W5 39 | PASS (increments/W5/VERDICT.md) |
 | W6 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 128/128 · pytest 4 · stager 18/18 · pgTAP 1408 PASS (36 migrations) · smoke W2 48, W3 33, W4 43, W5 39, W6 40 | PASS (increments/W6/VERDICT.md) |
 | W7 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 157/157 · pytest 4 · stager 19/19 · pgTAP 1713 PASS ×2 (44 migrations) · smoke W2–W7 0 failed | PASS (increments/W7/VERDICT.md) |
-| W8 | pending | — | 0 | — | — |
+| W8 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 174/174 · pytest 4 · stager 19/19 · pgTAP 1947 PASS ×2 (52 migrations) · smoke W2–W8 0 failed | PASS (increments/W8/VERDICT.md) |
 | W9 | pending | — | 0 | — | — |
 | W10 | pending | — | 0 | — | — |
 | W11 | pending | — | 0 | — | — |

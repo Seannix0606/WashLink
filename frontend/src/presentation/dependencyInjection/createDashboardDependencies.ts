@@ -13,6 +13,7 @@ import { SupabaseShopRepository } from '../../infrastructure/repositories/Supaba
 import { SupabaseShopVerificationRepository } from '../../infrastructure/repositories/SupabaseShopVerificationRepository'
 import { SupabaseWorkerRepository } from '../../infrastructure/repositories/SupabaseWorkerRepository'
 import { createCertificationDependencies, type CertificationDependencies } from './createCertificationDependencies'
+import { createContractTemplateDependencies, type ContractTemplateDependencies } from './createContractTemplateDependencies'
 import { createTrainingDependencies, type TrainingDependencies } from './createTrainingDependencies'
 
 interface DashboardDependencies {
@@ -25,6 +26,7 @@ interface DashboardDependencies {
   applicantPipelineService: ApplicantPipelineService
   trainingDependencies: TrainingDependencies
   certificationDependencies: CertificationDependencies
+  contractTemplateDependencies: ContractTemplateDependencies
   ownerIdentifier: string
 }
 
@@ -65,6 +67,7 @@ export function createDashboardDependencies(
     applicantPipelineService,
     trainingDependencies: createTrainingDependencies(),
     certificationDependencies: createCertificationDependencies(),
+    contractTemplateDependencies: createContractTemplateDependencies(),
     ownerIdentifier,
   }
 }

@@ -1,9 +1,9 @@
--- W1..W7 migration replay: objects from each committed migration exist after
--- baseline + 42 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7) replayed in order, with the owner-policies
--- baseline (20260417000002) applied right after 2026_04_17 (W1..W7 AC2; 44 staged migrations in total).
+-- W1..W8 migration replay: objects from each committed migration exist after
+-- baseline + 50 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8) replayed in order, with the owner-policies
+-- baseline (20260417000002) applied right after 2026_04_17 (W1..W8 AC2; 52 staged migrations in total).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(21);
 
 -- 2026_04_17
 select has_table('public', 'shops', 'replay_shops_created');
@@ -72,8 +72,10 @@ select results_eq(
             ('20261025000004'), ('20261025000005'), ('20261025000006'), ('20261025000007'),
             ('20261025000008'), ('20261025000009'), ('20261025000010'), ('20261025000011'), ('20261025000012'),
             ('20261025000013'), ('20261025000014'), ('20261026000001'), ('20261026000002'), ('20261026000003'),
-            ('20261026000004'), ('20261026000005'), ('20261026000006'), ('20261026000007'), ('20261026000008') $$,
-  'replay_schema_migrations_has_baseline_w2_to_w7'
+            ('20261026000004'), ('20261026000005'), ('20261026000006'), ('20261026000007'), ('20261026000008'),
+            ('20261026000009'), ('20261026000010'), ('20261026000011'), ('20261026000012'), ('20261026000013'),
+            ('20261026000014'), ('20261026000015'), ('20261026000016') $$,
+  'replay_schema_migrations_has_baseline_w2_to_w8'
 );
 
 -- The local-test owner booking policies come from the staged MIGRATION 20260417000002, not
@@ -183,6 +185,15 @@ select is(
      'certification_review_requests', 'certification_reassessments')),
   5,
   'replay_w7_certification_tables_rls_enabled'
+);
+-- Every W8 table has RLS enabled.
+select is(
+  (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relrowsecurity and c.relname in (
+     'contract_template_sections', 'contract_template_placeholders', 'worker_classification_options',
+     'contract_templates', 'contract_template_versions', 'contract_template_clauses')),
+  6,
+  'replay_w8_contract_template_tables_rls_enabled'
 );
 -- No public SECURITY DEFINER function runs without a pinned search_path.
 select is(

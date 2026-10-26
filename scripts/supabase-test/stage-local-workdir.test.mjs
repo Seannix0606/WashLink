@@ -252,13 +252,14 @@ test('runner_refuses_linked_workdir', () => {
   }
 })
 
-// W7: every helper file is seeded, in order, and a missing one is refused before staging.
+// W7 / W8: every helper file is seeded, in order, and a missing one is refused before staging.
 test('stager_seeds_every_helper_file_in_order', () => {
-  assert.deepEqual(HELPERS_SOURCE_NAMES, ['test_helpers.sql', 'test_helpers_certifications.sql'])
+  assert.deepEqual(HELPERS_SOURCE_NAMES, ['test_helpers.sql', 'test_helpers_certifications.sql', 'test_helpers_contract_templates.sql'])
   const root = createFakeRepo()
   const result = stageLocalWorkdir({ repoRoot: root })
   const seed = sectionLines(fs.readFileSync(path.join(result.outputDirectory, 'supabase', 'config.toml'), 'utf8'), '[db.seed]')
-  assert.ok(seed.includes('sql_paths = ["./local_test_baseline/test_helpers.sql", "./local_test_baseline/test_helpers_certifications.sql"]'))
+  assert.ok(seed.includes('sql_paths = ["./local_test_baseline/test_helpers.sql", "./local_test_baseline/test_helpers_certifications.sql", '
+    + '"./local_test_baseline/test_helpers_contract_templates.sql"]'))
   fs.rmSync(path.join(root, ...BASELINE_DIRECTORY, 'test_helpers_certifications.sql'))
   fs.mkdirSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep'), { recursive: true })
   assert.throws(() => stageLocalWorkdir({ repoRoot: root }), /Local test baseline file not found/)

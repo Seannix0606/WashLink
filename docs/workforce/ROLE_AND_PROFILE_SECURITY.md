@@ -96,7 +96,7 @@ returns only `full_name` for an existing booking/roster relationship; never wide
 ## D-10 checklist (mandatory human step before any production apply)
 
 A human takes a schema-only dump of the production project (read-only, outside this loop) and
-diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), W4 (rows 21-23), W5 (rows 24-26), W6 (rows 27-32) or W7 (rows 33-35) until every row is answered and recorded.
+diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), W4 (rows 21-23), W5 (rows 24-26), W6 (rows 27-32), W7 (rows 33-35) or W8 (rows 36-37) until every row is answered and recorded.
 
 | # | Check | Why |
 |---|---|---|
@@ -135,6 +135,8 @@ diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), 
 | 33 | No pre-existing certification objects: production has no `public.certification*` table or view and no `public.shop_certification_policies` that W7 did not create (the w7a preflight aborts on any such relation whose comment does not start `W7`). If production already stores certificates anywhere else (another table, profile JSON, storage files), decide whether they are migrated, shown or ignored before W7 is applied; W7 never reads worker-entered qualification text. | W7 R1 |
 | 34 | Columns / functions checked by the W7a preflight exist with these names: `shops.{id, owner_id, name, verification_status, verification_reviewed_by, verification_reviewed_at, is_active}`, `training_enrollments.{id, program_id, shop_id, owner_id, worker_id, status, accepted_at}`, `training_programs.{id, title, min_training_days, assessment_checklist, status}`, `training_assessments.{id, enrollment_id, result, assessed_by, assessor_role, assessor_display_name, assessed_on, items_met, checklist_snapshot, supersedes_id}`, `training_attendance_records.{id, session_date, supersedes_id}`, `job_openings.applicant_requirement`, `job_applications.submitted_at`, `worker_profiles.profile_id`, `profiles.full_name`; `training_enrollment_is_completed`, `training_enrollment_attended_days`, `lock_training_enrollment_for_recorder`, `is_current_training_program_owner`, `shop_has_recorded_verification`, `is_verified_shop_owner`, `job_application_apply_checks`, `applicant_verified_certifications`, `is_current_job_opening_owner`, `record_workforce_audit_event`, `enqueue_notification_safely`, `notification_safe_label`, `current_user_profile_role`, `is_orphaned_fk_set_null`. | W7 R1 |
 | 35 | Two W5 function BODIES are replaced by `create or replace` in w7g with the same signatures: `applicant_verified_certifications(uuid)` (now returns current certificates; authorisation unchanged) and `job_application_apply_checks(uuid, uuid, uuid)` (every W5 check in the same order plus the D-20 refusal right after the deadline check). Diff both against production first: if production bodies differ from the w5c / w5d versions, the W7 replacement would silently drop those differences. The w7g ROLLBACK block holds the verbatim W5 bodies. Also confirm no production client relies on certification-required openings accepting applications without a certificate (D-12 -> D-20). | W7 R1, R3 |
+| 36 | No pre-existing contract objects: production has no `public.contract_*` table, view or materialised view and no `public.worker_classification_options` that W8 did not create (the w8a preflight aborts on any such relation whose comment does not start `W8`). If production already stores contract or agreement text anywhere else (storage files, profile JSON, another table), decide whether it is migrated or ignored before W8 is applied; W8 never reads it. | W8 R1 |
+| 37 | Columns / functions checked by the W8a preflight exist with these names: `profiles.{id, role, full_name}`, `workforce_audit_events.{id, action}`; `record_workforce_audit_event(text, text, uuid, uuid, jsonb)`, `current_user_profile_role()`, `is_super_admin()`, `is_trusted_db_session()`, `is_orphaned_fk_set_null(regclass, jsonb, jsonb)`. Also confirm production `supabase_realtime` is not FOR ALL TABLES (w8c aborts) and that the jsonb text form used as the hash canonical form (W8 R7) is the same server major version as the local stack before comparing stored hashes. | W8 R1, R7 |
 
 ## W5 job applications guard matrix (`2026_10_25_w5b`)
 
@@ -167,6 +169,16 @@ diffs it against the local stack. Do not apply W2 (rows 1-16), W3 (rows 17-20), 
 | Trusted SQL session | NO bypass: issued facts immutable (42501 `Certification records cannot be edited.`); status change only with the flag (not tamper-proof, W6-L5 / R5) | UPDATE / DELETE always refused | flag required | flag required |
 | FK set-null cascade (shop, owner, approver, decider gone) | allowed through `is_orphaned_fk_set_null` (D-18 / D-23, nothing else may change) | n/a | `decided_by` only | `updated_by` only |
 | FK cascade delete | only when the worker profile or the enrollment row is already gone | only when the certification is gone | when the certification or worker profile is gone | when the shop is gone |
+
+## W8 contract template guard matrix (`2026_10_26_w8b`, `w8c`, `w8d`)
+
+| Session | Templates | Versions | Clauses | Reference data (sections, placeholders, classification options) |
+|---|---|---|---|---|
+| anon, authenticated, service_role via PostgREST | no table privilege (42501); deny-all write policies; only the W8 RPCs write | same | same | same |
+| W8 RPC (flag `washlink.contract_template_write` = template id) | INSERT; UPDATE only of name, status, current_version_number (platform always active, CHECK) | INSERT only, numbered n+1, base must be a platform version; saved_by / role / txid / stamps forced | INSERT only in the transaction that inserted the version (P38); heading / body normalised, clause_hash server-computed | n/a |
+| Trusted SQL session | NO bypass: flag required; platform template never deleted (42501) | UPDATE / DELETE always refused (42501 `Contract template versions cannot be edited.`); every new version re-validated by the DEFERRED commit validator (P39) | UPDATE / DELETE refused; no clause added to a sealed version | the only writer (migrations) |
+| FK set-null cascade | `derived_from_version_id` only (lineage) | `saved_by` only (account gone) | n/a (RESTRICT) | n/a |
+| FK cascade delete | only when the owner profile is gone (owner scope) | only when the template is gone | only when the version is gone | n/a |
 
 ## Risks (from the W2 plan)
 

@@ -1,4 +1,4 @@
-# Audit events and notifications (W3, job openings W4, job applications W5, training W6, certifications W7)
+# Audit events and notifications (W3, job openings W4, job applications W5, training W6, certifications W7, contract templates W8)
 
 Scope: what `supabase/migrations/2026_10_24_w3a..w3d_*.sql` add. Everything here was proven
 on the local Docker stack only (pgTAP files `j17_w3_*`, `j18_w3_flows`, and
@@ -275,3 +275,30 @@ per recipient per event, `w7_notifications_idempotent_one_per_event`) and, for e
 `certification_expiry:<id>:due` / `:expired` (idempotent: the function counts only newly created notices and
 refuses a past `p_as_of`, 22023). The expiry function is internal (no client role may execute it); W12 schedules
 it. Trusted SQL (no `auth.uid()`) and cascades notify nobody.
+
+## W8 contract templates (`2026_10_26_w8h`)
+
+Producers: `contract_templates_audit` (AFTER INSERT / UPDATE / DELETE on `contract_templates`) and
+`contract_template_versions_audit` (AFTER INSERT on `contract_template_versions`); helper
+`contract_template_changed_by()`. All definer, pinned `public, pg_temp`, revoked from every client role. Clauses
+are not audited separately (they belong to their version, which is). subject_type `contract_template`,
+subject_id = template id, subject_profile_id = owner_id (null for the platform template). Payload keys only:
+`template_id`, `version_id`, `scope`, `version_number`, `base_platform_version_number`, `edited_count`,
+`added_count`, `from_status`, `to_status`, `derived_from_version_id`, `changed_by`, `deleted_by` (never names,
+headings, bodies, clause keys or hashes; test `w8_audit_payload_has_no_names_headings_bodies_or_hashes`).
+`changed_by`: `owner`, `super_admin` (platform publish) or `trusted_session` (no `auth.uid()`). An audit failure
+aborts the action (W3 rule); refused actions write nothing (`w8_refused_action_writes_nothing`).
+
+| Event | Audit action | Notification |
+|---|---|---|
+| owner creates a template (from the standard or from an own version) | `contract_template.created` (scope, version_number 1, derived_from_version_id) and `contract_template.version_saved` for v1 | none |
+| owner saves a version | `contract_template.version_saved` (version_number, base_platform_version_number, edited_count, added_count) | none |
+| super_admin publishes a platform version | `contract_template.version_saved` (scope platform, changed_by super_admin) | none |
+| rename | `contract_template.renamed` (no name in the payload) | none |
+| archive / restore | `contract_template.status_changed` (from_status, to_status) | none |
+| owner account deletion (cascade) | `contract_template.deleted` (deleted_by `owner_account_deleted`; `trusted_session` is reserved, the guard refuses any other delete) | none |
+| platform starter seed (w8e, before the producers existed) | w8h records `contract_template.created` and `.version_saved` once (changed_by trusted_session) | none |
+
+No notifications in W8 (D-30): the owner acts on their own data; the owner list shows "A newer standard template
+is available" from live state (`owner_contract_templates().newer_standard_available`). W12 decides whether a
+newer standard ever notifies owners.

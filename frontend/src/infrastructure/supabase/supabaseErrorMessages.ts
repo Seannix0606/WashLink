@@ -156,12 +156,60 @@ const userFacingDatabaseMessages: ReadonlySet<string> = new Set([
   'Choose reinstate or uphold.',
   // W7 review polish: worker_profiles_guard_certified_delete (23503).
   'A worker profile with certifications cannot be deleted. Delete the account instead.',
+  // W8 contract templates (w8c guards, w8d validator, w8f RPCs).
+  'Only shop owners can create contract templates.',
+  'Contract template not found.',
+  'Only WashLink administrators can change the standard template.',
+  'Contract templates are changed only through WashLink.',
+  'Contract template versions cannot be edited.',
+  'Contract template reference data changes only through migrations.',
+  'The standard contract template cannot be deleted.',
+  'Template names must be 3 to 120 characters.',
+  'You can keep up to 25 active templates. Archive one first.',
+  'Archived templates cannot be changed. Restore it first.',
+  'Use the current standard template version.',
+  'This clause is a WashLink safeguard and cannot be changed.',
+  'Editable clauses cannot be empty.',
+  'A clause can hold up to 4000 characters.',
+  'Shop-specific terms are not allowed in this section.',
+  'Shop-specific terms come after the standard clauses of their section.',
+  'A version can have up to 40 shop-specific terms.',
+  'Give each shop-specific term a heading of 3 to 160 characters.',
+  'Write each shop-specific term in 10 to 4000 characters.',
+  'A template can keep up to 200 versions. Start a new template from this version.',
+  'Nothing changed since the last version.',
+  'Shop text cannot be labelled as a WashLink safeguard.',
+  'A contract template can hold up to 120000 characters.',
+  'The template already has this status.',
+  'Section 4 must keep the relationship-type placeholder in a WashLink safeguard clause.',
+  'The standard template cannot contain digits or amounts.',
+  'The standard template has only WashLink safeguard and editable clauses.',
+  'The standard template has only its own WashLink safeguard and editable clauses.',
+  'This template changed. Reload it and try again.',
+  'Unknown clause.',
+  'Editable clause bodies must be text.',
+  'Shop-specific terms must be a list of section, heading and text.',
+  'Unknown template status.',
+  'Give the standard template as a list of 1 to 120 clauses.',
+  'Each clause needs a section, key, kind, heading and text.',
+  // W8 review polish (w8c invisible-character CHECKs, w8d validator, w8g render).
+  'Remove invisible characters (such as zero-width spaces) from the text.',
+  'The relationship type and the party names can appear only in WashLink safeguard clauses.',
+  'Each clause of the standard template must appear exactly once.',
+  'Section 4 can hold only WashLink safeguard clauses.',
+  'The standard template cannot say it is reviewed, approved, valid, binding, signed or compliant.',
+  'Placeholder values cannot contain {{ or }}.',
 ])
 
 /** Guard messages that carry a number (for example the program's required training days). */
 const userFacingDatabaseMessagePatterns: readonly RegExp[] = [
   /^Schedule at least \d{1,2} upcoming supervised training days \(and no past sessions\) before opening\.$/,
   /^Each (skill|checklist item) must be \d{1,3} characters or fewer\.$/,
+  // W8: the placeholder text is capped at 40 characters by the database.
+  /^Unknown placeholder \{\{[^{}\n]{0,40}\}\}\.$/,
+  /^Every contract section needs at least one clause \(missing: [\d, ]{1,60}\)\.$/,
+  /^The standard template must keep these WashLink safeguard clauses locked: [a-z_, ]{3,600}\.$/,
+  /^These WashLink safeguard clauses must stay in their own sections: [a-z_, ]{3,600}\.$/,
 ]
 
 const userFacingMessageByErrorCode: ReadonlyMap<string, string> = new Map([

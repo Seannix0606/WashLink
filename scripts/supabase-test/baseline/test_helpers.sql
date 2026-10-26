@@ -141,7 +141,7 @@ declare
 begin
   perform test_helpers.assert_service_session();
   insert into public.shops (owner_id, name, address, is_active, verification_status)
-  values (p_owner, 'Local Test Shop ' || left(gen_random_uuid()::text, 8),
+  values (p_owner, 'Local Test Shop ' || translate(left(gen_random_uuid()::text, 8), '0123456789', 'ghijklmnop'),
           'Local test address', p_active, p_status)
   returning id into new_shop_id;
   return new_shop_id;
@@ -216,7 +216,7 @@ begin
   perform test_helpers.assert_service_session();
   insert into public.shops (owner_id, name, address, is_active, verification_status,
                             verification_reviewed_by, verification_reviewed_at)
-  values (p_owner, 'Local Test Verified Shop ' || left(gen_random_uuid()::text, 8),
+  values (p_owner, 'Local Test Verified Shop ' || translate(left(gen_random_uuid()::text, 8), '0123456789', 'ghijklmnop'),
           'Local test address', true, 'approved', p_reviewer, now())
   returning id into new_shop_id;
   return new_shop_id;

@@ -11,7 +11,7 @@ on its next increment and adds rework if needed.
 | D-3 | What does "worker contracts with minimum three owners" mean operationally? Which statuses qualify (active only? accepted?), and is it a goal/progress metric or a requirement for anything? | W10 | Progress metric only; qualifying = `active`; declined/expired/terminated/revoked do not count; suspended does not count while suspended | OPEN |
 | D-4 | Who may act as trainer/assessor: the owner only, or named staff the owner designates? | W6 | Owner + owner-designated trainers recorded per program | ADOPTED-DEFAULT (loop, 2026-10-25) |
 | D-5 | Certification validity period and renewal rule? | W7 | 12 months, renewal by re-assessment; configurable per shop | ADOPTED-DEFAULT (loop, 2026-10-26) |
-| D-6 | Is a compliant e-signature provider in scope? | W9 | No — draft-and-acceptance workflow, labelled as such | OPEN |
+| D-6 | Is a compliant e-signature provider in scope? | W9 | No — draft-and-acceptance workflow, labelled as such | ADOPTED-DEFAULT (loop, 2026-10-26) |
 | D-7 | Should training compensation/reimbursement be offered as optional fields? | W6 | Yes, optional, owner-entered, displayed verbatim | ADOPTED-DEFAULT (loop, 2026-10-25) |
 | D-8 | Signup role trust: signup sends `role` in client-controlled `auth.signUp` metadata and the profile-creation trigger is not in the repo (audit E1/E2). How is the role trusted? | W2 | W2 makes signup profile creation whitelist the metadata role to `customer`, `owner`, `worker`; `super_admin` only via SQL run by a human; `role` immutable for authenticated users (trigger) | ADOPTED-DEFAULT (loop, 2026-10-24) |
 | D-9 | Worker self-registration: the role picker offers only customer/owner, so worker accounts cannot sign up. Allow it? | W2 | Add `worker` to the signup role picker in W2 | ADOPTED-DEFAULT (loop, 2026-10-24) |
@@ -31,6 +31,11 @@ on its next increment and adds rework if needed.
 | D-23 | Effect of losing shop verification or deleting the shop/owner | W7 | Certificates are not voided (D-18); workers not notified | ADOPTED-DEFAULT (loop, 2026-10-26) |
 | D-24 | Training record corrected after a certificate was issued | W7 | Flag the certificate and notify the owner; never auto-suspend | ADOPTED-DEFAULT (loop, 2026-10-26) |
 | D-25 | Expiry notices | W7, W12 | W7 adds the expiry-notice function; W12 schedules it | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-26 | Where does worker classification live? | W8, W9 | Templates carry none; W9 contracts require an explicit choice from `worker_classification_options` (NOT NULL, no default); `independent_contractor` listed last and needs an extra acknowledgement | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-27 | What may owners edit in templates? | W8 | Only bodies of editable clauses and shop-specific terms (not in sections 1, 4, 14); headings, sections and locked safeguard clauses are platform-controlled | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-28 | Who publishes platform template versions? | W8 | super_admin via RPC only; review_status stays `draft_requires_legal_review` until a human-run migration records a legal review | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-29 | Do templates need shop verification? Can they be deleted? | W8 | No verification for templates (W9 gates sending); archived, never deleted, except by account deletion | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-30 | Notifications for templates | W8 | None; owner list shows "A newer standard template is available" from live state | ADOPTED-DEFAULT (loop, 2026-10-26) |
 
 ## Standing human gates (never automated — the only things the loop stops for)
 - Applying any migration to the linked/shared/production Supabase project.

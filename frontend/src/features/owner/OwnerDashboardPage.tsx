@@ -22,6 +22,7 @@ export function OwnerDashboardPage({
     applicantPipelineService,
     trainingDependencies,
     certificationDependencies,
+    contractTemplateDependencies,
   } = useMemo(
       () => createDashboardDependencies(ownerIdentifier),
       [ownerIdentifier],
@@ -49,6 +50,7 @@ export function OwnerDashboardPage({
       applicantPipelineService={applicantPipelineService}
       trainingDependencies={trainingDependencies}
       certificationDependencies={certificationDependencies}
+      contractTemplateDependencies={contractTemplateDependencies}
       ownerShopList={ownerShopList}
       onOwnerShopListChanged={setOwnerShopList}
     />
