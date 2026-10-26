@@ -162,6 +162,15 @@ pause and opening removal. Draft edits write nothing. Keys embed the audit event
 - No auto-close on the deadline (no scheduler): apply refuses instead. Closing updates up to 500 rows in the owner's transaction (R2).
 - Snapshots keep owner free text permanently (P20); a W11 takedown can only delete the row through a trusted session (R4).
 - Deleting a worker profile removes its applications, accepted ones included; the owner is told without the name (R5).
+- Retained application records (W9, `2026_10_26_w9i`, W5-L10): when a shop or owner account deletion cascades and
+  deletes an ACCEPTED application while the worker profile still exists, the AFTER DELETE trigger
+  `job_applications_retain_accepted` first copies it to `retained_job_application_records` (application id without FK,
+  `opening_snapshot`, status, `submitted_at`, `decided_at`, `removed_at`, `removal_reason` = `shop_or_owner_removed`;
+  never the cover note). Write-once (no client or trusted update; written only by the trigger), readable by the worker
+  only (`my_retained_application_records()`), deleted with the worker profile; audited `job_application_record.retained`.
+  Other statuses and worker-side deletions are not retained. Retention periods and erasure rights stay open (W9-L5).
+  Accepted applications can also be the D-31 origin of a W9 worker contract (`worker_contracts.job_application_id`,
+  `on delete set null`); `accepted` itself is still not a contract (W5-L2).
 - Flags rely on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`, R6). An audit failure aborts the action, cascades included (R9); w5a reduces drift risk.
 - The guard message `A submitted application cannot be edited.` is defence in depth: the RPCs never change a non-draft cover note and no client has UPDATE.
 - The 500-per-opening cap is tested with 499 trusted fixtures (`j4_w5_opening_application_cap`); the advisory-lock race fix is checked structurally (lock order in the function body, `j17_w5_fix1_closed_drafts_and_current_owner`), not with two concurrent sessions.

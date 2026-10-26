@@ -58,7 +58,7 @@ export interface SupabaseJobApplicationRow {
   updated_at: string
 }
 
-function mapOpeningSnapshot(
+export function mapOpeningSnapshot(
   snapshotJson: SupabaseJobApplicationSnapshotJson | null,
 ): JobApplicationOpeningSnapshot | null {
   if (snapshotJson === null || typeof snapshotJson !== 'object') {

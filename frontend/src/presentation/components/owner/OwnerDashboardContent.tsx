@@ -12,6 +12,7 @@ import type { Shop } from '../../../domain/models/Shop'
 import type { CertificationDependencies } from '../../dependencyInjection/createCertificationDependencies'
 import type { ContractTemplateDependencies } from '../../dependencyInjection/createContractTemplateDependencies'
 import type { TrainingDependencies } from '../../dependencyInjection/createTrainingDependencies'
+import type { WorkerContractDependencies } from '../../dependencyInjection/createWorkerContractDependencies'
 import { AppShell, Skeleton, Tabs, type TabItemDefinition } from '../../design/ui'
 import { useOwnerBookingDashboard } from '../../hooks/useOwnerBookingDashboard'
 import { useOwnerDashboardBookingFilterSelection } from '../../hooks/useOwnerDashboardBookingFilterSelection'
@@ -50,6 +51,12 @@ const OwnerContractTemplatesPanel = lazy(async () => {
   return { default: contractTemplatesModule.OwnerContractTemplatesPanel }
 })
 
+// W9: the worker contracts tab is loaded only when the owner opens it.
+const OwnerWorkerContractsPanel = lazy(async () => {
+  const workerContractsModule = await import('./workerContracts/OwnerWorkerContractsPanel')
+  return { default: workerContractsModule.OwnerWorkerContractsPanel }
+})
+
 type OwnerDashboardPrimaryTabKey =
   | 'bookings'
   | 'shops'
@@ -58,6 +65,7 @@ type OwnerDashboardPrimaryTabKey =
   | 'training'
   | 'certifications'
   | 'contracts'
+  | 'worker_contracts'
   | 'verification'
 
 interface OwnerDashboardContentProps {
@@ -72,6 +80,7 @@ interface OwnerDashboardContentProps {
   readonly trainingDependencies: TrainingDependencies
   readonly certificationDependencies: CertificationDependencies
   readonly contractTemplateDependencies: ContractTemplateDependencies
+  readonly workerContractDependencies: WorkerContractDependencies
   readonly ownerShopList: Shop[]
   readonly onOwnerShopListChanged: (nextOwnerShopList: Shop[]) => void
 }
@@ -88,6 +97,7 @@ export function OwnerDashboardContent({
   trainingDependencies,
   certificationDependencies,
   contractTemplateDependencies,
+  workerContractDependencies,
   ownerShopList,
   onOwnerShopListChanged,
 }: OwnerDashboardContentProps): ReactElement {
@@ -138,6 +148,7 @@ export function OwnerDashboardContent({
     { value: 'training', label: 'Training' },
     { value: 'certifications', label: 'Certifications' },
     { value: 'contracts', label: 'Contract templates' },
+    { value: 'worker_contracts', label: 'Worker contracts' },
     {
       value: 'verification',
       label: 'Verification',
@@ -275,6 +286,12 @@ export function OwnerDashboardContent({
         {selectedPrimaryTab === 'contracts' ? (
           <Suspense fallback={<Skeleton heightClassName="h-40" />}>
             <OwnerContractTemplatesPanel contractTemplateService={contractTemplateDependencies.contractTemplateService} />
+          </Suspense>
+        ) : null}
+
+        {selectedPrimaryTab === 'worker_contracts' ? (
+          <Suspense fallback={<Skeleton heightClassName="h-40" />}>
+            <OwnerWorkerContractsPanel workerContractService={workerContractDependencies.workerContractService} />
           </Suspense>
         ) : null}
 

@@ -15,6 +15,7 @@ import { SupabaseWorkerRepository } from '../../infrastructure/repositories/Supa
 import { createCertificationDependencies, type CertificationDependencies } from './createCertificationDependencies'
 import { createContractTemplateDependencies, type ContractTemplateDependencies } from './createContractTemplateDependencies'
 import { createTrainingDependencies, type TrainingDependencies } from './createTrainingDependencies'
+import { createWorkerContractDependencies, type WorkerContractDependencies } from './createWorkerContractDependencies'
 
 interface DashboardDependencies {
   bookingService: BookingService
@@ -27,6 +28,7 @@ interface DashboardDependencies {
   trainingDependencies: TrainingDependencies
   certificationDependencies: CertificationDependencies
   contractTemplateDependencies: ContractTemplateDependencies
+  workerContractDependencies: WorkerContractDependencies
   ownerIdentifier: string
 }
 
@@ -68,6 +70,7 @@ export function createDashboardDependencies(
     trainingDependencies: createTrainingDependencies(),
     certificationDependencies: createCertificationDependencies(),
     contractTemplateDependencies: createContractTemplateDependencies(),
+    workerContractDependencies: createWorkerContractDependencies(),
     ownerIdentifier,
   }
 }

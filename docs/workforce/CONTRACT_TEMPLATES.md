@@ -165,6 +165,17 @@ J9 ("owner can customize a contract draft and save a reusable template version")
 template version half; the contract-draft half (customizing a per-worker contract draft from a template version)
 is W9's.
 
+W9 status (`docs/workforce/WORKER_CONTRACTS.md`): implemented as described above. A contract version references the
+chosen template version (lineage only, `on delete set null`) and the base platform version (`restrict`), copies both
+hashes and the template name, and stores its own rendered text, clause rows (with the standard clause rendered with the
+same values, `change` and `edited_in` = template / contract), keyword flags and acceptance records; template saves,
+new platform versions and owner account deletion never change it (J10). Contract-level edits override the template
+version by clause key; the contract keeps its own full shop-term list (initialised from the template version). The
+J9 contract-draft half is `j9_w9_owner_customizes_worker_contract_draft`. Problem-term flags use the W8-L13 list
+(15 categories, W9-L3). W9 adds no function whose name contains `contract_template`, and its `contract_*` tables carry
+comments starting `W8/W9 contract module (created by W9)` so the w8a preflight (re-run by `j19_w8_review_polish`)
+still passes.
+
 ## Limitations
 
 - R4: the write flag relies on PostgREST not exposing `set_config` (smoke-tested). Trusted SQL can set it but
@@ -187,4 +198,5 @@ Per-file `-- ROLLBACK` blocks in reverse order h..a, local stack only. h: produc
 f: RPCs. e: the platform rows (the guards refuse deleting them; disable the guards as a trusted session or roll
 back c instead). d: rules and the commit validator. c: the three template tables (IRREVERSIBLE loss of owner
 templates; export with a trusted `copy` first). b: reference tables. a: nothing. Stager: drop the third
-`HELPERS_SOURCE_NAMES` entry. Only valid before W9 ships (W9 FKs point at W8 tables).
+`HELPERS_SOURCE_NAMES` entry. Only valid before W9 ships (W9 FKs point at W8 tables): with W9 present, roll back W9
+(j..a) first.

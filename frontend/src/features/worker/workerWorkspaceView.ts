@@ -45,6 +45,7 @@ export type WorkerWorkspaceTabKey =
   | 'applications'
   | 'training'
   | 'certifications'
+  | 'contracts'
   | 'training_i_run'
   | 'bookings'
 
@@ -60,6 +61,7 @@ export function workerWorkspaceTabDefinitions(isDesignatedTrainer: boolean): rea
     { value: 'applications', label: 'My applications' },
     { value: 'training', label: 'My training' },
     { value: 'certifications', label: 'My certifications' },
+    { value: 'contracts', label: 'Contracts' },
     ...(isDesignatedTrainer ? [{ value: 'training_i_run' as const, label: 'Training I run' }] : []),
     { value: 'bookings', label: 'Assigned bookings' },
   ]

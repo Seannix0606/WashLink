@@ -36,6 +36,11 @@ on its next increment and adds rework if needed.
 | D-28 | Who publishes platform template versions? | W8 | super_admin via RPC only; review_status stays `draft_requires_legal_review` until a human-run migration records a legal review | ADOPTED-DEFAULT (loop, 2026-10-26) |
 | D-29 | Do templates need shop verification? Can they be deleted? | W8 | No verification for templates (W9 gates sending); archived, never deleted, except by account deletion | ADOPTED-DEFAULT (loop, 2026-10-26) |
 | D-30 | Notifications for templates | W8 | None; owner list shows "A newer standard template is available" from live state | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-31 | Which workers can receive a contract draft? | W9 | Only workers with an accepted application or a completed training enrollment at that shop; one open contract per shop + worker | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-32 | What happens to contracts when the worker deletes their account? | W9 | Keep contracts the worker accepted (owner's record, name snapshot), remove the rest. Privacy/retention basis needs legal review (RA 10173) | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-33 | Problem-term flags | W9 | Keyword based, never block sending, shown to both parties; owner acknowledges the count; not legal advice | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-34 | Changes after acceptance | W9 | Every change is a material amendment needing worker acceptance; one open amendment at a time; declining keeps current terms | ADOPTED-DEFAULT (loop, 2026-10-26) |
+| D-35 | Owner/shop removal and contracts | W9 | Never terminates or alters a sent contract; unsent drafts removed; open offers become declinable only | ADOPTED-DEFAULT (loop, 2026-10-26) |
 
 ## Standing human gates (never automated — the only things the loop stops for)
 - Applying any migration to the linked/shared/production Supabase project.

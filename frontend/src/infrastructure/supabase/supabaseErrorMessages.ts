@@ -3,6 +3,8 @@
  * Raw SQL or PostgREST messages are never passed through; only the messages the
  * W2 database guards raise on purpose (already written for end users) are.
  */
+import { workerContractDatabaseMessagePatterns, workerContractDatabaseMessages } from './supabaseWorkerContractErrorMessages'
+
 interface SupabaseErrorLike {
   readonly code?: string | null
   readonly message?: string | null
@@ -199,6 +201,8 @@ const userFacingDatabaseMessages: ReadonlySet<string> = new Set([
   'Section 4 can hold only WashLink safeguard clauses.',
   'The standard template cannot say it is reviewed, approved, valid, binding, signed or compliant.',
   'Placeholder values cannot contain {{ or }}.',
+  // W9 worker contracts (merged from supabaseWorkerContractErrorMessages.ts).
+  ...workerContractDatabaseMessages,
 ])
 
 /** Guard messages that carry a number (for example the program's required training days). */
@@ -210,6 +214,7 @@ const userFacingDatabaseMessagePatterns: readonly RegExp[] = [
   /^Every contract section needs at least one clause \(missing: [\d, ]{1,60}\)\.$/,
   /^The standard template must keep these WashLink safeguard clauses locked: [a-z_, ]{3,600}\.$/,
   /^These WashLink safeguard clauses must stay in their own sections: [a-z_, ]{3,600}\.$/,
+  ...workerContractDatabaseMessagePatterns,
 ]
 
 const userFacingMessageByErrorCode: ReadonlyMap<string, string> = new Map([

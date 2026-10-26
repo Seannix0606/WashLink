@@ -1,4 +1,4 @@
-# Audit events and notifications (W3, job openings W4, job applications W5, training W6, certifications W7, contract templates W8)
+# Audit events and notifications (W3, job openings W4, job applications W5, training W6, certifications W7, contract templates W8, worker contracts W9)
 
 Scope: what `supabase/migrations/2026_10_24_w3a..w3d_*.sql` add. Everything here was proven
 on the local Docker stack only (pgTAP files `j17_w3_*`, `j18_w3_flows`, and
@@ -302,3 +302,43 @@ aborts the action (W3 rule); refused actions write nothing (`w8_refused_action_w
 No notifications in W8 (D-30): the owner acts on their own data; the owner list shows "A newer standard template
 is available" from live state (`owner_contract_templates().newer_standard_available`). W12 decides whether a
 newer standard ever notifies owners.
+
+## W9 worker contracts (`2026_10_26_w9j`)
+
+Producers: `worker_contracts_audit` (AFTER INSERT / UPDATE / DELETE on `worker_contracts`), `contract_versions_audit`
+(AFTER INSERT / UPDATE / DELETE on `contract_versions`, amendment versions only; the initial version's events are the
+contract's own status changes) and `retained_job_application_records_audit` (AFTER INSERT); helpers
+`worker_contract_changed_by()` and `worker_contract_notify(...)`. All definer, pinned `public, pg_temp`, revoked from
+every client role. Clauses, flags and acceptance records are not audited separately (they are sealed with their
+version; the owner's acceptance is part of `.sent`). subject_type `worker_contract` (subject_id = contract id,
+subject_profile_id = owner_id, or worker_id once the owner is gone) or `job_application_record` (subject_id =
+application id, subject_profile_id = worker). Payload keys only: `contract_id`, `version_id`, `version_number`,
+`version_kind`, `shop_id`, `from_status`, `to_status`, `flag_count`, `classification_key`, `party_role`, `ended_by`,
+`changed_by`, `deleted_by`, `removed_party`, `origin` (created), `application_id`, `record_id`, `removal_reason`
+(retained); never contract text, names, reasons, decline notes, pay, dates or hashes (test
+`w9_audit_payload_has_no_text_names_reasons_dates_or_hashes`). `changed_by`: `owner` / `worker` (an RPC with
+`auth.uid()`), `system` (expiry, cascades from GoTrue), `trusted_session` (trusted SQL; a status change without the
+write flag is a trusted repair). Draft saves are not audited (W5 / W6 rule); refused actions write nothing
+(`w9_refused_action_writes_nothing`); an audit failure aborts the action (W3 rule).
+
+| Event | Audit action | Notification (category `worker_contract`: recipient, body) |
+|---|---|---|
+| draft created | `worker_contract.created` (origin) | none |
+| offer sent (v1) | `worker_contract.sent` (version_kind initial, flag_count, classification_key, party_role owner) | worker: `<shop> sent you a contract draft to review. It applies only if you accept it.` |
+| amendment created | `worker_contract.amendment_created` | none |
+| amendment sent | `worker_contract.sent` (version_kind amendment) | worker: `<shop> proposed a change to your contract. Your current terms stay until you accept it.` |
+| offer / amendment withdrawn by the owner | `worker_contract.withdrawn` | worker: `<shop> withdrew a contract offer.` / `<shop> withdrew a proposed contract change. Your current terms stay.` (none when the withdrawal is part of a termination, expiry or party removal) |
+| accepted (worker) | `worker_contract.accepted` (party_role worker) | owner: `A worker accepted your contract offer.` / `A worker accepted your proposed contract change.` |
+| declined (worker) | `worker_contract.declined` | owner: `A worker declined your contract offer.` / `A worker declined your proposed contract change.` |
+| start recorded (owner) | `worker_contract.activated` | worker: `<shop> recorded that your contract has started.` |
+| terminated | `worker_contract.terminated` (ended_by worker / owner) | the other party: `A worker ended a contract. Open it to see the reason.` / `<shop> ended a contract. Open it to see the reason.` |
+| expired (`expire_worker_contracts`) | `worker_contract.expired` (ended_by system) | worker: `Your contract with <shop> reached its end date and has expired.`; owner: `A contract reached its end date and has expired.` |
+| unsent draft discarded | `worker_contract.draft_discarded` (version_kind initial / amendment, deleted_by owner_discarded / system) | none |
+| owner / shop / worker removed, contract kept (D-32, D-35) | `worker_contract.party_removed` (removed_party owner / shop / worker; once for owner + shop) | the remaining party: `A contract's other party left WashLink. Your contract record is kept.` (worker only if the offer was sent) |
+| contract removed by retention | `worker_contract.deleted` (deleted_by owner_account_deleted / shop_deleted / worker_account_deleted) | none |
+| trusted status repair | the matching action with changed_by trusted_session | none |
+| accepted application copied before a shop / owner cascade | `job_application_record.retained` | none |
+
+Label: `notification_safe_label(shop_name_snapshot, 'The shop')`. Keys: `worker_contract:<contract id>:<audit event
+id>` (at most one notification per recipient per event; `w9_notifications_one_per_event_idempotent`). No W9 table is
+published to Realtime; clients poll.

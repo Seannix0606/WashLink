@@ -1,4 +1,4 @@
-# Local test harness (W1, hardened in W2, extended in W3, W4, W5, W6, W7 and W8)
+# Local test harness (W1, hardened in W2, extended in W3, W4, W5, W6, W7, W8 and W9)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,14 +20,14 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after W8): the reset applies 52 migrations (baseline `00000000000000`, the
+Expected (after W9): the reset applies 62 migrations (baseline `00000000000000`, the
 2026_04_17 copy, owner-policies baseline `20260417000002`, the other 4 pre-W2 copies, the
 6 W2 copies `20261024000001..06`, then the 5 W3 copies `20261024000007..11`: w3a, w3b, w3c, w3d0 preflight, w3d, then the 4 W4 copies
 `20261024000012..15`: w4a preflight, w4b, w4c, w4d, then the 5 W5 copies `20261025000001..05`: w5a preflight, w5b, w5c, w5d, w5e, then the 9 W6 copies
 `20261025000006..14`: w6a preflight, w6b..w6i, then the 8 W7 copies `20261026000001..08`: w7a preflight, w7b..w7h, then the 8 W8 copies `20261026000009..16`:
-w8a preflight, w8b..w8h) and seeds the three helper files in order (`test_helpers.sql`, `test_helpers_certifications.sql`,
-then `test_helpers_contract_templates.sql`); `test db` runs 52 files (1890 assertions after the W8 build; 47 files /
-1713 before W8, i.e. after the W7 review polish; 38 files / 1409 before W7) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
+w8a preflight, w8b..w8h, then the 10 W9 copies `20261026000017..26`: w9a preflight, w9b..w9j) and seeds the four helper files in
+order (`test_helpers.sql`, `test_helpers_certifications.sql`, `test_helpers_contract_templates.sql`, then `test_helpers_worker_contracts.sql`); `test db` runs 63 files (2178 assertions after the W9 build; 54 files / 1947 before
+W9, i.e. after the W8 review polish; 47 files / 1713 before W8; 38 files / 1409 before W7) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
 ## Why a staged workdir
 
@@ -53,7 +53,7 @@ then `test_helpers_contract_templates.sql`); `test db` runs 52 files (1890 asser
   `20260417000002`, directly after the 2026_04_17 copy (`20260417000001`, adds
   `bookings.shop_id`) and before every later committed migration, so W2 migrations can drop or
   replace `bookings_owner_select_local_test` / `bookings_owner_update_local_test`;
-  `test_helpers.sql`, `test_helpers_certifications.sql` (W7) then `test_helpers_contract_templates.sql` (W8;
+  `test_helpers.sql`, `test_helpers_certifications.sql` (W7), `test_helpers_contract_templates.sql` (W8) then `test_helpers_worker_contracts.sql` (W9;
   `HELPERS_SOURCE_NAMES`, all required) -> the staged seed in that order (helpers only, runs after all migrations). The stager
   aborts if any committed migration collides with that slot.
 - D-11: Supabase CLI 2.122.0 parses `YYYY_MM_DD_<desc>.sql` as version `2026`, so the second
@@ -63,7 +63,7 @@ then `test_helpers_contract_templates.sql`); `test db` runs 52 files (1890 asser
   renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no
   `.temp/project-ref` and no `.env`, so the CLI cannot target a remote project from it.
-  Layout: `supabase/migrations/` (the 2 baseline migrations + the 42 copies),
+  Layout: `supabase/migrations/` (the 2 baseline migrations + the 60 copies),
   `supabase/local_test_baseline/test_helpers.sql` and `test_helpers_certifications.sql` (seed; kept outside `tests/` because
   `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env`
@@ -95,6 +95,9 @@ then `test_helpers_contract_templates.sql`); `test db` runs 52 files (1890 asser
   days)` is a TEST-ONLY time shift (W7 R7): it disables the W7 guards for one statement each (superuser, inside
   the test transaction) to move issue / expiry stamps, status history and re-assessments into the past. All
   start and end in a trusted session.
+- W9 (`test_helpers_worker_contracts.sql`, real RPCs as the actor): `create_accepted_application` (trusted), `create_test_contract_draft(owner_email, shop,
+  worker, template_version = latest standard, classification = 'employee')`, `fill_test_contract_draft` (neutral text in every editable clause; JSON null
+  keeps the template body), `send_test_contract` (statements + live flag count), `accept_test_contract`. No fixture inserts an acceptance (P47).
 - Ids are passed between statements with `set_config('fx.<name>', ..., true)` /
   `current_setting('fx.<name>')`, readable under any role.
 - Never print a bare `ok` from a plain `select`: TAP counts it as a test.
@@ -108,12 +111,12 @@ direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_reques
 The baseline still reproduces the weaknesses on purpose, so those assertions only pass
 because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (after the W8 build: 52 files, 1890 assertions)
+## pgTAP files (after the W9 build: 63 files, 2178 assertions)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 21 | replay of 52 migrations, W2 objects, W2..W8 RLS on, definer search_path |
+| `001_migration_replay.test.sql` | 22 | replay of 62 migrations, W2 objects, W2..W9 RLS on, definer search_path |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
@@ -159,6 +162,15 @@ because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a pla
 | `j17_w8_contract_template_authorization.test.sql` | 41 | privileges and RLS, owners own + standard, other owner / worker / customer / anon nothing, super_admin standard only, no owner publish, foreign ids return nothing, internal functions closed, anon, pinning, realtime, no fee / pay columns |
 | `j18_w8_flows.test.sql` | 19 | owner deletion cascades templates and keeps audit, platform and other owners survive (publisher deletion: saved_by set null), bookings / verification / openings / training / certifications / applications unchanged |
 | `j19_w7_review_polish.test.sql` | 27 | review polish: certified worker-profile delete refused (account deletion still works), direct reinstate closes the open review, no uphold on an active certificate, revoke keeps the review decidable, worker reads no raw rows, legacy approved shop without reviewer 23514, applicant read issuer-verified flag |
+| `j9_w9_owner_customizes_worker_contract_draft.test.sql` | 30 | J9 contract half: draft from an own template version / the standard for an accepted applicant or completed trainee, eligibility, explicit classification, contract-level edits and shop terms, template unchanged, unfilled list and live flags, diff (template vs contract edits), locked clauses verbatim, stale save, one open contract |
+| `j10_accepted_contract_contents_preserved_after_template_change.test.sql` | 27 | J10: sealed text + sha256 recompute, text format, immutability for every session, acceptance records and label, template save / platform publish / owner deletion leave the text unchanged |
+| `j11_material_contract_amendments_require_acceptance.test.sql` | 28 | J11: amendment drafts, not in force until accepted, supersede and keep, decline / withdraw keep current terms, stale hash, no direct edit or minor path, one open amendment, verified send, change list, termination |
+| `j12_worker_and_owner_cannot_access_other_parties_private_contracts.test.sql` | 28 | J12: other owner / worker / customer / super_admin / anon read nothing, no unsent drafts for the worker, foreign ids and actions, owner cannot respond for the worker, eligible list names only, notifications without text |
+| `j9_w9_worker_contract_rules.test.sql` | 52 | state machine, send gates, start date, contractor acknowledgements, no fabricated acceptance, commit validator, braces, decline / terminate always, activation gates (C7), effective expiry, internal expiry, discard |
+| `j9_w9_problem_term_flags.test.sql` | 15 | 15 W8-L13 categories incl. Filipino words, samples, excerpt, locked clauses never scanned, stored at seal and shown to both parties, never block, no validation claims |
+| `j9_w9_worker_contract_audit.test.sql` | 12 | audit for every transition, payload keys and leaks, refused actions write nothing, one notification per event, text safety |
+| `j17_w9_worker_contract_authorization.test.sql` | 16 | RLS and SELECT-only grants, deny-all write policies, 34 internal functions closed, 23 RPCs closed to anon / service_role, pinning, Realtime, no fee / pay / signature columns |
+| `j18_w9_flows.test.sql` | 22 | owner / shop / worker deletion retention (D-32, D-35, W5-L10 copies), bookings, verification, applications, training, certifications and templates unchanged |
 
 ## Safety rules
 
@@ -326,3 +338,13 @@ DELETE denied for owner and service_role; `set_config` and the internal version 
 GoTrue `deleteUser` of the owner removes the templates and keeps the audit rows; the platform standard survives.
 The published platform version stays on the local stack until the next reset. Must end `0 failed`
 (W8 build: 30 checks).
+
+## W9 API smoke (local stack only)
+
+`node scripts/supabase-test/w9-api-smoke.mjs` (after the W8 smoke, before stopping the stack). Same safety rules as W2..W8; no time shift, no
+trusted write or read; synthetic `smoke9-*@local.test` users, all deleted. Checks: no direct insert / patch / delete on the eight W9 tables for
+owner, worker, service_role; non-eligible and unclassified drafts refused; nothing visible to the worker before send; unverified-shop send 23514;
+deposit flag and flag-count 55000; the worker reads document, flags and diff; stale-hash accept 55000; two acceptance records with the label;
+template save and platform publish leave the hash unchanged; amendment declined, second accepted (old superseded); contractor acknowledgements;
+other owner / worker / super_admin read nothing; activation; worker termination; notifications without pay, reasons or names; `set_config`, the
+expiry function and the sealer not callable; owner `deleteUser` keeps the contract for the worker. Must end `0 failed` (W9 build: 34 checks).

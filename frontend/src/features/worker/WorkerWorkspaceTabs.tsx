@@ -36,6 +36,12 @@ const MyCertificationsPanel = lazy(async () => {
   return { default: certificationsModule.MyCertificationsPanel }
 })
 
+// W9: Contracts loads only when the worker opens it.
+const MyContractsPanel = lazy(async () => {
+  const contractsModule = await import('../../presentation/components/worker/contracts/MyContractsPanel')
+  return { default: contractsModule.MyContractsPanel }
+})
+
 interface WorkerWorkspaceTabsProps {
   readonly initialTab: WorkerWorkspaceTabKey
   readonly marketplaceDependencies: WorkerMarketplaceDependencies
@@ -108,6 +114,12 @@ export function WorkerWorkspaceTabs({
       {visibleTab === 'certifications' ? (
         <Suspense fallback={panelFallback}>
           <MyCertificationsPanel certificationDependencies={marketplaceDependencies.certificationDependencies} />
+        </Suspense>
+      ) : null}
+
+      {visibleTab === 'contracts' ? (
+        <Suspense fallback={panelFallback}>
+          <MyContractsPanel workerContractDependencies={marketplaceDependencies.workerContractDependencies} />
         </Suspense>
       ) : null}
 
