@@ -297,7 +297,7 @@ erDiagram
 | certifications | W7 | holder + issuing shop read; issue/revoke via function; immutable decisions |
 | contract_templates / contract_template_versions | W8 | super_admin (platform) or shop-owner; versions immutable |
 | worker_contracts / contract_versions / contract_acceptances | W9 | the two parties + super_admin; versions and acceptances immutable; transitions via function |
-| worker_owner_relationships / workforce_policies | W10 | parties read; write via function; policies super_admin |
+| worker_owner_relationships / workforce_policies | W10 | worker reads own rows (owners via RPC only); write via function; policies read and changed by super_admin only |
 
 ## Findings routed to increments
 

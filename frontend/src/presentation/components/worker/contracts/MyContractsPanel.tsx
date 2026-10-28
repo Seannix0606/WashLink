@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { useState } from 'react'
 import { ArrowLeft, ChevronRight, Handshake } from 'lucide-react'
 import type { MyWorkerContract } from '../../../../domain/models/WorkerContract'
+import { contractListSignal } from '../../../../domain/utilities/ownerRelationshipProgress'
 import type { WorkerContractDependencies } from '../../../dependencyInjection/createWorkerContractDependencies'
 import { Button, Card, EmptyState, Skeleton } from '../../../design/ui'
 import { useMyWorkerContracts } from '../../../hooks/useMyWorkerContracts'
@@ -16,6 +17,7 @@ import { describeContractDates } from '../../../utilities/workerContractDisplay'
 import { ContractStatusBadge } from '../../contracts/ContractStatusBadge'
 import { DraftLegalReviewBanner } from '../../contracts/DraftLegalReviewBanner'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
+import { OwnerRelationshipProgressCard } from './OwnerRelationshipProgressCard'
 import { RetainedApplicationRecords } from './RetainedApplicationRecords'
 import { WorkerContractReview } from './WorkerContractReview'
 
@@ -42,11 +44,13 @@ function MyContractListItem({ contract, onOpen }: { readonly contract: MyWorkerC
 
 interface MyContractsPanelProps {
   readonly workerContractDependencies: WorkerContractDependencies
+  /** W10: switches the workspace to Find work (the progress card's button is hidden without it). */
+  readonly onFindWorkRequested?: () => void
 }
 
 /** Worker "Contracts" tab: offers, proposed changes, accepted and active contracts, and kept application records. */
-export function MyContractsPanel({ workerContractDependencies }: MyContractsPanelProps): ReactElement {
-  const { workerContractResponseService } = workerContractDependencies
+export function MyContractsPanel({ workerContractDependencies, onFindWorkRequested }: MyContractsPanelProps): ReactElement {
+  const { workerContractResponseService, ownerRelationshipService } = workerContractDependencies
   const contracts = useMyWorkerContracts(workerContractResponseService)
   const actions = useWorkerContractActions(contracts.refresh)
   const [openContractId, setOpenContractId] = useState<string | null>(null)
@@ -96,6 +100,13 @@ export function MyContractsPanel({ workerContractDependencies }: MyContractsPane
       <DraftLegalReviewBanner isAcceptanceNoteShown />
       {openContractId === null ? (
         <>
+          {ownerRelationshipService !== undefined ? (
+            <OwnerRelationshipProgressCard
+              ownerRelationshipService={ownerRelationshipService}
+              refreshSignal={contractListSignal(contracts.contracts)}
+              onFindWorkRequested={onFindWorkRequested}
+            />
+          ) : null}
           {renderList()}
           <RetainedApplicationRecords workerContractResponseService={workerContractResponseService} />
         </>

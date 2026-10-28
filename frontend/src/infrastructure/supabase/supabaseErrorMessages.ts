@@ -3,6 +3,7 @@
  * Raw SQL or PostgREST messages are never passed through; only the messages the
  * W2 database guards raise on purpose (already written for end users) are.
  */
+import { ownerRelationshipDatabaseMessages } from './supabaseOwnerRelationshipErrorMessages'
 import { workerContractDatabaseMessagePatterns, workerContractDatabaseMessages } from './supabaseWorkerContractErrorMessages'
 
 interface SupabaseErrorLike {
@@ -203,6 +204,8 @@ const userFacingDatabaseMessages: ReadonlySet<string> = new Set([
   'Placeholder values cannot contain {{ or }}.',
   // W9 worker contracts (merged from supabaseWorkerContractErrorMessages.ts).
   ...workerContractDatabaseMessages,
+  // W10 owner relationships and workforce policies (merged from supabaseOwnerRelationshipErrorMessages.ts).
+  ...ownerRelationshipDatabaseMessages,
 ])
 
 /** Guard messages that carry a number (for example the program's required training days). */

@@ -291,7 +291,10 @@ export function OwnerDashboardContent({
 
         {selectedPrimaryTab === 'worker_contracts' ? (
           <Suspense fallback={<Skeleton heightClassName="h-40" />}>
-            <OwnerWorkerContractsPanel workerContractService={workerContractDependencies.workerContractService} />
+            <OwnerWorkerContractsPanel
+              workerContractService={workerContractDependencies.workerContractService}
+              ownerRelationshipService={workerContractDependencies.ownerRelationshipService}
+            />
           </Suspense>
         ) : null}
 

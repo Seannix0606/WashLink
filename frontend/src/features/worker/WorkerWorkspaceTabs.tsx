@@ -119,7 +119,12 @@ export function WorkerWorkspaceTabs({
 
       {visibleTab === 'contracts' ? (
         <Suspense fallback={panelFallback}>
-          <MyContractsPanel workerContractDependencies={marketplaceDependencies.workerContractDependencies} />
+          <MyContractsPanel
+            workerContractDependencies={marketplaceDependencies.workerContractDependencies}
+            onFindWorkRequested={(): void => {
+              setActiveTab('find_work')
+            }}
+          />
         </Suspense>
       ) : null}
 

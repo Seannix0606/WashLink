@@ -1,9 +1,9 @@
--- W1..W9 migration replay: objects from each committed migration exist after
--- baseline + 60 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9) replayed in order, with the owner-policies
--- baseline (20260417000002) applied right after 2026_04_17 (W1..W9 AC2; 62 staged migrations in total).
+-- W1..W10 migration replay: objects from each committed migration exist after
+-- baseline + 67 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10) replayed in order, with the
+-- owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W10 AC2; 69 staged migrations in total).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(23);
 
 -- 2026_04_17
 select has_table('public', 'shops', 'replay_shops_created');
@@ -76,8 +76,9 @@ select results_eq(
             ('20261026000009'), ('20261026000010'), ('20261026000011'), ('20261026000012'), ('20261026000013'),
             ('20261026000014'), ('20261026000015'), ('20261026000016'), ('20261026000017'), ('20261026000018'),
             ('20261026000019'), ('20261026000020'), ('20261026000021'), ('20261026000022'), ('20261026000023'),
-            ('20261026000024'), ('20261026000025'), ('20261026000026') $$,
-  'replay_schema_migrations_has_baseline_w2_to_w9'
+            ('20261026000024'), ('20261026000025'), ('20261026000026'), ('20261028000001'), ('20261028000002'),
+            ('20261028000003'), ('20261028000004'), ('20261028000005'), ('20261028000006'), ('20261028000007') $$,
+  'replay_schema_migrations_has_baseline_w2_to_w10'
 );
 
 -- The local-test owner booking policies come from the staged MIGRATION 20260417000002, not
@@ -205,6 +206,13 @@ select is(
      'contract_version_clauses', 'contract_version_flags', 'contract_acceptances', 'retained_job_application_records')),
   8,
   'replay_w9_worker_contract_tables_rls_enabled'
+);
+-- Both W10 tables have RLS enabled.
+select is(
+  (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relrowsecurity and c.relname in ('workforce_policies', 'worker_owner_relationships')),
+  2,
+  'replay_w10_relationship_and_policy_tables_rls_enabled'
 );
 -- No public SECURITY DEFINER function runs without a pinned search_path.
 select is(

@@ -12,8 +12,9 @@
 //     20260417000002  local_test_baseline_owner_policies.sql (needs bookings.shop_id from
 //                     2026_04_17 = 20260417000001; a migration, not the seed, so later W2
 //                     migrations can drop or replace these policies)
-//   test_helpers.sql, test_helpers_certifications.sql (W7), test_helpers_contract_templates.sql (W8) then
-//   test_helpers_worker_contracts.sql (W9) are the staged seed (helpers only), in order.
+//   test_helpers.sql, test_helpers_certifications.sql (W7), test_helpers_contract_templates.sql (W8),
+//   test_helpers_worker_contracts.sql (W9) then test_helpers_owner_relationships.sql (W10) are the staged seed
+//   (helpers only), in order.
 // - The staged dir never contains `.temp/project-ref`, so the CLI cannot target a linked project.
 // - W2 (S10/S11): the repo config keeps [db.seed] enabled = false (only the staged copy enables
 //   it), the staged project_id must end in "-local-test", and no .sql may exist under supabase/
@@ -35,9 +36,9 @@ export const BASELINE_SOURCE_DIRECTORY = path.join('scripts', 'supabase-test', '
 const BASELINE_SOURCE_NAME = 'local_test_baseline.sql'
 const OWNER_POLICIES_SOURCE_NAME = 'local_test_baseline_owner_policies.sql'
 // Seeded in this order (second file: W7 certification helpers, third: W8 contract template helpers, fourth: W9
-// worker contract helpers; test_helpers.sql is at its size limit).
+// worker contract helpers, fifth: W10 owner relationship helpers; test_helpers.sql is at its size limit).
 export const HELPERS_SOURCE_NAMES = ['test_helpers.sql', 'test_helpers_certifications.sql', 'test_helpers_contract_templates.sql',
-  'test_helpers_worker_contracts.sql']
+  'test_helpers_worker_contracts.sql', 'test_helpers_owner_relationships.sql']
 const PROJECT_ID_LINE = 'project_id = "washlink"'
 const STAGED_PROJECT_ID_LINE = 'project_id = "washlink-local-test"'
 const SEED_PATHS_LINE = 'sql_paths = ["./seed.sql"]'

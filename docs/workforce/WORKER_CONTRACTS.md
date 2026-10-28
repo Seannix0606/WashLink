@@ -1,4 +1,4 @@
-# Worker contracts, acceptance records, snapshots and amendments (W9)
+# Worker contracts, acceptance records, snapshots and amendments (W9; forward-only trusted repairs W10)
 
 Local Docker proof only (D-10): nothing here was applied to the linked project. Every legal question is in
 `LEGAL_REVIEW_REGISTER.md` (W9-L1..L12, all OPEN). Nothing in WashLink states that a contract is valid, binding,
@@ -31,6 +31,10 @@ Migrations (staged `20261026000017..26`): `2026_10_26_w9a_worker_contracts_prefl
   `washlink.worker_contract_write` = contract id. No client role (anon, authenticated, service_role) has INSERT /
   UPDATE / DELETE; write policies deny all. A trusted SQL session may repair the status columns of
   `worker_contracts` only (audited `trusted_session`, no notification); never versions, clauses, flags or acceptances.
+  W10 (`2026_10_28_w10b`, D-40) makes that repair forward-only: only an `accepted` / `active` row, only to the same
+  status, `terminated` or `expired`, and never `ended_at` back to null; anything else 42501 `Contracts are changed
+  only through WashLink.` (no revival of an ended contract, no reopened offer, no activation that skips the W9
+  checks). The rest of the w9c guard is unchanged (verbatim body). See `OWNER_RELATIONSHIPS.md`.
 - P46 sealed versions are write-once for every session. A version is `draft` (inputs editable by the owner RPC only)
   until sent; sending seals it in one transaction under `washlink.worker_contract_seal` = version id (render values,
   rendered text, sha256 hash, flag count, clauses, flags, owner acceptance), validated at once and again by the
@@ -209,10 +213,14 @@ keys `worker_contract:<contract id>:<audit event id>`; no contract text, names, 
 - Keyword flags miss paraphrases, other languages and misspellings and flag harmless text (W9-L3). The hash covers
   the rendered text, not the jsonb inputs (R6). The C7 activation check reads training state without a lock (R7).
 - Expiry is derived until W12 schedules `expire_worker_contracts` (R9). Paid booking assignment of a worker without a
-  contract is not blocked (W6-L10 stays OPEN). No super_admin or dispute access (W11); no three-owner count (W10).
+  contract is not blocked (W6-L10 stays OPEN). No super_admin or dispute access (W11). The W10 distinct-owner count (`OWNER_RELATIONSHIPS.md`) is derived from
+  these contracts and is informational only: no W9 RPC, guard or policy reads it, and decline / terminate never depend on it.
 - A commit-validator bug would block every send (R2); an audit failure aborts the action, cascades included (R3).
 
 ## Rollback (local test stack only; reverse order j..a; valid only before W10 ships)
+
+W10 is now built: roll back W10 first (g..a, `OWNER_RELATIONSHIPS.md`). Its w10b rollback restores the w9c guard
+body (re-opening W9-S1 / C1); the W10 sync trigger on `worker_contracts` must be gone before any W9 step.
 
 j: drop the producers (audit rows and notifications stay). i: drop the retention trigger, the `job_applications`
 AFTER DELETE trigger and `retained_job_application_records` (IRREVERSIBLE: export first). h: drop the reads. g, f:

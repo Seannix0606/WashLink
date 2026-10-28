@@ -1,16 +1,23 @@
 import type { ReactElement } from 'react'
-import { useCallback, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import type { Shop } from '../../domain/models/Shop'
 import { createSuperAdminDependencies } from '../../presentation/dependencyInjection/createSuperAdminDependencies'
 import { useShopReviewQueue } from '../../presentation/hooks/useShopReviewQueue'
 import {
   AppShell,
+  Skeleton,
   Tabs,
   type TabItemDefinition,
 } from '../../presentation/design/ui'
 import { AuthenticatedTopBar } from '../../presentation/components/AuthenticatedTopBar'
 import { ShopReviewQueueList } from '../../presentation/components/superAdmin/ShopReviewQueueList'
 import { ShopVerificationReviewDrawer } from '../../presentation/components/superAdmin/ShopVerificationReviewDrawer'
+
+// W10: the workforce policy panel loads only on this page.
+const WorkforcePolicyPanel = lazy(async () => {
+  const policyModule = await import('../../presentation/components/superAdmin/WorkforcePolicyPanel')
+  return { default: policyModule.WorkforcePolicyPanel }
+})
 
 type SuperAdminReviewScopeTabKey = 'pending' | 'all'
 
@@ -21,7 +28,7 @@ interface SuperAdminDashboardPageProps {
 export function SuperAdminDashboardPage({
   superAdminIdentifier,
 }: SuperAdminDashboardPageProps): ReactElement {
-  const { shopService, shopVerificationService } = useMemo(
+  const { shopService, shopVerificationService, workforcePolicyService } = useMemo(
     () => createSuperAdminDependencies(),
     [],
   )
@@ -95,6 +102,10 @@ export function SuperAdminDashboardPage({
           }
           onShopSelectedForReview={setShopSelectedForReview}
         />
+
+        <Suspense fallback={<Skeleton heightClassName="h-28" />}>
+          <WorkforcePolicyPanel workforcePolicyService={workforcePolicyService} />
+        </Suspense>
       </div>
 
       <ShopVerificationReviewDrawer

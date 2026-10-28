@@ -1,7 +1,7 @@
 # Loop State
 
-Loop status: **PAUSED** (W9 run with `/workforce-loop step`, 2026-10-27) · resume with `/workforce-loop` (continuous)
-Next increment: **W10** (W9 passed 2026-10-27; loop run in step mode, paused after W9)
+Loop status: **PAUSED** (W10 run with `/workforce-loop step W10`, 2026-10-28) · resume with `/workforce-loop` (continuous)
+Next increment: **W11** (W10 passed 2026-10-28; loop run in step mode, paused after W10)
 Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 
 | ID | Status | Branch | Fix cycles | Checks (actual) | Verifier |
@@ -16,7 +16,7 @@ Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 | W7 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 157/157 · pytest 4 · stager 19/19 · pgTAP 1713 PASS ×2 (44 migrations) · smoke W2–W7 0 failed | PASS (increments/W7/VERDICT.md) |
 | W8 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 174/174 · pytest 4 · stager 19/19 · pgTAP 1947 PASS ×2 (52 migrations) · smoke W2–W8 0 failed | PASS (increments/W8/VERDICT.md) |
 | W9 | passed | feature/workforce | 0 | lint 0 · build 0 · vitest 191/191 · pytest 4 · stager 19/19 · pgTAP 2178 PASS ×2 (62 migrations) · smoke W2–W9 0 failed | PASS (increments/W9/VERDICT.md) |
-| W10 | pending | — | 0 | — | — |
+| W10 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 209/209 · pytest 4 · stager 19/19 · pgTAP 2356 PASS (69 migrations, 72 files) · smoke W2–W10 0 failed (w10 39) | PASS (increments/W10/VERDICT.md) |
 | W11 | pending | — | 0 | — | — |
 | W12 | pending | — | 0 | — | — |
 | W13 | pending | — | 0 | — | — |
@@ -37,4 +37,5 @@ Not run. Requires all increments passed, then whole-branch verifier → `FINAL_V
 - Legal flags: `increments/W0/LEGAL_FLAGS.md` (W0-L1…L7).
 - W2 closed E1, E2, E3, E5, S1, S2, S4–S11, F5, F6 locally (tests passing). Carry-forwards: `increments/W2/REVIEW.md` R-1…R-6.
 - W9 non-blocking: `increments/W9/REVIEW.md` S1–S5, C1–C6 (S1/C1 trusted status repair has no transition rules + no test; S2 shop text can imitate header lines; C2–C5 copy and keyword gaps); C6 carry-forward to W10 (D-3 counting). Legal W9-L1…L17 OPEN in the register.
+- W10 non-blocking: `increments/W10/REVIEW.md`. Fix cycle 1 closed S1/C3, C2, C4, C1, C7, S5, S6. Carry-forwards: S2/S3/C8 to W12 (bulk refresh one pair per transaction or try-lock, no future `p_as_of`, keep separate from the expiry job), S4 to W13; no concurrency test for pair-lock ordering (PLAN R4). W9 C6 closed. Legal W10-L1…L11 OPEN in the register. W10 PLAN.md is 357 lines (planning doc, not code; noted by verifier).
 - E1/E2 fixes are verified on the local baseline only; production parity requires the D-10 checklist (`docs/workforce/ROLE_AND_PROFILE_SECURITY.md`).

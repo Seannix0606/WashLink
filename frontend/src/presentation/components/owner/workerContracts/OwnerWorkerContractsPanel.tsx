@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
 import { ArrowLeft, ChevronRight, FilePlus2, Handshake } from 'lucide-react'
+import type { OwnerRelationshipService } from '../../../../application/services/OwnerRelationshipService'
 import type { NewWorkerContractRequest, NewWorkerContractOptions, WorkerContractService } from '../../../../application/services/WorkerContractService'
 import type { OwnerWorkerContract } from '../../../../domain/models/WorkerContract'
 import { Button, Card, EmptyState, Skeleton } from '../../../design/ui'
@@ -18,6 +19,7 @@ import { DraftLegalReviewBanner } from '../../contracts/DraftLegalReviewBanner'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 import { NewWorkerContractModal } from './NewWorkerContractModal'
 import { OwnerWorkerContractDetail } from './OwnerWorkerContractDetail'
+import { OwnerWorkerRelationshipsList } from './OwnerWorkerRelationshipsList'
 import { WorkerContractDraftEditor } from './WorkerContractDraftEditor'
 
 type PanelView = { readonly kind: 'list' } | { readonly kind: 'detail' | 'editor'; readonly contractId: string }
@@ -68,10 +70,12 @@ function ContractListItem({ contract, onOpen }: ContractListItemProps): ReactEle
 
 interface OwnerWorkerContractsPanelProps {
   readonly workerContractService: WorkerContractService
+  /** W10: the owner's own relationship rows are listed under the contracts when given. */
+  readonly ownerRelationshipService?: OwnerRelationshipService
 }
 
 /** Owner "Worker contracts" tab: drafts, sent offers, accepted and active relationships. */
-export function OwnerWorkerContractsPanel({ workerContractService }: OwnerWorkerContractsPanelProps): ReactElement {
+export function OwnerWorkerContractsPanel({ workerContractService, ownerRelationshipService }: OwnerWorkerContractsPanelProps): ReactElement {
   const contracts = useOwnerWorkerContracts(workerContractService)
   const actions = useWorkerContractActions(contracts.refresh)
   const [view, setView] = useState<PanelView>(listView)
@@ -179,6 +183,7 @@ export function OwnerWorkerContractsPanel({ workerContractService }: OwnerWorker
           ))}
         </ul>
       )}
+      {ownerRelationshipService !== undefined ? <OwnerWorkerRelationshipsList ownerRelationshipService={ownerRelationshipService} /> : null}
     </div>
   )
 
