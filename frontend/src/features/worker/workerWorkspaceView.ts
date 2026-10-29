@@ -41,6 +41,7 @@ export function decideWorkerWorkspaceView({
 }
 
 export type WorkerWorkspaceTabKey =
+  | 'overview'
   | 'find_work'
   | 'applications'
   | 'training'
@@ -54,9 +55,13 @@ export interface WorkerWorkspaceTabDefinition {
   readonly label: string
 }
 
-/** "Training I run" is offered only to a worker who is a current designated trainer (D-16). */
+/**
+ * W11 (D-42): "Overview" comes first. "Training I run" is offered only to a worker who is a
+ * current designated trainer (D-16).
+ */
 export function workerWorkspaceTabDefinitions(isDesignatedTrainer: boolean): readonly WorkerWorkspaceTabDefinition[] {
   return [
+    { value: 'overview', label: 'Overview' },
     { value: 'find_work', label: 'Find work' },
     { value: 'applications', label: 'My applications' },
     { value: 'training', label: 'My training' },
@@ -68,9 +73,9 @@ export function workerWorkspaceTabDefinitions(isDesignatedTrainer: boolean): rea
 }
 
 /**
- * Linked workers land on their assigned bookings as before; everyone else starts on
- * Find work (the marketplace does not need a roster link).
+ * W11 (D-42, J18): linked workers keep landing on their assigned bookings; everyone else starts
+ * on the Overview (next action first).
  */
 export function defaultWorkerWorkspaceTab(hasRosterLink: boolean): WorkerWorkspaceTabKey {
-  return hasRosterLink ? 'bookings' : 'find_work'
+  return hasRosterLink ? 'bookings' : 'overview'
 }

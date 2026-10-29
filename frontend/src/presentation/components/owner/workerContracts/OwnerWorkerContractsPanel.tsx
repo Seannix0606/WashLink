@@ -1,10 +1,13 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
-import { ArrowLeft, ChevronRight, FilePlus2, Handshake } from 'lucide-react'
+import { ArrowLeft, ChevronRight, FilePlus2, Flag, Handshake } from 'lucide-react'
+import type { ContractDisputeService } from '../../../../application/services/ContractDisputeService'
 import type { OwnerRelationshipService } from '../../../../application/services/OwnerRelationshipService'
 import type { NewWorkerContractRequest, NewWorkerContractOptions, WorkerContractService } from '../../../../application/services/WorkerContractService'
+import { canReportContractProblem } from '../../../../domain/models/ContractDispute'
 import type { OwnerWorkerContract } from '../../../../domain/models/WorkerContract'
 import { Button, Card, EmptyState, Skeleton } from '../../../design/ui'
+import { useContractDisputes } from '../../../hooks/useContractDisputes'
 import { useOwnerWorkerContracts } from '../../../hooks/useOwnerWorkerContracts'
 import { useWorkerContractActions } from '../../../hooks/useWorkerContractActions'
 import {
@@ -13,9 +16,12 @@ import {
   ownerContractsEmptyTitle,
   ownerContractsIntroText,
 } from '../../../utilities/workerContractCopy'
+import { reportProblemButtonLabel } from '../../../utilities/contractDisputeCopy'
 import { contractOriginLabel, describeContractDates } from '../../../utilities/workerContractDisplay'
+import { ContractDisputeList } from '../../contracts/ContractDisputeList'
 import { ContractStatusBadge } from '../../contracts/ContractStatusBadge'
 import { DraftLegalReviewBanner } from '../../contracts/DraftLegalReviewBanner'
+import { ReportContractProblemModal, type ReportContractProblemTarget } from '../../contracts/ReportContractProblemModal'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 import { NewWorkerContractModal } from './NewWorkerContractModal'
 import { OwnerWorkerContractDetail } from './OwnerWorkerContractDetail'
@@ -29,9 +35,11 @@ const listView: PanelView = { kind: 'list' }
 interface ContractListItemProps {
   readonly contract: OwnerWorkerContract
   readonly onOpen: (contract: OwnerWorkerContract) => void
+  /** W11: shown only when a report is possible (the database re-checks). */
+  readonly onReportProblem?: () => void
 }
 
-function ContractListItem({ contract, onOpen }: ContractListItemProps): ReactElement {
+function ContractListItem({ contract, onOpen, onReportProblem }: ContractListItemProps): ReactElement {
   const workerName = contract.workerName ?? 'Worker'
   const versionText =
     contract.pendingVersionNumber !== null
@@ -53,17 +61,24 @@ function ContractListItem({ contract, onOpen }: ContractListItemProps): ReactEle
         </p>
         {versionText.length > 0 ? <p className="text-xs text-[var(--color-ink-500)]">{versionText}</p> : null}
       </div>
-      <Button
-        size="sm"
-        variant="secondary"
-        trailingIcon={<ChevronRight className="h-4 w-4" aria-hidden="true" />}
-        aria-label={`Open the contract with ${workerName}`}
-        onClick={(): void => {
-          onOpen(contract)
-        }}
-      >
-        Open
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        {onReportProblem !== undefined ? (
+          <Button size="sm" variant="ghost" leadingIcon={<Flag className="h-4 w-4" aria-hidden="true" />} aria-label={`${reportProblemButtonLabel} with the contract with ${workerName}`} onClick={onReportProblem}>
+            {reportProblemButtonLabel}
+          </Button>
+        ) : null}
+        <Button
+          size="sm"
+          variant="secondary"
+          trailingIcon={<ChevronRight className="h-4 w-4" aria-hidden="true" />}
+          aria-label={`Open the contract with ${workerName}`}
+          onClick={(): void => {
+            onOpen(contract)
+          }}
+        >
+          Open
+        </Button>
+      </div>
     </li>
   )
 }
@@ -72,14 +87,23 @@ interface OwnerWorkerContractsPanelProps {
   readonly workerContractService: WorkerContractService
   /** W10: the owner's own relationship rows are listed under the contracts when given. */
   readonly ownerRelationshipService?: OwnerRelationshipService
+  /** W11: reported contract problems; without it nothing can be reported (older callers). */
+  readonly contractDisputeService?: ContractDisputeService
 }
 
 /** Owner "Worker contracts" tab: drafts, sent offers, accepted and active relationships. */
-export function OwnerWorkerContractsPanel({ workerContractService, ownerRelationshipService }: OwnerWorkerContractsPanelProps): ReactElement {
+export function OwnerWorkerContractsPanel({
+  workerContractService,
+  ownerRelationshipService,
+  contractDisputeService,
+}: OwnerWorkerContractsPanelProps): ReactElement {
   const contracts = useOwnerWorkerContracts(workerContractService)
   const actions = useWorkerContractActions(contracts.refresh)
   const [view, setView] = useState<PanelView>(listView)
   const [isNewContractOpen, setIsNewContractOpen] = useState<boolean>(false)
+  const disputes = useContractDisputes(contractDisputeService)
+  const [reportTarget, setReportTarget] = useState<ReportContractProblemTarget | null>(null)
+  const renderInstant = new Date()
   const backToList = (): void => {
     setView(listView)
   }
@@ -179,10 +203,23 @@ export function OwnerWorkerContractsPanel({ workerContractService, ownerRelation
               onOpen={(openedContract): void => {
                 setView({ kind: 'detail', contractId: openedContract.contractId })
               }}
+              onReportProblem={
+                disputes.isAvailable && canReportContractProblem(contract, renderInstant)
+                  ? (): void => {
+                      setReportTarget({
+                        contractId: contract.contractId,
+                        subjectText: `Contract with ${contract.workerName ?? 'the worker'}`,
+                        raiserRole: 'owner',
+                        endedBy: contract.endedBy,
+                      })
+                    }
+                  : undefined
+              }
             />
           ))}
         </ul>
       )}
+      {disputes.isAvailable ? <ContractDisputeList disputes={disputes} /> : null}
       {ownerRelationshipService !== undefined ? <OwnerWorkerRelationshipsList ownerRelationshipService={ownerRelationshipService} /> : null}
     </div>
   )
@@ -208,6 +245,14 @@ export function OwnerWorkerContractsPanel({ workerContractService, ownerRelation
           }}
         />
       ) : null}
+      <ReportContractProblemModal
+        target={reportTarget}
+        isSubmitting={disputes.pendingActionKey !== null}
+        onSubmit={disputes.reportProblem}
+        onClose={(): void => {
+          setReportTarget(null)
+        }}
+      />
     </Card>
   )
 }

@@ -1,4 +1,4 @@
-# Worker contracts, acceptance records, snapshots and amendments (W9; forward-only trusted repairs W10)
+# Worker contracts, acceptance records, snapshots and amendments (W9; forward-only trusted repairs W10; reported problems W11)
 
 Local Docker proof only (D-10): nothing here was applied to the linked project. Every legal question is in
 `LEGAL_REVIEW_REGISTER.md` (W9-L1..L12, all OPEN). Nothing in WashLink states that a contract is valid, binding,
@@ -204,6 +204,28 @@ Messages (code: text), for `supabaseErrorMessages.ts`:
 
 See `AUDIT_AND_NOTIFICATIONS.md` (W9 section): `worker_contract.*` actions and `job_application_record.retained`;
 keys `worker_contract:<contract id>:<audit event id>`; no contract text, names, reasons, notes, pay, dates or hashes.
+W11 adds `worker_contract_dispute.*` (raised, responded, withdrawn, closed, deleted, case_viewed) with the same subject
+rule and keys `contract_dispute:<id>:<event>` (`DASHBOARDS_AND_OVERSIGHT.md`).
+
+## Reported contract problems (W11; details in `DASHBOARDS_AND_OVERSIGHT.md`)
+
+- Either party of a SENT contract (the worker it was sent to, or its owner) can report a problem to WashLink with
+  `raise_contract_dispute` up to 90 days after the contract ends (declined, withdrawn, expired, terminated or
+  effectively expired). Categories: `owner_ended_contract` (worker raiser, `ended_by` owner; the review of owner
+  terminations carried forward from W9-L14), `worker_ended_contract` (owner raiser, `ended_by` worker),
+  `contract_terms`, `amendment`, `acceptance_record`, `other`. One open problem per party and contract, at most 3 per
+  party; the other party may answer once; the raiser may withdraw.
+- A super_admin reads the contract (metadata, sealed versions and their text, acceptance records, the live (worker,
+  owner) relationship status without any count) only through `admin_contract_dispute_case` /
+  `admin_contract_dispute_version_document`, only while that problem is open, and every call is audited
+  (`worker_contract_dispute.case_viewed`). There is still no super_admin access to a contract without an open problem.
+- The super_admin closes a problem with `information_shared`, `referred_outside_washlink` or `no_platform_action` and
+  a note shown to both parties. Nothing changes the contract: no W11 function writes `worker_contracts`,
+  `contract_versions` or acceptances, the W9 RPCs never read the dispute table, and an open problem never blocks a
+  decline or termination (J16). WashLink never reinstates or ends a contract, awards pay or decides legal rights
+  (D-47; W11-L5..L8). Frontend (built): "Report a problem" per row in `MyContractsPanel` /
+  `OwnerWorkerContractsPanel` (optional `contractDisputeService`), `ContractDisputeList` with respond / withdraw; the W9
+  accept / decline / terminate modals are byte-identical to HEAD.
 
 ## Limitations
 
@@ -213,13 +235,15 @@ keys `worker_contract:<contract id>:<audit event id>`; no contract text, names, 
 - Keyword flags miss paraphrases, other languages and misspellings and flag harmless text (W9-L3). The hash covers
   the rendered text, not the jsonb inputs (R6). The C7 activation check reads training state without a lock (R7).
 - Expiry is derived until W12 schedules `expire_worker_contracts` (R9). Paid booking assignment of a worker without a
-  contract is not blocked (W6-L10 stays OPEN). No super_admin or dispute access (W11). The W10 distinct-owner count (`OWNER_RELATIONSHIPS.md`) is derived from
+  contract is not blocked (W6-L10 stays OPEN). super_admin access exists only through an open reported problem (W11,
+  below). The W10 distinct-owner count (`OWNER_RELATIONSHIPS.md`) is derived from
   these contracts and is informational only: no W9 RPC, guard or policy reads it, and decline / terminate never depend on it.
 - A commit-validator bug would block every send (R2); an audit failure aborts the action, cascades included (R3).
 
 ## Rollback (local test stack only; reverse order j..a; valid only before W10 ships)
 
-W10 is now built: roll back W10 first (g..a, `OWNER_RELATIONSHIPS.md`). Its w10b rollback restores the w9c guard
+W10 and W11 are now built: roll back W11 first (i..a, `DASHBOARDS_AND_OVERSIGHT.md`; `worker_contract_disputes` has an
+FK to `worker_contracts`), then W10 (g..a, `OWNER_RELATIONSHIPS.md`). Its w10b rollback restores the w9c guard
 body (re-opening W9-S1 / C1); the W10 sync trigger on `worker_contracts` must be gone before any W9 step.
 
 j: drop the producers (audit rows and notifications stay). i: drop the retention trigger, the `job_applications`

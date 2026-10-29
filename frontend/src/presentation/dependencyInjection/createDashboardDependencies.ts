@@ -14,6 +14,7 @@ import { SupabaseShopVerificationRepository } from '../../infrastructure/reposit
 import { SupabaseWorkerRepository } from '../../infrastructure/repositories/SupabaseWorkerRepository'
 import { createCertificationDependencies, type CertificationDependencies } from './createCertificationDependencies'
 import { createContractTemplateDependencies, type ContractTemplateDependencies } from './createContractTemplateDependencies'
+import { createOversightDependencies, type OversightDependencies } from './createOversightDependencies'
 import { createTrainingDependencies, type TrainingDependencies } from './createTrainingDependencies'
 import { createWorkerContractDependencies, type WorkerContractDependencies } from './createWorkerContractDependencies'
 
@@ -29,6 +30,8 @@ interface DashboardDependencies {
   certificationDependencies: CertificationDependencies
   contractTemplateDependencies: ContractTemplateDependencies
   workerContractDependencies: WorkerContractDependencies
+  /** W11: next actions, workforce counts, WashLink reviews and reported contract problems. */
+  oversightDependencies: OversightDependencies
   ownerIdentifier: string
 }
 
@@ -71,6 +74,7 @@ export function createDashboardDependencies(
     certificationDependencies: createCertificationDependencies(),
     contractTemplateDependencies: createContractTemplateDependencies(),
     workerContractDependencies: createWorkerContractDependencies(),
+    oversightDependencies: createOversightDependencies(),
     ownerIdentifier,
   }
 }

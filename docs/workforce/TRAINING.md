@@ -147,7 +147,7 @@ completed / failed / shop_removed enrollments are not affected.
 | current shop owner | own, every status | own programs | own programs | own programs | own programs |
 | designated linked trainer | non-draft designated programs | same | accepted ones of those programs | of those enrollments | own designation rows |
 | worker | programs where they hold any enrollment | same | own rows | own rows | via `trainers_for_training_program` (names only) |
-| customer, super_admin (until W11), anon | none | none | none | none | none |
+| customer, super_admin (W11 added no training read), anon | none | none | none | none | none |
 
 Read RPCs: `training_roster_for_program`, `training_evidence_for_enrollment`, `trainers_for_training_program`
 (no contact or profile fields; names = trimmed `full_name` or a role label). The progress view follows the

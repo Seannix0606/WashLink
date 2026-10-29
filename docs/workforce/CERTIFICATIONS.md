@@ -1,4 +1,4 @@
-# Shop-issued certifications (W7)
+# Shop-issued certifications (W7; WashLink review and holds W11)
 
 Migrations `2026_10_26_w7a` .. `w7h` (staged `20261026000001..08`). Spec D (certification decision, approver and
 time, expiry / renewal, revoke / suspend with audit and review; never government-recognized), A (only verified
@@ -95,7 +95,8 @@ recorded verification, sets it active (event `reinstated` with the request id); 
 request is open decides that request in the same transaction (status `reinstated`, the reinstate reason as
 decision reason, event `reinstated` with the request id; one `certification.review_decided` notification, no
 separate `certification.reinstated`). A direct revoke (suspended -> revoked) keeps the open request open; it can
-still be decided (uphold records revoked -> revoked). A request on a removed shop stays open (W11 admin queue).
+still be decided (uphold records revoked -> revoked). A request on a removed shop stays open; since W11 the worker can escalate it to a WashLink review (basis
+`issuer_unavailable`), which withdraws it (`DASHBOARDS_AND_OVERSIGHT.md`).
 
 ## Renewal (D-5, D-22)
 
@@ -145,7 +146,8 @@ gone when it reaches `worker_profiles`).
 | current owner of the issuing shop | the shop's rows (copied `owner_id` AND `shops.owner_id`); `owner_certifications(shop)` (worker display name, effective status, flags, latest re-assessment, open review first); `certifiable_enrollments(program)`; the policy row |
 | other owners | only `applicant_verified_certifications(application)`: CURRENT certificates of an applicant inside the W5 window (D-13), no reasons, statements or history; plus `issuing_shop_currently_verified boolean` (false when the issuing shop was removed, is inactive or has no recorded verification; no reviewer data; W7-L16) |
 | trainers | nothing directly; they record re-assessments through the RPC |
-| customers, super_admin | nothing (W11 adds admin review) |
+| super_admin | no W7 read added; since W11 `certification_platform_reviews` (raw SELECT) and the audited `admin_certification_platform_review_queue` / `_case` reads; decides only WashLink reviews (reinstate / uphold), never suspends, revokes, issues or renews |
+| customers | nothing |
 | anon | no privilege |
 
 No read returns contact data; display names are a trimmed `full_name`, else `Worker` / `Trainee`.
@@ -179,19 +181,41 @@ number of new notices (idempotent). It refuses a past `p_as_of` (22023). Nothing
 - Time-shift fixtures (`test_helpers.backdate_certification`, past sessions, backdated acceptance) exist only in
   test helpers and the smoke (R7). A corrected training record leaves the certificate valid until the owner
   acts (R8, D-24).
-- No public / third-party verification, QR codes or PDFs (W7-L11); no super_admin suspension or review queue
-  (W11); no email / SMS / push / Realtime (W12); no certification or renewal fee exists.
+- No public / third-party verification, QR codes or PDFs (W7-L11); no super_admin suspension, revocation or
+  issue (D-45; W11 adds only the worker-initiated WashLink review); no email / SMS / push / Realtime (W12); no certification or renewal fee exists.
 
-## W11 carry-forwards (review polish)
+## WashLink review and holds (W11; closes the W7 carry-forwards)
 
-- Independent review decider: a super_admin (or designated panel) independent of the issuing shop can decide or
-  escalate any review request; the worker can escalate an `upheld` decision; an owner decision deadline after
-  which the request escalates; the reviewer sees the owner's reason and the worker's statement and records a
-  reason (W7-L12, D-21).
-- Stranded suspensions: when the issuing shop loses verification, is deleted, or its owner account is deleted
-  (`owner_id` null), a suspended certificate can never be reinstated and an open review has no decider. W11 must
-  give such certificates and open reviews a decider (and decide whether suspensions need a time limit) (W7-L13,
-  D-23).
+The W7 review-polish carry-forwards are covered as follows (RPCs and messages in `DASHBOARDS_AND_OVERSIGHT.md`;
+local proof only; W7-L3, W7-L12, W7-L13 and W7-L14 stay OPEN):
+
+- Independent decider (W7-L12, D-21): the certificate's worker can ask WashLink (a super_admin, shown as "WashLink
+  review", never a name) to review a suspension or revocation when the shop upheld it (within 30 days), has not
+  decided a request within 14 days, or can no longer decide (`issuer_unavailable`). Since fix cycle 1 (N2) also at
+  once, with no new shop request, when the issuing owner suspends or revokes again within 30 days after a WashLink
+  review closed as `resolved_by_shop` (basis `resuspended_after_shop_resolution`). Opening it withdraws the open
+  shop request. The reviewer sees the worker's statement, the shop's reasons, the status history and the certificate
+  facts, and records a reason (20..500). Decisions: reinstate (no current issuer verification needed; expiry and
+  snapshots unchanged) or uphold; one decision per suspension / revocation event, final within WashLink; at most 3
+  WashLink reviews per suspension / revocation event, withdrawn ones counting (fix cycle 1 N5; 23514 `You can ask
+  WashLink to review this decision at most 3 times.`). A
+  super_admin cannot open a review, suspend, revoke, issue or renew; no panel or second reviewer (W11-L1, W11-L10).
+  Admin take-over without the worker moved to W14 (only if a human changes D-44).
+- Stranded suspensions (W7-L13, D-23): a suspended certificate whose shop is gone, transferred or unverified, or
+  whose owner is gone, can always be escalated (`issuer_unavailable`, no time window; a revoked one within 30 days
+  or with an open shop request). Suspensions still have no automatic time limit (D-46, W11-L2).
+- Holds (new triggers, no W7 body changed): while a WashLink review is open the owner cannot revoke and the worker
+  cannot open a shop request (23514 `WashLink is reviewing this certification. Wait for its decision.`); an owner
+  reinstatement closes the review as `resolved_by_shop`. The UI mirrors this as a hint only (the database
+  enforces): the worker's shop "Ask for a review" is hidden and the owner is not offered "Revoke" while a review is open.
+  Cross-shop retaliation (W7-L14) is only partly addressed
+  (W11-L3).
+- `certification_status_events.platform_review_id` (no FK) links a WashLink decision event (`actor_display_name`
+  `WashLink review`). Admin id mask (fix cycle 1 N1): new BEFORE triggers `certifications_zz_platform_review_mask`
+  and `certification_status_events_zz_platform_review_mask` (sorting after the unchanged W7 guards) null
+  `status_changed_by` for a WashLink decision and `actor_id` for every event with `platform_review_id`, so the issuing
+  owner's raw W7 rows never hold the deciding administrator's id; accountability stays in
+  `certification_platform_reviews.decided_by` and the super_admin-only audit table.
 
 ## Rollback
 
@@ -201,4 +225,4 @@ trigger, the expiry function (audit rows and notifications stay). g: drop the re
 re-opens D-12). f, e: RPCs. d: helpers. c: reviews and re-assessments (drop the certifications FK / CHECK
 first). b: certifications, events, policies (IRREVERSIBLE loss of issued records; export with a trusted `copy`
 first). a: nothing. Stager: remove `test_helpers_certifications.sql` from `HELPERS_SOURCE_NAMES`. Frontend:
-revert.
+revert. Invalid while the W11 holds and `certification_platform_reviews` exist: roll back W11 first.

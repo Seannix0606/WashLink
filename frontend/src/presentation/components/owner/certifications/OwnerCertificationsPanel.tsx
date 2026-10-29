@@ -1,9 +1,11 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
 import { Award, Info } from 'lucide-react'
+import type { CertificationPlatformReviewService } from '../../../../application/services/CertificationPlatformReviewService'
 import type { Shop } from '../../../../domain/models/Shop'
 import type { CertificationDependencies } from '../../../dependencyInjection/createCertificationDependencies'
 import { Card, EmptyState, Select } from '../../../design/ui'
+import { useOwnerCertificationPlatformReviews } from '../../../hooks/useOwnerCertificationPlatformReviews'
 import { renewalRuleText } from '../../../utilities/certificationCopy'
 import { ShopIssuedNotice } from '../../certifications/ShopIssuedNotice'
 import { OwnerShopCertifications } from './OwnerShopCertifications'
@@ -12,6 +14,8 @@ import { ShopCertificationValiditySection } from './ShopCertificationValiditySec
 interface OwnerCertificationsPanelProps {
   readonly certificationDependencies: CertificationDependencies
   readonly ownerShopList: readonly Shop[]
+  /** W11: WashLink reviews of this owner's certificates; omitted by older callers. */
+  readonly platformReviewService?: CertificationPlatformReviewService
   /** Injected in tests; defaults to the time of each render. */
   readonly currentInstant?: Date
 }
@@ -20,8 +24,10 @@ interface OwnerCertificationsPanelProps {
 export function OwnerCertificationsPanel({
   certificationDependencies,
   ownerShopList,
+  platformReviewService,
   currentInstant,
 }: OwnerCertificationsPanelProps): ReactElement {
+  const platformReviews = useOwnerCertificationPlatformReviews(platformReviewService)
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null)
   const selectedShop = ownerShopList.find((ownerShop) => ownerShop.id === selectedShopId) ?? ownerShopList.at(0) ?? null
   const isShopVerified = selectedShop?.verificationStatus === 'approved'
@@ -36,6 +42,9 @@ export function OwnerCertificationsPanel({
         <p className="mt-0.5 text-xs text-[var(--color-ink-500)]">{renewalRuleText}</p>
       </header>
       <ShopIssuedNotice />
+      {platformReviews.errorMessage !== null ? (
+        <p role="status" className="text-xs text-[var(--color-warning-600)]">{`WashLink review status is unavailable: ${platformReviews.errorMessage}`}</p>
+      ) : null}
 
       {selectedShop === null ? (
         <EmptyState icon={<Award className="h-5 w-5" />} title="No shops yet" description="Add a shop first. Only a verified shop can issue certifications." />
@@ -72,6 +81,7 @@ export function OwnerCertificationsPanel({
             shopId={selectedShop.id}
             isShopVerified={isShopVerified}
             currentInstant={currentInstant ?? new Date()}
+            findPlatformReview={platformReviews.findReview}
           />
         </>
       )}

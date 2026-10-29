@@ -17,8 +17,9 @@ and must leave the existing booking, pricing, verification and rating flows work
 | W9 | Worker contracts, acceptance, snapshots, amendments | E | W8, W5 | J10, J11, J12 |
 | W10 | Owner relationships & three-distinct-owner policy | F | W9, D-3 | J13, J14, J15, J16 |
 | W11 | Role-aware dashboards & navigation (worker/owner/admin) | H | W4–W10 | UI states, counts |
-| W12 | Notification wiring for all events | I | W11 | no-duplicate, no-private-leak |
+| W12 | Notification wiring for all events | I | W11, W14 | no-duplicate, no-private-leak |
 | W13 | Hardening, docs, rollback guide, legal-review register | K | all | full J1–J18 green |
+| W14 | Platform moderation, oversight reads & admin audit (super_admin) | A, B, H, I | W11 | J2, J3, J17, J18 + moderation / audit tests |
 
 ## Increment details
 
@@ -107,6 +108,15 @@ and must leave the existing booking, pricing, verification and rating flows work
 - Count = distinct verified owners with qualifying status per D-3. View shows count/remaining.
 - Rule is informational/progress only unless D-3 decides otherwise — never blocks a worker
   from declining or terminating (J16).
+
+### W14 — Platform moderation, oversight reads & admin audit (split from W11, D-49; run after W11, before W12)
+- Worker reports of job postings (discrimination incl. age, fees, unpaid trials, misleading terms; W4, W4-L4/L7/L8/L9) with a
+  super_admin moderation queue and audited takedown (pause / close with a reason shown to the owner; snapshots never edited).
+- super_admin UI for `publish_platform_contract_template_version` (W8).
+- Redacted per-user audit reads and an admin audit log UI (W3).
+- Audited super_admin relationship reads outside disputes (W10, D-38).
+- Queue of approved shops with no recorded reviewer, re-review from it, runbook (D-10, W4).
+- Admin take-over of overdue / stranded shop review requests, only if a human changes D-44.
 
 ### W11–W13
 - Dashboards prioritizing next action; admin queues only for `super_admin`.

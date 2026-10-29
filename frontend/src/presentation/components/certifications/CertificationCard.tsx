@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react'
 import type { CertificationService } from '../../../application/services/CertificationService'
@@ -31,6 +31,10 @@ interface CertificationCardProps {
   readonly isActionPending: boolean
   readonly onReviewRequested: (certification: MyCertification) => void
   readonly onWithdrawReviewRequested: (certification: MyCertification) => void
+  /** W11: the WashLink review notice for this certificate (shown under the shop review controls). */
+  readonly platformReviewSlot?: ReactNode
+  /** W11 hold: while WashLink reviews the certificate, no new shop review request can be sent. */
+  readonly isShopReviewOnHold?: boolean
 }
 
 function describeReviewUnavailable(certification: MyCertification): string {
@@ -47,10 +51,12 @@ export function CertificationCard({
   isActionPending,
   onReviewRequested,
   onWithdrawReviewRequested,
+  platformReviewSlot,
+  isShopReviewOnHold = false,
 }: CertificationCardProps): ReactElement {
   const [isHistoryShown, setIsHistoryShown] = useState<boolean>(false)
   const isSuspendedOrRevoked = certification.status === 'suspended' || certification.status === 'revoked'
-  const canRequestReview = canRequestCertificationReview(certification, currentInstant)
+  const canRequestReview = !isShopReviewOnHold && canRequestCertificationReview(certification, currentInstant)
 
   return (
     <li className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
@@ -166,9 +172,11 @@ export function CertificationCard({
             {certification.reviewWindowEndsAt === null ? '' : ` Open until ${formatCertificationDate(certification.reviewWindowEndsAt)}.`}
           </p>
         </div>
-      ) : isSuspendedOrRevoked ? (
+      ) : isSuspendedOrRevoked && !isShopReviewOnHold ? (
         <p className="text-xs text-[var(--color-ink-500)]">{describeReviewUnavailable(certification)}</p>
       ) : null}
+
+      {platformReviewSlot}
 
       <Button
         size="sm"

@@ -23,7 +23,8 @@ Migrations (staged `20261028000001..07`; 69 staged migrations in total):
 - D-37 `minimum_distinct_owners` default 3, range 1..10, changed only by a super_admin through an audited RPC with a
   reason; enforcement fixed to `informational` by a CHECK.
 - D-38 owners see only their own relationship rows with a worker, never the worker's count, remaining, goal or other
-  owners; super_admin has no relationship read in W10 (W11 disputes).
+  owners; super_admin has no relationship read in W10. W11 added only a dispute-scoped read (below); audited
+  super_admin relationship reads outside disputes moved to W14 (W11 PLAN D-49).
 - D-39 no notifications for relationship changes (contract events already notify; W12 decides).
 - D-40 trusted contract repairs are forward-only (accepted / active -> terminated / expired).
 
@@ -257,7 +258,13 @@ every W10 function `W10: ...` (a missing one aborts). No notifications (D-39).
   triggers and fabricate rows (W3-L3, W9-S3).
 - The reason `owner_verification_not_current` also covers an inactive shop and an acceptance-hash mismatch; the
   worker text "The shop's verification is not current right now." is approximate in those cases.
-- No notification when a relationship stops counting (D-39, W10-L3). Super_admin / dispute reads come in W11.
+- No notification when a relationship stops counting (D-39, W10-L3).
+- W11 (dispute-scoped status, `DASHBOARDS_AND_OVERSIGHT.md`): while a reported contract problem is OPEN,
+  `admin_contract_dispute_case` returns a `relationship` block with only `status` and `status_reason` of that contract's
+  (worker, owner) pair, derived live by `worker_owner_relationship_derive` (null when there is no accepted contract);
+  never the count, remaining, minimum or other owners, and nothing once the problem is closed or withdrawn. Every call
+  is audited. `owner_dashboard_summary().relationship_needs_attention_count` counts the owner's live `suspended` rows; the worker Overview (`worker/dashboard/WorkerOverviewPanel.tsx`) reuses the W10 progress card. The W11 owner copy labels this count "Relationships needing attention" (`presentation/utilities/workforceDashboardCopy.ts:34`, `workforceDashboardDisplay.ts:86`), matching the W10 owner label (C1, W10-L9). Other
+  super_admin relationship reads are W14.
 
 ## Rollback (local test stack only; reverse order g..a)
 
@@ -266,7 +273,8 @@ g: drop the producer (audit rows stay). f: drop the three reads. e: drop the tri
 trusted `copy` first; every non-`owner_removed` row is re-derivable by re-applying d..g). c: drop RPC, producer, guard
 and table (IRREVERSIBLE for a changed value and reason; the audit keeps from / to values). b: re-create the w9c guard
 body from the w10b ROLLBACK block (re-opens W9-S1 / C1). a: nothing. Stager: drop the 5th helper entry. Frontend:
-revert. The W9 rollback is invalid while the W10 triggers exist on `worker_contracts`.
+revert. The W9 rollback is invalid while the W10 triggers exist on `worker_contracts`. Roll back W11 (i..a) before W10:
+its dispute case and summaries call `worker_owner_relationship_derive` and `owner_worker_relationships`.
 
 ## Tests
 

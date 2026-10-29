@@ -1,4 +1,4 @@
-# Audit events and notifications (W3, job openings W4, job applications W5, training W6, certifications W7, contract templates W8, worker contracts W9, owner relationships W10)
+# Audit events and notifications (W3, job openings W4, job applications W5, training W6, certifications W7, contract templates W8, worker contracts W9, owner relationships W10, oversight W11)
 
 Scope: what `supabase/migrations/2026_10_24_w3a..w3d_*.sql` add. Everything here was proven on the local Docker stack
 only (pgTAP files `j17_w3_*`, `j18_w3_flows`, and `scripts/supabase-test/w3-api-smoke.mjs`). It says nothing about
@@ -25,7 +25,7 @@ Columns: `id` bigint identity (insertion order), `created_at` (forced to `now()`
 | INSERT | Only `record_workforce_audit_event(p_action, p_subject_type, p_subject_id, p_subject_profile_id, p_payload)` (definer, revoked from public, anon, authenticated, service_role). Actor fields are derived: `actor_id = auth.uid()`; `actor_kind` = user if uid, else trusted_session if `is_trusted_db_session()`, else system (e.g. GoTrue `deleteUser`); a trusted SQL session that sets `request.jwt.claims` is recorded as `user` (see Limitations); `actor_role = current_user_profile_role()`. Direct INSERT -> 42501 `Audit events are written only by the server.` (trigger) or permission denied. |
 | UPDATE | Never: 42501 `Audit events are append-only.` for every session, super_admin, service_role and trusted SQL included. |
 | DELETE / TRUNCATE | 42501 unless the trusted retention path below holds. |
-| SELECT | super_admin only (`wae_select_super_admin`). An event about one party may carry the other party's id (reviewer, owner), so W11 adds redacted per-user functions instead of widening this policy. |
+| SELECT | super_admin only (`wae_select_super_admin`). An event about one party may carry the other party's id (reviewer, owner), so redacted per-user functions (moved from W11 to W14, W11 PLAN D-49) are planned instead of widening this policy. W11 adds no audit read. |
 
 Payload rule `workforce_audit_payload_is_safe(jsonb)` (CHECK, 23514 on violation): at most 2048 bytes, nesting depth
 at most 3; no key (recursive) matching
@@ -66,14 +66,12 @@ No retention period is claimed (W3-L1). Export before purging if a record is req
 | same | content changed while not draft, status unchanged | `job_opening.updated`; same | shop_id, status, changed_fields (column NAMES only) | none |
 | `job_openings_audit` AFTER DELETE | always (draft delete or cascade) | `job_opening.deleted`; same | shop_id, from_status, deleted_by = `owner_account_deleted` / `shop_deleted` / `owner` / `trusted_session` (checked in that order) | none |
 
-WHEN clauses are used instead of `UPDATE OF <column>`: a BEFORE trigger change (S6 sets the status to pending on a
-name edit) is not in the UPDATE target list, so `UPDATE OF` would miss it. FK `on delete set null` cascades (reviewing
-admin deleted) change neither status nor submitted_at and write no shop event.
+WHEN clauses are used instead of `UPDATE OF <column>`: a BEFORE trigger change (S6 sets the status to pending on a name edit) is not
+in the UPDATE target list, so `UPDATE OF` would miss it. FK `on delete set null` cascades (reviewing admin deleted) change neither status nor submitted_at and write no shop event.
 
 `shop_verification_review_log` (view, `security_invoker = true`, super_admin only through the base-table RLS):
-`event_id, shop_id, action, from_status, to_status, reviewed_by (= actor_id), actor_role, created_at` over
-`shop.verification_%` events. This is the R-4 append-only review log; it survives deletion of the reviewer, the owner
-and the shop. W7/W10 still snapshot verification at issue time.
+`event_id, shop_id, action, from_status, to_status, reviewed_by (= actor_id), actor_role, created_at` over `shop.verification_%` events.
+This is the R-4 append-only review log; it survives deletion of the reviewer, the owner and the shop. W7/W10 still snapshot verification at issue time.
 
 ## notifications
 
@@ -133,7 +131,7 @@ and on focus). W12 may add Realtime Broadcast with `realtime.messages` policies,
   and reviewed, and no client can write.
 - Up to 60 s polling delay (R6). Audit rows keep pseudonymous user ids after account deletion (R7, by design for R-4;
   retention is a legal question, W3-L1).
-- Audit read for actors/subjects and an admin audit UI are W11; email/SMS/push and W4-W10 events are W12.
+- Audit read for actors/subjects and an admin audit UI moved from W11 to W14 (D-49); email/SMS/push and W4-W11 events are W12.
 
 ## Rollback
 
@@ -329,14 +327,12 @@ write flag is a trusted repair). Draft saves are not audited (W5 / W6 rule); ref
 | trusted status repair | the matching action with changed_by trusted_session | none |
 | accepted application copied before a shop / owner cascade | `job_application_record.retained` | none |
 
-Label: `notification_safe_label(shop_name_snapshot, 'The shop')`. Keys: `worker_contract:<contract id>:<audit event
-id>` (at most one notification per recipient per event; `w9_notifications_one_per_event_idempotent`). No W9 table is
-published to Realtime; clients poll.
+Label: `notification_safe_label(shop_name_snapshot, 'The shop')`. Keys: `worker_contract:<contract id>:<audit event id>` (at most one
+notification per recipient per event; `w9_notifications_one_per_event_idempotent`). No W9 table is published to Realtime; clients poll.
 
 ## W10 owner relationships and workforce policies (`2026_10_28_w10c`, `w10g`; details in `OWNER_RELATIONSHIPS.md`)
 
-Producers (definer, pinned, revoked from every client role): `worker_owner_relationships_audit` (AFTER INSERT / UPDATE /
-DELETE) and `workforce_policies_audit` (AFTER UPDATE when `integer_value` changes); `changed_by` via `worker_contract_changed_by()`.
+Producers (definer, pinned, revoked from every client role): `worker_owner_relationships_audit` (AFTER INSERT / UPDATE / DELETE) and `workforce_policies_audit` (AFTER UPDATE when `integer_value` changes); `changed_by` via `worker_contract_changed_by()`.
 
 | Event | Audit action (subject_type) | Payload keys |
 |---|---|---|
@@ -345,6 +341,10 @@ DELETE) and `workforce_policies_audit` (AFTER UPDATE when `integer_value` change
 | worker account deleted (cascade) | `.deleted` | relationship_id, worker_id, owner_id, from_status, deleted_by `worker_account_deleted` |
 | minimum changed (RPC or trusted SQL) | `workforce_policy.changed` (`workforce_policy`) | policy_key, from_value, to_value, revision, changed_by |
 
-Never names, free text, dates or another owner's ids; the policy reason stays on the policy row (`last_change_reason`). A
-refresh that changes nothing writes no event; refused actions write nothing. No notifications for any W10 event (D-39) and
-no W10 table in Realtime. An audit failure aborts the causing action (W3 rule), including a decline or termination (R2).
+Never names, free text, dates or another owner's ids; the policy reason stays on the policy row (`last_change_reason`). A refresh that
+changes nothing writes no event; refused actions write nothing. No notifications for any W10 event (D-39) and no W10 table in Realtime. An
+audit failure aborts the causing action (W3 rule), including a decline or termination (R2).
+
+## W11 WashLink certification reviews, reported contract problems (`2026_10_29_w11i`, case views w11d / w11g)
+
+Moved to `DASHBOARDS_AND_OVERSIGHT.md` ("Audit and notifications") to keep this file within 350 lines: `certification_platform_review.*` and `worker_contract_dispute.*` actions (incl. audited admin `case_viewed` reads, which notify nobody), payload keys (never statements, reasons, notes, names or dates; `j6_w11_oversight_audit_and_notifications`), fixed in-app texts (D-48) and keys `certification_platform_review:<id>:<event>` / `contract_dispute:<id>:<event>`.

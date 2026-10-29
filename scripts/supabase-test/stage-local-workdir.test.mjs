@@ -252,15 +252,14 @@ test('runner_refuses_linked_workdir', () => {
   }
 })
 
-// W7 / W8 / W10: every helper file is seeded, in order, and a missing one is refused before staging.
+// W7 / W8 / W10 / W11: every helper file is seeded, in order, and a missing one is refused before staging.
 test('stager_seeds_every_helper_file_in_order', () => {
-  assert.deepEqual(HELPERS_SOURCE_NAMES, ['test_helpers.sql', 'test_helpers_certifications.sql', 'test_helpers_contract_templates.sql',
-    'test_helpers_worker_contracts.sql', 'test_helpers_owner_relationships.sql'])
+  const suffixes = ['', '_certifications', '_contract_templates', '_worker_contracts', '_owner_relationships', '_oversight']
+  assert.deepEqual(HELPERS_SOURCE_NAMES, suffixes.map((suffix) => `test_helpers${suffix}.sql`))
   const root = createFakeRepo()
   const result = stageLocalWorkdir({ repoRoot: root })
   const seed = sectionLines(fs.readFileSync(path.join(result.outputDirectory, 'supabase', 'config.toml'), 'utf8'), '[db.seed]')
-  assert.ok(seed.includes(`sql_paths = [${['', '_certifications', '_contract_templates', '_worker_contracts', '_owner_relationships']
-    .map((suffix) => `"./local_test_baseline/test_helpers${suffix}.sql"`).join(', ')}]`))
+  assert.ok(seed.includes(`sql_paths = [${suffixes.map((suffix) => `"./local_test_baseline/test_helpers${suffix}.sql"`).join(', ')}]`))
   fs.rmSync(path.join(root, ...BASELINE_DIRECTORY, 'test_helpers_certifications.sql'))
   fs.mkdirSync(path.join(root, STAGED_DIRECTORY_NAME, 'keep'), { recursive: true })
   assert.throws(() => stageLocalWorkdir({ repoRoot: root }), /Local test baseline file not found/)

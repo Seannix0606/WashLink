@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react'
+import type { OwnerCertificationPlatformReview } from '../../../../domain/models/CertificationPlatformReview'
 import { useState } from 'react'
 import { Award } from 'lucide-react'
 import type { CertificationStatusChange, OwnerCertification } from '../../../../domain/models/Certification'
@@ -16,6 +17,7 @@ import { ownerCertificationsEmptyDescription } from '../../../utilities/certific
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 import { CertificationReviewDecisionModal, CertificationStatusChangeModal } from './CertificationStatusChangeModal'
 import { OwnerCertificationListItem } from './OwnerCertificationListItem'
+import { OwnerPlatformReviewNotice } from './OwnerPlatformReviewNotice'
 import { RecordReassessmentModal } from './RecordReassessmentModal'
 import { RenewCertificationModal } from './RenewCertificationModal'
 
@@ -38,6 +40,8 @@ interface OwnerShopCertificationsProps {
   readonly shopId: string
   readonly isShopVerified: boolean
   readonly currentInstant: Date
+  /** W11: the newest WashLink review of a certificate, if any (from owner_certification_platform_reviews). */
+  readonly findPlatformReview?: (certificationId: string) => OwnerCertificationPlatformReview | undefined
 }
 
 function toActionTarget(certification: OwnerCertification, action: OwnerCertificationAction): ActionTarget {
@@ -56,6 +60,7 @@ export function OwnerShopCertifications({
   shopId,
   isShopVerified,
   currentInstant,
+  findPlatformReview,
 }: OwnerShopCertificationsProps): ReactElement {
   const { certificationService, certificationReviewService } = certificationDependencies
   const certifications = useOwnerCertifications(certificationService, shopId)
@@ -102,19 +107,27 @@ export function OwnerShopCertifications({
         <p className="text-sm text-[var(--color-ink-500)]">No certificates match this filter.</p>
       ) : (
         <ul aria-label="Certificate list" className="space-y-2">
-          {visibleCertifications.map((certification) => (
-            <OwnerCertificationListItem
-              key={certification.certificationId}
-              certificationService={certificationService}
-              certification={certification}
-              availableActions={ownerCertificationActionsForShop(certification, isShopVerified, currentInstant)}
-              currentInstant={currentInstant}
-              isActionPending={actions.pendingSubjectId === certification.certificationId}
-              onActionRequested={(targetCertification, action): void => {
-                setActionTarget(toActionTarget(targetCertification, action))
-              }}
-            />
-          ))}
+          {visibleCertifications.map((certification) => {
+            const platformReview = findPlatformReview?.(certification.certificationId)
+            // W11 hold: the database refuses a revocation while a WashLink review is open, so it is not offered.
+            const isUnderPlatformReview = platformReview?.status === 'open'
+            return (
+              <OwnerCertificationListItem
+                key={certification.certificationId}
+                certificationService={certificationService}
+                certification={certification}
+                availableActions={ownerCertificationActionsForShop(certification, isShopVerified, currentInstant).filter(
+                  (action) => !(isUnderPlatformReview && action === 'revoke'),
+                )}
+                platformReviewSlot={platformReview === undefined ? null : <OwnerPlatformReviewNotice platformReview={platformReview} />}
+                currentInstant={currentInstant}
+                isActionPending={actions.pendingSubjectId === certification.certificationId}
+                onActionRequested={(targetCertification, action): void => {
+                  setActionTarget(toActionTarget(targetCertification, action))
+                }}
+              />
+            )
+          })}
         </ul>
       )}
 

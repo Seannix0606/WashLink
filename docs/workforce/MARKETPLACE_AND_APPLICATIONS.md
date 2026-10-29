@@ -110,7 +110,7 @@ re-applying to that opening (W5 PLAN 4.1).
 |---|---|---|
 | worker | own rows, every status (closed drafts included) | published openings of P15 shops, plus any non-draft opening they hold a SENT application (submitted_at set) to (folded into `jo_select_published_for_workers`) |
 | owning owner | SENT rows (`submitted_at is not null`) of openings whose shop they currently own (`is_current_job_opening_owner`: role owner and `shops.owner_id = auth.uid()` via the opening's shop, plus the copied `owner_id`), every later status | own openings (W4) |
-| other owners, customers, super_admin | none (no super_admin path until W11) | W4 rules |
+| other owners, customers, super_admin | none (no super_admin path; posting moderation moved from W11 to W14) | W4 rules |
 | anon | no table privilege | none |
 
 Applicant profiles (`applicant_profiles_for_job_opening`): current owner of the opening's shop
@@ -160,7 +160,7 @@ pause and opening removal. Draft edits write nothing. Keys embed the audit event
 ## Limitations
 
 - No auto-close on the deadline (no scheduler): apply refuses instead. Closing updates up to 500 rows in the owner's transaction (R2).
-- Snapshots keep owner free text permanently (P20); a W11 takedown can only delete the row through a trusted session (R4).
+- Snapshots keep owner free text permanently (P20); the posting takedown moved from W11 to W14 (planned as an audited pause / close with a reason; snapshots are never edited), and removing an application row still needs a trusted session (R4).
 - Deleting a worker profile removes its applications, accepted ones included; the owner is told without the name (R5).
 - Retained application records (W9, `2026_10_26_w9i`, W5-L10): when a shop or owner account deletion cascades and
   deletes an ACCEPTED application while the worker profile still exists, the AFTER DELETE trigger

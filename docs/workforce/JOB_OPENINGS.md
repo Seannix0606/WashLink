@@ -78,7 +78,7 @@ pay or employment terms." The form never pre-fills pay, benefits or schedule.
 - Editing a published opening changes what earlier applicants saw; W5 keeps a write-once snapshot on each application (C-W4-1 closed in W5).
 - Deleting a non-draft opening through PostgREST affects 0 rows (RLS filters it before the guard), so no error is returned; the guard message `Only draft job openings can be deleted.` is defence in depth.
 - The RPC flag relies on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`; R6).
-- Owner free text is length-checked only; no moderation until W11 (W4-L4).
+- Owner free text is length-checked only; no moderation yet: worker reports and a super_admin moderation queue moved from W11 to W14 (W11 PLAN D-49; W4-L4).
 - An audit failure aborts the action, including shop / account deletion cascades; the w4a preflight reduces drift risk (R5).
 
 ## Rollback

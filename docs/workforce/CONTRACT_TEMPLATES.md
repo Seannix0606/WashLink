@@ -185,7 +185,7 @@ still passes.
 - R6: owner free text is unfiltered except for safeguard impersonation (W8-L5).
 - R7: the jsonb text form is the hash canonical form; a Postgres change to jsonb output would change new hashes
   only (stored hashes stay; the validator compares within one server version).
-- No PDF / print export, no e-signature (D-6), no notifications (D-30), no super_admin UI (W11).
+- No PDF / print export, no e-signature (D-6), no notifications (D-30), no super_admin UI (moved from W11 to W14, W11 PLAN D-49).
 - Deviations from PLAN.md: `render_contract_template_clause` is STABLE (it reads the placeholder allowlist) and
   lives in w8g next to its reader; the copy helpers (`contract_template_latest_platform_version`,
   `contract_template_owner_clause_list`, `contract_template_editable_bodies`, `contract_template_shop_terms`)

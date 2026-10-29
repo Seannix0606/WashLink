@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import type { CertificationService } from '../../../../application/services/CertificationService'
@@ -27,6 +27,8 @@ interface OwnerCertificationListItemProps {
   readonly currentInstant: Date
   readonly isActionPending: boolean
   readonly onActionRequested: (certification: OwnerCertification, action: OwnerCertificationAction) => void
+  /** W11: the WashLink review notice for this certificate. */
+  readonly platformReviewSlot?: ReactNode
 }
 
 /** One issued certificate in the owner's list, with only the actions the lifecycle allows. */
@@ -37,6 +39,7 @@ export function OwnerCertificationListItem({
   currentInstant,
   isActionPending,
   onActionRequested,
+  platformReviewSlot,
 }: OwnerCertificationListItemProps): ReactElement {
   const [isHistoryShown, setIsHistoryShown] = useState<boolean>(false)
 
@@ -85,6 +88,8 @@ export function OwnerCertificationListItem({
           ) : null}
         </div>
       ) : null}
+
+      {platformReviewSlot}
 
       {certification.isRenewalWindowOpen && certification.status === 'active' ? (
         <p className="text-xs text-[var(--color-ink-700)]">

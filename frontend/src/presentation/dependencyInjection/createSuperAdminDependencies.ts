@@ -4,12 +4,15 @@ import { WorkforcePolicyService } from '../../application/services/WorkforcePoli
 import { SupabaseShopRepository } from '../../infrastructure/repositories/SupabaseShopRepository'
 import { SupabaseShopVerificationRepository } from '../../infrastructure/repositories/SupabaseShopVerificationRepository'
 import { SupabaseWorkforcePolicyRepository } from '../../infrastructure/repositories/SupabaseWorkforcePolicyRepository'
+import { createOversightDependencies, type OversightDependencies } from './createOversightDependencies'
 
-interface SuperAdminDependencies {
+export interface SuperAdminDependencies {
   readonly shopService: ShopService
   readonly shopVerificationService: ShopVerificationService
   /** W10: informational workforce policies (super_admin; the database checks the role). */
   readonly workforcePolicyService: WorkforcePolicyService
+  /** W11: overview counts, WashLink review queue and reported contract problems (the database checks the role). */
+  readonly oversightDependencies: OversightDependencies
 }
 
 export function createSuperAdminDependencies(): SuperAdminDependencies {
@@ -21,5 +24,5 @@ export function createSuperAdminDependencies(): SuperAdminDependencies {
     supabaseShopVerificationRepository,
   )
   const workforcePolicyService = new WorkforcePolicyService(new SupabaseWorkforcePolicyRepository())
-  return { shopService, shopVerificationService, workforcePolicyService }
+  return { shopService, shopVerificationService, workforcePolicyService, oversightDependencies: createOversightDependencies() }
 }
