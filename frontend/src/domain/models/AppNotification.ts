@@ -1,3 +1,5 @@
+import type { NotificationArea } from '../utilities/notificationAreas'
+
 /**
  * An in-app notification for the signed-in account (W3).
  * Named AppNotification so it never collides with the DOM `Notification` global.
@@ -13,6 +15,11 @@ export interface AppNotification {
   readonly isRead: boolean
 }
 
+/** W12 (D-68): an inbox notification with its client-side area (unknown categories are `other`). */
+export interface InboxNotification extends AppNotification {
+  readonly area: NotificationArea
+}
+
 /** A notification exactly as stored (read state is a nullable timestamp). */
 export interface StoredNotification {
   readonly identifier: string
@@ -21,4 +28,16 @@ export interface StoredNotification {
   readonly body: string
   readonly createdAt: string
   readonly readAt: string | null
+}
+
+/** W12 keyset position: the last row already shown, as stored (`created_at` text and `id`). */
+export interface NotificationPageCursor {
+  readonly createdAt: string
+  readonly identifier: string
+}
+
+/** W12 inbox page: newest first by (created_at, id); `before` null is the first page. */
+export interface NotificationPageRequest {
+  readonly before: NotificationPageCursor | null
+  readonly isUnreadOnly: boolean
 }

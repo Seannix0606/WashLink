@@ -112,7 +112,7 @@ Notification texts (in-app only, W3-L2):
 Neither table is in `supabase_realtime` (W3b/W3c drop them if present; a FOR ALL TABLES publication is NOTICE-logged
 for D-10 row 19). Reason: postgres_changes authorization depends on production Realtime/RLS settings that are unknown
 (D-10), and one missed check would broadcast inboxes. The client polls (W3 PLAN section 5: every 60 s while visible,
-and on focus). W12 may add Realtime Broadcast with `realtime.messages` policies, proven by tests.
+and on focus). W12 kept polling and added no Realtime Broadcast (D-62, `NOTIFICATIONS_AND_SCHEDULING.md`).
 
 ## Limitations
 
@@ -131,7 +131,7 @@ and on focus). W12 may add Realtime Broadcast with `realtime.messages` policies,
   and reviewed, and no client can write.
 - Up to 60 s polling delay (R6). Audit rows keep pseudonymous user ids after account deletion (R7, by design for R-4;
   retention is a legal question, W3-L1).
-- Per-user and admin audit reads, W14 events and notifications: `PLATFORM_MODERATION_AND_AUDIT.md`; email/SMS/push and W4-W14 events are W12.
+- Per-user and admin audit reads, W14 events and notifications: `PLATFORM_MODERATION_AND_AUDIT.md`. Category registry, de-duplication, in-app-only channel (no email/SMS/push) and scheduled jobs (W12): `NOTIFICATIONS_AND_SCHEDULING.md`.
 
 ## Rollback
 
@@ -261,8 +261,8 @@ Labels: `notification_safe_label(program_title_snapshot, 'your training')` and
 `(shop_name_snapshot, 'The shop')`. Keys: `certification:<certification id>:<audit event id>` (one notification
 per recipient per event, `w7_notifications_idempotent_one_per_event`) and, for expiry notices,
 `certification_expiry:<id>:due` / `:expired` (idempotent: the function counts only newly created notices and
-refuses a past `p_as_of`, 22023). The expiry function is internal (no client role may execute it); W12 schedules
-it. Trusted SQL (no `auth.uid()`) and cascades notify nobody.
+refuses a past `p_as_of`, 22023). The expiry function is internal (no client role may execute it); W12 calls it
+from the human-registered `certification_expiry_notices` job (no date). Trusted SQL (no `auth.uid()`) and cascades notify nobody.
 
 ## W8 contract templates (`2026_10_26_w8h`)
 
@@ -288,8 +288,8 @@ aborts the action (W3 rule); refused actions write nothing (`w8_refused_action_w
 | platform starter seed (w8e, before the producers existed) | w8h records `contract_template.created` and `.version_saved` once (changed_by trusted_session) | none |
 
 No notifications in W8 (D-30): the owner acts on their own data; the owner list shows "A newer standard template
-is available" from live state (`owner_contract_templates().newer_standard_available`). W12 decides whether a
-newer standard ever notifies owners.
+is available" from live state (`owner_contract_templates().newer_standard_available`). W12 decided (D-60)
+that a newer standard never notifies owners.
 
 ## W9 worker contracts (`2026_10_26_w9j`)
 

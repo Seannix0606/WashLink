@@ -1,9 +1,17 @@
-import type { StoredNotification } from '../../domain/models/AppNotification'
+import type {
+  NotificationPageCursor,
+  NotificationPageRequest,
+  StoredNotification,
+} from '../../domain/models/AppNotification'
 import type { NotificationRepository } from '../../domain/repositories/NotificationRepository'
+import { isValidNotificationCursor } from '../../domain/utilities/notificationCursor'
 import { getSupabaseClient } from '../supabase/supabaseClient'
 import { toUserFacingError } from '../supabase/supabaseErrorMessages'
 
-/** Explicit columns only: never `*`, never `recipient_id` (RLS scopes rows to auth.uid()). */
+/**
+ * Explicit columns only: never `*`, never `recipient_id` (RLS scopes rows to auth.uid()), and
+ * never `subject_type`, `subject_id` or `idempotency_key` (W12).
+ */
 export const notificationSelectColumns = 'id, category, title, body, created_at, read_at'
 
 interface SupabaseNotificationRow {
@@ -26,13 +34,41 @@ function toStoredNotification(notificationRow: SupabaseNotificationRow): StoredN
   }
 }
 
+export const invalidNotificationKeysetCursorMessage = 'Older notifications could not be loaded. Reload the inbox and try again.'
+
+/**
+ * W12 keyset filter for "Load older": rows strictly after `before` in (created_at desc, id desc).
+ * NotificationService validates the cursor first; this re-checks it with the same rules (strict
+ * ISO timestamp and uuid, N8) and throws before any request, so no caller can put PostgREST
+ * separators into the filter.
+ */
+export function buildNotificationKeysetFilter(before: NotificationPageCursor): string {
+  if (!isValidNotificationCursor(before)) {
+    throw new Error(invalidNotificationKeysetCursorMessage)
+  }
+  return `created_at.lt.${before.createdAt},and(created_at.eq.${before.createdAt},id.lt.${before.identifier})`
+}
+
 export class SupabaseNotificationRepository implements NotificationRepository {
-  public async listMyNotifications(limit: number): Promise<StoredNotification[]> {
-    const queryResponse = await getSupabaseClient()
+  public async listMyNotifications(
+    limit: number,
+    pageRequest?: NotificationPageRequest,
+  ): Promise<StoredNotification[]> {
+    let notificationQuery = getSupabaseClient()
       .from('notifications')
       .select(notificationSelectColumns)
       .order('created_at', { ascending: false })
-      .limit(limit)
+    if (pageRequest !== undefined) {
+      // W12 paging: the id tie-break makes the order total, matching the keyset filter.
+      notificationQuery = notificationQuery.order('id', { ascending: false })
+      if (pageRequest.isUnreadOnly) {
+        notificationQuery = notificationQuery.is('read_at', null)
+      }
+      if (pageRequest.before !== null) {
+        notificationQuery = notificationQuery.or(buildNotificationKeysetFilter(pageRequest.before))
+      }
+    }
+    const queryResponse = await notificationQuery.limit(limit)
     if (queryResponse.error) {
       throw toUserFacingError(queryResponse.error, 'Could not load your notifications.')
     }

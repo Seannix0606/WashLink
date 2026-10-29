@@ -53,6 +53,19 @@ export function NotificationCenter({
           onMarkAllReadRequested={(): void => {
             void notificationInbox.markAllRead()
           }}
+          inboxPaging={{
+            loadedNotificationCount: notificationInbox.loadedNotificationCount,
+            isUnreadOnly: notificationInbox.isUnreadOnly,
+            areaFilter: notificationInbox.areaFilter,
+            hasOlderNotifications: notificationInbox.hasOlderNotifications,
+            isLoadingOlder: notificationInbox.isLoadingOlder,
+            loadOlderErrorMessage: notificationInbox.loadOlderErrorMessage,
+            onUnreadOnlyChange: notificationInbox.setUnreadOnly,
+            onAreaFilterChange: notificationInbox.setAreaFilter,
+            onLoadOlderRequested: (): void => {
+              void notificationInbox.loadOlderNotifications()
+            },
+          }}
         />,
         // Rendered at body level: the sticky top bar uses backdrop-blur, which would clip a fixed drawer.
         document.body,

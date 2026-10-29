@@ -162,10 +162,16 @@ earlier are never touched (no auto-close, no transition block). No lock on certi
 
 ## Expiry notices (D-25)
 
-`enqueue_certification_expiry_notices(p_as_of default now())` (internal; trusted SQL or the W12 scheduler only)
+`enqueue_certification_expiry_notices(p_as_of default now())` (internal; trusted SQL or the W12 runner only)
 enqueues `certification.expiring` for active certificates expiring within 30 days of `p_as_of` and
 `certification.expired` for expired ones, keys `certification_expiry:<id>:due` / `:expired`, and returns the
-number of new notices (idempotent). It refuses a past `p_as_of` (22023). Nothing schedules it until W12.
+number of new notices (idempotent). It refuses a past `p_as_of` (22023).
+
+Since W12 (`NOTIFICATIONS_AND_SCHEDULING.md`) the job `certification_expiry_notices` calls it through
+`run_workforce_scheduled_job` with `now()` (no date parameter on the scheduled path, D-64); the HUMAN-RUN register script
+schedules that job hourly at minute 17 (UTC). **No job is registered until a person approves and runs that script**; until
+then no expiry notice is sent and expiry is only derived on read (W12-L4). Proven locally: due then expired once each, a
+superseded certificate gets none, repeated runs create nothing (`j17_w12_notification_dedup`).
 
 ## Limitations
 
@@ -173,7 +179,8 @@ number of new notices (idempotent). It refuses a past `p_as_of` (22023). Nothing
   bodies are replaced (row 35).
 - Not tamper-proof (R5): trusted SQL can set the flag and change status, or disable triggers (W6-L5). Flags rely
   on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`).
-- Effective status uses the DB clock; expiry notices are unscheduled until W12 (R2, W7-L10).
+- Effective status uses the DB clock; expiry notices are sent only once a human registers the W12 jobs (R2, W7-L10,
+  W12-L3, W12-L4).
 - The D-20 check reads certificate state without a lock: a suspension committed concurrently with an apply may
   not be seen (R3).
 - An audit failure aborts the action, cascades included (R4). A worker account deletion removes the worker's
@@ -182,7 +189,7 @@ number of new notices (idempotent). It refuses a past `p_as_of` (22023). Nothing
   test helpers and the smoke (R7). A corrected training record leaves the certificate valid until the owner
   acts (R8, D-24).
 - No public / third-party verification, QR codes or PDFs (W7-L11); no super_admin suspension, revocation or
-  issue (D-45; W11 adds only the worker-initiated WashLink review); no email / SMS / push / Realtime (W12); no certification or renewal fee exists.
+  issue (D-45; W11 adds only the worker-initiated WashLink review); no email / SMS / push / Realtime (W12 kept in-app only and polling, D-61 / D-62); no certification or renewal fee exists.
 
 ## WashLink review and holds (W11; closes the W7 carry-forwards)
 

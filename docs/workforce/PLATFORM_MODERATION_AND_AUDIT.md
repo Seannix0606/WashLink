@@ -74,7 +74,7 @@ every client role); 32 are SECURITY DEFINER with `search_path = public, pg_temp`
   owner notified) or requests changes / rejects through the existing decision path; runbook below.
 - D-57 console tabs (extends D-42): Overview, Shop verification (with an "Approved without a recorded review" view),
   Posting reports, Certification reviews, Contract disputes, Standard contract, Relationships, Audit log, Policies.
-- D-58 the fixed in-app notification texts below; W12 de-duplicates and schedules.
+- D-58 the fixed in-app notification texts below; W12 registered them and proved de-duplication (`NOTIFICATIONS_AND_SCHEDULING.md`).
 
 ## Tables (w14b, w14g; all four also have `updated_at`, stamped = `created_at` on immutable rows, D2)
 

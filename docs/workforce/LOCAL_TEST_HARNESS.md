@@ -1,4 +1,4 @@
-# Local test harness (W1, hardened in W2, extended in W3..W11 and W14)
+# Local test harness (W1, hardened in W2, extended in W3..W12 and W14)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,13 +20,13 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after the W14 DB build): the reset applies 87 migrations (baseline `00000000000000`, the 2026_04_17 copy, owner-policies baseline
+Expected (after the W12 DB build): the reset applies 92 migrations (baseline `00000000000000`, the 2026_04_17 copy, owner-policies baseline
 `20260417000002`, the other 4 pre-W2 copies, then per increment, each starting with its preflight where it has one: W2 `20261024000001..06`, W3
 `20261024000007..11` (w3a, w3b, w3c, w3d0 preflight, w3d), W4 `20261024000012..15`, W5 `20261025000001..05`, W6 `20261025000006..14`, W7
 `20261026000001..08`, W8 `20261026000009..16`, W9 `20261026000017..26`, W10 `20261028000001..07`, W11 `20261029000001..09`, W14 `20261029000010..18`:
-w14a preflight, w14b..w14i) and seeds the seven helper files in order (`test_helpers.sql`, `test_helpers_certifications.sql`,
+w14a preflight, w14b..w14i; W12 `20261030000001..05`: w12a preflight, w12b..w12e) and seeds the eight helper files in order (`test_helpers.sql`, `test_helpers_certifications.sql`,
 `test_helpers_contract_templates.sql`, `test_helpers_worker_contracts.sql`, `test_helpers_owner_relationships.sql`, `test_helpers_oversight.sql`,
-then `test_helpers_moderation.sql`); `test db` runs 91 files / 2876 tests after W14 fix cycle 1 (90 / 2850 after the W14 DB build; 82 / 2622 after W11 fix cycle 1; 81 / 2589 after the W11 DB build; 72 /
+`test_helpers_moderation.sql`, then `test_helpers_scheduling.sql`); `test db` runs 99 files / 3051 tests after W12 fix cycle 1 (98 / 3028 after the W12 DB build; 91 / 2876 after W14 fix cycle 1; 90 / 2850 after the W14 DB build; 82 / 2622 after W11 fix cycle 1; 81 / 2589 after the W11 DB build; 72 /
 2347 after the W10 DB build; 63 / 2178 after W9; 54 / 1947 before W9; 47 / 1713 before W8; 38 / 1409 before W7) and ends with `Result: PASS`. There
 are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
@@ -48,13 +48,13 @@ are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
   (`20260417000001`, adds `bookings.shop_id`) and before every later committed migration, so W2 migrations can drop or replace
   `bookings_owner_select_local_test` / `bookings_owner_update_local_test`; `test_helpers.sql`, `test_helpers_certifications.sql` (W7),
   `test_helpers_contract_templates.sql` (W8), `test_helpers_worker_contracts.sql` (W9), `test_helpers_owner_relationships.sql` (W10)
-  `test_helpers_oversight.sql` (W11) then `test_helpers_moderation.sql` (W14; `HELPERS_SOURCE_NAMES`, all required) -> the staged seed in that order (helpers only, runs after all migrations). The stager aborts if any committed
+  `test_helpers_oversight.sql` (W11), `test_helpers_moderation.sql` (W14) then `test_helpers_scheduling.sql` (W12; `HELPERS_SOURCE_NAMES`, all required) -> the staged seed in that order (helpers only, runs after all migrations). The stager aborts if any committed
   migration collides with that slot.
 - D-11: Supabase CLI 2.122.0 parses `YYYY_MM_DD_<desc>.sql` as version `2026`, so the second file collides in `schema_migrations` (evidence in
   `loop/workforce/increments/W1/LOG.md`). The repo keeps its naming (LOOP rule 3); the stager copies each migration byte-identical (sha256-checked)
   under a 14-digit name (`YYYYMMDD` + per-date sequence). A human decides on renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no `.temp/project-ref` and no `.env`, so the CLI cannot target a
-  remote project from it. Layout: `supabase/migrations/` (the 2 baseline migrations + the 85 copies), `supabase/local_test_baseline/test_helpers.sql`
+  remote project from it. Layout: `supabase/migrations/` (the 2 baseline migrations + the 90 copies), `supabase/local_test_baseline/test_helpers.sql`
   and `test_helpers_certifications.sql` (seed; kept outside `tests/` because `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP
   files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env` and the root migrations cannot replay (no baseline, version
@@ -94,6 +94,12 @@ are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
   default false)` (TEST-ONLY trusted update: a pre-W2 approved shop without a recorded review), `delete_test_admin_profile` (real `auth.users`
   cascade), TEST-ONLY time shifts `backdate_test_moderation_case(case, minutes default 60)` and `backdate_test_contract_dispute(dispute, days)` (N6;
   guards disabled for one statement, as `backdate_shop_review_request`). No helper inserts a case, report, action or access record.
+- W12 (`test_helpers_scheduling.sql`): `backdate_test_worker_contract(contract, days)` (TEST-ONLY time shift; one UPDATE under `SET LOCAL
+  session_replication_role = replica`, which also skips the W10 sync trigger, W12 D9), `hold_lock_in_second_session(key bigint)` /
+  `release_second_session()` (TEST-ONLY dblink to the local DB via the container alias `db` with the local default credentials, W12 D10; the
+  extension is created inside the test transaction), `notification_marker()` = `ZQXW12PRIVATE`. It also registers the local-only `test.notice`,
+  `test.dup`, `test.text` categories for the unchanged W3 writer tests by a plain trusted INSERT (W12 D3; never a migration). No helper
+  function writes the registry, job state or notifications. Runner tests clear `washlink.scheduled_job` between two calls (one transaction, D13).
 - Ids are passed between statements with `set_config('fx.<name>', ..., true)` / `current_setting('fx.<name>')`, readable under any role.
 - Never print a bare `ok` from a plain `select`: TAP counts it as a test.
 
@@ -104,12 +110,12 @@ supabase/tests/database/*.sql` is 0 for every file. The j17 assertions are uncha
 direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_requested_shop`). The baseline still reproduces the weaknesses on purpose,
 so those assertions only pass because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (after W14 fix cycle 1: 91 files, 2876 assertions)
+## pgTAP files (after W12 fix cycle 1: 99 files, 3051 assertions)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 25 | replay of 87 migrations (`replay_schema_migrations_has_baseline_w2_to_w14`), W2 objects, W2..W10 RLS on, `replay_w11_review_and_dispute_tables_rls_enabled`, `replay_w14_moderation_tables_rls_enabled`, definer search_path |
+| `001_migration_replay.test.sql` | 26 | replay of 92 migrations (`replay_schema_migrations_has_baseline_w2_to_w14_and_w12`), W2 objects, W2..W10 RLS on, `replay_w11_review_and_dispute_tables_rls_enabled`, `replay_w14_moderation_tables_rls_enabled`, `replay_w12_registry_and_job_state_rls_enabled`, definer search_path |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
@@ -192,6 +198,14 @@ so those assertions only pass because the W2 migrations fix them. Any new `todo_
 | `j17_w14_moderation_audit_and_notifications.test.sql` | 13 | audit per transition, payloads without statements / messages / notes / names, fixed texts once per event, reports and case views notify nobody, refused actions write nothing |
 | `j17_w14_fix1_report_privacy.test.sql` | 26 | W14 fix cycle 1: after pause -> owner close, close -> archive and changes_submitted -> close the owner's activity has no `job_opening_report%` or report-revealing case rows while the reporter sees their own (B1); owner-actor `job_opening_moderation.deleted` hidden; no-op edit does not count and the last pause_kept snapshot is compared (N5); per-worker advisory lock (N2); `log_searched` subject / prefix values or `unrecognised` (N4) |
 | `j18_w14_flows.test.sql` | 15 | owner deletion keeps the case with a null opening, worker deletion cascades reports with audit, platform publish leaves owner versions and contract hashes unchanged, W4 / W5 lifecycles and bookings / quotes / ratings / verification unchanged |
+| `j17_w12_notification_registry.test.sql` | 31 | 37 categories equal a fixed list and a scan of every producer body (categories, families, key prefixes), `external_delivery` never, unregistered category / prefix / subject type 23514, safe enqueue skips and the action succeeds, trigger after the W3 writer guard, not client readable / writable, trusted-SQL-only changes, not in Realtime, W4 / W8 / W10 actions notify nobody |
+| `j17_w12_notification_dedup.test.sql` | 21 | one notice per recipient per audit event, review reinstatements send the decision only, termination / scheduled expiry with an open amendment one per party, WashLink close owner one / applicants one each, relationship change none, superseded certificate none, due then expired once, repeated runs nothing, mark-read never resends |
+| `j17_w12_notification_privacy.test.sql` | 12 | marker in names, notes, reasons, statements, clause text, pay, owner message and admin note through the real RPCs, plus (fix cycle 1) an amendment proposal and the scheduler-written contract expiry and certificate due / expired notices via `run_workforce_scheduled_job`; unique assertion names; header maps every other producer to its earlier file: no marker, `@` or phone shape in any notice, labels from the allow-list only, no payload column, recipient isolation |
+| `j13_w12_scheduled_jobs.test.sql` | 31 | contract expiry (past end only, each party once, J15 stops counting, terminated / declined / future untouched), notices job, relationship cursor walk and reset, disabled job, 55000 one job per transaction, no date parameter, batch bounds 22023, state and audit without ids, runner refused for authenticated and service_role JWTs |
+| `j16_w12_fix1_scheduler_liveness.test.sql` | 20 | W12 fix cycle 1 N3 / N4: a planted contract and a planted pair raise 23514; each run completes, the item is skipped_failed with its SQLSTATE only and writes nothing, its pair lock is released (dblink), both cursors move past it, the rest is processed, it is retried next pass; audit SQLSTATE only; try-lock before row lock; `lock_timeout` 1 s |
+| `j16_w12_scheduler_locking.test.sql` | 18 | dblink second session: pair try-lock collides with the w10e key both ways (same key text), busy contract skipped then expired, busy pair skipped, busy job `already_running` writes nothing, terminate and decline succeed after runs (J16) |
+| `j17_w12_scheduler_authorization.test.sql` | 25 | both tables RLS on with no client privilege, internal functions closed to every client role, admin read super_admin only with no ids or names, `pg_temp` pinned, no migration created pg_cron or a cron job, state guard refuses direct writes (runbook change only; the runner flag needs a trusted session, fix cycle 1 N2) |
+| `j18_w12_flows.test.sql` | 16 | W3..W14 flows write the same notices as before W12, bookings / quotes / ratings / verification unchanged, `mark_notifications_read` unchanged, raw W7 / W9 / W10 functions internal and still accept a future test clock |
 
 ## Safety rules
 
@@ -204,11 +218,15 @@ so those assertions only pass because the W2 migrations fix them. Any new `todo_
 - Never read or print `.env` files.
 - Never copy anything from `scripts/supabase-test/baseline/` into the repo's `supabase/` folder
   or a real project.
+- `scripts/supabase-scheduling/*.sql` are HUMAN-RUN (runbook in `NOTIFICATIONS_AND_SCHEDULING.md`); the loop runs them only on the
+  local stack inside `begin; ... rollback;` and never copies them into `supabase/migrations/`.
 
 ## Vitest (frontend)
 
-After W14 fix cycle 1: 131 files / 263 tests pass (118 / 233 after W11 fix cycle 1 + 12 files / 29 W14 tests + 1 DI wiring test, suffixes `.j2`, `.j3`,
-`.j17`, `.w14`; fixtures `src/test/moderationFixtures.ts`).
+After W12 fix cycle 1: 137 files / 282 tests pass (136 / 274 after the W12 frontend build; 131 / 263 after W14 fix cycle 1; 118 / 233 after W11 fix cycle 1 + 12 files / 29 W14 tests + 1 DI wiring test, suffixes `.j2`, `.j3`,
+`.j17`, `.w14`; fixtures `src/test/moderationFixtures.ts`). W12 added 11 tests in 5 `*.w12.test.ts(x)` files (W12 LOG
+"BUILD (frontend)") and fix cycle 1 added 8 more (card health / badge, `ScheduledJobService.w12.test.ts`, keyset cursor); `w12_every_registered_category_has_an_area` reads the w12b migration with `node:fs` from `../supabase/migrations`
+(F4: a Vite `?raw` import outside the root is refused), so `npm test` must run in `frontend/`.
 
 ```sh
 cd frontend && npm test          # vitest run (jsdom), all src/**/*.test.{ts,tsx}
@@ -230,7 +248,8 @@ cd frontend && npm run test:watch
 
 ## API smokes (local stack only)
 
-Run in order after `run-db-tests.mjs`, before stopping the stack: `node scripts/supabase-test/w2-api-smoke.mjs`, then `w3-` .. `w14-api-smoke.mjs`.
+Run in order after `run-db-tests.mjs`, before stopping the stack: `node scripts/supabase-test/w2-api-smoke.mjs`, then `w3-` .. `w11-`, `w14-`,
+then `w12-api-smoke.mjs` (W12 test step). At the W12 DB step W2..W11 and W14 were re-run with the counts below, all `0 failed`.
 Shared safety rules: loopback API URL only (a non-loopback URL is refused); URL and keys come from `supabase status -o env --workdir
 .local-supabase-test`, stay in memory and are never printed; no `.env`; synthetic `@local.test` users (`smoke<n>-*` from W7) are deleted and the
 deletion is asserted. TEST-ONLY time shifts (W6, W7, W11) run through `docker exec supabase_db_<staged project_id> psql` as a trusted local session
@@ -283,3 +302,9 @@ emails are interpolated). Each must end `0 failed`; counts are the passed checks
   second report, close, applications closed with byte-equal snapshots; super_admin publishes the standard template with the UI payload shape, the owner
   sees "newer standard", a sent contract hash unchanged; `my_workforce_activity` has no id fields; admin log search audited; relationship lookup needs a
   purpose, owner / worker denied; unreviewed-shop queue + confirm makes the opening visible to workers; `set_config`, guard and stamp functions not callable.
+- **W12** (`w12-api-smoke.mjs`, PLAN section 6; 22 checks at the W12 test step): `smoke12-*@local.test`; registry and job state select /
+  insert / patch / delete denied for anon, owner, worker, super_admin, service_role; the runner, both batch functions, the pair try-lock,
+  `enqueue_notification` and `set_config` not callable through PostgREST; contract send / accept / activate give one notice per step to the right
+  party without the marker; TEST-ONLY backdate, then the runner via `docker exec` psql expires it (one notice each, second run nothing);
+  certification notice run; `admin_workforce_scheduled_jobs` super_admin only, no id columns; the register script inside `begin; ... rollback;`
+  registers exactly 3 `washlink_workforce_%` jobs and leaves no job or pg_cron after rollback; notifications not in `supabase_realtime`; mark-read.

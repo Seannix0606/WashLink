@@ -169,7 +169,7 @@ is FOR ALL TABLES or lists a `training_*` table.
   program text and sessions, no worker data, and nobody can read or change it (no owner, no enrollment);
   a trusted cleanup can delete it. The shop-removal trigger locks the shop's programs FOR UPDATE before the
   no-enrollment check, so a concurrent invite cannot make the delete hit the RESTRICT FK (23503).
-- No reminders, email / SMS / push or Realtime (W12); no optional / refresher training kinds or fees (D-19).
+- No reminders, email / SMS / push or Realtime (W12 kept in-app only and polling, D-61 / D-62); no optional / refresher training kinds or fees (D-19).
 - W7 carry-forward closed: completion is not monotonic, so `issue_certification` / `renew_certification`
   re-read `training_enrollment_is_completed` AFTER taking the W6 lock chain (program FOR SHARE, enrollment
   FOR SHARE, advisory `training_evidence:<enrollment>`), which serialises an issue with any concurrent

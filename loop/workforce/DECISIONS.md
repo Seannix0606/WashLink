@@ -64,6 +64,17 @@ on its next increment and adds rework if needed.
 | D-56 | Unreviewed approved shops | W14 | super_admin confirms (stamps the reviewer without a status change; owner notified) or requests changes / rejects via the existing decision path; runbook in PLATFORM_MODERATION_AND_AUDIT.md | ADOPTED-DEFAULT (loop, 2026-10-29) |
 | D-57 | Console tabs | W14 | Overview, Shop verification (with "Approved without a recorded review"), Posting reports, Certification reviews, Contract disputes, Standard contract, Relationships, Audit log, Policies | ADOPTED-DEFAULT (loop, 2026-10-29) |
 | D-58 | W14 notifications | W14 | Fixed texts, in-app only; W12 de-duplicates and schedules; admin take-over of shop review requests stays out until a human changes D-44 | ADOPTED-DEFAULT (loop, 2026-10-29) |
+| D-59 | Relationship notices | W12 | None when a relationship stops counting; the progress card is live and contract / verification events already notify (D-39, D-23) | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-60 | Newer standard template | W12 | No notice; owners keep the live "A newer standard template is available" flag (residual risk W12-L12) | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-61 | Channels | W12 | In-app only; `external_delivery` fixed to `never` by CHECK; email / SMS / push need human-provisioned credentials, consent records and legal review; outbox hook documented, not built; smtp-test scripts untouched | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-62 | Realtime | W12 | Keep 60 s inbox polling; no Realtime until production Realtime / RLS settings are known (D-10) | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-63 | Scheduler | W12 | pg_cron; migrations register nothing; HUMAN-RUN register / unregister scripts (run as postgres, unregister by jobid) after written approval; runbook in NOTIFICATIONS_AND_SCHEDULING.md | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-64 | Scheduled path dates | W12 | The scheduled entry point takes no date; W7 / W9 / W10 functions keep their test-clock parameter, internal only | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-65 | Batching and locking | W12 | One job per transaction; pair try-lock before row lock, SKIP LOCKED / NOWAIT, lock_timeout 1s; batches 25 contracts / 50 pairs; per-item subtransactions, failed items skipped with SQLSTATE only and retried next pass; cursors always advance | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-66 | De-duplication | W12 | Per-event idempotency keys plus the tested cross-event pairs; on the first production run the backlog sends each true notice once | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-67 | Opening close fan-out | W12 | Closing an opening keeps enqueuing up to 500 applicant notices inside the owner transaction (W5 cap); no batching | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-68 | Inbox | W12 | Area chips, unread / area filters, keyset "Load older" 50 per page; unknown categories shown as "Other updates"; no deep links into tabs | ADOPTED-DEFAULT (loop, 2026-10-30) |
+| D-69 | Interview notices | W12 | None; no interview feature exists | ADOPTED-DEFAULT (loop, 2026-10-30) |
 
 ## Standing human gates (never automated — the only things the loop stops for)
 - Applying any migration to the linked/shared/production Supabase project.

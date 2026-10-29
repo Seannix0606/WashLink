@@ -1,10 +1,13 @@
 import type { ReactElement } from 'react'
+import { useMemo } from 'react'
 import { CheckCircle2, LayoutDashboard } from 'lucide-react'
 import type { AdminOversightService } from '../../../application/services/AdminOversightService'
+import type { ScheduledJobService } from '../../../application/services/ScheduledJobService'
 import type { WorkforceDashboardService } from '../../../application/services/WorkforceDashboardService'
 import type { AdminModerationSummary } from '../../../domain/models/AdminOversight'
 import { adminModerationNextActions, adminNextActions, type AdminNextActionTarget } from '../../../domain/utilities/workforceNextActions'
 import { Card, EmptyState, Skeleton } from '../../design/ui'
+import { createScheduledJobDependencies } from '../../dependencyInjection/createScheduledJobDependencies'
 import { useAdminModerationSummary } from '../../hooks/useAdminModerationSummary'
 import { useWorkforceDashboardSummary } from '../../hooks/useWorkforceDashboardSummary'
 import { adminModerationNextActionText, moderationCountsHeading } from '../../utilities/adminOversightCopy'
@@ -24,12 +27,24 @@ import { adminCountGroups } from '../../utilities/workforceDashboardDisplay'
 import { DashboardCountGrid, type DashboardCountGroup } from '../shared/DashboardCountGrid'
 import { LoadErrorNotice } from '../shared/LoadErrorNotice'
 import { NextActionList } from '../shared/NextActionList'
+import { ScheduledJobsCard } from './ScheduledJobsCard'
 
 interface AdminOverviewPanelProps {
   readonly workforceDashboardService: WorkforceDashboardService
   readonly onNavigate: (target: AdminNextActionTarget) => void
   /** W14: the second summary (`admin_moderation_summary()`); omitted by W11 callers. */
   readonly adminOversightService?: AdminOversightService
+  /** W12: scheduled-job status; defaults to the production service in the W14 console. */
+  readonly scheduledJobService?: ScheduledJobService
+}
+
+/** W12 card in the nine-tab console; the page predates W12, so the service is created here when not given. */
+function AdminScheduledJobsSection({ scheduledJobService }: { readonly scheduledJobService?: ScheduledJobService }): ReactElement {
+  const effectiveService = useMemo(
+    () => scheduledJobService ?? createScheduledJobDependencies().scheduledJobService,
+    [scheduledJobService],
+  )
+  return <ScheduledJobsCard scheduledJobService={effectiveService} />
 }
 
 function moderationCountGroup(summary: AdminModerationSummary): DashboardCountGroup {
@@ -97,7 +112,7 @@ function AdminModerationOverview({
 }
 
 /** Super_admin Overview (default tab): what is waiting, then counts from admin_dashboard_summary(). */
-export function AdminOverviewPanel({ workforceDashboardService, onNavigate, adminOversightService }: AdminOverviewPanelProps): ReactElement {
+export function AdminOverviewPanel({ workforceDashboardService, onNavigate, adminOversightService, scheduledJobService }: AdminOverviewPanelProps): ReactElement {
   const summaryState = useWorkforceDashboardSummary(workforceDashboardService, 'super_admin')
 
   const renderBody = (): ReactElement => {
@@ -166,6 +181,7 @@ export function AdminOverviewPanel({ workforceDashboardService, onNavigate, admi
         <p className="mt-0.5 text-xs text-[var(--color-ink-500)]">{adminOverviewIntroText}</p>
       </header>
       {renderBody()}
+      {adminOversightService !== undefined || scheduledJobService !== undefined ? <AdminScheduledJobsSection scheduledJobService={scheduledJobService} /> : null}
     </Card>
   )
 }

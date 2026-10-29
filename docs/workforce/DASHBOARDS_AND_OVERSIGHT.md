@@ -46,7 +46,7 @@ item 6 out; D-44 unchanged).
   the contract only while the problem is open, every read audited; closes with `information_shared` /
   `referred_outside_washlink` / `no_platform_action` and a note to both; WashLink never reinstates a contract, awards pay
   or decides legal rights.
-- D-48 fixed notification texts (below), in-app only; W12 de-duplicates and schedules. D-49 the W14 split above.
+- D-48 fixed notification texts (below), in-app only; W12 registered them and proved de-duplication (`NOTIFICATIONS_AND_SCHEDULING.md`). D-49 the W14 split above.
 
 ## Principles (P65-P71)
 
@@ -331,7 +331,7 @@ suffixes `.j8`, `.j12`, `.j16`, `.j17`, `.w11`; fixtures `test/oversightFixtures
   owner label "Needs attention" (D-36, W10-L9); an earlier "Suspended" wording was corrected before review. StrictMode double
   case reads (dev only).
 - Concurrency (two simultaneous raises / opens) relies on partial unique indexes and an advisory lock; not exercised
-  with parallel sessions. No automatic lifting of suspensions; no email / SMS / push (W12); the reviewer sees only the
+  with parallel sessions. No automatic lifting of suspensions; no email / SMS / push (W12 kept in-app only, D-61); the reviewer sees only the
   records, not the worker in person (W11-L1).
 
 ## Rollback (local test stack only; reverse order i..a)

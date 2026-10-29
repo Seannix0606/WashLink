@@ -1,16 +1,20 @@
 import type { ReactElement } from 'react'
 import { Check } from 'lucide-react'
-import type { AppNotification } from '../../../domain/models/AppNotification'
-import { Button } from '../../design/ui'
+import type { InboxNotification } from '../../../domain/models/AppNotification'
+import { Badge, Button } from '../../design/ui'
 import { joinClassNames } from '../../design/classNames'
 import { formatRelativeTimeFromNow } from '../../utilities/datetimeFormatting'
+import { notificationAreaLabel } from '../../utilities/notificationAreaCopy'
 
 interface NotificationListItemProps {
-  readonly notification: AppNotification
+  readonly notification: InboxNotification
   readonly onMarkReadRequested: (notificationIdentifier: string) => void
 }
 
-/** One notification. Title and body are rendered as plain text (React escapes them), never HTML. */
+/**
+ * One notification. Title, body and the W12 area chip are rendered as plain text (React escapes
+ * them), never HTML. The chip is a label only; it does not link into a dashboard tab (D-68).
+ */
 export function NotificationListItem({
   notification,
   onMarkReadRequested,
@@ -32,6 +36,10 @@ export function NotificationListItem({
         )}
       />
       <div className="min-w-0 flex-1">
+        <Badge tone="neutral" className="mb-1" data-testid="notification-area-chip">
+          <span className="sr-only">Area: </span>
+          {notificationAreaLabel[notification.area]}
+        </Badge>
         <p className="text-sm font-semibold text-[var(--color-ink-900)]">
           {notification.isRead ? null : <span className="sr-only">Unread: </span>}
           {notification.title}

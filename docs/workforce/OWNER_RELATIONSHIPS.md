@@ -25,7 +25,7 @@ Migrations (staged `20261028000001..07`; 69 staged migrations in total):
 - D-38 owners see only their own relationship rows with a worker, never the worker's count, remaining, goal or other
   owners; super_admin has no relationship read in W10. W11 added a dispute-scoped read (below); W14 added audited
   super_admin lookups outside disputes (D-55, below).
-- D-39 no notifications for relationship changes (contract events already notify; W12 decides).
+- D-39 no notifications for relationship changes (contract events already notify); W12 confirmed it (D-59: none).
 - D-40 trusted contract repairs are forward-only (accepted / active -> terminated / expired).
 
 ## Principles (P55-P64)
@@ -57,7 +57,7 @@ Migrations (staged `20261028000001..07`; 69 staged migrations in total):
   customers and anon nothing. No contacts, contract text, pay, end reasons or notes.
 - P62 audit under W3 rules; a refresh that changes nothing writes nothing. No W10 table in `supabase_realtime`.
 - P63 every read derives status live as of Manila today; the stored row is refreshed by the sync triggers and by
-  `refresh_worker_owner_relationships(p_as_of)` (internal; W12 schedules it).
+  the W12 `owner_relationship_refresh` job (`NOTIFICATIONS_AND_SCHEDULING.md`).
 - P64 forward-only trusted repairs (below).
 
 ## Counting per status (D-3, D-36)
@@ -140,7 +140,8 @@ amendment only changes dates, which the refresh re-evaluates).
   reason or count differ, clears the flag. Never raises for a contract state. Returns true when the row changed.
 - `refresh_worker_owner_relationships(p_as_of date default null)`: refuses a past date (22023 `The refresh date
   cannot be in the past.`), refreshes every pair with an accepted contract as of that date, returns rows changed.
-  Not callable by any client; W12 schedules it.
+  Not callable by any client and not scheduled: it stays a test-clock tool (never called with a date in production,
+  D-64). The W12 scheduled job uses `refresh_worker_owner_relationships_batch` instead (below).
 - Triggers (AFTER, no RAISE): `worker_contracts_sync_owner_relationship` (AFTER INSERT OR UPDATE on
   `worker_contracts`; as built the function returns early unless status, owner_id, shop_id, worker_id, end_date,
   activated_at, ended_at, accepted_at or current_version_id changed; refreshes the new pair and, if the pair changed,
@@ -150,7 +151,12 @@ amendment only changes dates, which the refresh re-evaluates).
   that owner's pairs). Shop DELETE needs no trigger (the contract `shop_id` set null fires the contract trigger).
 - Lock order: `worker_contracts` row (W9 RPC) -> `shops` row -> pair advisory lock -> relationship row.
 - Live vs stored (P63): the reads derive status, reason and count as of Manila today; the stored row can lag a
-  passed end date until the next refresh or `expire_worker_contracts` (W12 schedules both).
+  passed end date until the next refresh or the W12 `worker_contract_expiry` job records the expiry.
+- Scheduled refresh (W12; closes W10 REVIEW S2 / S3 / C8): the job `owner_relationship_refresh` runs
+  `refresh_worker_owner_relationships_batch` through the date-free `run_workforce_scheduled_job`: 50 pairs per run in
+  `(worker_id, owner_id)` order from a stored cursor (reset when a pass completes), each pair try-locked on the same
+  w10e key (busy -> skipped, retried next pass) and refreshed with the default date; separate from contract expiry (one
+  job per transaction). It runs only after a human registers the jobs; a refresh still notifies nobody (D-59).
 
 ## Forward-only trusted repairs (w10b, D-40; closes W9-S1 / C1 status part and W9 REVIEW C6 repair path)
 

@@ -107,7 +107,10 @@ start with `W8`; w9a accepts that prefix or `W9`.
 | pending version | sent_for_review | withdrawn | system | contract terminated / expired; party removed (P53) |
 
 `effective_status` (reads, `worker_contract_effective_status`) shows accepted / active contracts whose end date is
-before Manila today as `expired` until `expire_worker_contracts` (internal; W12 schedules it) records it.
+before Manila today as `expired` until it is recorded. Since W12 the `worker_contract_expiry` job records it through
+`expire_worker_contracts_batch` (no date, 25 per run, skip-locked, `ended_by 'system'`; the same update as the internal
+`expire_worker_contracts(date)`, which stays a test-clock tool); it runs only after a human registers the jobs
+(`NOTIFICATIONS_AND_SCHEDULING.md`). The recorded `expired` is a WashLink record, not the legal end of work (W12-L2).
 
 ## Text format and hash (P48)
 
@@ -234,7 +237,9 @@ rule and keys `contract_dispute:<id>:<event>` (`DASHBOARDS_AND_OVERSIGHT.md`).
   `set_config` (smoke-checked).
 - Keyword flags miss paraphrases, other languages and misspellings and flag harmless text (W9-L3). The hash covers
   the rendered text, not the jsonb inputs (R6). The C7 activation check reads training state without a lock (R7).
-- Expiry is derived until W12 schedules `expire_worker_contracts` (R9). Paid booking assignment of a worker without a
+- Expiry is derived on read until the W12 `worker_contract_expiry` job records it; that job runs only once a human
+  registers it (R9, W12-L4). Each party gets one notice; a terminate or decline is never refused and waits at most until
+  the running batch commits (J16, `j16_w12_scheduler_locking`). Paid booking assignment of a worker without a
   contract is not blocked (W6-L10 stays OPEN). super_admin access exists only through an open reported problem (W11,
   below). The W10 distinct-owner count (`OWNER_RELATIONSHIPS.md`) is derived from
   these contracts and is informational only: no W9 RPC, guard or policy reads it, and decline / terminate never depend on it.
