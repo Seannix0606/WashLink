@@ -1,4 +1,4 @@
-# Local test harness (W1, hardened in W2, extended in W3, W4, W5, W6, W7, W8, W9, W10 and W11)
+# Local test harness (W1, hardened in W2, extended in W3..W11 and W14)
 
 Local Docker Supabase only. Nothing here touches the linked project, and local results say
 nothing about the linked project (D-10).
@@ -20,17 +20,15 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after W11): the reset applies 78 migrations (baseline `00000000000000`, the 2026_04_17 copy, owner-policies baseline
-`20260417000002`, the other 4 pre-W2 copies, the 6 W2 copies `20261024000001..06`, then the 5 W3 copies `20261024000007..11`: w3a, w3b,
-w3c, w3d0 preflight, w3d, then the 4 W4 copies `20261024000012..15`: w4a preflight, w4b, w4c, w4d, then the 5 W5 copies
-`20261025000001..05`: w5a preflight, w5b..w5e, then the 9 W6 copies `20261025000006..14`: w6a preflight, w6b..w6i, then the 8 W7 copies
-`20261026000001..08`: w7a preflight, w7b..w7h, then the 8 W8 copies `20261026000009..16`: w8a preflight, w8b..w8h, then the 10 W9 copies
-`20261026000017..26`: w9a preflight, w9b..w9j, then the 7 W10 copies `20261028000001..07`: w10a preflight, w10b..w10g, then the 9 W11
-copies `20261029000001..09`: w11a preflight, w11b..w11i) and seeds the six helper files in order (`test_helpers.sql`,
-`test_helpers_certifications.sql`, `test_helpers_contract_templates.sql`, `test_helpers_worker_contracts.sql`,
-`test_helpers_owner_relationships.sql`, then `test_helpers_oversight.sql`); `test db` runs 82 files (2622 tests after W11 fix cycle 1;
-81 / 2589 after the W11 DB build; 72 / 2356 before it; 72 / 2347 after the W10 DB build; 63 / 2178 after the W9 build; 54 / 1947 before W9; 47 / 1713 before W8; 38 / 1409
-before W7) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
+Expected (after the W14 DB build): the reset applies 87 migrations (baseline `00000000000000`, the 2026_04_17 copy, owner-policies baseline
+`20260417000002`, the other 4 pre-W2 copies, then per increment, each starting with its preflight where it has one: W2 `20261024000001..06`, W3
+`20261024000007..11` (w3a, w3b, w3c, w3d0 preflight, w3d), W4 `20261024000012..15`, W5 `20261025000001..05`, W6 `20261025000006..14`, W7
+`20261026000001..08`, W8 `20261026000009..16`, W9 `20261026000017..26`, W10 `20261028000001..07`, W11 `20261029000001..09`, W14 `20261029000010..18`:
+w14a preflight, w14b..w14i) and seeds the seven helper files in order (`test_helpers.sql`, `test_helpers_certifications.sql`,
+`test_helpers_contract_templates.sql`, `test_helpers_worker_contracts.sql`, `test_helpers_owner_relationships.sql`, `test_helpers_oversight.sql`,
+then `test_helpers_moderation.sql`); `test db` runs 91 files / 2876 tests after W14 fix cycle 1 (90 / 2850 after the W14 DB build; 82 / 2622 after W11 fix cycle 1; 81 / 2589 after the W11 DB build; 72 /
+2347 after the W10 DB build; 63 / 2178 after W9; 54 / 1947 before W9; 47 / 1713 before W8; 38 / 1409 before W7) and ends with `Result: PASS`. There
+are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
 ## Why a staged workdir
 
@@ -50,13 +48,13 @@ before W7) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (T
   (`20260417000001`, adds `bookings.shop_id`) and before every later committed migration, so W2 migrations can drop or replace
   `bookings_owner_select_local_test` / `bookings_owner_update_local_test`; `test_helpers.sql`, `test_helpers_certifications.sql` (W7),
   `test_helpers_contract_templates.sql` (W8), `test_helpers_worker_contracts.sql` (W9), `test_helpers_owner_relationships.sql` (W10)
-  then `test_helpers_oversight.sql` (W11; `HELPERS_SOURCE_NAMES`, all required) -> the staged seed in that order (helpers only, runs after all migrations). The stager aborts if any committed
+  `test_helpers_oversight.sql` (W11) then `test_helpers_moderation.sql` (W14; `HELPERS_SOURCE_NAMES`, all required) -> the staged seed in that order (helpers only, runs after all migrations). The stager aborts if any committed
   migration collides with that slot.
 - D-11: Supabase CLI 2.122.0 parses `YYYY_MM_DD_<desc>.sql` as version `2026`, so the second file collides in `schema_migrations` (evidence in
   `loop/workforce/increments/W1/LOG.md`). The repo keeps its naming (LOOP rule 3); the stager copies each migration byte-identical (sha256-checked)
   under a 14-digit name (`YYYYMMDD` + per-date sequence). A human decides on renaming before any `db push`.
 - The gitignored `.local-supabase-test/` has `project_id = "washlink-local-test"`, no `.temp/project-ref` and no `.env`, so the CLI cannot target a
-  remote project from it. Layout: `supabase/migrations/` (the 2 baseline migrations + the 76 copies), `supabase/local_test_baseline/test_helpers.sql`
+  remote project from it. Layout: `supabase/migrations/` (the 2 baseline migrations + the 85 copies), `supabase/local_test_baseline/test_helpers.sql`
   and `test_helpers_certifications.sql` (seed; kept outside `tests/` because `test db` runs every `.sql` there), `supabase/tests/database/` (pgTAP
   files).
 - Do not run `supabase start`/`db reset` from the repo root: the CLI loads the root `.env` and the root migrations cannot replay (no baseline, version
@@ -92,6 +90,10 @@ before W7) and ends with `Result: PASS`. There are 0 TODO blocks: any `Failed (T
 - W11 (`test_helpers_oversight.sql`): `suspend_test_certification` and `request_test_shop_review` (real W7 RPCs),
   `backdate_shop_review_request(request, days)` (TEST-ONLY time shift, technique of `backdate_certification`), `raise_test_contract_dispute` (real
   W11 RPC). No helper inserts a WashLink review, a dispute, a status event or an acceptance.
+- W14 (`test_helpers_moderation.sql`): `report_test_job_opening` (real RPC as the worker), `make_test_shop_legacy_unreviewed(shop, keep_reviewer
+  default false)` (TEST-ONLY trusted update: a pre-W2 approved shop without a recorded review), `delete_test_admin_profile` (real `auth.users`
+  cascade), TEST-ONLY time shifts `backdate_test_moderation_case(case, minutes default 60)` and `backdate_test_contract_dispute(dispute, days)` (N6;
+  guards disabled for one statement, as `backdate_shop_review_request`). No helper inserts a case, report, action or access record.
 - Ids are passed between statements with `set_config('fx.<name>', ..., true)` / `current_setting('fx.<name>')`, readable under any role.
 - Never print a bare `ok` from a plain `select`: TAP counts it as a test.
 
@@ -102,12 +104,12 @@ supabase/tests/database/*.sql` is 0 for every file. The j17 assertions are uncha
 direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_requested_shop`). The baseline still reproduces the weaknesses on purpose,
 so those assertions only pass because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (after W11 fix cycle 1: 82 files, 2622 assertions)
+## pgTAP files (after W14 fix cycle 1: 91 files, 2876 assertions)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 24 | replay of 78 migrations (`replay_schema_migrations_has_baseline_w2_to_w11`), W2 objects, W2..W10 RLS on, `replay_w11_review_and_dispute_tables_rls_enabled`, definer search_path |
+| `001_migration_replay.test.sql` | 25 | replay of 87 migrations (`replay_schema_migrations_has_baseline_w2_to_w14`), W2 objects, W2..W10 RLS on, `replay_w11_review_and_dispute_tables_rls_enabled`, `replay_w14_moderation_tables_rls_enabled`, definer search_path |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
@@ -181,6 +183,15 @@ so those assertions only pass because the W2 migrations fix them. Any new `todo_
 | `j17_w11_oversight_authorization.test.sql` | 25 | RLS and privileges, deny-all select (super_admin has no raw read, N3) and writes for every role incl. trusted insert, internal functions closed, anon denied, pinning, Realtime, admin functions refuse owner / worker / customer |
 | `j6_w11_oversight_audit_and_notifications.test.sql` | 12 | audit per transition, payloads without statements / reasons / notes / names, fixed texts once per event, case views audited without notifications, refused actions write nothing |
 | `j18_w11_flows.test.sql` | 16 | owner deletion keeps review and dispute, worker deletion cascades with audit, bookings / quotes / ratings / verification and W7 / W9 / W10 lifecycles unchanged |
+| `j2_w14_job_opening_reports.test.sql` | 30 | J2: report published / applied-paused openings, unreadable or draft refused, category 22023 / statement 23514, duplicate 23505, limits (3 per opening, 10 open), write-once snapshot, second reporter joins the case, withdraw, owner / customer / trainer cannot report |
+| `j2_w14_job_opening_takedown.test.sql` | 51 | pause with reason and hold (owner resume 23514), edit + submit (refused without edit), lift then resume with verification check, pause kept, close with W5 auto-close, snapshots and content unchanged, owner close resolves, dismiss note, stale 55000, action 23514, removed opening only dismiss, non-admin refused, flag without case 42501, W4 guard md5 and trigger order, no direct super_admin edit / transition |
+| `j3_w14_unreviewed_approved_shops.test.sql` | 33 | J3: queue lists reviewer missing (admin deleted), legacy null review time, reviewer not super_admin; confirm stamps without status change, restores publish and worker visibility, refreshes relationships; request changes / reject via the decision path; reviewed shop refused; notes required; non-admin refused; stamp inert without flag |
+| `j17_w14_audit_reads.test.sql` | 31 | own actor / subject events only, contract events for the sent party only, no ids (columns and uuid values), details allow-list, actor labels, reports hidden from the owner, admin log filters / paging / audited search / non-admin refused, N6 flag and its exclusions |
+| `j17_w14_relationship_lookups.test.sql` | 24 | worker lookup rows and count (minimum absent, D1), owner lookup without worker counts or other owners, purpose and note required, every lookup recorded and audited, unknown id recorded, visible in the subject's activity with the generic purpose `washlink_review` (N7), owner / worker refused, raw select denied |
+| `j17_w14_moderation_authorization.test.sql` | 30 | RLS and privileges, deny-all policies, direct writes refused for every role incl. trusted insert, internal functions closed, anon denied, pinning, Realtime, admin functions refuse owner / worker / customer, owner read has no report columns, `prosrc` scan: no W14 function writes `job_applications` or opening content |
+| `j17_w14_moderation_audit_and_notifications.test.sql` | 13 | audit per transition, payloads without statements / messages / notes / names, fixed texts once per event, reports and case views notify nobody, refused actions write nothing |
+| `j17_w14_fix1_report_privacy.test.sql` | 26 | W14 fix cycle 1: after pause -> owner close, close -> archive and changes_submitted -> close the owner's activity has no `job_opening_report%` or report-revealing case rows while the reporter sees their own (B1); owner-actor `job_opening_moderation.deleted` hidden; no-op edit does not count and the last pause_kept snapshot is compared (N5); per-worker advisory lock (N2); `log_searched` subject / prefix values or `unrecognised` (N4) |
+| `j18_w14_flows.test.sql` | 15 | owner deletion keeps the case with a null opening, worker deletion cascades reports with audit, platform publish leaves owner versions and contract hashes unchanged, W4 / W5 lifecycles and bookings / quotes / ratings / verification unchanged |
 
 ## Safety rules
 
@@ -196,7 +207,8 @@ so those assertions only pass because the W2 migrations fix them. Any new `todo_
 
 ## Vitest (frontend)
 
-After the W11 frontend build: 117 files / 228 tests pass (209 before W11 + 19 W11 tests).
+After W14 fix cycle 1: 131 files / 263 tests pass (118 / 233 after W11 fix cycle 1 + 12 files / 29 W14 tests + 1 DI wiring test, suffixes `.j2`, `.j3`,
+`.j17`, `.w14`; fixtures `src/test/moderationFixtures.ts`).
 
 ```sh
 cd frontend && npm test          # vitest run (jsdom), all src/**/*.test.{ts,tsx}
@@ -216,134 +228,58 @@ cd frontend && npm run test:watch
 - Tests are excluded from the production `tsconfig.app.json` and type-checked via
   `tsconfig.test.json` (`npm run build` runs `tsc -b`).
 
-## W2 API smoke (local stack only)
+## API smokes (local stack only)
 
-```sh
-node scripts/supabase-test/w2-api-smoke.mjs   # needs the stack left running by run-db-tests.mjs
-```
+Run in order after `run-db-tests.mjs`, before stopping the stack: `node scripts/supabase-test/w2-api-smoke.mjs`, then `w3-` .. `w14-api-smoke.mjs`.
+Shared safety rules: loopback API URL only (a non-loopback URL is refused); URL and keys come from `supabase status -o env --workdir
+.local-supabase-test`, stay in memory and are never printed; no `.env`; synthetic `@local.test` users (`smoke<n>-*` from W7) are deleted and the
+deletion is asserted. TEST-ONLY time shifts (W6, W7, W11) run through `docker exec supabase_db_<staged project_id> psql` as a trusted local session
+calling the seeded `test_helpers` (container name derived from the asserted `*-local-test` project_id; only validated uuids / dates / synthetic
+emails are interpolated). Each must end `0 failed`; counts are the passed checks in the W14 DB-step run (all `0 failed`).
 
-Signs up synthetic `@local.test` users through the local GoTrue HTTP API with metadata roles, calls the W2 RPCs through PostgREST (supabase-js) and
-deletes the users afterwards. The API URL and keys come from `supabase status -o env --workdir .local-supabase-test`, stay in memory, and a
-non-loopback URL is refused. Note: the baseline signup trigger has no metadata-sync on update, so the `updateUser` assertions prove the profile never
-follows metadata; the GoTrue silent-restore branch itself (R4) is still only covered by review.
-
-## W3 API smoke (local stack only)
-
-Run `node scripts/supabase-test/w3-api-smoke.mjs` (after run-db-tests.mjs (and w2-api-smoke.mjs), before stopping the stack).
-
-Same safety rules as the W2 smoke script (loopback URL only, keys from `supabase status` held in memory and never printed, no `.env`, synthetic
-`@local.test` users deleted with the result asserted). Checks through PostgREST / GoTrue: direct inserts into `workforce_audit_events` and
-`notifications` fail (42501); `rpc('record_workforce_audit_event')` and `rpc('enqueue_notification')` fail with 42501 (also for the service_role key);
-`rpc('set_config')` is not exposed; non-admin audit and review-log reads return 0 rows; a super admin approves a shop and the owner lists exactly 1
-notification; `mark_notifications_read` returns 1, then 0; the service_role key cannot insert, update or delete audit rows; a GoTrue `deleteUser` of a
-linked worker writes a `roster.unlinked` event with `account_deleted` and `actor_kind = system`; the review log survives owner and shop deletion. Must
-end `0 failed` (W3 build: 33 checks).
-
-## W4 API smoke (local stack only)
-
-Run `node scripts/supabase-test/w4-api-smoke.mjs` (after run-db-tests.mjs (and the W2 / W3 smokes), before stopping the stack).
-
-Same safety rules as the W2 / W3 smoke scripts (loopback URL only, keys from `supabase status` held in memory and never printed, no `.env`, synthetic
-`@local.test` users deleted with the result asserted). Checks through PostgREST / GoTrue: anon read fails or returns 0 rows; the owner inserts a draft
-without sending owner_id / status / stamps; publish is rejected with `Only a verified shop can publish job openings.` until a super admin approves the
-shop; the worker then lists 1 opening, customer and other owner 0; the other owner's update changes 0 rows and its RPC gets 42501; direct status and
-stamp PATCHes fail; `set_config` is not exposed; a stale transition gets 55000; deleting a published opening removes nothing; pause / resume / close /
-archive succeed; archived cannot be reopened or edited; a draft delete works; 5 status events are audited; the owner has no job-opening notifications;
-a GoTrue `deleteUser` of the owner cascades the opening and writes `job_opening.deleted` with `owner_account_deleted`. Must end `0 failed` (W4 build:
-35 checks).
-
-## W5 API smoke (local stack only)
-
-Run `node scripts/supabase-test/w5-api-smoke.mjs` (after run-db-tests.mjs (and the W2 / W3 / W4 smokes), before stopping the stack).
-
-Same safety rules as the earlier smoke scripts (loopback URL only, keys from `supabase status` held in memory and never printed, no `.env`, synthetic
-`@local.test` users deleted with the result asserted). Checks through PostgREST / GoTrue: anon read of `job_applications` fails or returns 0 rows;
-worker direct insert / patch / delete fail (42501); `search_job_openings` returns 1 row for the worker and 0 for the customer and owner; apply without
-the notice version is refused; apply through `create_job_application` returns a submitted row with the snapshot; a duplicate gets 23505 `You have
-already applied to this job opening.`; `set_config` is not exposed; the other worker sees 0 rows, the owner 1, the other owner 0 and its transition
-gets 42501; the owner reads 0 `worker_private_contacts`; `applicant_profiles_for_job_opening` keys contain no contact / phone / email;
-`applicant_verified_certifications` returns an empty list; a stale transition gets 55000; withdraw then reapply works; an owner edit leaves the
-snapshot unchanged; closing the opening closes the application and the applicant still reads the opening; notifications exist for both parties without
-the cover note or terms; a GoTrue `deleteUser` of the worker removes its applications and writes `job_application.deleted` with
-`worker_profile_deleted`. Must end `0 failed` (W5 build: 39 checks).
-
-## W6 API smoke (local stack only)
-
-Run `node scripts/supabase-test/w6-api-smoke.mjs` (after run-db-tests.mjs (and the W2..W5 smokes), before stopping the stack).
-
-Same safety rules as the earlier smoke scripts (loopback URL only, keys from `supabase status` held in memory and never printed, no `.env`, synthetic
-`@local.test` users deleted with the result asserted). One addition, the TEST-ONLY time shift (W6 R3): two past sessions and an earlier `accepted_at`
-are written through `docker exec supabase_db_<staged project_id> psql` as a trusted local session calling the seeded `test_helpers` (container name
-derived from the asserted `*-local-test` project_id; only validated uuids / dates are interpolated); all evidence is then recorded through the real
-RPCs. Checks through PostgREST / GoTrue: anon reads of the six tables and the progress view fail or return 0 rows; direct inserts by owner, worker and
-service_role fail (42501); draft program with pay and sessions via RPC (worker_fee 0); a worker cannot see the draft; open refused without the
-attestation, then opened; designation of a roster-linked trainer (link-code flow); invitations from accepted applications; accept refused without the
-notice, then accepted with the snapshot (fee 0, pay as entered); worker_fee PATCH denied and still 0; the trainee's booking assignment refused
-(23514); trainee and other-owner recording denied; trainer records; same-day duplicate 23505; assessment before 3 days refused; after the time shift 3
-days give `awaiting_assessment`, a correction without reason is refused, a pass gives `completed`; evidence PATCH / DELETE denied; notifications exist
-without dates, names or pay; `set_config` not exposed; GoTrue `deleteUser` of the owner keeps the other worker's enrollment (`shop_removed`, D-18);
-`deleteUser` of the trainee removes its enrollment and keeps the audit rows; the retained program is removed by a trusted cleanup. Must end `0 failed`
-(W6 build: 40 checks).
-
-## W7 API smoke (local stack only)
-
-Run `node scripts/supabase-test/w7-api-smoke.mjs` (after the W6 smoke, before stopping the stack).
-
-Same safety rules as the W2..W6 smoke scripts. TEST-ONLY time shift as in W6 (R3 / W7 R7): a program with three past sessions and a backdated
-acceptance is created through `docker exec` psql calling the seeded `test_helpers` (only validated uuids and synthetic `smoke7-*@local.test` emails
-are interpolated); evidence, certificates, status changes, reviews, re-assessments and renewals then go through PostgREST. Checks: anon reads of the
-five W7 tables return an error or 0 rows; direct inserts denied for worker, owner and service_role; issue refused before completion, for an unverified
-shop, for a designated trainer, without the attestation and with a stale assessment (55000); issue succeeds (`shop_issued`, approver, server stamps,
-expiry +12 months); PATCH / DELETE denied; another owner reads nothing; a certification_required apply is refused without and allowed with a current
-certificate; `applicant_verified_certifications` lists it; suspend needs a reason and then blocks the next apply; review request and reinstate;
-revoke; trainer re-assessment and owner renewal supersede (validity 1 then 12 months); notifications without reason, statement, name or date;
-`set_config` and the expiry-notice function are not client callable; GoTrue `deleteUser` of the owner keeps the worker's certificate (D-18);
-`deleteUser` of the worker removes it and keeps the audit row; retained programs are removed by a trusted cleanup. Must end `0 failed` (W7 build: 38
-checks).
-
-## W8 API smoke (local stack only)
-
-Run `node scripts/supabase-test/w8-api-smoke.mjs` (after the W7 smoke, before stopping the stack).
-
-Same safety rules as the W2..W7 smoke scripts; no time shift and no trusted write (one trusted READ through `docker exec` psql, validated uuid only,
-confirms the cascade after the owner `deleteUser`). Synthetic `smoke8-*@local.test` users, all deleted. Checks: anon, worker and customer read 0 rows
-of the three template tables (platform included); the owner reads the platform standard (v1 in its history); direct inserts denied for owner, worker
-and service_role; create from the standard; save v2 with an edited body and a section-15 shop term (hash differs, v1 unchanged); a locked key in the
-edits, an unknown placeholder and a section-4 shop term 23514; stale 55000; another owner and super_admin read nothing of it and cannot rename it;
-owner publish denied; super_admin publishes the next platform version (letters-only run tag, so reruns stay distinct); the owner sees
-`newer_standard_available` and rebases keeping the edit; preview carries the notice on 15 sections with no raw placeholder; diff rows (1 edited, 1
-added_by_shop); archive blocks saves, restore reopens; PATCH / DELETE denied for owner and service_role; `set_config` and the internal version writer
-not client callable; GoTrue `deleteUser` of the owner removes the templates and keeps the audit rows; the platform standard survives. The published
-platform version stays on the local stack until the next reset. Must end `0 failed` (W8 build: 30 checks).
-
-## W9 API smoke (local stack only)
-
-`node scripts/supabase-test/w9-api-smoke.mjs` (after the W8 smoke, before stopping the stack). Same safety rules as W2..W8; no time shift, no
-trusted write or read; synthetic `smoke9-*@local.test` users, all deleted. Checks: no direct insert / patch / delete on the eight W9 tables for
-owner, worker, service_role; non-eligible and unclassified drafts refused; nothing visible to the worker before send; unverified-shop send 23514;
-deposit flag and flag-count 55000; the worker reads document, flags and diff; stale-hash accept 55000; two acceptance records with the label;
-template save and platform publish leave the hash unchanged; amendment declined, second accepted (old superseded); contractor acknowledgements;
-other owner / worker / super_admin read nothing; activation; worker termination; notifications without pay, reasons or names; `set_config`, the
-expiry function and the sealer not callable; owner `deleteUser` keeps the contract for the worker. Must end `0 failed` (W9 build: 34 checks).
-
-## W10 API smoke (local stack only)
-
-`node scripts/supabase-test/w10-api-smoke.mjs` (after the W9 smoke, before stopping the stack). Same safety rules as W2..W9; no time shift, no
-trusted write; synthetic `smoke10-*@local.test` users, all deleted; the super_admin is promoted as in the W9 smoke. Planned checks (PLAN
-section 6): direct insert / patch / delete on both W10 tables denied for owner, worker, service_role; `set_workforce_policy_value` denied for
-owner, worker, service_role; policy 3 / informational; three verified owners -> progress 3 / remaining 0; a second shop of owner A -> still 3
-(owner A row: 2 contracts); amendment -> still 3; owner B shop `changes_requested` -> 2, re-approved -> 3; minimum 5 -> remaining 2 (audit
-without reason text); worker terminates owner C -> succeeds, 2; worker declines owner D -> succeeds, no row; owner and other-worker isolation;
-internal functions and `set_config` not callable; owner B `deleteUser` -> `owner_removed`, 1. Must end `0 failed` (38 checks at W10 test step).
-
-## W11 API smoke (local stack only; 36 checks after W11 fix cycle 1)
-
-`node scripts/supabase-test/w11-api-smoke.mjs` (after the W10 smoke, before stopping the stack). Same safety rules as W2..W10 (loopback URL only,
-keys from local `supabase status` held in memory, no `.env`); synthetic `smoke11-*@local.test` users, all deleted and asserted; TEST-ONLY 14-day
-backdate of a shop review request via `docker exec` psql as in the W6 / W7 smokes. Planned checks (PLAN section 6): direct writes on both W11 tables
-denied for owner, worker, service_role; escalation refused before the shop decides, allowed after backdating (shop request withdrawn); owner revoke
-refused while open; owner / worker cannot decide; super_admin queue + case (audit row), uphold; second escalation refused; owner `deleteUser` ->
-issuer-unavailable escalation -> reinstate; worker `owner_ended_contract` dispute, owner response, admin case + document, close; contract unchanged;
-case after close has no contract block; other owner / worker read nothing; summaries return one row for the right role only; `set_config` and
-`certification_platform_review_basis` not callable; fix cycle 1: super_admin raw selects on both W11 tables return no rows (N3), the closed dispute
-queue row has null contract status / effective status / shop name (N4); the worker-delete cascade is counted via a trusted query. Must end `0 failed`.
+- **W2** (48): signs up users through GoTrue with metadata roles, calls the W2 RPCs through PostgREST (supabase-js). The baseline signup trigger has
+  no metadata sync on update, so the `updateUser` assertions prove the profile never follows metadata; the GoTrue silent-restore branch (R4) is
+  covered by review only.
+- **W3** (33): direct inserts into `workforce_audit_events` / `notifications` and `rpc('record_workforce_audit_event')` / `rpc('enqueue_notification')`
+  fail 42501 (service_role too); `rpc('set_config')` not exposed; non-admin audit and review-log reads 0 rows; a super admin approves a shop and the
+  owner lists exactly 1 notification; `mark_notifications_read` 1 then 0; service_role cannot change audit rows; GoTrue `deleteUser` of a linked worker
+  writes `roster.unlinked` (`account_deleted`, `actor_kind = system`); the review log survives owner and shop deletion.
+- **W4** (43; 35 at the W4 build): anon read fails or 0 rows; the owner inserts a draft without owner_id / status / stamps; publish refused (`Only a verified shop can
+  publish job openings.`) until a super admin approves; the worker lists 1 opening, customer and other owner 0; other-owner update 0 rows, RPC 42501;
+  status / stamp PATCHes fail; stale transition 55000; deleting a published opening removes nothing; pause / resume / close / archive; archived
+  read-only; draft delete; 5 status events audited; no owner notifications; owner `deleteUser` writes `job_opening.deleted` (`owner_account_deleted`).
+- **W5** (39): anon 0 rows; worker direct writes 42501; `search_job_openings` 1 row for the worker, 0 for customer / owner; apply needs the notice
+  version, returns a submitted row with the snapshot; duplicate 23505; other worker 0 rows, owner 1, other owner 0 (transition 42501); owner reads 0
+  `worker_private_contacts`; applicant profiles without contact keys; certifications empty; stale 55000; withdraw then reapply; owner edit keeps the
+  snapshot; close closes the application; notifications without cover note or terms; worker `deleteUser` writes `job_application.deleted`.
+- **W6** (40, time shift for two past sessions and an earlier `accepted_at`): anon reads of the six tables / progress view fail; direct inserts by
+  owner, worker, service_role 42501; draft program (worker_fee 0); open needs the attestation; trainer designation via link code; invitations; accept
+  needs the notice (fee 0, pay as entered); worker_fee PATCH denied; trainee booking assignment 23514; trainee / other-owner recording denied; same-day
+  duplicate 23505; assessment before 3 days refused, then `awaiting_assessment`, correction needs a reason, pass -> `completed`; evidence PATCH / DELETE
+  denied; notifications without dates, names or pay; owner `deleteUser` keeps the other worker's enrollment (D-18); trainee `deleteUser` keeps audit rows.
+- **W7** (38, same time shift): anon 0 rows on the five tables; direct inserts denied; issue refused before completion, for an unverified shop, for a
+  trainer, without the attestation, with a stale assessment (55000); issue (`shop_issued`, stamps, +12 months); PATCH / DELETE denied; certification-
+  required apply refused without / allowed with a certificate; suspend with reason blocks the next apply; review request, reinstate, revoke, re-assessment
+  and renewal; notifications without reason, statement, name or date; owner `deleteUser` keeps the certificate (D-18), worker `deleteUser` removes it.
+- **W8** (30; one trusted READ confirms the cascade): anon / worker / customer read 0 template rows; the owner reads the standard; direct inserts
+  denied; create, save v2 (hash differs, v1 unchanged); locked key, unknown placeholder and section-4 term 23514; stale 55000; other owner / super_admin
+  read nothing; owner publish denied; super_admin publishes the next platform version (stays until the next reset); `newer_standard_available` and
+  rebase; preview notice on 15 sections; diff rows; archive / restore; PATCH / DELETE denied; owner `deleteUser` removes templates, keeps audit rows.
+- **W9** (34): no direct writes on the eight tables; non-eligible / unclassified drafts refused; nothing visible before send; unverified send 23514;
+  deposit flag and flag-count 55000; worker reads document, flags, diff; stale-hash accept 55000; two acceptance records with the label; template save
+  and platform publish keep the hash; amendments; contractor acknowledgements; other parties read nothing; activation; termination; owner `deleteUser`
+  keeps the contract for the worker.
+- **W10** (39; 38 at the W10 test step): direct writes on both tables and `set_workforce_policy_value` denied for owner, worker, service_role; policy
+  3 / informational; three verified owners -> 3 / remaining 0; same owner, second shop or amendment -> still 3; `changes_requested` -> 2, re-approved
+  -> 3; minimum 5 -> remaining 2; worker terminates -> 2; decline -> no row; isolation; owner `deleteUser` -> `owner_removed`.
+- **W11** (36 after fix cycle 1; 14-day backdate of a shop review request): direct writes on both tables denied; escalation refused before the shop
+  decides, allowed after (request withdrawn); revoke refused while open; super_admin queue + case (audit row), uphold; issuer-unavailable escalation ->
+  reinstate; `owner_ended_contract` dispute, response, admin case + document, close, contract unchanged, no contract block after close; summaries for
+  the right role only; N3 raw selects empty; N4 closed queue row without contract data; the worker-delete cascade counted via a trusted query.
+- **W14** (`w14-api-smoke.mjs`, PLAN section 6; 32 checks at the W14 test step, 33 after fix cycle 1 (`b1_owner_close_never_shows_reports_to_owner`;
+  no-op edit 23514, `log_searched` prefix and the subject's `washlink_review` purpose added to existing checks); `smoke14-*@local.test`; TEST-ONLY legacy-unreviewed shop via
+  `docker exec` psql): direct insert / patch / delete / select on the four W14 tables denied for owner, worker, service_role and super_admin; worker
+  report, duplicate 23505, owner reads no report; admin queue + case (audit row), pause, owner resume 23514, owner edit + submit, lift, owner resume ok;
+  second report, close, applications closed with byte-equal snapshots; super_admin publishes the standard template with the UI payload shape, the owner
+  sees "newer standard", a sent contract hash unchanged; `my_workforce_activity` has no id fields; admin log search audited; relationship lookup needs a
+  purpose, owner / worker denied; unreviewed-shop queue + confirm makes the opening visible to workers; `set_config`, guard and stamp functions not callable.

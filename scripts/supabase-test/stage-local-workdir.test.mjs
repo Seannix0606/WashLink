@@ -254,7 +254,7 @@ test('runner_refuses_linked_workdir', () => {
 
 // W7 / W8 / W10 / W11: every helper file is seeded, in order, and a missing one is refused before staging.
 test('stager_seeds_every_helper_file_in_order', () => {
-  const suffixes = ['', '_certifications', '_contract_templates', '_worker_contracts', '_owner_relationships', '_oversight']
+  const suffixes = ['', '_certifications', '_contract_templates', '_worker_contracts', '_owner_relationships', '_oversight', '_moderation']
   assert.deepEqual(HELPERS_SOURCE_NAMES, suffixes.map((suffix) => `test_helpers${suffix}.sql`))
   const root = createFakeRepo()
   const result = stageLocalWorkdir({ repoRoot: root })

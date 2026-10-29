@@ -119,6 +119,7 @@ export function OwnerDashboardTabPanels(props: OwnerDashboardTabPanelsProps): Re
             applicantPipelineService={props.applicantPipelineService}
             ownerShopList={props.ownerShopList}
             trainingDependencies={props.trainingDependencies}
+            jobOpeningModerationService={props.oversightDependencies?.moderationDependencies?.jobOpeningModerationService}
           />
         </Suspense>
       )

@@ -200,7 +200,7 @@ local proof only; W7-L3, W7-L12, W7-L13 and W7-L14 stay OPEN):
   WashLink reviews per suspension / revocation event, withdrawn ones counting (fix cycle 1 N5; 23514 `You can ask
   WashLink to review this decision at most 3 times.`). A
   super_admin cannot open a review, suspend, revoke, issue or renew; no panel or second reviewer (W11-L1, W11-L10).
-  Admin take-over without the worker moved to W14 (only if a human changes D-44).
+  Admin take-over without the worker was not built in W14 (plan item 6 out; D-44 unchanged, only a human can change it).
 - Stranded suspensions (W7-L13, D-23): a suspended certificate whose shop is gone, transferred or unverified, or
   whose owner is gone, can always be escalated (`issuer_unavailable`, no time window; a revoked one within 30 days
   or with an open shop request). Suspensions still have no automatic time limit (D-46, W11-L2).

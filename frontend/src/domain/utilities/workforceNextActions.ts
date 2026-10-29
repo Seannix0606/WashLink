@@ -1,3 +1,4 @@
+import type { AdminModerationSummary } from '../models/AdminOversight'
 import type { AdminDashboardSummary, OwnerDashboardSummary, WorkerDashboardSummary } from '../models/WorkforceDashboardSummary'
 
 /**
@@ -34,7 +35,10 @@ export type OwnerNextActionTarget = 'jobs' | 'training' | 'certifications' | 'co
 
 export type AdminNextActionKey = 'shops_pending_review' | 'open_platform_review' | 'unviewed_dispute' | 'open_dispute'
 
-export type AdminNextActionTarget = 'shop_verification' | 'certification_reviews' | 'contract_disputes'
+export type AdminNextActionTarget = 'shop_verification' | 'certification_reviews' | 'contract_disputes' | 'posting_reports' | 'audit_log'
+
+/** W14 admin next actions from `admin_moderation_summary()`. */
+export type AdminModerationNextActionKey = 'changes_submitted' | 'open_report_case' | 'unreviewed_approved_shop' | 'oversight_flag'
 
 export interface NextAction<Key extends string, Target extends string> {
   readonly key: Key
@@ -46,6 +50,7 @@ export interface NextAction<Key extends string, Target extends string> {
 export type WorkerNextAction = NextAction<WorkerNextActionKey, WorkerNextActionTarget>
 export type OwnerNextAction = NextAction<OwnerNextActionKey, OwnerNextActionTarget>
 export type AdminNextAction = NextAction<AdminNextActionKey, AdminNextActionTarget>
+export type AdminModerationNextAction = NextAction<AdminModerationNextActionKey, AdminNextActionTarget>
 
 function keepNonEmpty<Action extends { readonly count: number }>(candidates: readonly Action[]): Action[] {
   return candidates.filter((candidate) => candidate.count > 0)
@@ -87,5 +92,15 @@ export function adminNextActions(summary: AdminDashboardSummary): AdminNextActio
     { key: 'shops_pending_review', target: 'shop_verification', count: summary.shopsPendingReviewCount },
     // The database total, shown as is (P65: the client never derives a count from two others).
     { key: 'open_dispute', target: 'contract_disputes', count: summary.openDisputeCount },
+  ])
+}
+
+/** W14: owners waiting for a check first, then new reports, unreviewed shops and N6 flags. */
+export function adminModerationNextActions(summary: AdminModerationSummary): AdminModerationNextAction[] {
+  return keepNonEmpty<AdminModerationNextAction>([
+    { key: 'changes_submitted', target: 'posting_reports', count: summary.changesSubmittedCount },
+    { key: 'open_report_case', target: 'posting_reports', count: summary.openReportCaseCount },
+    { key: 'unreviewed_approved_shop', target: 'shop_verification', count: summary.unreviewedApprovedShopCount },
+    { key: 'oversight_flag', target: 'audit_log', count: summary.oversightFlagCount },
   ])
 }

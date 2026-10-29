@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { lazy, Suspense, useMemo, useState } from 'react'
 import { Briefcase, Info, Plus, Store } from 'lucide-react'
 import type { ApplicantPipelineService } from '../../../../application/services/ApplicantPipelineService'
+import type { JobOpeningModerationService } from '../../../../application/services/JobOpeningModerationService'
 import type { JobOpeningService } from '../../../../application/services/JobOpeningService'
 import {
   jobOpeningLimits,
@@ -9,10 +10,12 @@ import {
   type JobOpening,
   type JobOpeningStatus,
 } from '../../../../domain/models/JobOpening'
+import type { OwnerJobOpeningModeration } from '../../../../domain/models/JobOpeningModeration'
 import type { Shop } from '../../../../domain/models/Shop'
 import type { TrainingDependencies } from '../../../dependencyInjection/createTrainingDependencies'
 import { Button, Card, EmptyState, Modal, Skeleton, Tabs, type TabItemDefinition } from '../../../design/ui'
 import { useJobOpeningApplicationCounts } from '../../../hooks/useJobOpeningApplicationCounts'
+import { useOwnerJobOpeningModeration } from '../../../hooks/useOwnerJobOpeningModeration'
 import { useOwnerJobOpenings } from '../../../hooks/useOwnerJobOpenings'
 import {
   targetStatusByTransitionAction,
@@ -27,6 +30,7 @@ import { JobOpeningEditorModal } from './JobOpeningEditorModal'
 import { JobOpeningListItem } from './JobOpeningListItem'
 import { JobOpeningPreview } from './JobOpeningPreview'
 import { JobOpeningTransitionConfirmModal } from './JobOpeningTransitionConfirmModal'
+import { SubmitOpeningChangesModal } from './SubmitOpeningChangesModal'
 
 // W5: the applicant pipeline loads only when the owner opens it.
 const ApplicantPipelinePanel = lazy(async () => {
@@ -52,6 +56,8 @@ interface OwnerJobOpeningsPanelProps {
   readonly ownerShopList: readonly Shop[]
   /** W6: lets the applicant drawer invite accepted applicants to training. */
   readonly trainingDependencies?: TrainingDependencies
+  /** W14: WashLink notices on held openings (optional for W4-W11 callers). */
+  readonly jobOpeningModerationService?: JobOpeningModerationService
 }
 
 export function OwnerJobOpeningsPanel({
@@ -59,6 +65,7 @@ export function OwnerJobOpeningsPanel({
   applicantPipelineService,
   ownerShopList,
   trainingDependencies,
+  jobOpeningModerationService,
 }: OwnerJobOpeningsPanelProps): ReactElement {
   const ownerShopIds = useMemo(() => ownerShopList.map((ownerShop) => ownerShop.id), [ownerShopList])
   const {
@@ -81,6 +88,8 @@ export function OwnerJobOpeningsPanel({
   const [previewedJobOpening, setPreviewedJobOpening] = useState<JobOpening | null>(null)
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null)
   const [pipelineJobOpeningId, setPipelineJobOpeningId] = useState<string | null>(null)
+  const openingModeration = useOwnerJobOpeningModeration(jobOpeningModerationService)
+  const [changesTarget, setChangesTarget] = useState<OwnerJobOpeningModeration | null>(null)
   const jobOpeningIds = useMemo(() => jobOpenings.map((jobOpening) => jobOpening.id), [jobOpenings])
   const { applicationCountByOpening, hasLoadedApplicationCounts, refreshApplicationCounts } =
     useJobOpeningApplicationCounts(applicantPipelineService, jobOpeningIds)
@@ -235,6 +244,9 @@ export function OwnerJobOpeningsPanel({
                   onApplicantsRequested={(selectedJobOpening): void => {
                     setPipelineJobOpeningId(selectedJobOpening.id)
                   }}
+                  moderation={openingModeration.moderationByOpeningId.get(jobOpening.id)}
+                  isModerationSubmitting={openingModeration.isSubmitting}
+                  onAskWashLinkRequested={setChangesTarget}
                   onActionRequested={(selectedJobOpening, action): void => {
                     if (action !== 'save_published') {
                       setPendingConfirmation({ jobOpening: selectedJobOpening, action })
@@ -253,13 +265,12 @@ export function OwnerJobOpeningsPanel({
           jobOpening={editorTarget.mode === 'edit' ? editorTarget.jobOpening : null}
           initialShopId={ownerShopList.length === 1 ? (ownerShopList[0]?.id ?? '') : ''}
           ownerShopList={ownerShopList}
-          onSave={(shopId, saveJobOpeningInput): Promise<boolean> =>
-            saveJobOpening(
-              editorTarget.mode === 'edit' ? editorTarget.jobOpening : null,
-              shopId,
-              saveJobOpeningInput,
-            )
-          }
+          onSave={async (shopId, saveJobOpeningInput): Promise<boolean> => {
+            const isSaved = await saveJobOpening(editorTarget.mode === 'edit' ? editorTarget.jobOpening : null, shopId, saveJobOpeningInput)
+            // W14: an edit can make a held opening ready for "Ask WashLink to check it".
+            await openingModeration.refresh()
+            return isSaved
+          }}
           onClose={(): void => {
             setEditorTarget(null)
           }}
@@ -284,6 +295,15 @@ export function OwnerJobOpeningsPanel({
           </div>
         ) : null}
       </Modal>
+
+      <SubmitOpeningChangesModal
+        moderation={changesTarget}
+        isSubmitting={openingModeration.isSubmitting}
+        onSubmit={openingModeration.submitChanges}
+        onClose={(): void => {
+          setChangesTarget(null)
+        }}
+      />
 
       <JobOpeningTransitionConfirmModal
         action={pendingConfirmation?.action ?? null}

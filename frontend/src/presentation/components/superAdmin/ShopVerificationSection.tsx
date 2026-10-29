@@ -1,19 +1,36 @@
 import type { ReactElement } from 'react'
-import { useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
+import type { AdminOversightService } from '../../../application/services/AdminOversightService'
 import type { ShopService } from '../../../application/services/ShopService'
 import type { ShopVerificationService } from '../../../application/services/ShopVerificationService'
 import type { Shop } from '../../../domain/models/Shop'
-import { Tabs, type TabItemDefinition } from '../../design/ui'
+import { Skeleton, Tabs, type TabItemDefinition } from '../../design/ui'
 import { useShopReviewQueue } from '../../hooks/useShopReviewQueue'
 import { ShopReviewQueueList } from './ShopReviewQueueList'
 import { ShopVerificationReviewDrawer } from './ShopVerificationReviewDrawer'
+import { shopReviewQueueViewLabel, shopViewToggleLabel, unreviewedShopsViewLabel } from '../../utilities/adminOversightCopy'
+
+// W14: the "approved without a recorded review" view loads only when opened.
+const UnreviewedApprovedShopsPanel = lazy(async () => {
+  const unreviewedModule = await import('./shops/UnreviewedApprovedShopsPanel')
+  return { default: unreviewedModule.UnreviewedApprovedShopsPanel }
+})
 
 type SuperAdminReviewScopeTabKey = 'pending' | 'all'
+
+type ShopVerificationViewKey = 'review_queue' | 'unreviewed_approved'
+
+const viewTabItems: readonly TabItemDefinition<ShopVerificationViewKey>[] = [
+  { value: 'review_queue', label: shopReviewQueueViewLabel },
+  { value: 'unreviewed_approved', label: unreviewedShopsViewLabel },
+]
 
 interface ShopVerificationSectionProps {
   readonly superAdminIdentifier: string
   readonly shopService: ShopService
   readonly shopVerificationService: ShopVerificationService
+  /** W14: adds the "Approved without a recorded review" view (D-56). */
+  readonly adminOversightService?: AdminOversightService
 }
 
 /** Shop verification review (moved unchanged from SuperAdminDashboardPage in W11): queue scope, list and drawer. */
@@ -21,7 +38,9 @@ export function ShopVerificationSection({
   superAdminIdentifier,
   shopService,
   shopVerificationService,
+  adminOversightService,
 }: ShopVerificationSectionProps): ReactElement {
+  const [activeView, setActiveView] = useState<ShopVerificationViewKey>('review_queue')
   const {
     shopsInReviewQueue,
     isLoadingShopsInReviewQueue,
@@ -61,8 +80,27 @@ export function ShopVerificationSection({
     [reloadShopsInReviewQueue, replaceShopInReviewQueueLocally, reviewQueueScope],
   )
 
+  const viewToggle =
+    adminOversightService === undefined ? null : (
+      <div className="overflow-x-auto">
+        <Tabs accessibleLabel={shopViewToggleLabel} tabItems={viewTabItems} activeTabValue={activeView} onTabChange={setActiveView} />
+      </div>
+    )
+
+  if (adminOversightService !== undefined && activeView === 'unreviewed_approved') {
+    return (
+      <div className="space-y-4">
+        {viewToggle}
+        <Suspense fallback={<Skeleton heightClassName="h-40" />}>
+          <UnreviewedApprovedShopsPanel adminOversightService={adminOversightService} shopVerificationService={shopVerificationService} />
+        </Suspense>
+      </div>
+    )
+  }
+
   return (
     <section aria-labelledby="shop-verification-heading" className="space-y-4">
+      {viewToggle}
       <header className="flex flex-col gap-1">
         <h2 id="shop-verification-heading" className="text-base font-semibold text-[var(--color-ink-900)]">
           Verification review

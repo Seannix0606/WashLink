@@ -116,6 +116,7 @@ export function WorkerWorkspaceTabs({
             hasWorkerProfile={hasWorkerProfile}
             onCreateProfileRequested={onCreateProfileRequested}
             workerCertificationState={workerCertificationState}
+            jobOpeningModerationService={oversightDependencies?.moderationDependencies?.jobOpeningModerationService}
           />
         </Suspense>
       ) : null}

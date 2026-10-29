@@ -1,11 +1,12 @@
 import type { ReactElement } from 'react'
-import { AlertTriangle, Info, Send } from 'lucide-react'
+import { AlertTriangle, Flag, Info, Send } from 'lucide-react'
 import type { MarketplaceService } from '../../../../application/services/MarketplaceService'
 import type { JobOpening } from '../../../../domain/models/JobOpening'
 import type { MarketplaceJobOpening } from '../../../../domain/models/MarketplaceJobOpening'
 import { Button, Modal, Skeleton } from '../../../design/ui'
 import { useMarketplaceOpeningDetail } from '../../../hooks/useMarketplaceOpeningDetail'
 import { jobOpeningDetailsDisclaimer } from '../../../utilities/jobOpeningDisplay'
+import { reportButtonLabel } from '../../../utilities/jobOpeningModerationCopy'
 import {
   loadingWorkerCertificationState,
   type WorkerVerifiedCertificationState,
@@ -26,6 +27,8 @@ interface MarketplaceOpeningDetailProps {
   readonly onClose: () => void
   /** The worker's real certification state (D-20); only read for certification-required openings. */
   readonly workerCertificationState?: WorkerVerifiedCertificationState
+  /** W14: shown only when given (worker accounts) and the opening was readable (D-50). */
+  readonly onReportRequested?: (selectedJobOpening: MarketplaceJobOpening, jobOpening: JobOpening) => void
 }
 
 /** The full current opening, shown exactly as the shop entered it. */
@@ -35,6 +38,7 @@ export function MarketplaceOpeningDetail({
   onApplyRequested,
   onClose,
   workerCertificationState = loadingWorkerCertificationState,
+  onReportRequested,
 }: MarketplaceOpeningDetailProps): ReactElement {
   const { jobOpening, isLoadingJobOpening, jobOpeningErrorMessage, reloadJobOpening } =
     useMarketplaceOpeningDetail(marketplaceService, selectedJobOpening?.jobOpeningId ?? null)
@@ -44,6 +48,7 @@ export function MarketplaceOpeningDetail({
     applicantRequirement === 'certification_required' ? describeWorkerCertificationWarning(workerCertificationState) : null
   const isBlockedByCertification = isApplyBlockedByCertification(applicantRequirement, workerCertificationState)
   const canApply = jobOpening !== null && jobOpening.status === 'published' && myApplicationStatus === null
+  const canReport = onReportRequested !== undefined && jobOpening !== null && jobOpening.status !== 'draft'
 
   return (
     <Modal
@@ -56,6 +61,17 @@ export function MarketplaceOpeningDetail({
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
             {myApplicationStatus !== null ? (
               <JobApplicationStatusBadge status={myApplicationStatus} prefix="Your application:" />
+            ) : null}
+            {canReport ? (
+              <Button
+                variant="ghost"
+                leadingIcon={<Flag className="h-4 w-4" />}
+                onClick={(): void => {
+                  onReportRequested(selectedJobOpening, jobOpening)
+                }}
+              >
+                {reportButtonLabel}
+              </Button>
             ) : null}
             <Button variant="secondary" onClick={onClose}>
               Close

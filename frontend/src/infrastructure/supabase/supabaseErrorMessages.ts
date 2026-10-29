@@ -3,6 +3,7 @@
  * Raw SQL or PostgREST messages are never passed through; only the messages the
  * W2 database guards raise on purpose (already written for end users) are.
  */
+import { moderationDatabaseMessages } from './supabaseModerationErrorMessages'
 import { oversightDatabaseMessages } from './supabaseOversightErrorMessages'
 import { ownerRelationshipDatabaseMessages } from './supabaseOwnerRelationshipErrorMessages'
 import { workerContractDatabaseMessagePatterns, workerContractDatabaseMessages } from './supabaseWorkerContractErrorMessages'
@@ -209,6 +210,8 @@ const userFacingDatabaseMessages: ReadonlySet<string> = new Set([
   ...ownerRelationshipDatabaseMessages,
   // W11 WashLink reviews and reported contract problems (merged from supabaseOversightErrorMessages.ts).
   ...oversightDatabaseMessages,
+  // W14 job opening moderation, oversight reads and lookups (merged from supabaseModerationErrorMessages.ts).
+  ...moderationDatabaseMessages,
 ])
 
 /** Guard messages that carry a number (for example the program's required training days). */

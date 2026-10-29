@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { Eye, EyeOff, PencilLine, Trash2, Users } from 'lucide-react'
 import type { JobOpening } from '../../../../domain/models/JobOpening'
+import { heldModerationStatuses, heldOpeningResumeRefusedMessage, type OwnerJobOpeningModeration } from '../../../../domain/models/JobOpeningModeration'
 import {
   isJobOpeningContentEditable,
   isJobOpeningDeletable,
@@ -15,6 +16,7 @@ import { formatShortDateTime } from '../../../utilities/datetimeFormatting'
 import { formatApplicantCountLabel } from '../../../utilities/jobApplicationDisplay'
 import { describeJobOpeningStatus, formatCompensationAsEntered } from '../../../utilities/jobOpeningDisplay'
 import { JobOpeningStatusBadge } from './JobOpeningStatusBadge'
+import { OpeningModerationNotice } from './OpeningModerationNotice'
 
 interface JobOpeningListItemProps {
   readonly jobOpening: JobOpening
@@ -29,6 +31,10 @@ interface JobOpeningListItemProps {
   /** W5: number of applications (undefined while unknown). Drafts never have applicants. */
   readonly applicationCount?: number
   readonly onApplicantsRequested?: (jobOpening: JobOpening) => void
+  /** W14: WashLink's decided case for this opening (reason and message only; never reports). */
+  readonly moderation?: OwnerJobOpeningModeration
+  readonly isModerationSubmitting?: boolean
+  readonly onAskWashLinkRequested?: (moderation: OwnerJobOpeningModeration) => void
 }
 
 export function JobOpeningListItem({
@@ -42,11 +48,17 @@ export function JobOpeningListItem({
   onActionRequested,
   applicationCount,
   onApplicantsRequested,
+  moderation,
+  isModerationSubmitting = false,
+  onAskWashLinkRequested,
 }: JobOpeningListItemProps): ReactElement {
-  const transitionOptions = listJobOpeningTransitionOptions(
-    jobOpening,
-    isShopVerifiedForPublishing,
-    evaluatedAt,
+  const isHeldByWashLink = moderation !== undefined && heldModerationStatuses.includes(moderation.status)
+  // P75: while WashLink holds the opening, resuming is refused by the database; say why up front.
+  const transitionOptions = listJobOpeningTransitionOptions(jobOpening, isShopVerifiedForPublishing, evaluatedAt).map(
+    (transitionOption) =>
+      isHeldByWashLink && transitionOption.action === 'resume'
+        ? { ...transitionOption, disabledReason: heldOpeningResumeRefusedMessage }
+        : transitionOption,
   )
   const isHiddenFromWorkers = jobOpening.status === 'published' && !isShopVerifiedForPublishing
   const [compensationSummary] = formatCompensationAsEntered(jobOpening)
@@ -82,6 +94,16 @@ export function JobOpeningListItem({
           Hidden from workers: this shop does not currently have an approved verification. It
           stays published and shows again after the shop is verified.
         </p>
+      ) : null}
+
+      {moderation !== undefined ? (
+        <OpeningModerationNotice
+          moderation={moderation}
+          isSubmitting={isModerationSubmitting}
+          onAskWashLinkRequested={(heldModeration): void => {
+            onAskWashLinkRequested?.(heldModeration)
+          }}
+        />
       ) : null}
 
       <div className="flex flex-wrap gap-2">

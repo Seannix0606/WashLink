@@ -23,8 +23,8 @@ Migrations (staged `20261028000001..07`; 69 staged migrations in total):
 - D-37 `minimum_distinct_owners` default 3, range 1..10, changed only by a super_admin through an audited RPC with a
   reason; enforcement fixed to `informational` by a CHECK.
 - D-38 owners see only their own relationship rows with a worker, never the worker's count, remaining, goal or other
-  owners; super_admin has no relationship read in W10. W11 added only a dispute-scoped read (below); audited
-  super_admin relationship reads outside disputes moved to W14 (W11 PLAN D-49).
+  owners; super_admin has no relationship read in W10. W11 added a dispute-scoped read (below); W14 added audited
+  super_admin lookups outside disputes (D-55, below).
 - D-39 no notifications for relationship changes (contract events already notify; W12 decides).
 - D-40 trusted contract repairs are forward-only (accepted / active -> terminated / expired).
 
@@ -204,7 +204,8 @@ As built: for `owner_removed` rows `my_owner_relationships()` returns `shop_name
 
 The owner's read has no goal, count, remaining or other-owner column, the owner has no direct select on
 `worker_owner_relationships`, and the frontend never calls the worker reads for an owner. Customers, anon and
-super_admin read no relationship rows (super_admin alone selects `workforce_policies` and reads the W3 audit). Owner name snapshots are kept for the worker after the owner account is deleted; relationship rows are
+super_admin have no direct read of relationship rows (super_admin alone selects `workforce_policies` and reads the W3
+audit; since W14 it reads rows only through the audited lookups below). Owner name snapshots are kept for the worker after the owner account is deleted; relationship rows are
 deleted with the worker account (the audit rows remain).
 
 ## Audit (w10g; W3 rules; details in `AUDIT_AND_NOTIFICATIONS.md`, W10 section)
@@ -263,8 +264,19 @@ every W10 function `W10: ...` (a missing one aborts). No notifications (D-39).
   `admin_contract_dispute_case` returns a `relationship` block with only `status` and `status_reason` of that contract's
   (worker, owner) pair, derived live by `worker_owner_relationship_derive` (null when there is no accepted contract);
   never the count, remaining, minimum or other owners, and nothing once the problem is closed or withdrawn. Every call
-  is audited. `owner_dashboard_summary().relationship_needs_attention_count` counts the owner's live `suspended` rows; the worker Overview (`worker/dashboard/WorkerOverviewPanel.tsx`) reuses the W10 progress card. The W11 owner copy labels this count "Relationships needing attention" (`presentation/utilities/workforceDashboardCopy.ts:34`, `workforceDashboardDisplay.ts:86`), matching the W10 owner label (C1, W10-L9). Other
-  super_admin relationship reads are W14.
+  is audited. `owner_dashboard_summary().relationship_needs_attention_count` counts the owner's live `suspended` rows; the worker Overview (`worker/dashboard/WorkerOverviewPanel.tsx`) reuses the W10 progress card. The W11 owner copy labels this count "Relationships needing attention" (`presentation/utilities/workforceDashboardCopy.ts:34`, `workforceDashboardDisplay.ts:86`), matching the W10 owner label (C1, W10-L9).
+- W14 (`2026_10_29_w14g`, `PLATFORM_MODERATION_AND_AUDIT.md`; D-38 outside disputes, D-55): a super_admin looks up one
+  worker (`admin_worker_relationships`) or one owner (`admin_owner_relationships`) with a fixed purpose and a 20..300
+  note. Each call reads the rows, then writes an `admin_access_records` row and the audit event
+  `admin_access.relationships_viewed` in the same transaction before returning (an audit failure returns nothing; an
+  unknown id is recorded too and returns `{found:false}`). The worker result has the live rows
+  (`worker_owner_relationship_derive`), owner name snapshots and `distinct_qualifying_owner_count`, but **not** the
+  current minimum: only the W10 functions read `workforce_policies` (`j16_only_w10_reads_and_setter_reference_workforce_policies`,
+  W14 deviation D1). The owner result never has a worker count, the minimum or other owners. No contract text. Parties are
+  not notified; the looked-up person sees the event in "Your activity" (`my_workforce_activity`: label `washlink`,
+  details access_kind and the generic purpose `washlink_review` instead of the stated purpose (N7), never the note;
+  shown as "WashLink looked up your workforce relationships"). Counterpart workers listed in an owner lookup do not see it. The console
+  reads the minimum separately through the W10 `WorkforcePolicyService` after a worker lookup (W14 F6).
 
 ## Rollback (local test stack only; reverse order g..a)
 

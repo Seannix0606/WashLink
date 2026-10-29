@@ -2,10 +2,19 @@ import { useCallback, useRef, useState } from 'react'
 import { stalePlatformReviewMessage } from '../../domain/models/CertificationPlatformReview'
 import { staleContractDisputeMessage } from '../../domain/models/ContractDispute'
 import { staleCertificationMessage } from '../../domain/models/Certification'
+import { staleContractTemplateMessage } from '../../domain/models/ContractTemplate'
+import { staleModerationCaseMessage } from '../../domain/models/JobOpeningModeration'
 import { applicationToast } from '../design/ui'
 import { toDisplayErrorMessage } from '../utilities/toDisplayErrorMessage'
 
-const staleMessages: readonly string[] = [stalePlatformReviewMessage, staleContractDisputeMessage, staleCertificationMessage]
+const staleMessages: readonly string[] = [
+  stalePlatformReviewMessage,
+  staleContractDisputeMessage,
+  staleCertificationMessage,
+  // W14: a moderation case or the standard template changed since it was read.
+  staleModerationCaseMessage,
+  staleContractTemplateMessage,
+]
 
 export interface UseOversightActionRunnerResult {
   /** The key of the action that is running (for example `withdraw:<id>`). */

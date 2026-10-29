@@ -13,28 +13,31 @@ block; no committed migration changed, no W7 / W9 function body replaced): `2026
 `w11d_certification_platform_review_reads.sql`, `w11e_worker_contract_disputes.sql`, `w11f_worker_contract_dispute_rpcs.sql`,
 `w11g_worker_contract_dispute_reads.sql`, `w11h_workforce_dashboard_summaries.sql`, `w11i_oversight_audit_and_notifications.sql`.
 
-## Split: what moved to W14 (D-49)
+## Split: what moved to W14 (D-49) and what W14 delivered
 
 W11 keeps the dashboards and navigation, the independent certification review (W7-L12, W7-L13, D-21 conflict; part of
 W7-L14) and contract-problem access including review of owner terminations (W9, W9-L14) with a dispute-scoped
-relationship status (part of W10). A new increment **W14 "Platform moderation, oversight reads & admin audit
-(super_admin)"** (after W11, before W12) takes: worker reports of job postings and a super_admin moderation queue with an
-audited takedown (W4-L4 / L7 / L8 / L9); a super_admin UI for `publish_platform_contract_template_version` (W8);
-redacted per-user audit reads and an admin audit log UI (W3); audited super_admin relationship reads outside disputes
-(W10, D-38); a queue of approved shops with no recorded reviewer (D-10 rows 14 / 22); admin take-over of overdue or
-stranded shop review requests without a worker escalation, only if a human changes D-44. RECORD appends W14 to
-`loop/workforce/PLAN.md` / `STATE.md`.
+relationship status (part of W10). **W14 "Platform moderation, oversight reads & admin audit"** delivered (database
+w14a..w14i, and frontend built; `PLATFORM_MODERATION_AND_AUDIT.md`): worker reports of job openings with a
+super_admin queue and an audited pause (with a hold) / close (W4-L4 / L7 / L8 / L9 -> W14-L1..L3); a super_admin UI for
+`publish_platform_contract_template_version` (W8; frontend only); the redacted per-user `my_workforce_activity`, the
+audited `admin_workforce_audit_log` and the N6 flag below (W3); audited super_admin relationship lookups outside
+disputes (W10, D-38, D-55); a queue and re-review of approved shops without a recorded super_admin review (D-10 rows
+14 / 22, D-56, with a runbook). Not delivered: admin take-over of overdue or stranded shop review requests (W14 plan
+item 6 out; D-44 unchanged).
 
 ## Decisions (proposed defaults in W11 PLAN section 5; RECORD adds them to DECISIONS.md as ADOPTED-DEFAULT)
 
 - D-42 navigation: workers get an "Overview" tab first and land on it, except roster-linked workers, who keep "Assigned
   bookings" (J18). Owners keep "Bookings" as default, plus a "Next actions" strip (hidden when empty) and a "Workforce"
-  tab. super_admin console tabs: Overview (default), Shop verification, Certification reviews, Contract disputes, Policies.
+  tab. super_admin console tabs: Overview (default), Shop verification, Certification reviews, Contract disputes, Policies
+  (W14 D-57 shows nine when `moderationDependencies` is wired, as in production: adds Posting reports, Standard
+  contract, Relationships, Audit log; without it the five W11 tabs stay, W14 F1 / F2).
 - D-43 counts come from DB summary functions; workers see "Latest openings" (newest 3 from `search_job_openings`), never
   "recommended for you"; no matching or ranking algorithm.
 - D-44 independent certification review = super_admin ("WashLink review"), opened by the certificate's worker only; bases:
   shop upheld (within 30 days), no shop decision within 14 days, issuer unavailable. Escalating withdraws the open shop
-  request. Admin take-over without the worker -> W14, only if a human changes this row.
+  request. Admin take-over without the worker only if a human changes this row (unchanged; W14 did not build it).
 - D-45 a WashLink reinstatement needs no current issuer verification; WashLink never suspends, revokes, issues or renews;
   one decision per suspension / revocation event, final within WashLink.
 - D-46 holds while a WashLink review is open (P68). No automatic time limit on suspensions; stranded suspensions use the
@@ -215,6 +218,9 @@ record_label` (`Acceptance record — not an e-signature`) only for an open disp
 (else 0 rows). Every case call and every returned document writes `worker_contract_dispute.case_viewed` (payload
 dispute_id, contract_id, to_status, `contract_block` or `version_id`); the review case writes
 `certification_platform_review.case_viewed`. An audit failure aborts the read (R3). Parties see `washlink_has_viewed`.
+N6 (W11 REVIEW) is addressed by W14 `admin_oversight_access_flags()`: an OPEN dispute open >= 30 days with >= 5
+`worker_contract_dispute.case_viewed` events (case and document reads) is listed for the administrators; it informs,
+it does not block reads (W14-L12).
 
 ## Audit and notifications (w11i; W3 rules: an audit failure aborts the action, a notification problem never does)
 
@@ -334,4 +340,5 @@ i: drop the producers (audit rows and notifications stay). h: drop the three sum
 RPCs. e: drop the dispute guard and table (IRREVERSIBLE: trusted `copy` first). d, c: drop the review reads and RPCs. b:
 drop the holds FIRST, then the guard, the reviews table and `certification_status_events.platform_review_id`
 (IRREVERSIBLE: copy the reviews and linked events first). a: nothing. Stager: drop the 6th helper entry. Frontend:
-revert. W7 / W9 / W10 rollbacks are invalid while W11 objects exist.
+revert. W7 / W9 / W10 rollbacks are invalid while W11 objects exist; roll back W14 (i..a) before W11 (w14h reads the
+W11 disputes).

@@ -41,9 +41,25 @@ means shop-issued certification only, never government-recognized (W4-L5).
 | draft | (row deleted) | owning owner | DELETE, draft only |
 
 Everything else (same status, backwards, reopening closed, un-archiving, draft -> closed /
-archived) is rejected for every end user, super_admin included. Closed and archived are
+archived) is rejected for every end user, super_admin included (the one W14 exception is the moderation path
+below; a super_admin still cannot edit, publish, archive or delete an opening). Closed and archived are
 read-only. Trusted SQL sessions bypass the guard for support / repair and are audited as
 `trusted_session`. At most 50 non-archived openings per shop.
+
+## WashLink moderation (W14, `PLATFORM_MODERATION_AND_AUDIT.md`)
+
+Workers report openings they can read; a super_admin decides the resulting case with `moderate_job_opening` only:
+`published -> paused` (with a hold) or `published | paused -> closed` (W5 auto-close fires), with a reason kind and a
+message the owner reads in `owner_job_opening_moderation()`. The w4c guard trigger was split (w14c) and its function
+body is unchanged; a separate guard checks the moderation update. While held (`paused_by_washlink` /
+`changes_submitted`) the owner's `paused -> published` is refused with 23514 `WashLink paused this job opening. Edit it
+and ask WashLink to check it before publishing again.`; edit, close and archive stay allowed (close / archive resolves
+the case). The owner edits, then calls `submit_job_opening_changes` (refused unless the content differs from the
+snapshot of the last pause / kept pause, N5); after WashLink lifts the pause the owner resumes through
+`transition_job_opening` (verification re-checked). Content and snapshots are never changed. Owners never see reports,
+reporters, report counts or report categories, including after their own close / archive of a held opening: that close
+closes the open reports in the owner's session, but `my_workforce_activity` shows `job_opening_report.*` events only to
+the reporter (subject profile), never to the actor (W14 fix cycle 1, B1).
 
 ## Visibility (RLS)
 
@@ -78,7 +94,7 @@ pay or employment terms." The form never pre-fills pay, benefits or schedule.
 - Editing a published opening changes what earlier applicants saw; W5 keeps a write-once snapshot on each application (C-W4-1 closed in W5).
 - Deleting a non-draft opening through PostgREST affects 0 rows (RLS filters it before the guard), so no error is returned; the guard message `Only draft job openings can be deleted.` is defence in depth.
 - The RPC flag relies on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`; R6).
-- Owner free text is length-checked only; no moderation yet: worker reports and a super_admin moderation queue moved from W11 to W14 (W11 PLAN D-49; W4-L4).
+- Owner free text is length-checked only; there is no automatic or keyword filter. W14 added report-driven moderation (worker reports, a super_admin queue, audited pause / close; above); an opening WashLink did not act on is not vetted (W4-L4, W14-L1).
 - An audit failure aborts the action, including shop / account deletion cascades; the w4a preflight reduces drift risk (R5).
 
 ## Rollback
@@ -86,4 +102,4 @@ pay or employment terms." The form never pre-fills pay, benefits or schedule.
 Reverse order d, c, b, a (local stack only): d drops the audit trigger / function and the RPC
 (audit rows stay); c drops the policies, triggers, functions and table (data loss, export first);
 b restores the w2b / w2d bodies (pinned) and drops `shop_has_recorded_verification` (re-opens
-R-2); a has nothing to roll back.
+R-2); a has nothing to roll back. The W4 rollbacks are invalid while the w14c triggers exist (roll back W14 first).

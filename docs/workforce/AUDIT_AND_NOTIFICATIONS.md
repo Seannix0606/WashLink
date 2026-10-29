@@ -25,7 +25,7 @@ Columns: `id` bigint identity (insertion order), `created_at` (forced to `now()`
 | INSERT | Only `record_workforce_audit_event(p_action, p_subject_type, p_subject_id, p_subject_profile_id, p_payload)` (definer, revoked from public, anon, authenticated, service_role). Actor fields are derived: `actor_id = auth.uid()`; `actor_kind` = user if uid, else trusted_session if `is_trusted_db_session()`, else system (e.g. GoTrue `deleteUser`); a trusted SQL session that sets `request.jwt.claims` is recorded as `user` (see Limitations); `actor_role = current_user_profile_role()`. Direct INSERT -> 42501 `Audit events are written only by the server.` (trigger) or permission denied. |
 | UPDATE | Never: 42501 `Audit events are append-only.` for every session, super_admin, service_role and trusted SQL included. |
 | DELETE / TRUNCATE | 42501 unless the trusted retention path below holds. |
-| SELECT | super_admin only (`wae_select_super_admin`). An event about one party may carry the other party's id (reviewer, owner), so redacted per-user functions (moved from W11 to W14, W11 PLAN D-49) are planned instead of widening this policy. W11 adds no audit read. |
+| SELECT | Raw: super_admin only (`wae_select_super_admin`, kept by D-54; W13 decides). An event about one party may carry the other party's id, so the policy is not widened: W14 adds the redacted per-user read `my_workforce_activity` (every role, no ids) and the audited `admin_workforce_audit_log`; see `PLATFORM_MODERATION_AND_AUDIT.md` (W14 events, payloads and notifications). |
 
 Payload rule `workforce_audit_payload_is_safe(jsonb)` (CHECK, 23514 on violation): at most 2048 bytes, nesting depth
 at most 3; no key (recursive) matching
@@ -131,7 +131,7 @@ and on focus). W12 may add Realtime Broadcast with `realtime.messages` policies,
   and reviewed, and no client can write.
 - Up to 60 s polling delay (R6). Audit rows keep pseudonymous user ids after account deletion (R7, by design for R-4;
   retention is a legal question, W3-L1).
-- Audit read for actors/subjects and an admin audit UI moved from W11 to W14 (D-49); email/SMS/push and W4-W11 events are W12.
+- Per-user and admin audit reads, W14 events and notifications: `PLATFORM_MODERATION_AND_AUDIT.md`; email/SMS/push and W4-W14 events are W12.
 
 ## Rollback
 

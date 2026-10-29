@@ -1,9 +1,14 @@
 import type { ReactElement } from 'react'
 import { CheckCircle2, LayoutDashboard } from 'lucide-react'
+import type { AdminOversightService } from '../../../application/services/AdminOversightService'
 import type { WorkforceDashboardService } from '../../../application/services/WorkforceDashboardService'
-import { adminNextActions, type AdminNextActionTarget } from '../../../domain/utilities/workforceNextActions'
+import type { AdminModerationSummary } from '../../../domain/models/AdminOversight'
+import { adminModerationNextActions, adminNextActions, type AdminNextActionTarget } from '../../../domain/utilities/workforceNextActions'
 import { Card, EmptyState, Skeleton } from '../../design/ui'
+import { useAdminModerationSummary } from '../../hooks/useAdminModerationSummary'
 import { useWorkforceDashboardSummary } from '../../hooks/useWorkforceDashboardSummary'
+import { adminModerationNextActionText, moderationCountsHeading } from '../../utilities/adminOversightCopy'
+import { formatShortDateTime } from '../../utilities/datetimeFormatting'
 import {
   adminNextActionsEmptyText,
   adminNextActionText,
@@ -16,17 +21,83 @@ import {
   overviewUnavailableTitle,
 } from '../../utilities/workforceDashboardCopy'
 import { adminCountGroups } from '../../utilities/workforceDashboardDisplay'
-import { DashboardCountGrid } from '../shared/DashboardCountGrid'
+import { DashboardCountGrid, type DashboardCountGroup } from '../shared/DashboardCountGrid'
 import { LoadErrorNotice } from '../shared/LoadErrorNotice'
 import { NextActionList } from '../shared/NextActionList'
 
 interface AdminOverviewPanelProps {
   readonly workforceDashboardService: WorkforceDashboardService
   readonly onNavigate: (target: AdminNextActionTarget) => void
+  /** W14: the second summary (`admin_moderation_summary()`); omitted by W11 callers. */
+  readonly adminOversightService?: AdminOversightService
+}
+
+function moderationCountGroup(summary: AdminModerationSummary): DashboardCountGroup {
+  return {
+    key: 'moderation',
+    heading: 'Moderation counts',
+    items: [
+      { key: 'open_report_cases', label: 'New posting report cases', value: summary.openReportCaseCount },
+      { key: 'changes_submitted', label: 'Owners asking for a check', value: summary.changesSubmittedCount },
+      { key: 'paused_by_washlink', label: 'Openings paused by WashLink', value: summary.pausedByWashLinkCount },
+      { key: 'oldest_open_case', label: 'Oldest new case', value: summary.oldestOpenCaseAt === null ? 'None' : formatShortDateTime(summary.oldestOpenCaseAt) },
+      { key: 'unreviewed_shops', label: 'Approved shops without a recorded review', value: summary.unreviewedApprovedShopCount },
+      { key: 'oversight_flags', label: 'Long-open disputes read often', value: summary.oversightFlagCount },
+      { key: 'lookups', label: 'Relationship lookups in 30 days', value: summary.relationshipLookupsLast30Days },
+    ],
+  }
+}
+
+/** W14 moderation and oversight counts with their next actions (read only; polled like W11). */
+function AdminModerationOverview({
+  adminOversightService,
+  onNavigate,
+}: {
+  readonly adminOversightService: AdminOversightService
+  readonly onNavigate: (target: AdminNextActionTarget) => void
+}): ReactElement | null {
+  const moderationSummary = useAdminModerationSummary(adminOversightService)
+  if (moderationSummary.isLoading) {
+    return <Skeleton heightClassName="h-24" />
+  }
+  if (moderationSummary.errorMessage !== null) {
+    return (
+      <LoadErrorNotice
+        title="The moderation counts could not be loaded"
+        errorMessage={moderationSummary.errorMessage}
+        onRetry={(): void => {
+          void moderationSummary.reload()
+        }}
+      />
+    )
+  }
+  const summary = moderationSummary.resource
+  if (summary === null) {
+    return null
+  }
+  const nextActions = adminModerationNextActions(summary)
+  return (
+    <section aria-label={moderationCountsHeading} className="space-y-2">
+      {nextActions.length > 0 ? (
+        <NextActionList
+          accessibleLabel={`${moderationCountsHeading}: next actions`}
+          items={nextActions.map((nextAction) => ({
+            key: nextAction.key,
+            count: nextAction.count,
+            label: adminModerationNextActionText[nextAction.key](nextAction.count),
+            onSelect: (): void => {
+              onNavigate(nextAction.target)
+            },
+          }))}
+        />
+      ) : null}
+      <DashboardCountGrid groups={[moderationCountGroup(summary)]} />
+    </section>
+  )
 }
 
 /** Super_admin Overview (default tab): what is waiting, then counts from admin_dashboard_summary(). */
-export function AdminOverviewPanel({ workforceDashboardService, onNavigate }: AdminOverviewPanelProps): ReactElement {
+export function AdminOverviewPanel({ workforceDashboardService, onNavigate, adminOversightService }: AdminOverviewPanelProps): ReactElement {
   const summaryState = useWorkforceDashboardSummary(workforceDashboardService, 'super_admin')
 
   const renderBody = (): ReactElement => {
@@ -80,6 +151,7 @@ export function AdminOverviewPanel({ workforceDashboardService, onNavigate }: Ad
           </h3>
           <DashboardCountGrid groups={adminCountGroups(summary)} />
         </section>
+        {adminOversightService !== undefined ? <AdminModerationOverview adminOversightService={adminOversightService} onNavigate={onNavigate} /> : null}
       </div>
     )
   }

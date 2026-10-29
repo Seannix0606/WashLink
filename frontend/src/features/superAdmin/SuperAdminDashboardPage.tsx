@@ -6,7 +6,7 @@ import { AuthenticatedTopBar } from '../../presentation/components/Authenticated
 import {
   adminNextActionTab,
   defaultSuperAdminTab,
-  superAdminTabItems,
+  superAdminTabItemsFor,
   type SuperAdminTabKey,
 } from '../../presentation/components/superAdmin/superAdminTabs'
 
@@ -27,6 +27,23 @@ const ContractDisputeQueuePanel = lazy(async () => {
   const disputeModule = await import('../../presentation/components/superAdmin/ContractDisputeQueuePanel')
   return { default: disputeModule.ContractDisputeQueuePanel }
 })
+// W14 (D-57): posting reports, standard contract, relationship lookups and the audit log.
+const PostingReportQueuePanel = lazy(async () => {
+  const postingModule = await import('../../presentation/components/superAdmin/moderation/PostingReportQueuePanel')
+  return { default: postingModule.PostingReportQueuePanel }
+})
+const StandardContractPanel = lazy(async () => {
+  const standardModule = await import('../../presentation/components/superAdmin/standardContract/StandardContractPanel')
+  return { default: standardModule.StandardContractPanel }
+})
+const RelationshipLookupPanel = lazy(async () => {
+  const relationshipModule = await import('../../presentation/components/superAdmin/relationships/RelationshipLookupPanel')
+  return { default: relationshipModule.RelationshipLookupPanel }
+})
+const AdminAuditLogPanel = lazy(async () => {
+  const auditModule = await import('../../presentation/components/superAdmin/audit/AdminAuditLogPanel')
+  return { default: auditModule.AdminAuditLogPanel }
+})
 // W10: the workforce policy panel.
 const WorkforcePolicyPanel = lazy(async () => {
   const policyModule = await import('../../presentation/components/superAdmin/WorkforcePolicyPanel')
@@ -38,9 +55,9 @@ interface SuperAdminDashboardPageProps {
 }
 
 /**
- * W11 super_admin console (D-42): Overview (default), Shop verification, Certification reviews,
- * Contract disputes, Policies. Every read and action is checked by the database; this page only
- * arranges the sections.
+ * Super_admin console (D-42, D-57): Overview (default), Shop verification, Posting reports,
+ * Certification reviews, Contract disputes, Standard contract, Relationships, Audit log, Policies.
+ * Every read and action is checked by the database; this page only arranges the sections.
  */
 export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDashboardPageProps): ReactElement {
   const { shopService, shopVerificationService, workforcePolicyService, oversightDependencies } = useMemo(
@@ -48,6 +65,8 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
     [],
   )
   const [activeTab, setActiveTab] = useState<SuperAdminTabKey>(defaultSuperAdminTab)
+  const moderationDependencies = oversightDependencies.moderationDependencies
+  const tabItems = superAdminTabItemsFor(moderationDependencies !== undefined)
   const panelFallback = <Skeleton heightClassName="h-40" />
 
   const renderActivePanel = (): ReactElement => {
@@ -56,6 +75,7 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
         return (
           <AdminOverviewPanel
             workforceDashboardService={oversightDependencies.workforceDashboardService}
+            adminOversightService={moderationDependencies?.adminOversightService}
             onNavigate={(target): void => {
               setActiveTab(adminNextActionTab(target))
             }}
@@ -67,7 +87,27 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
             superAdminIdentifier={superAdminIdentifier}
             shopService={shopService}
             shopVerificationService={shopVerificationService}
+            adminOversightService={moderationDependencies?.adminOversightService}
           />
+        )
+      case 'posting_reports':
+        return moderationDependencies === undefined ? panelFallback : (
+          <PostingReportQueuePanel moderationService={moderationDependencies.jobOpeningModerationService} />
+        )
+      case 'standard_contract':
+        return moderationDependencies === undefined ? panelFallback : (
+          <StandardContractPanel
+            platformTemplateService={moderationDependencies.platformContractTemplateService}
+            contractTemplateService={moderationDependencies.contractTemplateService}
+          />
+        )
+      case 'relationships':
+        return moderationDependencies === undefined ? panelFallback : (
+          <RelationshipLookupPanel adminOversightService={moderationDependencies.adminOversightService} workforcePolicyService={workforcePolicyService} />
+        )
+      case 'audit_log':
+        return moderationDependencies === undefined ? panelFallback : (
+          <AdminAuditLogPanel adminOversightService={moderationDependencies.adminOversightService} />
         )
       case 'certification_reviews':
         return <CertificationReviewQueuePanel platformReviewService={oversightDependencies.certificationPlatformReviewService} />
@@ -84,12 +124,12 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
         <header className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-[var(--color-ink-900)] sm:text-3xl">Platform administration</h1>
           <p className="text-sm text-[var(--color-ink-500)]">
-            Shop verification, WashLink reviews of certification decisions, reported contract problems and workforce policies.
+            Shop verification, posting reports, WashLink reviews of certification decisions, reported contract problems, the standard contract template, audited lookups and workforce policies.
           </p>
         </header>
 
         <div className="overflow-x-auto">
-          <Tabs accessibleLabel="Administration sections" tabItems={superAdminTabItems} activeTabValue={activeTab} onTabChange={setActiveTab} />
+          <Tabs accessibleLabel="Administration sections" tabItems={tabItems} activeTabValue={activeTab} onTabChange={setActiveTab} />
         </div>
 
         <Suspense fallback={panelFallback}>{renderActivePanel()}</Suspense>

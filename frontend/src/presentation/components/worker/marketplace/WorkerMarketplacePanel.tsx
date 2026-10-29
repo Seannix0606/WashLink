@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import type { JobApplicationService } from '../../../../application/services/JobApplicationService'
+import type { JobOpeningModerationService } from '../../../../application/services/JobOpeningModerationService'
 import type { MarketplaceService } from '../../../../application/services/MarketplaceService'
 import type { JobOpening } from '../../../../domain/models/JobOpening'
 import type { MarketplaceJobOpening } from '../../../../domain/models/MarketplaceJobOpening'
@@ -10,11 +11,14 @@ import { Button, Card, EmptyState, Skeleton } from '../../../design/ui'
 import { useApplyToJobOpening } from '../../../hooks/useApplyToJobOpening'
 import { useMarketplaceSearch } from '../../../hooks/useMarketplaceSearch'
 import { toApplyOpeningRequirements } from '../../../utilities/applyOpeningRequirements'
+import { myReportsHeading, myReportsHideLabel, myReportsShowLabel } from '../../../utilities/jobOpeningModerationCopy'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 import { ApplyToOpeningModal, type ApplyTarget } from './ApplyToOpeningModal'
 import { MarketplaceFilterBar } from './MarketplaceFilterBar'
 import { MarketplaceOpeningCard } from './MarketplaceOpeningCard'
 import { MarketplaceOpeningDetail } from './MarketplaceOpeningDetail'
+import { MyOpeningReportsList } from './MyOpeningReportsList'
+import { ReportOpeningDialog, type ReportOpeningTarget } from './ReportOpeningModal'
 import { TrainingAndWorkNotice } from './TrainingAndWorkNotice'
 
 interface WorkerMarketplacePanelProps {
@@ -24,6 +28,8 @@ interface WorkerMarketplacePanelProps {
   readonly onCreateProfileRequested: () => void
   /** The worker's real certification state (D-20) for certification-required openings. */
   readonly workerCertificationState?: WorkerVerifiedCertificationState
+  /** W14: lets the worker report an opening and read their reports (optional for W5-W11 callers). */
+  readonly jobOpeningModerationService?: JobOpeningModerationService
 }
 
 /** Apply always starts from the loaded opening, so its requirements are in the dialog. */
@@ -45,6 +51,7 @@ export function WorkerMarketplacePanel({
   hasWorkerProfile,
   onCreateProfileRequested,
   workerCertificationState,
+  jobOpeningModerationService,
 }: WorkerMarketplacePanelProps): ReactElement {
   const {
     jobOpenings,
@@ -62,6 +69,8 @@ export function WorkerMarketplacePanel({
     useApplyToJobOpening(jobApplicationService)
   const [detailJobOpening, setDetailJobOpening] = useState<MarketplaceJobOpening | null>(null)
   const [applyTarget, setApplyTarget] = useState<ApplyTarget | null>(null)
+  const [reportTarget, setReportTarget] = useState<ReportOpeningTarget | null>(null)
+  const [isReportListShown, setIsReportListShown] = useState<boolean>(false)
 
   const sendApplication = async (coverNoteInput: string, hasAcknowledgedNotice: boolean): Promise<void> => {
     if (applyTarget === null) {
@@ -149,7 +158,7 @@ export function WorkerMarketplacePanel({
 
       <MarketplaceOpeningDetail
         marketplaceService={marketplaceService}
-        selectedJobOpening={applyTarget === null ? detailJobOpening : null}
+        selectedJobOpening={applyTarget === null && reportTarget === null ? detailJobOpening : null}
         onApplyRequested={(selectedJobOpening, jobOpening): void => {
           clearApplyError()
           setApplyTarget(toApplyTarget(selectedJobOpening, jobOpening))
@@ -158,7 +167,44 @@ export function WorkerMarketplacePanel({
           setDetailJobOpening(null)
         }}
         workerCertificationState={workerCertificationState}
+        onReportRequested={
+          jobOpeningModerationService === undefined
+            ? undefined
+            : (selectedJobOpening): void => {
+                setReportTarget({
+                  jobOpeningId: selectedJobOpening.jobOpeningId,
+                  title: selectedJobOpening.title,
+                  shopName: selectedJobOpening.shopName,
+                })
+              }
+        }
       />
+
+      {jobOpeningModerationService !== undefined ? (
+        <>
+          <ReportOpeningDialog
+            moderationService={jobOpeningModerationService}
+            target={reportTarget}
+            onClose={(): void => {
+              setReportTarget(null)
+            }}
+          />
+          <section aria-label={myReportsHeading} className="space-y-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-expanded={isReportListShown}
+              leadingIcon={isReportListShown ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              onClick={(): void => {
+                setIsReportListShown((isShown) => !isShown)
+              }}
+            >
+              {isReportListShown ? myReportsHideLabel : myReportsShowLabel}
+            </Button>
+            {isReportListShown ? <MyOpeningReportsList moderationService={jobOpeningModerationService} /> : null}
+          </section>
+        </>
+      ) : null}
 
       <ApplyToOpeningModal
         key={applyTarget?.jobOpeningId ?? 'none'}

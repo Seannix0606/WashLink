@@ -110,7 +110,7 @@ re-applying to that opening (W5 PLAN 4.1).
 |---|---|---|
 | worker | own rows, every status (closed drafts included) | published openings of P15 shops, plus any non-draft opening they hold a SENT application (submitted_at set) to (folded into `jo_select_published_for_workers`) |
 | owning owner | SENT rows (`submitted_at is not null`) of openings whose shop they currently own (`is_current_job_opening_owner`: role owner and `shops.owner_id = auth.uid()` via the opening's shop, plus the copied `owner_id`), every later status | own openings (W4) |
-| other owners, customers, super_admin | none (no super_admin path; posting moderation moved from W11 to W14) | W4 rules |
+| other owners, customers, super_admin | none (no super_admin row read; W14 moderation shows the admin only application counts by status in the audited case read) | W4 rules |
 | anon | no table privilege | none |
 
 Applicant profiles (`applicant_profiles_for_job_opening`): current owner of the opening's shop
@@ -160,7 +160,12 @@ pause and opening removal. Draft edits write nothing. Keys embed the audit event
 ## Limitations
 
 - No auto-close on the deadline (no scheduler): apply refuses instead. Closing updates up to 500 rows in the owner's transaction (R2).
-- Snapshots keep owner free text permanently (P20); the posting takedown moved from W11 to W14 (planned as an audited pause / close with a reason; snapshots are never edited), and removing an application row still needs a trusted session (R4).
+- Snapshots keep owner free text permanently (P20). W14 (`PLATFORM_MODERATION_AND_AUDIT.md`) added the posting takedown:
+  a worker who can read an opening (published at a P15 shop, or non-draft and applied) can report it; a super_admin
+  pauses it with a hold or closes it with a reason only the owner reads. A WashLink close runs the unchanged W5 auto-close
+  (open applications closed, applicants notified without a reason, D-53); a pause keeps applications open and sends the
+  W5 pause notice. No W14 function writes `job_applications` and snapshots are never edited
+  (`w14_application_snapshots_unchanged_after_takedown`). Removing an application row still needs a trusted session (R4).
 - Deleting a worker profile removes its applications, accepted ones included; the owner is told without the name (R5).
 - Retained application records (W9, `2026_10_26_w9i`, W5-L10): when a shop or owner account deletion cascades and
   deletes an ACCEPTED application while the worker profile still exists, the AFTER DELETE trigger
@@ -174,7 +179,7 @@ pause and opening removal. Draft edits write nothing. Keys embed the audit event
 - Flags rely on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`, R6). An audit failure aborts the action, cascades included (R9); w5a reduces drift risk.
 - The guard message `A submitted application cannot be edited.` is defence in depth: the RPCs never change a non-draft cover note and no client has UPDATE.
 - The 500-per-opening cap is tested with 499 trusted fixtures (`j4_w5_opening_application_cap`); the advisory-lock race fix is checked structurally (lock order in the function body, `j17_w5_fix1_closed_drafts_and_current_owner`), not with two concurrent sessions.
-- `applicant_verified_certifications` (P22) is real since W7 (`2026_10_26_w7g`, same signature and authorisation): the applicant's CURRENT shop-issued certifications from any shop, never suspended, revoked, expired or superseded rows, reasons or history (W7-L4). The D-20 apply check reads certificate state without a lock (W7 R3); applications sent earlier are never touched by a later suspension or revocation. No contact exchange (D-14), no interview scheduling, no super_admin moderation (W11), no email / SMS / push or Realtime (W12).
+- `applicant_verified_certifications` (P22) is real since W7 (`2026_10_26_w7g`, same signature and authorisation): the applicant's CURRENT shop-issued certifications from any shop, never suspended, revoked, expired or superseded rows, reasons or history (W7-L4). The D-20 apply check reads certificate state without a lock (W7 R3); applications sent earlier are never touched by a later suspension or revocation. No contact exchange (D-14), no interview scheduling, no moderation of applications (W14 moderates openings only), no email / SMS / push or Realtime (W12).
 
 ## Rollback
 

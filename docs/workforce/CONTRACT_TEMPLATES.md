@@ -185,7 +185,17 @@ still passes.
 - R6: owner free text is unfiltered except for safeguard impersonation (W8-L5).
 - R7: the jsonb text form is the hash canonical form; a Postgres change to jsonb output would change new hashes
   only (stored hashes stay; the validator compares within one server version).
-- No PDF / print export, no e-signature (D-6), no notifications (D-30), no super_admin UI (moved from W11 to W14, W11 PLAN D-49).
+- No PDF / print export, no e-signature (D-6), no notifications (D-30).
+- super_admin UI (W14, frontend only, as built; `PLATFORM_MODERATION_AND_AUDIT.md`, F4 / F5): a "Standard contract"
+  console tab (`presentation/components/superAdmin/standardContract/`) edits only the heading and text of editable
+  clauses of the current platform version (no clause added, removed or re-ordered; a no-change publish is blocked) and
+  lists versions itself (`ContractTemplateVersionHistory` stays owner-only and unchanged); it calls the unchanged W8
+  `publish_platform_contract_template_version(p_expected_version_number, p_clauses)`, reusing
+  `platform_contract_template_current`, `contract_template_version_history` and `contract_template_version_clauses`.
+  Locked clauses are read-only in the UI; `ContractTemplatePreview` is reused; the server still enforces every W8 rule. Publishing does not make the standard
+  template legally reviewed: it stays "Draft — requires review by a qualified Philippine labor-law professional" (D-28,
+  W14-L11). Owner versions and sent contracts are unchanged
+  (`j18_w14_platform_publish_leaves_owner_versions_and_contract_hashes_unchanged`). No W14 migration touches W8 objects.
 - Deviations from PLAN.md: `render_contract_template_clause` is STABLE (it reads the placeholder allowlist) and
   lives in w8g next to its reader; the copy helpers (`contract_template_latest_platform_version`,
   `contract_template_owner_clause_list`, `contract_template_editable_bodies`, `contract_template_shop_terms`)
