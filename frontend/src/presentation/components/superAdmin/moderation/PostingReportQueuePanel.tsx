@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ChevronRight, Flag } from 'lucide-react'
 import type { JobOpeningModerationService } from '../../../../application/services/JobOpeningModerationService'
 import { moderationQueueFilters, type ModerationQueueFilter } from '../../../../domain/models/JobOpeningModeration'
-import { Badge, Card, EmptyState, Select, Skeleton } from '../../../design/ui'
+import { Badge, Button, Card, EmptyState, Select, Skeleton } from '../../../design/ui'
 import { useAdminModerationQueue } from '../../../hooks/useAdminModerationQueue'
 import { formatShortDateTime } from '../../../utilities/datetimeFormatting'
 import {
@@ -11,6 +11,9 @@ import {
   adminQueueEmptyTitle,
   adminQueueHeading,
   adminQueueIntro,
+  adminQueueLoadMoreFailedTitle,
+  adminQueueLoadMoreLabel,
+  adminQueueShowingText,
   moderationQueueFilterLabel,
   moderationStatusLabel,
   reportCategoryLabel,
@@ -24,7 +27,7 @@ interface PostingReportQueuePanelProps {
   readonly moderationService: JobOpeningModerationService
 }
 
-/** Super_admin "Posting reports": cases by status, oldest first (no statements), and the case drawer. */
+/** Super_admin "Posting reports": cases by status, oldest first, 50 per page with "Load more" (W13, D-71), and the case drawer. */
 export function PostingReportQueuePanel({ moderationService }: PostingReportQueuePanelProps): ReactElement {
   const [filter, setFilter] = useState<ModerationQueueFilter>('active')
   const queue = useAdminModerationQueue(moderationService, filter)
@@ -54,34 +57,63 @@ export function PostingReportQueuePanel({ moderationService }: PostingReportQueu
       return <EmptyState icon={<Flag className="h-5 w-5" />} title={adminQueueEmptyTitle} description={adminQueueEmptyText} />
     }
     return (
-      <ul aria-label="Posting report cases" className="space-y-2">
-        {queue.items.map((item) => (
-          <li key={item.caseId}>
-            <button
-              type="button"
-              aria-label={`Open the case: ${item.openingTitleSnapshot ?? 'job opening'}, ${item.shopNameSnapshot ?? 'shop'}`}
-              onClick={(): void => {
-                setOpenCaseId(item.caseId)
-              }}
-              className="flex w-full items-start justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-3 text-left transition-colors hover:border-[var(--color-brand-400)]"
-            >
-              <span className="min-w-0 space-y-0.5">
-                <span className="block text-sm font-semibold break-words text-[var(--color-ink-900)]">{item.openingTitleSnapshot ?? 'Job opening'}</span>
-                <span className="block text-xs break-words text-[var(--color-ink-500)]">{item.shopNameSnapshot ?? 'Shop name not recorded'}</span>
-                <span className="block text-[11px] text-[var(--color-ink-500)]">
-                  {`${item.categories.map((category) => reportCategoryLabel[category]).join(', ')} · ${String(item.openReportCount)} open of ${String(item.reportCount)} reports · opened ${formatShortDateTime(item.openedAt)} · ${
-                    item.isOpeningPresent ? `opening ${item.openingStatus ?? 'unknown'}` : 'opening removed'
-                  }`}
+      <div className="space-y-2">
+        <ul aria-label="Posting report cases" className="space-y-2">
+          {queue.items.map((item) => (
+            <li key={item.caseId}>
+              <button
+                type="button"
+                aria-label={`Open the case: ${item.openingTitleSnapshot ?? 'job opening'}, ${item.shopNameSnapshot ?? 'shop'}`}
+                onClick={(): void => {
+                  setOpenCaseId(item.caseId)
+                }}
+                className="flex w-full items-start justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-3 text-left transition-colors hover:border-[var(--color-brand-400)]"
+              >
+                <span className="min-w-0 space-y-0.5">
+                  <span className="block text-sm font-semibold break-words text-[var(--color-ink-900)]">{item.openingTitleSnapshot ?? 'Job opening'}</span>
+                  <span className="block text-xs break-words text-[var(--color-ink-500)]">{item.shopNameSnapshot ?? 'Shop name not recorded'}</span>
+                  <span className="block text-[11px] text-[var(--color-ink-500)]">
+                    {`${item.categories.map((category) => reportCategoryLabel[category]).join(', ')} · ${String(item.openReportCount)} open of ${String(item.reportCount)} reports · opened ${formatShortDateTime(item.openedAt)} · ${
+                      item.isOpeningPresent ? `opening ${item.openingStatus ?? 'unknown'}` : 'opening removed'
+                    }`}
+                  </span>
                 </span>
-              </span>
-              <span className="flex shrink-0 items-center gap-1">
-                <Badge tone={item.status === 'open' || item.status === 'changes_submitted' ? 'warning' : 'neutral'}>{moderationStatusLabel[item.status]}</Badge>
-                <ChevronRight className="h-4 w-4 text-[var(--color-ink-500)]" aria-hidden="true" />
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+                <span className="flex shrink-0 items-center gap-1">
+                  <Badge tone={item.status === 'open' || item.status === 'changes_submitted' ? 'warning' : 'neutral'}>{moderationStatusLabel[item.status]}</Badge>
+                  <ChevronRight className="h-4 w-4 text-[var(--color-ink-500)]" aria-hidden="true" />
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        {queue.totalCount === null ? null : (
+          <p aria-live="polite" className="text-xs text-[var(--color-ink-500)]">
+            {adminQueueShowingText(queue.items.length, queue.totalCount)}
+          </p>
+        )}
+        {queue.loadMoreErrorMessage === null ? null : (
+          <LoadErrorNotice
+            title={adminQueueLoadMoreFailedTitle}
+            errorMessage={queue.loadMoreErrorMessage}
+            onRetry={(): void => {
+              void queue.loadMore()
+            }}
+          />
+        )}
+        {queue.hasMore && queue.loadMoreErrorMessage === null ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            isFullWidth
+            isLoading={queue.isLoadingMore}
+            onClick={(): void => {
+              void queue.loadMore()
+            }}
+          >
+            {adminQueueLoadMoreLabel}
+          </Button>
+        ) : null}
+      </div>
     )
   }
 

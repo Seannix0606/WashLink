@@ -1,5 +1,5 @@
 -- J17 (W3): every wired W2 sensitive action writes its audit event (AC7), the R-4 review log
--- survives reviewer deletion and is super_admin only (AC6), failed link attempts write no
+-- survives reviewer deletion and is trusted SQL only since W13 (AC6, D-70), failed link attempts write no
 -- link event, and no payload carries private data (AC8). Local Docker stack only; synthetic.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -113,25 +113,25 @@ select is((select verification_reviewed_by from public.shops where id = current_
           'w3_shop_review_history_survives_reviewer_deletion');
 select is(pg_temp.event_count('shop.verification_decided', current_setting('fx.s_del')::uuid), 1,
           'w3_shop_review_history_survives_reviewer_deletion');
-select test_helpers.act_as_admin('j17w-admin@local.test');
+-- W13 (D-70): the view is trusted SQL only; read it in the trusted session.
 select is((select jsonb_build_object('reviewed_by', reviewed_by, 'to_status', to_status, 'actor_role', actor_role)
            from public.shop_verification_review_log where shop_id = current_setting('fx.s_del')::uuid),
           jsonb_build_object('reviewed_by', current_setting('fx.admin2')::uuid, 'to_status', 'approved', 'actor_role', 'super_admin'),
           'w3_shop_review_history_survives_reviewer_deletion');
 
--- ---------- review log view: super_admin only ----------
-select test_helpers.act_as_service();
-select set_config('fx.log_total', (select count(*) from public.workforce_audit_events where action like 'shop.verification\_%')::text, true);
+-- ---------- review log view: trusted SQL only (W13, D-70; was w3_shop_review_log_view_is_super_admin_only) ----------
 select test_helpers.act_as_admin('j17w-admin@local.test');
-select is((select count(*)::int from public.shop_verification_review_log), current_setting('fx.log_total')::int,
-          'w3_shop_review_log_view_is_super_admin_only');
+select is(test_helpers.attempt('select count(*) from public.shop_verification_review_log'), '42501',
+          'w3_shop_review_log_view_is_trusted_sql_only');
 select test_helpers.act_as_owner('j17w-o1@local.test');
-select is((select count(*)::int from public.shop_verification_review_log), 0, 'w3_shop_review_log_view_is_super_admin_only');
+select is(test_helpers.attempt('select count(*) from public.shop_verification_review_log'), '42501',
+          'w3_shop_review_log_view_is_trusted_sql_only');
 select test_helpers.act_as_customer('j17w-c1@local.test');
-select is((select count(*)::int from public.shop_verification_review_log), 0, 'w3_shop_review_log_view_is_super_admin_only');
+select is(test_helpers.attempt('select count(*) from public.shop_verification_review_log'), '42501',
+          'w3_shop_review_log_view_is_trusted_sql_only');
 select test_helpers.act_as_anon();
 select is(test_helpers.attempt('select count(*) from public.shop_verification_review_log'), '42501',
-          'w3_shop_review_log_view_is_super_admin_only');
+          'w3_shop_review_log_view_is_trusted_sql_only');
 
 -- ---------- roster link code issued ----------
 select test_helpers.act_as_owner('j17w-o1@local.test');

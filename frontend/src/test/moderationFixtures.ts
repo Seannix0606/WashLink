@@ -7,8 +7,11 @@ import type { AdminModerationSummary, UnreviewedApprovedShop } from '../domain/m
 import type { ContractTemplateClause, StandardContractTemplate } from '../domain/models/ContractTemplate'
 import type {
   AdminModerationCase,
+  AdminModerationQueueCursor,
   AdminModerationQueueItem,
+  AdminModerationQueuePage,
   ModerationCaseStatus,
+  ModerationQueueFilter,
   MyJobOpeningReport,
   OwnerJobOpeningModeration,
 } from '../domain/models/JobOpeningModeration'
@@ -173,13 +176,24 @@ export interface ModerationTestHarness {
 
 /** The real W14 services over mocked repositories (no network). */
 export function createModerationTestHarness(): ModerationTestHarness {
+  const listAdminQueue: Mock<JobOpeningModerationRepository['listAdminQueue']> = vi.fn().mockResolvedValue([])
   const moderationRepository: MockedRepository<JobOpeningModerationRepository> = {
     report: vi.fn(),
     withdrawReport: vi.fn(),
     listMyReports: vi.fn().mockResolvedValue([]),
     listOwnerModeration: vi.fn().mockResolvedValue([]),
     submitChanges: vi.fn(),
-    listAdminQueue: vi.fn().mockResolvedValue([]),
+    listAdminQueue,
+    // W13 bridge: by default the paged queue serves the W14 `listAdminQueue` mock as one page
+    // (total = its length; any later page is empty), so W14 panel tests keep their fixtures.
+    // W13 tests replace this implementation with real pages.
+    listAdminQueuePage: vi.fn(async (filter: ModerationQueueFilter, cursor: AdminModerationQueueCursor | null): Promise<AdminModerationQueuePage> => {
+      if (cursor !== null) {
+        return { items: [], totalCount: null }
+      }
+      const items = await listAdminQueue(filter)
+      return { items, totalCount: items.length }
+    }),
     fetchAdminCase: vi.fn().mockResolvedValue(buildAdminCase()),
     moderate: vi.fn(),
   }

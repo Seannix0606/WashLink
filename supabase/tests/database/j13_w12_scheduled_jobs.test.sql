@@ -70,16 +70,16 @@ select is(pg_temp.run('worker_contract_expiry'), '{"job": "worker_contract_expir
            "skipped_failed": 0, "failed_sqlstates": []}'::jsonb,
           'w12_contract_expiry_job_expires_past_end_and_notifies_each_party_once');
 select is(array[pg_temp.status('k1'), pg_temp.notes_of('k1'), pg_temp.status('k5'), pg_temp.notes_of('k5')], array['expired', '1,1', 'expired', '1,1'],
-          'w12_contract_expiry_job_expires_past_end_and_notifies_each_party_once');
+          'w12_contract_expiry_job_notifies_each_party_once');
 select is((select string_agg(ended_by || ':' || (ended_at = now()) || ':' || (pending_version_id is null), ',') from public.worker_contracts
            where id in (pg_temp.id('k1'), pg_temp.id('k5'))), 'system:true:true,system:true:true',
-          'w12_contract_expiry_job_expires_past_end_and_notifies_each_party_once');
+          'w12_contract_expiry_job_stamps_system_end_and_clears_pending');
 select is(array[pg_temp.status('k2'), pg_temp.status('k3'), pg_temp.status('k4'), pg_temp.notes_of('k2'), pg_temp.notes_of('k4')],
           array['terminated', 'declined', 'active', '0,0', '0,0'], 'w12_contract_expiry_ignores_terminated_declined_and_future');
 select is(test_helpers.relationship_row(pg_temp.id('w1'), pg_temp.id('o1')) || '|' || public.worker_distinct_qualifying_owner_count(pg_temp.id('w1'))
           || '|' || public.worker_distinct_qualifying_owner_count(pg_temp.id('w4')), 'ended,contract_expired,0|0|1', 'w12_expired_contract_stops_counting');
 select is((pg_temp.run('worker_contract_expiry') ->> 'processed')::int || ',' || pg_temp.notes_of('k1'), '0,1,1',
-          'w12_contract_expiry_job_expires_past_end_and_notifies_each_party_once');
+          'w12_contract_expiry_job_second_run_changes_nothing');
 
 -- ---------- certification notices ----------
 select is((pg_temp.run('certification_expiry_notices') ->> 'processed')::int, 2, 'w12_certification_notice_job_sends_due_and_expired');

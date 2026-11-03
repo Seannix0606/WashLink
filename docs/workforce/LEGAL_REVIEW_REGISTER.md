@@ -1,328 +1,292 @@
-# Legal review register (first version W5, extended in W6..W12 and W14)
+# Legal review register: index (W0-W14; split in W13, D-75)
 
-Consolidated register of every legal-review flag raised by the workforce loop in W0-W12 and W14
-(`loop/workforce/increments/*/LEGAL_FLAGS.md` and W5 PLAN section 11). Every item is **OPEN**
-and is for review by a qualified Philippine labor-law professional (data-privacy items also by a
-qualified data-privacy professional). The loop cannot resolve any of them.
+This register lists every legal-review flag raised by the workforce loop in W0-W14
+(`loop/workforce/increments/*/LEGAL_FLAGS.md` and W5 PLAN section 11). Every item is **OPEN** and is for review by a
+qualified Philippine labor-law professional (data-privacy items also by a qualified data-privacy professional). The loop
+cannot resolve any of them.
 
-This register makes no compliance claim. Nothing in WashLink's code, UI copy or docs states that
-any feature is legally compliant, and no item here may be read as advice. Production use of the
-features named in an item requires that review first. W13 completes this register (final
-sources, owners, decisions); items are never deleted, only given a recorded outcome by a human.
+This register makes no compliance claim. Nothing in WashLink's code, UI copy or docs claims legal
+compliance for any feature, and no item here may be read as advice. Production use of the features named in an item requires that review
+first (`DEPLOYMENT_READINESS.md`). Items are never deleted, merged or closed by the loop; only a human records an outcome.
+
+Layout (D-75). This file is the index: status summary, sign-off table, overlap map, a list naming every item ID, and
+the W13 items in full (section "W13 items" at the end). The text, sources and cross-reference paragraphs of the 153
+earlier items are in two parts. W13 moved them there verbatim from the single-file register (153 items before W13, all
+OPEN, no duplicate IDs). Each item has exactly one full row, in one part or, for W13-L1..L11, in this file:
+
+- [`legal/REGISTER_PART_1_W0_W8.md`](legal/REGISTER_PART_1_W0_W8.md): W0, W2, W3, W4, W5, W6, W7, W8.
+- [`legal/REGISTER_PART_2_W9_W14.md`](legal/REGISTER_PART_2_W9_W14.md): W9, W10, W11, W14, W12 (in the earlier order). The W13 items are in this file, not in part 2.
+
+Line-number pointers to `LEGAL_REVIEW_REGISTER.md` in earlier REVIEW / VERDICT files are historical (W13 PLAN R6). The
+item IDs are stable; look an ID up in the index below.
 
 Status key: OPEN = not reviewed. Source paths are relative to the repository root.
 
-## W0 (baseline review)
+## Status summary
+
+| Increment | Items | OPEN | Part |
+|---|---|---|---|
+| W0 (baseline review) | 7 | 7 | 1 |
+| W2 (roles, worker profiles, roster links) | 5 | 5 | 1 |
+| W3 (audit trail, notifications) | 5 | 5 | 1 |
+| W4 (owner job openings) | 11 | 11 | 1 |
+| W5 (marketplace and applications) | 11 | 11 | 1 |
+| W6 (training programs, attendance, assessment) | 13 | 13 | 1 |
+| W7 (shop-issued certifications) | 16 | 16 | 1 |
+| W8 (contract templates and template versions) | 13 | 13 | 1 |
+| W9 (worker contracts, acceptance records, snapshots, amendments) | 17 | 17 | 2 |
+| W10 (owner relationships, three-distinct-owner progress goal) | 11 | 11 | 2 |
+| W11 (WashLink certification review, contract problems, dashboards) | 15 | 15 | 2 |
+| W14 (platform moderation, oversight reads, admin audit) | 17 | 17 | 2 |
+| W12 (notification wiring and scheduled jobs) | 12 | 12 | 2 |
+| W13 (hardening, final documentation; L8..L11 from the W13 review) | 11 | 11 | index |
+| **Total** | **164** | **164** | Part 1: 81, Part 2: 72, index: 11 |
+
+W1 raised no legal flag (test harness only). Before W13 the register held 153 items; W13 added 11 (L1..L7 from the plan, L8..L11 from the W13 compliance review). Nothing was removed.
+
+## Human sign-off (blank; the loop fills in nothing)
+
+A qualified reviewer records the outcome of each item in the "Human outcome" column of the ID list below, and the
+review of each part here. Until a row is signed, every item in it stays OPEN and the matching gate in `DEPLOYMENT_READINESS.md`
+stays unchecked.
+
+| Scope | Review type | Reviewer (name, qualification) | Date | Outcome summary | Signature |
+|---|---|---|---|---|---|
+| Part 1 (W0-W8, 81 items) | Philippine labor law | | | | |
+| Part 1 (W0-W8, 81 items) | Data privacy (RA 10173) | | | | |
+| Part 2 (W9-W12, W14, 72 items) | Philippine labor law | | | | |
+| Part 2 (W9-W12, W14, 72 items) | Data privacy (RA 10173) | | | | |
+| W13 items in this index (11 items) | Philippine labor law | | | | |
+| W13 items in this index (11 items) | Data privacy (RA 10173) | | | | |
+| Accepted limitations (`LIMITATIONS.md`, W13-L6) | Labor law and data privacy | | | | |
+| Deployment checklist (`DEPLOYMENT_READINESS.md`, W13-L6) | Project owner | | | | |
+
+## Overlap map (related items; never merged or deleted)
+
+Items below share a topic. Review them together; each keeps its own row and its own outcome.
+
+| Topic | Related item IDs |
+|---|---|
+| Meaning of the three-distinct-owner count (informational only, D-3) | W0-L1, W10-L1, W10-L3, W10-L5, W10-L6, W10-L8, W10-L9, W10-L11, W11-L9, W12-L5 |
+| Concurrent engagements across owners | W10-L2 |
+| Free training versus productive work; training fees | W0-L2, W4-L3, W5-L3, W5-L9, W6-L1, W6-L2, W6-L3, W6-L9, W6-L10, W6-L11, W6-L12, W8-L11, W9-L9, W14-L13, W13-L11 |
+| Relationship classification | W0-L3, W4-L2, W8-L3, W9-L2, W9-L13 |
+| Acceptance without an e-signature (D-6) | W0-L4, W8-L4, W9-L1, W9-L12 |
+| Certificate naming, validity and disclosure | W0-L5, W4-L5, W5-L5, W5-L11, W7-L1, W7-L2, W7-L4, W7-L5, W7-L9, W7-L11, W7-L15, W7-L16 |
+| Fair process: training records, certificate suspension and review | W6-L6, W6-L13, W7-L3, W7-L7, W7-L12, W7-L13, W7-L14, W11-L1, W11-L2, W11-L3, W11-L11 |
+| Shop verification records and loss of verification | W2-L3, W2-L4, W3-L4, W3-L5, W7-L6, W14-L10 |
+| Owner free text: waivers, fees, deposits, unpaid trials | W4-L1, W4-L8, W4-L11, W5-L8, W6-L11, W8-L5, W8-L12, W8-L13, W9-L3, W9-L4, W9-L16, W14-L2 |
+| Discrimination and publisher duties | W4-L4, W4-L7, W4-L9, W5-L4, W14-L1, W13-L7 |
+| Recruitment and placement | W4-L10 |
+| Template safeguards and statutory content | W8-L1, W8-L2, W8-L6, W8-L7, W8-L8, W8-L10, W12-L12 |
+| Termination, notice and trusted repairs | W9-L6, W9-L14, W9-L15, W9-L17, W10-L7, W11-L7, W13-L2, W13-L3 |
+| Contract and certificate expiry notices | W7-L10, W12-L2, W12-L3, W12-L4, W12-L8, W12-L9, W12-L10, W12-L11, W13-L1, W13-L8, W13-L9 |
+| Retention periods (none defined) | W0-L6, W3-L1, W4-L6, W5-L10, W7-L8, W8-L9, W9-L5, W12-L6, W14-L8, W13-L5, W13-L10 |
+| Personal data and access (RA 10173) | W0-L6, W2-L1, W2-L5, W5-L1, W5-L6, W5-L7, W6-L8, W10-L4, W10-L10, W11-L5, W11-L8, W14-L6, W14-L7, W14-L8, W14-L15 |
+| Audit trail: evidence value and who may read it | W3-L3, W14-L9, W13-L4 |
+| Notification channels and content | W3-L2, W12-L1, W12-L7 |
+| Reported problems and moderation process | W11-L4, W11-L5, W11-L6, W11-L10, W11-L12, W11-L13, W11-L14, W11-L15, W14-L3, W14-L4, W14-L5, W14-L12, W14-L14, W14-L16, W14-L17 |
+| Roster-link consent | W0-L7, W2-L2 |
+| Single-administrator governance | W10-L5, W11-L10, W14-L11 |
+| Contract lifecycle details | W5-L2, W9-L7, W9-L8, W9-L10, W9-L11 |
+| Training operations and safety | W6-L4, W6-L5, W6-L7 |
+| Human sign-off of limitations and readiness | W13-L6 |
+
+## Every item ID
+
+One line per item ID. "Where" names the file that holds the full row (item text and source): part 1, part 2, or the
+"W13 items" section of this file. The topic is a short label only; the full row is authoritative.
+
+| Where | ID | Status | Topic | Human outcome |
+|---|---|---|---|---|
+| 1 | W0-L1 | OPEN | Meaning of the three-distinct-owner rule | |
+| 1 | W0-L2 | OPEN | Free training versus productive work | |
+| 1 | W0-L3 | OPEN | Worker relationship classification | |
+| 1 | W0-L4 | OPEN | Acceptance without an e-signature as evidence of consent | |
+| 1 | W0-L5 | OPEN | Certificates shop-issued only; validity and renewal | |
+| 1 | W0-L6 | OPEN | Identity documents and worker personal data | |
+| 1 | W0-L7 | OPEN | Worker consent to roster linking | |
+| 1 | W2-L1 | OPEN | Worker profile and private contact data at collection | |
+| 1 | W2-L2 | OPEN | Roster-link consent wording | |
+| 1 | W2-L3 | OPEN | Shop re-verification and identity documents | |
+| 1 | W2-L4 | OPEN | Deleting a reviewer and shop verification | |
+| 1 | W2-L5 | OPEN | Profile visibility copy | |
+| 1 | W3-L1 | OPEN | Audit row retention | |
+| 1 | W3-L2 | OPEN | Notification content and channels | |
+| 1 | W3-L3 | OPEN | Audit trail is not legal evidence | |
+| 1 | W3-L4 | OPEN | Verification loss not snapshotted, workers not told | |
+| 1 | W3-L5 | OPEN | Authoritative approver record | |
+| 1 | W4-L1 | OPEN | Owner-typed pay and terms shown unchecked | |
+| 1 | W4-L2 | OPEN | Job type is not an employment classification | |
+| 1 | W4-L3 | OPEN | "Trainees welcome" and required-training wording | |
+| 1 | W4-L4 | OPEN | Discriminatory requirements: age | |
+| 1 | W4-L5 | OPEN | "Shop-issued certification required" wording | |
+| 1 | W4-L6 | OPEN | Retention of drafts and archived openings | |
+| 1 | W4-L7 | OPEN | Discriminatory requirements other than age | |
+| 1 | W4-L8 | OPEN | Waivers, fees and unpaid trials in owner free text | |
+| 1 | W4-L9 | OPEN | Publisher role and duties | |
+| 1 | W4-L10 | OPEN | Recruitment and placement | |
+| 1 | W4-L11 | OPEN | Piece-rate and open-ended pay display | |
+| 1 | W5-L1 | OPEN | Applicant data shared with owners | |
+| 1 | W5-L2 | OPEN | Meaning of an accepted application | |
+| 1 | W5-L3 | OPEN | Free-training notice and stored acknowledgement | |
+| 1 | W5-L4 | OPEN | Rejection without reasons; discrimination risk | |
+| 1 | W5-L5 | OPEN | Certification-required openings before certificates existed | |
+| 1 | W5-L6 | OPEN | Sensitive data in cover notes | |
+| 1 | W5-L7 | OPEN | No contact exchange between owner and applicant | |
+| 1 | W5-L8 | OPEN | Owner free text frozen in application snapshots | |
+| 1 | W5-L9 | OPEN | Notice text on training fees and deductions | |
+| 1 | W5-L10 | OPEN | Worker record of applications after deletion | |
+| 1 | W5-L11 | OPEN | "No verified certification" warning | |
+| 1 | W6-L1 | OPEN | The free required training arrangement | |
+| 1 | W6-L2 | OPEN | Owner attestation and the booking gate | |
+| 1 | W6-L3 | OPEN | Training pay shown unchecked | |
+| 1 | W6-L4 | OPEN | Trainer designation | |
+| 1 | W6-L5 | OPEN | Training record-keeping | |
+| 1 | W6-L6 | OPEN | Assessment fairness, no appeal | |
+| 1 | W6-L7 | OPEN | Occupational safety during training | |
+| 1 | W6-L8 | OPEN | Personal data in training notes | |
+| 1 | W6-L9 | OPEN | Training notice w6_v1 wording | |
+| 1 | W6-L10 | OPEN | Booking gate lifts while no contract exists | |
+| 1 | W6-L11 | OPEN | Owner free text against the free-training rule | |
+| 1 | W6-L12 | OPEN | "Training is not paid work." copy | |
+| 1 | W6-L13 | OPEN | Fair process for training records | |
+| 1 | W7-L1 | OPEN | Use of the name "certification" | |
+| 1 | W7-L2 | OPEN | Certificate validity and renewal | |
+| 1 | W7-L3 | OPEN | Fairness of suspension and revocation | |
+| 1 | W7-L4 | OPEN | Certificate disclosure to other owners | |
+| 1 | W7-L5 | OPEN | Certificate hiring gate | |
+| 1 | W7-L6 | OPEN | Verification loss never voids certificates | |
+| 1 | W7-L7 | OPEN | Evidence corrected after issue | |
+| 1 | W7-L8 | OPEN | Certificate retention | |
+| 1 | W7-L9 | OPEN | Issuer attestation | |
+| 1 | W7-L10 | OPEN | Certificate expiry notices | |
+| 1 | W7-L11 | OPEN | No public verification channel | |
+| 1 | W7-L12 | OPEN | Conflict of interest in certificate review | |
+| 1 | W7-L13 | OPEN | Stranded suspensions | |
+| 1 | W7-L14 | OPEN | Retaliation across shops | |
+| 1 | W7-L15 | OPEN | Access to certification depends on shops | |
+| 1 | W7-L16 | OPEN | What other owners see about the issuer | |
+| 1 | W8-L1 | OPEN | Starter contract template content | |
+| 1 | W8-L2 | OPEN | Locked safeguard sentences | |
+| 1 | W8-L3 | OPEN | Relationship-type vocabulary | |
+| 1 | W8-L4 | OPEN | Section 14 acceptance wording | |
+| 1 | W8-L5 | OPEN | Unfiltered owner clause text | |
+| 1 | W8-L6 | OPEN | "Safeguards prevail" precedence clause | |
+| 1 | W8-L7 | OPEN | Safety section of the template | |
+| 1 | W8-L8 | OPEN | Statutory-benefits section of the template | |
+| 1 | W8-L9 | OPEN | Template retention | |
+| 1 | W8-L10 | OPEN | Which locked clauses are mandatory | |
+| 1 | W8-L11 | OPEN | Wording of training compensation | |
+| 1 | W8-L12 | OPEN | Editable text contradicting locked clauses | |
+| 1 | W8-L13 | OPEN | Problem-term flagging scope | |
+| 2 | W9-L1 | OPEN | Acceptance record as evidence of consent | |
+| 2 | W9-L2 | OPEN | Per-contract relationship type; contractor option | |
+| 2 | W9-L3 | OPEN | Problem-term list and keywords | |
+| 2 | W9-L4 | OPEN | Keyword flags read as legal advice | |
+| 2 | W9-L5 | OPEN | Contract retention after deletion | |
+| 2 | W9-L6 | OPEN | Immediate termination; notice, final pay, clearance | |
+| 2 | W9-L7 | OPEN | Owner alone records the start | |
+| 2 | W9-L8 | OPEN | Owner or shop removal leaves contracts unchanged | |
+| 2 | W9-L9 | OPEN | Training versus productive work at activation | |
+| 2 | W9-L10 | OPEN | English only; download and print | |
+| 2 | W9-L11 | OPEN | Every amendment treated as material | |
+| 2 | W9-L12 | OPEN | Acknowledgement statements | |
+| 2 | W9-L13 | OPEN | Reclassification by amendment | |
+| 2 | W9-L14 | OPEN | Owner termination without a cause check | |
+| 2 | W9-L15 | OPEN | Worker "end at any time" copy | |
+| 2 | W9-L16 | OPEN | No keyword category for statutory-benefit exclusions | |
+| 2 | W9-L17 | OPEN | Trusted status repair of contracts | |
+| 2 | W10-L1 | OPEN | Display of the three-owner goal | |
+| 2 | W10-L2 | OPEN | Several concurrent engagements | |
+| 2 | W10-L3 | OPEN | What counts as a qualifying relationship | |
+| 2 | W10-L4 | OPEN | Relationship data is personal data | |
+| 2 | W10-L5 | OPEN | Governance of the minimum-owner policy | |
+| 2 | W10-L6 | OPEN | Off-platform pressure about other relationships | |
+| 2 | W10-L7 | OPEN | Forward-only repairs can still end a contract | |
+| 2 | W10-L8 | OPEN | Links, applications, training and certificates never count | |
+| 2 | W10-L9 | OPEN | Labels for relationships that do not count | |
+| 2 | W10-L10 | OPEN | Policy change reason and profile id | |
+| 2 | W10-L11 | OPEN | Per-relationship goal signal to owners | |
+| 2 | W11-L1 | OPEN | WashLink review of shop certificate decisions | |
+| 2 | W11-L2 | OPEN | Stranded suspensions without a time limit | |
+| 2 | W11-L3 | OPEN | Cross-shop retaliation hold | |
+| 2 | W11-L4 | OPEN | Time windows chosen by the loop | |
+| 2 | W11-L5 | OPEN | Privacy of contract reads during a reported problem | |
+| 2 | W11-L6 | OPEN | Dispute channel versus labour dispute bodies | |
+| 2 | W11-L7 | OPEN | Review of owner terminations | |
+| 2 | W11-L8 | OPEN | Free-text statements, responses and notes | |
+| 2 | W11-L9 | OPEN | Dashboard wording | |
+| 2 | W11-L10 | OPEN | Single-administrator decisions and identity | |
+| 2 | W11-L11 | OPEN | Route to an independent decider | |
+| 2 | W11-L12 | OPEN | 90-day reporting window read as a legal deadline | |
+| 2 | W11-L13 | OPEN | Statements shown to the other side | |
+| 2 | W11-L14 | OPEN | Hearing the other party before closing | |
+| 2 | W11-L15 | OPEN | Unverified independence claim | |
+| 2 | W14-L1 | OPEN | Publisher duties on posting reports | |
+| 2 | W14-L2 | OPEN | Fee, deposit and unpaid-trial postings | |
+| 2 | W14-L3 | OPEN | Fairness to owners on a pause or close | |
+| 2 | W14-L4 | OPEN | Reporter protection versus the right to know | |
+| 2 | W14-L5 | OPEN | Effect of a WashLink close on applicants | |
+| 2 | W14-L6 | OPEN | Free text in moderation | |
+| 2 | W14-L7 | OPEN | Per-user activity read | |
+| 2 | W14-L8 | OPEN | Relationship lookups: purpose limitation | |
+| 2 | W14-L9 | OPEN | Audit-log reads | |
+| 2 | W14-L10 | OPEN | Unreviewed approved shops | |
+| 2 | W14-L11 | OPEN | Standard-template publishing by one administrator | |
+| 2 | W14-L12 | OPEN | N6 oversight flag thresholds | |
+| 2 | W14-L13 | OPEN | "Unpaid trial work or training" report reason | |
+| 2 | W14-L14 | OPEN | Unconditional reporter anonymity promise | |
+| 2 | W14-L15 | OPEN | Relationship lookup transparency | |
+| 2 | W14-L16 | OPEN | "WashLink is not a party to any contract" statement | |
+| 2 | W14-L17 | OPEN | Owner response route after a pause | |
+| 2 | W12-L1 | OPEN | In-app only notices | |
+| 2 | W12-L2 | OPEN | Scheduled contract expiry record | |
+| 2 | W12-L3 | OPEN | Certificate expiry warnings | |
+| 2 | W12-L4 | OPEN | Scheduled jobs not registered | |
+| 2 | W12-L5 | OPEN | No notice when a relationship stops counting | |
+| 2 | W12-L6 | OPEN | Notification retention | |
+| 2 | W12-L7 | OPEN | Owner-authored labels in notices | |
+| 2 | W12-L8 | OPEN | First production run; Asia/Manila date | |
+| 2 | W12-L9 | OPEN | W9 contract expiry notice wording | |
+| 2 | W12-L10 | OPEN | Certificate expiry notice content and timing | |
+| 2 | W12-L11 | OPEN | No advance notice before a contract end date | |
+| 2 | W12-L12 | OPEN | Newer standard template notifies nobody | |
+| index | W13-L1 | OPEN | Contract expiry notice wording (D-72) | |
+| index | W13-L2 | OPEN | Worker termination copy (D-73) | |
+| index | W13-L3 | OPEN | Owner termination caution (D-73) | |
+| index | W13-L4 | OPEN | Audit access governance (D-70) | |
+| index | W13-L5 | OPEN | Retention periods undefined | |
+| index | W13-L6 | OPEN | Human sign-off of limitations and deployment checklist | |
+| index | W13-L7 | OPEN | Report handling response time and paging order | |
+| index | W13-L8 | OPEN | Owner expiry notice caveat | |
+| index | W13-L9 | OPEN | UI labels for a contract past its end date | |
+| index | W13-L10 | OPEN | Production rollback deletes worker records | |
+| index | W13-L11 | OPEN | super_admin assigns a trainee to another owner's booking | |
+
+## W13 items (hardening, final documentation, legal-review register)
+
+What W13 does (database local proof only, D-10): super_admin audit reads now go only through the audited
+`admin_workforce_audit_log`, and the review-log view is readable by trusted SQL only (D-70). The posting-report queue
+is paged, oldest first (D-71). The scheduled contract expiry notice says that WashLink "now shows" the contract as
+expired from the end date written in it (D-72). The worker and owner termination copy no longer states an unconditional
+right to end a contract (D-73). Accepted limitations are listed in `docs/workforce/LIMITATIONS.md` (D-74). This
+register was split into an index and two parts (D-75). Nothing in the code, UI copy or docs may state that a contract
+legally ended, that anyone was legally notified, or claim compliance for any feature. Notes (all stay **OPEN**):
+**W12-L9 / W12-L2** -> W13-L1; **W9-L15** -> W13-L2; **W9-L14 / W11-L7** -> W13-L3; **W3-L3 / W14-L9** -> W13-L4;
+**W3-L1 / W12-L6 / W14-L8** -> W13-L5; **W14-L1 / W14-L3** -> W13-L7. W13 review (compliance): **W13-L1** -> W13-L8 / W13-L9;
+**W9-L5 / W13-L5** -> W13-L10; **W0-L2 / W6-L2** -> W13-L11.
 
 | ID | Status | Item for review | Source |
 |---|---|---|---|
-| W0-L1 | OPEN | Operational and legal meaning of the "minimum three distinct owners" rule; whether it may be anything more than a progress metric; it must never restrict declining, leaving or terminating. | SPEC F, DECISIONS D-3 |
-| W0-L2 | OPEN | Boundary between free supervised training and productive work: trainees must not be assignable to paid customer bookings during required training; any compensation / reimbursement treatment (D-7). | SPEC D; `workers`, `bookings.assigned_worker_id` |
-| W0-L3 | OPEN | Worker relationship classification (employee vs other types); the template must not default to independent contractor. | SPEC E.4 |
-| W0-L4 | OPEN | Whether the draft-and-acceptance workflow without an e-signature provider is adequate evidence of consent; it must not be labelled an e-signature. | SPEC E, D-6 |
-| W0-L5 | OPEN | Certificates are platform / shop-issued only; never represented as government-recognized unless verified. Validity and renewal rule (D-5). | SPEC D |
-| W0-L6 | OPEN | Personal-data handling of identity documents and worker contact / profile data (retention, access, consent). | `shop_verification_documents`, SPEC A |
-| W0-L7 | OPEN | Linking a worker account to an owner roster should require the worker's consent; a roster row must not imply an employment or contract relationship. | D-2 (`workers.user_id`) |
-
-## W2 (roles, worker profiles, roster links)
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W2-L1 | OPEN | Collection of worker profile data and private contacts: privacy notice and lawful basis at collection; super admins can read profiles; W5 now shows profiles to owners of applied-to openings (fresh notice before widening); retention and deletion; the claim that staff cannot view contacts (DB operators / service role can). | `2026_10_24_w2f_worker_profiles.sql`; `workerProfileDisplay.ts` |
-| W2-L2 | OPEN | Roster-link consent wording: telling the worker the link "is not ... an employment relationship" may be a characterisation the platform cannot make; review neutral wording, disclosure that the link enables paid booking assignment, and that a roster link never counts toward the three-owner metric. | `rosterLinkResultDisplay.ts`; `WorkerRosterLinksPanel.tsx`; w2d |
-| W2-L3 | OPEN | Shop re-verification and identity documents: only name / address edits trigger re-review; shops approved before W2 keep "approved"; what "verified shop" may be represented as to workers; retention and access for ID documents; re-verification after ownership or identity changes. | w2b; D-10 row 8 |
-| W2-L4 | OPEN | Deleting a reviewing super admin nulls `verification_reviewed_by`, so the shop stops being verified and the approver is lost from the row: later loss of verification must not void issued certifications or accepted contracts (snapshot at issue); worker notice; approver retention; "deactivate, do not delete" is only a documented procedure. | w2b; P9 |
-| W2-L5 | OPEN | Profile visibility copy promised future owner access. W5 makes it real (owners of openings the worker applied to, while the application is submitted, under review, shortlisted or accepted). Review whether the updated copy and the apply-time notice are enough, or whether fresh consent is needed; DB operators / service role can still read the data. | `workerProfileDisplay.ts`; W5 D-13 |
-
-## W3 (audit trail, notifications)
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W3-L1 | OPEN | Retention of audit rows (RA 10173): pseudonymous ids and role snapshots kept after account deletion; no retention period defined; manual purge path; disclosure in the privacy notice; access / erasure requests against an append-only table; export before purge. Notifications cascade-delete with the recipient. | w3b; `AUDIT_AND_NOTIFICATIONS.md` |
-| W3-L2 | OPEN | Notification content and channels before any email / SMS / push is added (W12 kept in-app only, D-61; see W12-L1): consent per channel, minimum content, never contract text, pay terms or contact data externally. Roster unlink wording after an owner account closes (now neutral text). | w3c, w3d |
-| W3-L3 | OPEN | The audit trail is an internal operational log, not tamper-proof or certified; never presented as legal evidence or an e-signature record. Record-keeping standard for training attendance, assessment, certification and contract evidence (W6-W10). | w3b; `AUDIT_AND_NOTIFICATIONS.md` |
-| W3-L4 | OPEN | Loss of shop verification is logged but not snapshotted into certifications or contracts and workers are not told. Review in W7 / W10. | w3d; W2-L4 |
-| W3-L5 | OPEN | Which value is the authoritative approver record (`shops.verification_reviewed_by` payload vs server-derived `actor_id`) before it is used as approval evidence for certifications (W7). They differ only for trusted-session decisions. | w3d |
-
-## W4 (owner job openings)
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W4-L1 | OPEN | Pay, benefits, schedule and terms are owner-typed and shown as entered, unchecked against wage orders or labor standards (e.g. below the regional minimum wage). Extra disclosures or validation; adequacy of "Details as entered by the shop. WashLink does not verify pay or employment terms." | `jobOpeningDisplay.ts`; w4c |
-| W4-L2 | OPEN | `job_type` is a schedule category only, never an employment classification; whether "Temporary" or "Other" could suggest one. | `jobOpeningDisplay.ts`; `JobOpeningBasicsSection.tsx` |
-| W4-L3 | OPEN | `trainees_welcome` and "Required training" must not advertise unpaid work as training or a training fee. W5 adds the WashLink free-training notice before openings and before applying (W5-L3). | `JobOpeningRequirementsSection.tsx`; `JobOpeningPreview.tsx` |
-| W4-L4 | OPEN | Free-text requirements are not filtered for discriminatory content (e.g. age preference, RA 10911); moderation and notice duties. | `JobOpeningRequirementsSection.tsx`; `JobOpeningBasicsSection.tsx` |
-| W4-L5 | OPEN | "Shop-issued certification required" means shop-issued only, never government-recognized; whether such a hiring requirement is acceptable. | `jobOpeningDisplay.ts` |
-| W4-L6 | OPEN | Retention of deleted drafts, archived openings and their audit rows (with W3-L1). | w4d |
-| W4-L7 | OPEN | Discriminatory requirements other than age (sex, civil status, pregnancy, disability, religion, ethnicity, appearance, height) and whether a lawful minimum age for hazardous work is an allowed exception and how to state it; owner helper text and moderation (W11). | same fields as W4-L4 |
-| W4-L8 | OPEN | "Other terms", "Benefits" and pay details shown verbatim could contain waivers of mandatory rights, unpaid trial periods, deposits, fees or training-fee terms; blocked terms or flagging; platform exposure from verbatim display. | `JobOpeningPayAndTermsSection.tsx`; `JobOpeningPreview.tsx` |
-| W4-L9 | OPEN | Publisher role: the age-advertising prohibition (RA 10911) also covers publishing job notices; WashLink's duties as the party that publishes owner postings. | `jo_select_published_for_workers` (w4c, w5b) |
-| W4-L10 | OPEN | Recruitment and placement: whether running a job-posting and application marketplace counts as recruitment and placement activity, which includes advertising for employment (Labor Code Art. 13(b)), and so needs DOLE registration or a license. W5 opens applications locally; this must be answered before production use of W5. | product-level; W5 |
-| W4-L11 | OPEN | Pay periods `per_task` and `hour`, and "From PHP X" when only a minimum is entered: whether piece-rate or open-ended pay statements need extra disclosure. | `jobOpeningDisplay.ts` |
-
-## W5 (marketplace and applications)
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W5-L1 | OPEN | Applicant data (full name and worker profile) shared with the owner of an applied-to opening while the application is submitted, under review, shortlisted or accepted: notice at apply, lawful basis (RA 10173), retention of applications and opening snapshots, and what happens on account deletion (rows cascade; audit rows stay). | w5b, w5d `applicant_profiles_for_job_opening`; D-13 |
-| W5-L2 | OPEN | Meaning of `accepted`: the copy says it is not a contract or a job guarantee; whether an owner acceptance can still create obligations or expectations. | w5c; w5e owner-decision notification ("This is not a contract."); `frontend/src/presentation/utilities/jobApplicationDisplay.ts` (accepted label and explanation) |
-| W5-L3 | OPEN | Free-training notice wording and the stored acknowledgement (`notice_version = 'w5_v1'`): a WashLink product rule shown to workers, not legal advice; W6 records the actual training terms. | w5c `job_application_notice_version`; `frontend/src/presentation/utilities/workforceNoticeCopy.ts` (notice text); `frontend/src/presentation/components/worker/marketplace/TrainingAndWorkNotice.tsx`; `frontend/src/presentation/components/worker/marketplace/ApplyToOpeningModal.tsx` (acknowledgement) |
-| W5-L4 | OPEN | Rejection ("Not selected") without recorded reasons; discrimination risk in owner decisions (RA 10911 and others); whether reasons or records are required. | w5c |
-| W5-L5 | OPEN | Certification-required openings accept applications while no certification records exist (D-12); fairness of showing "No verified certification on record" to owners. | w5d `applicant_verified_certifications`; D-12 |
-| W5-L6 | OPEN | The optional cover note may carry sensitive personal data; there is guidance text only, no filter. | w5b `cover_note` |
-| W5-L7 | OPEN | No contact exchange between owner and applicant (D-14); workers may still type contacts into the cover note; whether the platform must mediate communication or offer a controlled channel. | D-14 |
-| W5-L8 | OPEN | Owner free text (W4-L8: terms, fees, unpaid trials) is now shown to every worker verbatim and frozen permanently in application snapshots (P20); publisher duties (W4-L9) and takedown limits (a snapshot can only be removed with its application row). | w5b snapshot; w5d search |
-| W5-L9 | OPEN | The notice tells workers that "A shop may not charge you a training fee or deduct one from your pay" and that training "is supervised learning, not productive work for customers". In W5 nothing enforces this: training records arrive in W6, and owner free text ("Required training", "Other terms") is shown next to the notice unchecked (W4-L3, W4-L8). A posting could contradict it. Review whether a platform statement of a rule it does not yet enforce is acceptable, how a contradicting posting should be handled, and whether the notice must also say that a shop may pay or reimburse training (spec D allows lawful compensation; D-7). | `frontend/src/presentation/utilities/workforceNoticeCopy.ts`; `frontend/src/presentation/components/worker/marketplace/MarketplaceOpeningDetail.tsx` (W5 LEGAL_FLAGS) |
-| W5-L10 | OPEN | Worker record of what they applied to: an owner can delete the shop (`SupabaseShopRepository.ts`) or their account, which cascades and deletes the worker's applications, accepted ones included, with their opening snapshots. The worker gets only "An application ended because the shop or its job opening was removed." Review whether the worker must keep (or be able to export) the snapshot of the terms they applied to and the decision history after the owner deletes the shop or account. This matters more once W9 links offers to accepted applications. | w5b FKs `on delete cascade`; w5e cascade notice (W5 LEGAL_FLAGS) |
-| W5-L11 | OPEN | D-12 warning "You have no verified certification on WashLink yet; the shop will see that." is shown to every worker, and owners see "Verified certifications: none yet" for every applicant, at a time when no worker can hold a WashLink certification (W7). Review whether this unfairly discourages applicants or disadvantages them in owner decisions, and whether the copy must say that certifications are not available on WashLink yet. The string becomes wrong for certified workers once W7 ships unless it is made conditional. | `frontend/src/presentation/utilities/workforceNoticeCopy.ts`; `frontend/src/presentation/components/worker/marketplace/ApplyToOpeningModal.tsx`; `frontend/src/presentation/components/owner/applicants/ApplicantVerifiedCertificationsSection.tsx` (W5 LEGAL_FLAGS) |
-
-## W6 (training programs, attendance, assessment)
-
-What W6 now enforces in the database (local proof only, D-10), without resolving any item: required
-initial training has `worker_fee` forced to 0 by CHECK and no fee / charge / deduction parameter or
-column exists; a trainee who is mid-way through required training with the same owner cannot be
-assigned to, or start, a customer booking (C7 gate, D-17); the enrollment records the `w6_v1` notice
-acknowledgement and a write-once snapshot of the agreed terms. This touches **W0-L2** and **W5-L9**:
-both stay **OPEN** (the gate covers only roster-linked trainees and on-platform bookings; owner free
-text is still shown unchecked; off-platform work is not visible).
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W6-L1 | OPEN | The arrangement itself: free required training of at least 3 supervised days at a commercial shop before any contract; trainee status under Philippine law (apprenticeship / learnership rules, TESDA), whether unpaid supervised training is lawful, duration limits and how any compensation must be treated. | w6b `training_programs` (`min_training_days` 3..30, `worker_fee` = 0); D-19 |
-| W6-L2 | OPEN | Training vs productive work: the owner attestation `w6_owner_v1` (stored by version only) and the booking gate are the only controls; off-platform or unassigned work during training is not visible to WashLink. | w6e `transition_training_program`; w6h `bookings_guard_training_assignment`; D-17 |
-| W6-L3 | OPEN | Owner-entered training pay / reimbursement is stored and shown verbatim, never checked against wage orders; wording "Not specified by the shop" when empty. | w6b pay columns (no defaults); w6c terms snapshot; D-7 |
-| W6-L4 | OPEN | Trainer designation: no qualification check, no trainer consent step, trainers act for the shop (their own pay and employment status are not modelled); revocation / unlinking ends authority but past evidence keeps the designation id. | w6b `training_program_trainers`, w6f `designate_training_trainer`; D-4, D-16 |
-| W6-L5 | OPEN | Record-keeping: attendance and assessments are operational, append-only evidence, not tamper-proof or evidence-grade (W3-L3). D-18 (orchestrator override): shop or owner deletion now RETAINS the worker's enrollments, attendance and assessments with name snapshots (shop, program, owner, recorder); the worker's own account deletion still removes them (audit rows stay). Review retention periods, the worker's right to export, and whether retaining owner / trainer display names after their deletion is acceptable (RA 10173). | w6c / w6d FKs (`on delete set null` / `restrict`), `shops_remove_unenrolled_training_programs`; D-18, W5-L10 |
-| W6-L6 | OPEN | Assessment checklists and pass / fail decisions: fairness and discrimination risk, no appeal or independent review before W7 certification; re-assessment only as a correction with a reason. | w6d `training_assessments`; w6g `correct_training_assessment` |
-| W6-L7 | OPEN | Occupational safety during training (chemicals, pressure equipment, PPE, supervision ratios) is not modelled at all. | SPEC D; W6 PLAN 1 (out of scope) |
-| W6-L8 | OPEN | Personal data in training: progress notes and assessor comments may hold sensitive data (free text, no filter); trainee names are shown to designated trainers; recorder names are snapshotted on evidence rows. | w6d `progress_note`, `assessor_comment`, `recorder_display_name`; w6g reads |
-| W6-L9 | OPEN | Notice `w6_v1` wording ("free", "you may leave unfinished training at any time", "not productive work", "not a contract or a job offer"): a WashLink product rule, not legal advice; versioned in the database. | w6f `training_enrollment_notice_version`; W6 PLAN 6 (notice text) |
-| W6-L10 | OPEN | After completion or a fail (or a shop removal) the booking gate lifts while no contract exists (W9): whether assigning paid work to a worker without a contract must be blocked too. | w6h `roster_worker_in_required_training` |
-| W6-L11 | OPEN | Owner free text can contradict the free-training rule. `terms` (up to 4000 chars), `training_pay_details` and `reimbursement_details` may state a fee, deposit, materials or uniform charge, a training bond, a repayment-if-you-leave clause or a future pay deduction. Nothing detects or flags this (spec D: "Flag any proposed training arrangement or contract terms requiring legal review"). The text is then snapshotted and shown to the worker as "Agreed training terms" they accepted. Review whether such clauses must be blocked or flagged, and whether calling the snapshot "agreed terms" is appropriate. | w6b `training_programs.terms`, pay / reimbursement details; w6c `training_enrollment_terms_snapshot`; frontend `MyTrainingProgress.tsx`, `trainingNoticeCopy.ts` |
-| W6-L12 | OPEN | The copy "Training is not paid work." is shown next to optional training pay (D-7). A worker may read it as "training is unpaid", and it may conflict with how compensation for training time has to be treated. Review the wording together with W6-L1 and W6-L3. | frontend `trainingNoticeCopy.ts`, `TrainingNotices.tsx` |
-| W6-L13 | OPEN | Fair process for training records. The worker cannot confirm or dispute attendance or an assessment, and cannot ask for a correction. The owner or a trainer can later correct a day to absent, which removes a completion, without the worker's input (the worker is only notified). Adds to W6-L6; review before W7 certification relies on these records. Partly addressed in the W6 review polish (not a legal conclusion): a fail now needs a reason of 10..300 characters (DB-enforced) and the worker can read which checklist items were met / not met. | w6d `training_assessments` (`failure_reason`, `items_met`); w6g `correct_training_attendance`, `correct_training_assessment`; frontend `TrainingEvidenceHistory.tsx`, `AssessmentSignOffModal.tsx` |
-
-## W7 (shop-issued certifications)
-
-What W7 now enforces in the database (local proof only, D-10), without resolving any item: a certificate
-is issued only by the current owner of a shop with a recorded verification, only after >= 3 attended
-supervised training days and a current passed assessment (re-checked under locks); issuer kind is always
-`shop_issued` and every surface says "Shop-issued certification" and "Not a government-recognized
-credential"; issued facts and the issue-time shop verification snapshot are write-once; expiry is derived;
-suspension / revocation need a reason and can be reviewed once requested by the worker; certification-required
-openings refuse applicants without a current certificate (D-20). This touches **W0-L5**, **W2-L4**, **W3-L4**,
-**W3-L5**, **W4-L5**, **W5-L5**, **W5-L11**, **W6-L6** and **W6-L13**: all stay **OPEN**. Notes: W0-L5 / W4-L5
--> W7-L1 (naming and disclaimer); W2-L4 / W3-L4 -> W7-L6 (snapshot at issue, later loss never voids, workers
-not told); W3-L5 -> W7-L6 (both the shop columns and the latest `shop.verification_decided` audit id are
-snapshotted, neither is declared authoritative); W5-L5 / W5-L11 -> W7-L5 (D-12 decided as D-20; the "none yet"
-copy becomes real state); W6-L6 / W6-L13 -> W7-L3 / W7-L7 (the issuing owner remains the only reviewer; the
-worker still cannot dispute training records).
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W7-L1 | OPEN | Whether a private shop may issue something called a "certification" at all; naming vs TESDA National Certificates and other recognised credentials; whether the disclaimer "Shop-issued certification. Not a government-recognized credential." is adequate and placed everywhere it is needed (W0-L5, W4-L5). | w7b `certifications.issuer_kind` (CHECK `shop_issued`); frontend certification copy (W7 frontend step) |
-| W7-L2 | OPEN | Validity and renewal: default 12 months, per-shop 1..36 months, renewal only by re-assessment against the original checklist inside expiry - 60 days .. expiry + 90 days; after that a new training enrollment is needed (D-5, D-22). Whether these periods are reasonable and whether workers must be told before validity changes. | w7b `shop_certification_policies`; w7d `certification_renewal_window_open`; w7e `renew_certification`, `set_shop_certification_validity` |
-| W7-L3 | OPEN | Fairness of suspension and revocation: the issuing owner decides and also decides the review (no independent review until W11); 30-day review window, at most 3 requests per certificate; reasons (20..500 chars) and worker statements (20..1000) are free text and may defame or hold sensitive personal data. | w7f `transition_certification`, `request_certification_review`, `decide_certification_review`; D-21 |
-| W7-L4 | OPEN | Disclosure to other owners: owners hiring through an application see only CURRENT certificates (never suspensions, revocations, reasons or history). Privacy of the worker vs a possible safety interest of other shops in knowing about a revocation. | w7g `applicant_verified_certifications`; D-20 |
-| W7-L5 | OPEN | Hiring gate: certification-required openings refuse workers without a current shop-issued certificate from ANY shop (D-20); cross-shop recognition means one shop's decision affects access to every other shop's openings. Fairness and discrimination review (W5-L5, W5-L11). | w7g `job_application_apply_checks`; D-12 -> D-20 |
-| W7-L6 | OPEN | Loss of shop verification later never voids issued certificates and workers are not told (D-23); the issue-time snapshot (status, reviewer id, review time, latest approval audit event id) is the only record. Which approver record is authoritative (W2-L4, W3-L4, W3-L5: both kept). | w7b snapshot columns; w7d `certification_shop_verification_snapshot` |
-| W7-L7 | OPEN | Evidence corrected after issue: the certificate is flagged and the owner notified, never auto-suspended (D-24); the worker still cannot dispute the training records the certificate rests on (W6-L13). | w7h `training_evidence_flag_certifications`; w7g `training_record_changed_after_issue` |
-| W7-L8 | OPEN | Retention: certificates are kept after shop or owner deletion with shop / program / approver / assessor name snapshots (D-18) and removed with the worker's own account (audit rows stay). Retention periods, the worker's right to export and the retention of other people's display names (RA 10173). | w7b FKs (`on delete set null` / `cascade`); w7h `certification.deleted` |
-| W7-L9 | OPEN | The issuer attestation `w7_issuer_v1` is the owner's confirmation in the app, recorded by version only; it is not an electronic signature and not a WashLink statement of compliance or competence. | w7d `certification_issuer_attestation_version`; w7e `issue_certification` |
-| W7-L10 | OPEN | Expiry notices (D-25): W12 added the `certification_expiry_notices` job (one notice within 30 days, one on expiry), but nothing is sent until a human registers the jobs; until then an expired certificate silently stops counting for certification-required openings. Whether workers must be warned before that happens, and how often (see W12-L3, W12-L4). | w7h `enqueue_certification_expiry_notices` |
-| W7-L11 | OPEN | No public or third-party verification channel (QR, PDF, lookup): a worker cannot prove a certificate outside WashLink, and others cannot check one presented to them. | W7 PLAN 1 (out of scope) |
-| W7-L12 | OPEN | Conflict of interest in the review process (D-21). The owner who suspended or revoked a certificate is the only person who decides the worker's review, and nobody else can act until W11. Suggested W11 minimum: (a) a reviewer independent of the issuing shop (super_admin or a designated panel) can decide or escalate any review; (b) the worker can escalate an `upheld` decision; (c) a time limit for the owner to decide, after which the request escalates; (d) the reviewer sees both the owner's reason and the worker's statement, and records a reason; (e) open reviews on removed or unverified shops get a decider. Review whether the W7 interim (issuing owner only) is acceptable before production use. | `supabase/migrations/2026_10_26_w7f_certification_status_and_review_rpcs.sql:160-215` (`decide_certification_review`); DECISIONS D-21 |
-| W7-L13 | OPEN | Stranded suspensions. Suspension has no time limit. Reinstating (directly or through a review) needs a recorded shop verification, but suspending does not. If the issuing shop then loses verification, is deleted, or its owner account is deleted (`owner_id` set null), a suspended certificate can never be reinstated or reviewed with a reinstate outcome, and an open review stays open with no decider until W11. The worker loses the D-20 benefit with no route back except new training. | w7f lines 61, 71, 188; w7b `owner_id`/`shop_id` `on delete set null`; DECISIONS D-21, D-23 |
-| W7-L14 | OPEN | Retaliation risk across shops. Because D-20 recognises any shop's certificate for every certification-required opening, one owner's suspension or revocation removes a worker's access to other shops' openings. Nothing links status changes to, or guards them against, the worker declining an offer, leaving, or ending a contract or relationship (spec F: a worker's ability to decline or terminate must not be bypassed). Review whether such a suspension or revocation needs extra safeguards (independent review, cooling-off, or disclosure of the dispute). | w7f `transition_certification`; w7g:208 apply gate; w7d:60 `worker_holds_current_certification` |
-| W7-L15 | OPEN | Access to certification and renewal depends on shops. A worker can only reach training via an accepted application to a trainees-welcome opening (D-15). If no shop nearby posts such openings, the worker cannot get a certificate and is shut out of every certification-required opening (D-20). Renewal needs the same issuing shop, verified and willing to re-assess. The worker cannot ask for a re-assessment, and if that shop is removed or unverified, a lapsed certificate means repeating the full training. The worker UI does not explain the renewal window, that renewal depends on the issuing shop, or that an expired certificate stops counting for applications (owner screens show `renewalRuleText`; the worker card shows only the expiry date). | w7e `renew_certification` (line 217); `frontend/src/presentation/components/certifications/CertificationCard.tsx:78`; `frontend/src/presentation/utilities/certificationCopy.ts:60`; DECISIONS D-15, D-20, D-22 |
-| W7-L16 | OPEN | What other owners see about the issuer. The applicant section is headed "Verified certifications" and lists only the title, shop name snapshot and dates. It does not show that the issuing shop has since lost verification or left WashLink, although such a certificate still unlocks certification-required openings (D-23). Hiring owners may read "Verified" as checked by WashLink or by a government body. Review the heading and whether issuer status should be disclosed. Note the privacy trade-off with W7-L4. | `frontend/src/presentation/components/owner/applicants/ApplicantVerifiedCertificationsSection.tsx:29,55`; `supabase/migrations/2026_10_26_w7g_certification_reads_and_apply_gate.sql:136-170` |
-
-## W8 (contract templates and template versions)
-
-What W8 now enforces in the database (local proof only, D-10), without resolving any item: the WashLink starter
-template is STRUCTURAL PLACEHOLDER CONTENT with the 15 spec E sections, each carrying "Draft — requires review by
-a qualified Philippine labor-law professional"; `review_status` can only be `draft_requires_legal_review` (D-28);
-the starter text holds no digits, amounts, currency, statute citations, dates or claims of review or compliance
-(only the negated `template_is_draft` sentence); templates carry no relationship type and the vocabulary has no
-default (D-26); locked safeguard clauses are copied by the server and re-checked at commit for every session;
-versions are immutable and hashed. Nothing here is a contract yet (W9). This touches **W0-L3**, **W0-L4**,
-**W4-L8** and **W6-L11**: all stay **OPEN**. Notes: W0-L3 -> W8-L3 (no default and contractor last in the
-vocabulary; whether it is selectable is still open); W0-L4 -> W8-L4 (section 14 wording follows the D-6
-proposed default; D-6 stays OPEN); W4-L8 / W6-L11 -> W8-L5 (owner free text is still unfiltered; keyword
-flagging is W9); W6-L7 -> W8-L7; W3-L1 -> W8-L9.
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W8-L1 | OPEN | The whole starter template (structure, the 15 section titles, every locked sentence, every editable instruction) is placeholder content written by the loop, not by a lawyer. It needs review before any production use, and a human-run migration must record that review before `review_status` may change. | `supabase/migrations/2026_10_26_w8b_contract_template_reference_data.sql`; `2026_10_26_w8e_platform_starter_contract_template.sql` |
-| W8-L2 | OPEN | The locked safeguard sentences (no training fee or deduction, only listed deductions, free supervised training of at least three days, no waiver of mandatory rights, right to decline or leave, customer-data rule, safeguards prevail, shop-issued certification) may themselves be inaccurate, incomplete or insufficient. | w8e clauses `no_training_fee_or_deduction`, `deductions_listed_only`, `required_training_free_and_supervised`, `no_waiver_of_mandatory_rights`, `right_to_decline_or_leave`, `customer_data_minimum`, `safeguards_prevail`, `certification_shop_issued` |
-| W8-L3 | OPEN | The relationship-type vocabulary (employee, probationary, fixed-term, project, seasonal, casual, other, independent contractor), its labels and order, and whether `independent_contractor` should be selectable at all (W0-L3). W9 must require an explicit choice with an extra acknowledgement for the contractor option (D-26). | w8b `worker_classification_options` |
-| W8-L4 | OPEN | Section 14 acceptance wording without an e-signature provider: acceptance is described as a draft-and-acceptance record, not an electronic signature, and WashLink does not state that it meets any signature requirement (W0-L4; D-6 OPEN). Whether this is adequate evidence of consent. | w8e `acceptance_record_not_e_signature`, `changes_need_new_version_and_consent` |
-| W8-L5 | OPEN | Owner free text in editable clauses and shop-specific terms is unfiltered (W4-L8, W6-L11): unlawful waivers, fees, deposits, penalties or a contractor label can be typed and will appear in W9 drafts. W8 only blocks text that impersonates a "WashLink safeguard" and keeps the locked clauses; keyword flagging is W9. | w8f `save_owner_contract_template_version`; w8d `validate_contract_template_version` |
-| W8-L6 | OPEN | Whether the "safeguards prevail" precedence clause is effective against conflicting shop terms or attachments. | w8e `safeguards_prevail` |
-| W8-L7 | OPEN | The safety section only asks the shop to describe rules, equipment and instruction and says they need review; it states no requirement itself (W6-L7). | w8e `safety_terms_need_review`, `safety_and_workplace_rules` |
-| W8-L8 | OPEN | The statutory-benefits section lists nothing and relies on the non-waiver sentence and the shop's own list; what must be listed, and whether a template may leave it to the shop. | w8e `no_waiver_of_mandatory_rights`, `benefits_listed` |
-| W8-L9 | OPEN | Retention: owner templates and their versions are deleted with the owner account (W9 contract snapshots must be self-contained); audit rows (ids, counts, no text) stay (W3-L1). Retention period and disclosure. | w8c FKs (`on delete cascade`); w8h `contract_template.deleted` |
-| W8-L10 | OPEN | Which locked clauses must be mandatory safeguards. Review polish made `parties_named`, `safety_terms_need_review` and `customer_data_minimum` core (with `classification_reasons`, 15 core keys, each pinned to its section), so a super_admin can no longer drop, unlock or move them without a migration; whether this set is the right one is still open. | w8d `contract_template_core_safeguards()`; w8e |
-| W8-L11 | OPEN | How compensation or reimbursement for the required training should be described (spec D; W0-L2, D-7). Review polish added the locked, neutral `training_pay_or_reimbursement` (the shop may offer pay for training time or reimbursement of training costs as written in the contract; "free to the worker" means the worker does not pay); no amounts, no statement of what the law requires. Whether this wording is adequate. | w8e `required_training_free_and_supervised`, `training_pay_or_reimbursement`, `training_details` |
-| W8-L12 | OPEN | Editable text can contradict locked clauses (forums, notice penalties or exit restrictions in `dispute_resolution` / `termination_and_notice`; costs or clawbacks in `training_details`). Review polish: section-4 `classification_reasons` is now locked (relationship type set only by the per-contract choice), `{{worker_classification}}` and the party-name placeholders are allowed only in locked clauses, and `safeguards_prevail` now covers any clause text the shop writes or edits as well as shop terms and attachments. Whether that precedence wording is effective is still open (W8-L6). | w8e `classification_reasons`, `safeguards_prevail`; w8d validator |
-| W8-L13 | OPEN | W9 problem-term flagging scope (proposal): training fees, training-cost reimbursement or clawback, deposits, cash bonds, uniform / equipment / damage / shortage deductions, fines or penalties, waivers, quitclaims or releases, exclusivity or non-compete clauses limiting work for other shops, liquidated damages or forfeited pay on leaving, unpaid trial shifts or customer work during training, contractor labels in free text, forum / arbitration clauses, claims that a certificate is government-recognized, and claims that a contract is signed, binding, valid or compliant. What list is adequate is a legal question. | W9 (owner editable and shop-specific text); `docs/workforce/CONTRACT_TEMPLATES.md` W9 hand-off |
-
-## W9 (worker contracts, acceptance records, snapshots, amendments)
-
-What W9 now enforces in the database (local proof only, D-10), without resolving any item: drafts only for workers
-with an accepted application or completed training at the shop (D-31); an explicit relationship type with no
-default, and an extra acknowledgement by both parties for `independent_contractor` (D-26); sending needs a recorded
-shop verification (D-29); each sent version is sealed with its own plain text and sha256 hash, immutable for every
-session; the owner's acceptance record is written at send and the worker's at accept, only by the accepting party
-inside the RPCs and labelled "Acceptance record — not an e-signature" (no signature, typed name, IP or device data);
-every change after acceptance is an amendment the worker must accept (D-34); keyword flags inform and never block
-(D-33); the worker can always decline an offer and terminate an accepted / active contract; owner, shop or worker
-removal keeps the records described in D-32 / D-35. Nothing here is reviewed. This touches **W0-L3**, **W0-L4**,
-**W5-L10**, **W6-L10**, **W8-L3**, **W8-L4**, **W8-L5**, **W8-L9** and **W8-L13**: all stay **OPEN**. Notes:
-W0-L3 / W8-L3 -> W9-L2 (per-contract explicit choice with acknowledgements; whether the contractor option should
-exist is still open); W0-L4 / W8-L4 -> W9-L1 (acceptance records implement the D-6 default; D-6 adequacy is still
-open); W5-L10 -> W9-L5 (accepted applications are now copied to `retained_job_application_records` before a shop /
-owner cascade deletes them; retention basis open); W6-L10 -> W9-L9 (paid work without a contract is still not
-blocked); W8-L5 / W8-L13 -> W9-L3 / W9-L4 (owner text is flagged, not filtered); W8-L9 -> W9-L5 (contract
-snapshots are self-contained and survive template deletion).
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W9-L1 | OPEN | Whether the draft-and-acceptance record (who, when, version number and sha256 hash, statement text and party name snapshot), with the owner's acceptance recorded at send, is adequate evidence of consent without an e-signature provider (W0-L4, W8-L4, D-6). | `supabase/migrations/2026_10_26_w9d_contract_version_records.sql` (`contract_acceptances`); w9f `send_worker_contract_version`; w9g `accept_worker_contract_version` |
-| W9-L2 | OPEN | The per-contract relationship-type choice, its labels and the contractor acknowledgements; whether `independent_contractor` should be selectable at all; misclassification risk (W0-L3, W8-L3, D-26). | w8b `worker_classification_options`; w9c `contract_versions.classification_key`; w9b `w9_contractor_owner_v1`, `w9_contractor_worker_v1` |
-| W9-L3 | OPEN | The problem-term list and keywords (incl. the Filipino words multa, kaltas, bawas, deposito, piyansa, walang bayad, pakyaw), false negatives (paraphrases, other languages, misspellings) and false positives, and whether some terms must be blocked rather than flagged (W8-L5, W8-L13, D-33). The 15 categories are those listed in W8-L13. | w9b `contract_problem_term_rules`, `contract_problem_term_matches` |
-| W9-L4 | OPEN | Showing keyword flags to the worker may be read as legal advice, and "No keyword matches. This does not mean the terms are lawful." may still be read as WashLink approval. | w9h `worker_contract_version_flags`, `worker_contract_flag_notices` |
-| W9-L5 | OPEN | Retention after owner / shop / worker deletion (D-32, D-35): accepted contracts, sealed text, acceptance records and name snapshots of deleted users are kept for the remaining party; accepted applications are copied for the worker (W5-L10). Retention periods, export, and erasure / access rights under the Data Privacy Act of 2012 (RA 10173), including whether keeping a deleted worker's name and accepted contract for the owner has a lawful basis (D-32 note) (W3-L1, W8-L9). | w9i `worker_contracts_retention`, `retained_job_application_records`; w9c FKs `on delete set null` |
-| W9-L6 | OPEN | Termination takes effect immediately; notice periods, final pay and clearance are not modelled; free-text reasons (10 to 500 characters) may defame or hold sensitive data; whether a worker may be required to give a reason at all. | w9g `terminate_worker_contract`; `worker_contracts.end_reason` |
-| W9-L7 | OPEN | The owner alone records the start (activation) after the worker's acceptance; whether the worker must confirm it. | w9g `activate_worker_contract` |
-| W9-L8 | OPEN | Owner or shop removal leaves accepted / active contracts unchanged (no fabricated termination, D-35): what the kept record means once a party is gone, and whether either party must be told more. | w9i; w9j `worker_contract.party_removed` |
-| W9-L9 | OPEN | Training vs productive work: the C7 gate refuses activation only while the worker is in live required training with the same owner; paid work without a contract (W6-L10) and off-platform work are not controlled. | w9g `activate_worker_contract`; W6 booking gate |
-| W9-L10 | OPEN | English only (informed consent; a Filipino version or translation may be needed); the text download / print is an uncertified copy of the stored text, not an official or notarised document; no PDF. | w9e `worker_contract_build_text`; w9h `worker_contract_version_document` |
-| W9-L11 | OPEN | Every amendment is treated as material and needs the worker's acceptance (D-34); whether some changes need more (fresh notice, a waiting period) or may need no consent. | w9g `create_worker_contract_amendment`, `accept_worker_contract_version` |
-| W9-L12 | OPEN | The acknowledgement statements (`w9_owner_send_v1`, `w9_worker_accept_v1`, `w9_contractor_owner_v1`, `w9_contractor_worker_v1`) and the flag disclaimer are loop-written placeholder wording. | w9b `contract_acknowledgement_texts`; w9h `worker_contract_flag_notices` |
-| W9-L13 | OPEN | Amendments during a running relationship can change the relationship type (for example employee to independent contractor), pay, schedule and dates, and an amendment's start date may be in the past (retroactive). The worker's acceptance (plus the contractor acknowledgement) is the only safeguard. After a worker declines an amendment, the owner can end the contract with a reason, so in practice the choice can become "accept the change or the contract ends". Whether reclassification, retroactive changes or less favourable terms by amendment should be refused, flagged separately, or need notice; and whether this accept-or-end pattern raises constructive-dismissal or retaliation concerns (extends W9-L2, W9-L11). | `supabase/migrations/2026_10_26_w9f_worker_contract_owner_rpcs.sql:196-198` (amendment draft may change classification and dates), `:232` (the past-start check covers initial versions only); `supabase/migrations/2026_10_26_w9g_worker_contract_party_rpcs.sql:238-268` (owner termination) |
-| W9-L14 | OPEN | When the owner ends a contract, the end is recorded at once with only a free-text reason. There is no cause category, notice step or hearing step, and the owner copy ("This records the end of the contract now.") says nothing about the requirements that may apply when the shop ends the relationship (for example cause and notice for an employee). Whether WashLink should warn owners, model these steps, or treat the owner's action only as a record of an end the shop says happened off-platform (extends W9-L6, which covers termination in general). | `frontend/src/presentation/utilities/workerContractCopy.ts:72-73`; w9g `terminate_worker_contract` (`:238-268`) |
-| W9-L15 | OPEN | Worker copy states the right to leave without any condition: "You can end this contract at any time." and "You can always decline an offer or end an accepted contract." The locked clause `right_to_decline_or_leave` and the acceptance statement `w9_worker_accept_v1` say "as the law allows". Workers could read the UI copy as advice that no notice period or other duty applies when they leave (for example a resignation notice period for employees). The wording needs review. | `frontend/src/presentation/utilities/workerContractCopy.ts:30-31`, `:69-70`; compare w8e `right_to_decline_or_leave` and w9b `:107` |
-| W9-L16 | OPEN | The keyword list has no category for text that excludes statutory benefits or wage rules, for example "not entitled to SSS / PhilHealth / Pag-IBIG", "no 13th month pay", "no overtime or holiday pay", pay below the minimum wage, "tips only" or "no basic pay", or long probationary periods. The `waiver` rule matches only waive / waiver / relinquish / isinusuko. Whether these categories (and their Filipino wording) should be added, or blocked instead of flagged (extends W9-L3). | `supabase/migrations/2026_10_26_w9b_worker_contract_reference_data.sql:112-155` |
-| W9-L17 | OPEN | A trusted database session (no JWT) may repair the status columns of `worker_contracts`. The guard limits which columns change but not which transitions happen. A repair can therefore move a worker-terminated or expired contract back to `active` or `accepted` (accepted_at and the current version are still set), move a declined or withdrawn offer back to `sent_for_review`, or activate an accepted contract without the shop-verification and live-training (C7) checks. The repair is audited, but neither party is notified. Whether operator repairs may ever reverse a worker's decision to end a contract, and what notice the parties must get. | `supabase/migrations/2026_10_26_w9c_worker_contracts.sql:184-193`; `supabase/migrations/2026_10_26_w9j_worker_contract_audit_and_notifications.sql:36`, `:75` (trusted repairs notify nobody) |
-
-## W10 (owner relationships, three-distinct-owner progress goal, workforce policy)
-
-What W10 now does in the database (local proof only, D-10), without resolving any item: one derived relationship row
-per (worker, owner), created at the first accepted contract and kept in sync by triggers; only `active` relationships
-backed by a started contract with a verified shop of that same owner count, once per owner (D-3, D-36); the count and
-"remaining" are shown to the worker as an informational goal only, enforcement is fixed to `informational` by a CHECK
-and no W9 action reads it, so declining, leaving and terminating are never blocked (J16); owners see only their own
-rows (D-38); the minimum (default 3, range 1..10) is changed only by a super_admin with a reason (D-37); trusted
-contract repairs are forward-only (D-40); no notifications (D-39). Nothing here is reviewed. Notes (all stay
-**OPEN**): **W0-L1** -> W10-L1 / W10-L5 (implemented strictly as a progress metric; whether it may ever be more is
-still open); **W2-L2** -> W10-L8 (roster links never count); **W9-L6** -> W10-L2 (termination stays immediate; a
-second or third concurrent engagement is not checked against hours, contributions or exclusivity); **W9-L17** ->
-W10-L7 (repairs can no longer revive or reopen contracts, but can still end one without notice).
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W10-L1 | OPEN | The three-owner goal (W0-L1): whether showing a numeric target, "remaining" and "goal reached" can be read as a condition of platform participation or as pressure to take several jobs at once; the wording of the informational notice ("This is a WashLink progress goal. It is not a requirement and not an obligation to work for several shops at the same time. It never stops you from declining an offer or recording the end of a contract."), the card heading as built ("Progress toward working with different shop owners", chosen instead of spec H's "...three-distinct-owner business requirement") and the "Find work" button on the progress card. | `frontend/src/presentation/utilities/ownerRelationshipCopy.ts:7-35`; `frontend/src/presentation/components/worker/contracts/OwnerRelationshipProgressCard.tsx`; w10f `my_owner_relationship_progress` |
-| W10-L2 | OPEN | Several concurrent engagements: hours of work and rest across employers, statutory contributions (SSS, PhilHealth, Pag-IBIG) with several employers, and exclusivity or non-compete terms in another owner's contract (W9-L3). WashLink checks none of these and the goal may encourage concurrent engagements. | w10e `worker_distinct_qualifying_owner_count`; W9 contract text (w9e) |
-| W10-L3 | OPEN | Counting only `active` contracts (D-3) and treating a verification lapse, an inactive shop, a deleted shop, a shop transfer or an owner role change as "suspended": whether workers should be told when a relationship stops counting and why (no notification in W10, D-39); the worker text for `owner_verification_not_current` ("The shop's verification is not current right now.") also covers an inactive shop and an acceptance-hash mismatch. | `supabase/migrations/2026_10_28_w10e_owner_relationship_derivation_and_sync.sql:19-99`; `frontend/src/presentation/utilities/ownerRelationshipDisplay.ts` |
-| W10-L4 | OPEN | Personal data (RA 10173): relationship status, reasons and counts are worker data; owners cannot see the worker's count, remaining or other owners (D-38) but see their own relationship status and reason; owner name snapshots are kept for the worker after the owner account is deleted; relationship rows are deleted with the worker account while the audit rows (ids, status words) remain (W3-L1, W9-L5). | `supabase/migrations/2026_10_28_w10d_worker_owner_relationships.sql:9-13`; w10f `owner_worker_relationships`; w10g audit producer |
-| W10-L5 | OPEN | Policy governance: a super_admin can change the minimum (1..10) for every worker with a reason; workers get no notice of the change and see only the new number (plus the WashLink default when it differs); the change log is the W3 audit (from / to values, reason kept on the policy row only). Enforcement is fixed to `informational` by a CHECK; any enforcement needs a new migration and legal review first (spec F). | `supabase/migrations/2026_10_28_w10c_workforce_policies.sql:27`, `:89-92`, `:115-150`; `frontend/src/presentation/components/superAdmin/WorkforcePolicyPanel.tsx` |
-| W10-L6 | OPEN | Off-platform pressure: owners could ask workers about their other relationships or count outside WashLink, or prefer workers who have (or have not) reached the goal. Not controlled by WashLink. | D-38; w10f |
-| W10-L7 | OPEN | Forward-only trusted repairs (D-40) still let a person with database access end an accepted or active contract by SQL without notifying either party and without a reason; the relationship then ends and stops counting (W9-L17 narrowed, not closed). | `supabase/migrations/2026_10_28_w10b_worker_contract_forward_only_repairs.sql:44-51` |
-| W10-L8 | OPEN | A roster link, job application, training enrollment or shop-issued certificate never counts as a relationship (W2-L2): confirm that only an accepted, started contract with a verified shop of the owner is the intended meaning of "contractual relationship" for the goal. | w10e `worker_contract_qualifies` (`:19-33`); `j15_roster_link_application_training_and_certificate_never_count` |
-| W10-L9 | OPEN | Relationship state shown while the worker's contract stays `active` but does not count: originally labelled "Suspended", which could be read as a disciplinary/preventive suspension of the worker or of work/pay. Fix cycle 1 changed the labels to "Not counting right now" (worker) and "Needs attention" (owner); review whether this wording and the owner-facing display of this state are appropriate. | `frontend/src/presentation/utilities/ownerRelationshipDisplay.ts`; `frontend/src/presentation/components/owner/workerContracts/OwnerWorkerRelationshipsList.tsx` |
-| W10-L10 | OPEN | The policy row holds the super_admin's free-text change reason and profile id. Fix cycle 1 restricted selecting `workforce_policies` to super_admin (workers get only the minimum through `my_owner_relationship_progress`); review retention and disclosure of the reason and admin identity under RA 10173 and the privacy notice. | `supabase/migrations/2026_10_28_w10c_workforce_policies.sql` (`wp_select_super_admin`) |
-| W10-L11 | OPEN | Per-relationship goal signal to owners: before fix cycle 1 owners could read `counts_toward_goal` / `qualifying_contract_count` on their own rows. Owners now read only through `owner_worker_relationships()` (no goal columns), but still see a status/reason that implies whether the relationship counts. Review whether this is acceptable (privacy, D-38, pressure, W10-L6). | `supabase/migrations/2026_10_28_w10d_worker_owner_relationships.sql` (`wor_select_own_worker`); w10f `owner_worker_relationships` |
-
-## W11 (WashLink certification review, reported contract problems, role-aware dashboards)
-
-What W11 now does in the database (local proof only, D-10; frontend built, mocked Vitest only), without resolving any item: the
-certificate's worker can ask WashLink (a super_admin, shown as "WashLink review") to review a shop's suspension or
-revocation when the shop upheld it, has not decided within 14 days, or can no longer decide; the super_admin reinstates or
-keeps the decision with a reason, once per event; holds stop a revocation and a new shop request while the review is open
-(D-44..D-46). Either party of a sent contract can report a problem up to 90 days after it ends; the other party answers
-once; a super_admin reads the contract only while the problem is open (every read audited) and closes it with a note;
-no contract is ever changed (D-47). Dashboards show database counts per role (D-42, D-43). Notes (all stay **OPEN**):
-**W7-L3 / W7-L12** -> W11-L1 (an independent decider now exists; fairness still open); **W7-L13** -> W11-L2 (stranded
-suspensions can be escalated; no time limit); **W7-L14** -> W11-L3 (partly addressed); **W9-L14** -> W11-L7 (owner
-terminations can be reported, not reversed); **W10-L1** -> W11-L9. Moved to W14 (D-49) and still OPEN:
-**W4-L4 / L7 / L8 / L9** (posting reports and moderation; W14 built report-driven moderation, see W14-L1 / L2). Finding R-a (admin profile id readable by the
-issuing owner in raw W7 rows) was fixed in W11 fix cycle 1; who-decided disclosure stays part of W11-L10.
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W11-L1 | OPEN | WashLink review of shop decisions (W7-L3, W7-L12): a single platform administrator may reinstate a certificate that the issuing shop suspended or revoked, or keep the shop's decision, on the written record only (worker statement, shop reasons, status history, certificate facts), without assessing the worker's competence and without hearing either side; a reinstatement needs no current shop verification (D-45); the decision is final within WashLink (one per suspension / revocation event). Whether this is a fair process for a shop-issued record, what it may be called, and whether the shop must be told more than "WashLink reviewed a certification decision". | `supabase/migrations/2026_10_29_w11c_certification_platform_review_rpcs.sql` (`decide_certification_platform_review`); w11i notification texts; D-44, D-45 |
-| W11-L2 | OPEN | Stranded suspensions (W7-L13): suspensions still have no automatic time limit (D-46). A worker whose issuing shop or owner is gone or unverified can ask WashLink at any time (`issuer_unavailable`), but nothing happens unless the worker asks, and the worker is not told that this route exists outside the certificate screen. Whether a time limit, an automatic lift or a notice to the worker is needed. | w11c `certification_platform_review_basis`; w11h `stranded_suspended_certification_count` (admin dashboard only) |
-| W11-L3 | OPEN | Cross-shop retaliation (W7-L14): the hold only blocks a revocation and a new shop request while a WashLink review is open; it does not stop a suspension, does not cool off later actions, and a suspended certificate still removes access to every certification-required opening (D-20). Whether a cooling-off period, disclosure to other shops or a different D-20 rule is needed. | w11b `certifications_platform_review_hold`, `certification_review_requests_platform_hold` |
-| W11-L4 | OPEN | Time windows chosen by the loop: 14 days for the shop to decide before the worker may escalate, 30 days after an "upheld" shop decision (and for a revoked certificate whose issuer is unavailable), 90 days after a contract ends to report a problem, at most 3 problems per party and contract. Whether these are reasonable and whether workers must be told the deadlines in advance. | w11c `certification_platform_review_owner_decision_days`, `certification_platform_review_basis`; w11f `raise_contract_dispute` |
-| W11-L5 | OPEN | Privacy (RA 10173): while a reported problem is open a super_admin reads the contract text, acceptance records, end / decline reasons, both parties' statements and the live relationship status; for a WashLink review the super_admin reads statements, reasons and the worker's name. Every read is audited, the parties see only "WashLink has viewed" (no reader identity, no per-read list), and statements stay as long as the contract / certificate rows. Legal basis, notice in the privacy policy, retention, and whether the parties must be told each time WashLink reads the contract. | w11g `admin_contract_dispute_case`, `admin_contract_dispute_version_document`, `my_contract_disputes.washlink_has_viewed`; w11d `admin_certification_platform_review_case` |
-| W11-L6 | OPEN | Dispute channel versus labour dispute bodies (SEnA / DOLE / NLRC): the built copy says "WashLink can read this contract only while the problem is open. WashLink cannot change, restart or end a contract, decide pay or decide legal rights. For those, contact the proper government office or a lawyer." and tells the administrator to "point to the proper government office or a lawyer"; the closing kinds include `referred_outside_washlink`. Whether this wording is accurate and sufficient, whether the channel creates duties or expectations (for example that a report stops a prescriptive period), and whether WashLink must say more. | w11f `close_contract_dispute`; `frontend/src/presentation/utilities/contractDisputeCopy.ts:9-10`, `:91-92`; D-47 |
-| W11-L7 | OPEN | Review of owner terminations (W9-L14): a worker can report an owner-ended contract (`owner_ended_contract`) but WashLink only records, reads and comments; the termination stays in force. Whether workers must be told of statutory remedies and their deadlines at the moment a contract is ended or a problem is closed. | w11f `raise_contract_dispute` (category rule); W9 `terminate_worker_contract` (unchanged) |
-| W11-L8 | OPEN | Free-text statements (20..1000), responses, decision reasons (20..500) and closing notes (20..1000) may contain defamatory content or sensitive personal data, are shown to the other party, cannot be edited or deleted by their author (only by cascade), and have no correction route. Whether moderation, correction or deletion routes are needed. | w11b `cpr_statement_length`; w11e `wcd_statement_length`, `worker_contract_disputes_guard_write` |
-| W11-L9 | OPEN | Dashboard wording (W10-L1, W4-L9): the worker Overview orders "next actions" and shows counts of offers, amendments, openings and the W10 progress card; it must not pressure workers to accept offers or amendments, and "Latest openings" (newest 3, never "recommended") must not imply that WashLink endorses or vetted the postings. As built, the "Latest openings" note says the openings "are not ranked or matched to you, and listing does not mean WashLink vouches for them"; review that wording. The owner Workforce overview counts live `suspended` relationships as "Relationships needing attention" (an initial "Suspended" wording was corrected before review, W10-L9). | w11h `my_worker_dashboard_summary`; `frontend/src/domain/utilities/workforceNextActions.ts`; `frontend/src/presentation/utilities/workforceDashboardCopy.ts:34`, `:64-66`; `frontend/src/presentation/utilities/workforceDashboardDisplay.ts:86`; `frontend/src/presentation/components/worker/dashboard/LatestOpeningsList.tsx` |
-| W11-L10 | OPEN | Single-administrator decisions and identity: one super_admin decides a WashLink review or closes a problem alone, with no conflict-of-interest check (for example an administrator related to a shop or worker) and no second reviewer. The administrator's name and id are never shown to the shop: W11 fix cycle 1 (R-a / N1) masks `certifications.status_changed_by` and `certification_status_events.actor_id` for WashLink decisions (w11b `zz_` mask triggers); the decider stays in `certification_platform_reviews.decided_by` and the super_admin-only audit. Record keeping and disclosure of who decided need review. | w11c `decide_certification_platform_review`; `frontend/src/presentation/utilities/platformReviewCopy.ts:6-9` (decider shown as "WashLink review"; the frontend never reads the admin id); W7 guards (w7b / w7c, unchanged); W11 fix cycle 1 (N1 mask triggers in w11b) |
-| W11-L11 | OPEN | Gaps in the route to an independent decider (W7-L3, W7-L12, W7-L13). WashLink review needs a basis, and every basis except `issuer_unavailable` depends on a W7 shop request. W7 accepts a shop request only within 30 days of the latest suspension / revocation and at most 3 per certificate for its whole life (escalating to WashLink withdraws a request, and that request still counts). As a result: (a) a worker whose certificate a verified, still-present shop keeps suspended, and who did not file a shop request within 30 days, has no decider at all, while the suspension has no time limit and still blocks every certification-required opening (D-20); (b) a worker who used 3 shop requests on earlier events cannot reach WashLink for a new suspension or revocation unless the issuer is unavailable; (c) a revoked certificate whose issuer became unavailable more than 30 days after the revocation cannot be reviewed. Whether this is "an appropriate review process" (spec D), and whether a long-running suspension needs its own route to WashLink. | `supabase/migrations/2026_10_29_w11c_certification_platform_review_rpcs.sql:48-63`; `supabase/migrations/2026_10_26_w7f_certification_status_and_review_rpcs.sql:128-138`; D-44, D-46 |
-| W11-L12 | OPEN | The WashLink 90-day reporting window may be read as a legal deadline. Users see "You can report a problem up to 90 days after a contract ends, at most 3 times per contract." with no statement that this is a WashLink limit only and does not affect, stop or replace any period for filing with a government office (statutory prescriptive periods for labor claims are much longer). Whether the copy must say so, and whether a report could be mistaken for filing a claim. | `frontend/src/presentation/utilities/contractDisputeCopy.ts:19`; w11f `raise_contract_dispute` (`:43-45`); related W11-L4, W11-L6 |
-| W11-L13 | OPEN | Notice that a statement is shown to the other side. A worker's WashLink review statement is returned to the issuing owner (`owner_certification_platform_reviews().worker_statement`), and a contract problem statement is shown to the other party (`my_contract_disputes().statement`), but the worker review modal says only "Write facts only; do not include ... private details" and the report modal says only that the other party can add their side; neither says the statement itself will be read by the shop / other party. Whether prior notice is required (RA 10173 transparency) and whether a worker may fear retaliation from the shop that suspended them. | `frontend/src/presentation/utilities/platformReviewCopy.ts:25-26`; `frontend/src/presentation/utilities/contractDisputeCopy.ts:16-17`, `:27`; `supabase/migrations/2026_10_29_w11d_certification_platform_review_reads.sql:39-46` |
-| W11-L14 | OPEN | Hearing the other party before closing. `close_contract_dispute` lets a super_admin close a reported problem at once, before the other party has added their side (no minimum response period, no check that the other party was notified or had time), and `decide_certification_platform_review` decides without any statement from the issuing shop (the shop can only reinstate). Whether a minimum response period or a shop statement step is needed for a fair process. | `supabase/migrations/2026_10_29_w11f_worker_contract_dispute_rpcs.sql:151-189`; `supabase/migrations/2026_10_29_w11c_certification_platform_review_rpcs.sql:156-211` |
-| W11-L15 | OPEN | Unverified independence claim shown to workers: "A WashLink administrator who does not work for the shop reads the record ..." The system has no conflict-of-interest check or declaration (W11-L10), so the statement is a guarantee the platform does not enforce. Whether the wording should be reduced to what is enforced (decided by a WashLink administrator, not by the shop) or backed by a recorded conflict declaration. | `frontend/src/presentation/utilities/platformReviewCopy.ts:15-16`; related W11-L10 |
-
-## W14 (platform moderation of job openings, oversight reads, admin audit)
-
-What W14 does (database local proof only, D-10; frontend built, mocked Vitest only), without resolving any item:
-a worker who can read an opening can report it in one of six categories with a statement; a super_admin reads the
-reports (as "Reporter n") and dismisses, pauses the opening with a hold, or closes it, with a reason kind and a message
-only the owner reads; the owner edits and asks WashLink to check; WashLink lifts, keeps the pause or closes (D-50..D-53).
-Every user gets a redacted "Your activity" read; super_admin audit-log searches, moderation case reads and relationship
-lookups (with a fixed purpose and a note) are audited (D-54, D-55); approved shops without a recorded super_admin review
-get a queue, a re-review and a runbook (D-56). Nothing in the code, UI copy or docs may state that a posting is lawful or
-vetted, that a takedown has legal effect, or that any feature is compliant. Notes (all stay **OPEN**): **W4-L4 / W4-L7 /
-W4-L9** -> W14-L1 (WashLink now acts on reports; no written standard and no proactive screening); **W4-L8**, **W5-L8**
-(takedown limits) and **W5-L9** -> W14-L2 (a takedown never edits snapshots; it pauses or closes the listing);
-**W3-L1** -> W14-L8 (retention of access records); **W3-L3** -> W14-L9; **W2-L4 / W3-L5 / W7-L6** -> W14-L10; **D-28**
--> W14-L11; **W11-L5 / W11-L10** -> W14-L12.
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W14-L1 | OPEN | Publisher duties (W4-L4, W4-L7, W4-L9; RA 10911 and other anti-discrimination rules): WashLink acts only on worker reports, with no written legal standard for when a requirement is discriminatory, no proactive or keyword screening (D-50) and a single administrator deciding. An opening that was not reported or not taken down must never be presented as lawful, vetted or endorsed; whether report-driven moderation meets WashLink's duties as the publisher of job notices. | `supabase/migrations/2026_10_29_w14d_job_opening_moderation_rpcs.sql` (`report_job_opening`, `moderate_job_opening`); categories `age_requirement`, `other_discriminatory_requirement` |
-| W14-L2 | OPEN | Fee, deposit and unpaid-trial postings (W4-L8, W5-L8, W5-L9): WashLink cannot verify whether a shop charges fees or deposits or runs unpaid trials; it can only pause or close the listing, and the text stays in application snapshots (P20). Whether such reports must be referred to DOLE or another office, and the wording of the owner message and of the reason kinds `worker_fee_or_deposit` / `unpaid_trial_or_training`. | w14d `moderate_job_opening`; w14b `job_opening_reports.reported_snapshot`; W5 `job_applications.opening_snapshot` (unchanged) |
-| W14-L3 | OPEN | Fairness to owners: a pause or close happens without a hearing; the owner reads only the reason kind and the WashLink message, never the reports (D-53); the only response route is "edit and ask WashLink to check" after a pause, and a close is final within WashLink. Whether a notice-and-response step is needed before closing and whether the owner must be told more about the complaint. | w14d `moderate_job_opening`, `submit_job_opening_changes`; `supabase/migrations/2026_10_29_w14e_job_opening_moderation_reads.sql` (`owner_job_opening_moderation`) |
-| W14-L4 | OPEN | Reporter protection versus the right to know the complaint: reporter identity, statements and report counts are hidden from owners, but the reported snapshot and timing may still let an owner guess a reporter (for example the only applicant); retaliation risk; whether anonymity can be kept under a legal or regulatory request (the reporter id stays in the row). | w14b `job_opening_reports.reporter_id`; w14e `admin_job_opening_moderation_case` (`Reporter n`) |
-| W14-L5 | OPEN | Effect on applicants: a WashLink close runs the W5 auto-close, which ends every open application and notifies applicants without a reason (D-53); a pause sends only the W5 pause notice. Whether applicants must be told more, or whether applications should stay open for an opening closed by WashLink. | w14d `moderate_job_opening` (close); W5 auto-close and notices (unchanged) |
-| W14-L6 | OPEN | Free text (W11-L8): report statements (20..1000), WashLink messages to owners (20..500), internal admin notes (20..1000) and owner change notes (<= 500) may be defamatory or hold sensitive personal data; none can be edited or deleted by its author (only by cascade); no correction route. | `supabase/migrations/2026_10_29_w14b_job_opening_moderation_tables.sql` (`jor_statement_length`, `jomc_owner_message_length`, `jomc_admin_note_length`, guards) |
-| W14-L7 | OPEN | Per-user activity read (RA 10173 access rights): `my_workforce_activity` is a redacted operational view (actor labels, allow-listed keys, no ids), not a complete data-subject access response; it shows "WashLink viewed / looked up" events with a generic purpose (`washlink_review`, not the stated purpose; fix cycle 1 N7); labels for other parties (`shop_owner`, `worker`, `someone`) and which events are hidden from whom (`job_opening_report.*` events only to the reporter; moderation events that would reveal a report only to an actor who is not the case owner; fix cycle 1 B1). | `supabase/migrations/2026_10_29_w14h_workforce_audit_reads.sql` (`my_workforce_activity`) |
-| W14-L8 | OPEN | Relationship lookups (D-38, D-55): purpose limitation and the fixed purpose list (incl. `legal_or_regulatory_request`, which records no request reference); the looked-up person is not notified (only the activity view shows it, with the purpose but not the note); `admin_access_records` has no retention period and outlives the subject (no FK, P11; W3-L1). | `supabase/migrations/2026_10_29_w14g_admin_relationship_lookups.sql` |
-| W14-L9 | OPEN | Audit-log reads: searches through `admin_workforce_audit_log` are logged (filter names plus the profile and actor filter ids, not the other filter values), but the W3 raw super_admin select policy `wae_select_super_admin` remains and is not audited (D-54, W13 decides); the log is internal and not evidence-grade (W3-L3). | w14h `admin_workforce_audit_log`; W3 `wae_select_super_admin` |
-| W14-L10 | OPEN | Unreviewed approved shops: a confirmation needs no fresh documents and is decided by one super_admin; certificates, contracts, applications and relationships created while a shop was unreviewed stay (D-23); shops whose reviewer is not a super_admin still pass the publish rule until confirmed; knowingly accepted exceptions are recorded outside the database. Whether earlier decisions made by or about such shops need review (W2-L4, W3-L5, W7-L6). | `supabase/migrations/2026_10_29_w14f_unreviewed_approved_shops.sql`; runbook in `docs/workforce/PLATFORM_MODERATION_AND_AUDIT.md` |
-| W14-L11 | OPEN | Standard-template publishing by a single super_admin (W14 UI edits only editable clause headings and text, RPC from W8): the template stays "Draft — requires review by a qualified Philippine labor-law professional" (D-28); owner versions and sent contracts are unchanged. Whether a second reviewer or a recorded human legal sign-off step is required before publishing; such a sign-off must never be fabricated or implied by the UI. | W8 `publish_platform_contract_template_version` (unchanged); `frontend/src/presentation/components/superAdmin/standardContract/PublishStandardContractModal.tsx`; `frontend/src/presentation/utilities/standardContractCopy.ts:10-11` |
-| W14-L12 | OPEN | N6 oversight flag: the thresholds (open >= 30 days and >= 5 case reads) were chosen by the loop; a flag only informs administrators and does not limit continued admin access to the contract while a dispute stays open (W11-L5, W11-L10). Whether limits, a second approval or notice to the parties are needed. | w14h `admin_oversight_access_flags`, `oversight_flag_open_days`, `oversight_flag_read_count` |
-| W14-L13 | OPEN | The report reason "Unpaid trial work or training" (`unpaid_trial_or_training`) is also the reason shown to the owner. WashLink's own required initial training must be free to the worker, but the spec allows it to be unpaid as wages unless the law says otherwise, and it allows lawful pay or reimbursement. If the label lumps all unpaid training together with unpaid productive work, owners and workers may read a legitimate free training as a breach, or the opposite. A reviewer should decide the wording, for example productive work presented as a trial or training, separate from training fees. | `frontend/src/presentation/utilities/jobOpeningModerationCopy.ts:21`; w14b / w14d category lists |
-| W14-L14 | OPEN | The worker-facing promise "The shop does not see your report, what you write or who reported." is unconditional. The reporter id stays in the row, and disclosure may be compelled by a legal or regulatory request or a court (see W14-L4). A reviewer should decide whether the copy must be qualified. | `frontend/src/presentation/utilities/jobOpeningModerationCopy.ts:111-112` |
-| W14-L15 | OPEN | Relationship lookups and transparency. An owner lookup returns the names and relationship status of that owner's workers, but only the owner is the recorded subject. Those workers get no access record and see nothing in "Your activity". The looked-up subject also sees the purpose, including `legal_or_regulatory_request`, which may tip off the subject of an investigation. Open questions: who counts as a data subject of a lookup, and whether some purposes should be hidden or delayed. | `supabase/migrations/2026_10_29_w14g_admin_relationship_lookups.sql:128-129, 187-197`; `frontend/src/presentation/utilities/adminOversightCopy.ts:51-52` |
-| W14-L16 | OPEN | The new admin copy says as fact "WashLink is not a party to any contract." That is a legal statement about WashLink's role, for example whether a platform that sets locked contract clauses, moderates postings and runs certification could be treated as an employer, a labor-only contractor or a recruitment agency. It should be reviewed, not asserted. There is an earlier W11 precedent (`contractDisputeCopy.ts`, `ContractDisputeCaseDrawer.tsx:162`), and the register has no item for it. | `frontend/src/presentation/utilities/standardContractCopy.ts:12-13` |
-| W14-L17 | OPEN | Owner response route (adds to W14-L3). After a pause the owner can ask WashLink to check only after editing the opening (`updated_at > status_changed_at`). An owner who believes the listing is already correct cannot contest without making some change. A WashLink close is possible straight from a new report, with no pause first, and has no response or appeal route. A reviewer should decide whether a contest-without-edit path and a pause-before-close or appeal step are needed. | `supabase/migrations/2026_10_29_w14d_job_opening_moderation_rpcs.sql:152, 225-227`; `frontend/src/presentation/utilities/jobOpeningModerationCopy.ts:95-96` |
-
-## W12 (notification wiring and scheduled jobs)
-
-What W12 does (database local proof only, D-10; frontend built, mocked Vitest only): every in-app notice must match a category registry
-(37 categories, `external_delivery` fixed to `never`); de-duplication and the absence of private text are proven across
-every notifying event; three scheduled jobs (certification expiry notices, contract expiry, relationship refresh) run
-through one date-free runner, but only after a human registers them with a HUMAN-RUN script (runbook in
-`NOTIFICATIONS_AND_SCHEDULING.md`). Nothing in the code, UI copy or docs may state that anyone was legally notified or
-warned, or that a contract legally ended. Notes (all stay **OPEN**): **W3-L2** -> W12-L1; **W7-L10** -> W12-L3 / W12-L4;
-**W3-L1** -> W12-L6; **W10-L1** -> W12-L5.
-
-| ID | Status | Item for review | Source |
-|---|---|---|---|
-| W12-L1 | OPEN | In-app only (D-61): whether job offers, contract termination or expiry, or certificate suspension / revocation need notice through a durable or external channel; consent per channel and minimum content before any email / SMS / push is added (RA 10173; extends W3-L2). The documented hook (outbox with title and fixed body only) is not built. | `supabase/migrations/2026_10_30_w12b_notification_category_registry.sql` (`notification_categories_external_delivery_check`) |
-| W12-L2 | OPEN | Scheduled contract expiry records `expired` with `ended_by 'system'` from the stored end date (Asia/Manila). The legal end of work is set by the contract and the law, not by this record; the UI must never present it as a legal termination. | `supabase/migrations/2026_10_30_w12d_scheduled_job_batches.sql` (`expire_worker_contracts_batch`) |
-| W12-L3 | OPEN | Certificate expiry warnings (W7-L10): one notice within 30 days of expiry, on the first run inside the window (not a fixed 30 days before), and one on expiry. Whether earlier or more warnings are needed when an expired certificate blocks certification-required applications (D-20). | w7h `enqueue_certification_expiry_notices`; `supabase/migrations/2026_10_30_w12e_scheduled_job_runner_and_reads.sql` (`run_workforce_scheduled_job`) |
-| W12-L4 | OPEN | Until a human approves and registers the jobs, no expiry notice is sent, contract expiry is only derived on read and relationship rows refresh only on contract / shop / role changes. The product must not say that workers were warned; the super_admin card says "Scheduled jobs are not running yet. A person must approve and register them." and "Until then, no in-app certificate expiry notices are created on a schedule and expired contracts are not recorded as expired by a job."; since fix cycle 1 (C1) its badge reads "Enabled in WashLink" with the note that registering a job with the database cron scheduler "is a separate step done by a person, and that registration is not visible here", and a job not started in the last 2 hours shows "Not run recently" ("Its cron registration may be missing or stopped; a person must check it."). Whether this is enough to stop anyone reading "enabled" as "running" or as "workers were warned". | `scripts/supabase-scheduling/register_workforce_jobs.sql`; w12e `admin_workforce_scheduled_jobs`; `frontend/src/presentation/utilities/scheduledJobCopy.ts:15-20, 49-60` |
-| W12-L5 | OPEN | No notice when a relationship stops counting (D-59) or a shop loses verification (D-23): transparency about the informational distinct-owner count (W10-L1). | D-59; W10 `refresh_worker_owner_relationship` (unchanged) |
-| W12-L6 | OPEN | Notification retention (W3-L1): notices are deleted with the recipient's account; no retention period is defined for notices of active accounts (W13). | W3 `notifications` (FK cascade) |
-| W12-L7 | OPEN | Owner-authored labels (shop name, opening title, program title) appear in notices to workers; an offensive or misleading label relies on W14 reports for openings only. | P82; `notification_safe_label` (W3, unchanged) |
-| W12-L8 | OPEN | First production run: a backlog of true "expired" notices and past-end contracts recorded as expired at once (R5); the Asia/Manila date used for contract expiry for workers or owners in other time zones. | w12d `expire_worker_contracts_batch`; w12e `workforce_scheduled_job_pending` |
-| W12-L9 | OPEN | Now that W12 schedules contract expiry, the worker gets the unchanged W9 notice "Your contract with <shop> reached its end date and has expired." (owner: "A contract reached its end date and has expired."). This reads as a statement of fact about the contract, not about a WashLink record. If the worker keeps working after the stored end date, the legal effect (for example, continued fixed-term work) is decided by the contract and the law, not by this notice. Review whether the wording should say that the contract is *recorded as expired in WashLink*. On a first-run backlog, the notice may arrive days or weeks after the end date (W12-L8). | `supabase/migrations/2026_10_26_w9j_worker_contract_audit_and_notifications.sql:94-97` (producer unchanged; activated by w12d `expire_worker_contracts_batch` and the w12e runner) |
-| W12-L10 | OPEN | Content and timing of the certificate expiry notice: "Your certification for <program> expires within 30 days." It gives no next step. It does not say that renewal by re-assessment is possible from 60 days before expiry (D-22), and it does not say that certification-required openings refuse new applications after expiry (D-20). The notice comes 30 days before expiry, so the first half of the renewal window passes without notice. Review whether the content or timing is enough to protect the worker's access to work. This complements W12-L3, which covers only the number of notices. | `supabase/migrations/2026_10_26_w7h_certification_audit_and_notifications.sql:241-243` (unchanged; scheduled by w12e) |
-| W12-L11 | OPEN | There is no advance notice before a contract's stored end date. Parties are told only after the job records `expired`, and nothing is sent until a human registers the job (W12-L4). Review whether a notice before the end date is needed for fixed-term, project or seasonal contracts (vocabulary in W8-L3), and whether it should come from the platform or from the employer. | w12d `expire_worker_contracts_batch`; D-69 / P81 (no contract "expiring" category in the w12b registry) |
-| W12-L12 | OPEN | D-60: a newer standard template version notifies nobody. If a newer platform version changes a locked safeguard clause after legal review, owners see only the live flag. Workers on contracts already accepted are never told that the platform's standard safeguard wording changed, because their accepted text stays immutable. Review whether parties to contracts in force need to be told when a safeguard clause is corrected. | D-60; W8 `owner_contract_templates().newer_standard_available`; `docs/workforce/NOTIFICATIONS_AND_SCHEDULING.md:49-50` |
+| W13-L1 | OPEN | Contract expiry notice wording (D-72; extends W12-L9 and W12-L2). Worker: "Your contract with <shop> reached the end date written in it, so WashLink now shows it as expired. What this means for your work depends on the contract terms and the law."; owner (after W13 fix cycle 1): "A contract reached the end date written in it, so WashLink now shows it as expired. What this means for you and the worker depends on the contract terms and the law."; notice title unchanged "Contract expired" (the UI status label is "Past end date", see W13-L9). Review whether this wording and the title avoid stating that the work relationship legally ended, and whether expiry needs a formal notice outside WashLink. Notices already sent keep the W9 wording (true records). | `supabase/migrations/2026_10_30_w13d_contract_expiry_notice_wording.sql`; `supabase/tests/database/j15_w13_contract_expiry_notice_wording.test.sql` |
+| W13-L2 | OPEN | Worker termination copy (D-73; W9-L15): "You can record the end of this contract on WashLink at any time. Give a short reason; the shop will see it. Notice periods or other duties under your contract or the law may still apply. Final pay and clearance are not handled on WashLink." The worker contracts intro now reads "You can decline an offer, or record the end of an accepted contract, on WashLink at any time." (W13 fix cycle 1, C1; before: "You can always decline an offer or end an accepted contract."). Review the accuracy of both texts and whether they are enough for a worker to understand what recording an end does and does not do. | `frontend/src/presentation/utilities/workerContractCopy.ts` (`workerTerminateText`, `myContractsIntroText`) |
+| W13-L3 | OPEN | Owner termination caution (D-73; W9-L14, W11-L7): the owner sees "Ending a work relationship can have legal requirements such as a proper cause and notice. WashLink only records the end." Review whether a general caution is enough, or whether cause or notice steps are needed before an owner can record an end. | `frontend/src/presentation/utilities/workerContractCopy.ts` (`ownerTerminationCautionText`, appended to `ownerTerminateText`) |
+| W13-L4 | OPEN | Audit access governance (D-70; W3-L3, W14-L9): super_admin reads of audit rows are logged (`workforce_audit.log_searched`); reads by database operators through trusted SQL (SQL editor, psql) are not logged. Review who may hold database access, under what controls, and whether operator reads must be recorded. | `supabase/migrations/2026_10_30_w13b_admin_audit_reads_only_through_rpc.sql`; `supabase/tests/database/j17_w13_admin_audit_reads.test.sql` |
+| W13-L5 | OPEN | Retention periods remain undefined for audit events, notifications, contracts, acceptance records and training evidence (W3-L1, W12-L6, W14-L8; D-18, D-32). The trusted purge procedure exists but no period is set; the loop does not invent one. | `docs/workforce/AUDIT_AND_NOTIFICATIONS.md` (trusted retention purge); `docs/workforce/LIMITATIONS.md` |
+| W13-L6 | OPEN | Accepted limitations (D-74) and the deployment checklist must be reviewed and signed by humans before production. The loop signs nothing and ticks no gate. | `docs/workforce/LIMITATIONS.md`; `docs/workforce/DEPLOYMENT_READINESS.md` |
+| W13-L7 | OPEN | Report handling has no response-time commitment, and oldest-first paging (50 per page) can delay attention to new reports (D-71; W14-L1, W14-L3). Review whether a response standard or a priority rule is needed for reports such as discriminatory or fee-charging postings. | `supabase/migrations/2026_10_30_w13c_admin_moderation_queue_paging.sql`; `supabase/tests/database/j2_w13_moderation_queue_paging.test.sql` |
+| W13-L8 | OPEN | (REVIEW, compliance) The owner expiry notice at first had no counterpart to the worker's "What this means for your work depends on the contract terms and the law." W13 fix cycle 1 (C2) changed it to "A contract reached the end date written in it, so WashLink now shows it as expired. What this means for you and the worker depends on the contract terms and the law." The owner is the party most likely to act on "expired" (for example by stopping work or pay, or by letting work continue past the end date without a new contract). Review whether this caveat is enough, and what an owner must do outside WashLink when a written end date passes. | `supabase/migrations/2026_10_30_w13d_contract_expiry_notice_wording.sql` (live body, owner branch) |
+| W13-L9 | OPEN | (REVIEW, compliance) The contract UI described an expired contract as ended ("Ended (end date passed)", "Ended when the end date passed", "The contract reached its end date."). W13 fix cycle 1 (C3, C4) changed the labels to "Past end date" (status), "End date passed (recorded on WashLink)" (ended by) and "The contract's end date has passed (recorded on WashLink)." (relationship reason, worker and owner), and the w13d header now names "Past end date" as the UI label. Review these labels with W13-L1: whether they still read as a statement that the work relationship ended. | `frontend/src/presentation/utilities/workerContractDisplay.ts:23`, `:60`; `frontend/src/presentation/utilities/ownerRelationshipDisplay.ts:53`, `:65`; `supabase/migrations/2026_10_30_w13d_contract_expiry_notice_wording.sql` (header) |
+| W13-L10 | OPEN | (REVIEW, compliance) A production rollback of W9, W7, W6 or W5 irreversibly deletes contracts, sealed versions and acceptance records, issued certificates, training attendance and assessment evidence, and applications. The guide requires an export and the project owner's written approval, but no legal or data-privacy review and no notice to the workers whose records are removed. Review what records must be kept or handed to workers before such a step, and whether a rollback that deletes them may be done at all once the module is in use. | `docs/workforce/ROLLBACK_GUIDE.md` (preconditions, "Per-increment blocks" W5..W9 rows) |
+| W13-L11 | OPEN | (REVIEW, compliance) A super_admin can assign a worker who is in required (free) training with one owner to another owner's customer booking, outside the training booking gate (W6 REVIEW carry-forward, LIMITATIONS "W6 (admin assignment)"). This was never raised as a legal item. `ARCHITECTURE.md` stated without exception that a trainee in required training cannot be assigned to a customer booking (corrected in W13 fix cycle 1). Review whether productive work for any shop during required training must be refused for every role, including WashLink administrators. | w6h `bookings_guard_training_assignment`; `docs/workforce/LIMITATIONS.md` (free-training gaps); `docs/workforce/ARCHITECTURE.md` (key data rules) |

@@ -338,7 +338,8 @@ W10 sync trigger); dblink to the container alias `db` with local default credent
   `enqueue_certification_expiry_notices` is unbatched (bounded by active certificates within 30 days). Not tamper-proof:
   a database superuser can disable the triggers (W3-L3).
 - Expiry warnings (W12-L3), no relationship / verification-loss notice (W12-L5), Asia/Manila date (W12-L8), no notice
-  retention period (W12-L6); admin queue paging and retention are W13.
+  retention period (W12-L6, still undefined after W13: W13-L5). W13: the posting-report queue is paged (D-71); the
+  contract expiry notice body now says WashLink "shows it as expired" (D-72, w13d; W13-L1); `LIMITATIONS.md`, `ROLLBACK_GUIDE.md`.
 
 ## Rollback (local test stack only; reverse order e..a)
 

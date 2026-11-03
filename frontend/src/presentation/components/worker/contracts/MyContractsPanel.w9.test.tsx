@@ -49,7 +49,7 @@ describe('Worker contracts panel (W9)', () => {
     await user.click(await screen.findByRole('button', { name: 'Open the contract with Test Wash Bay' }))
     await user.click(await screen.findByRole('button', { name: 'End contract' }))
     const dialog = await screen.findByRole('dialog', { name: 'End this contract' })
-    expect(dialog).toHaveTextContent('You can end this contract at any time.')
+    expect(dialog).toHaveTextContent('You can record the end of this contract on WashLink at any time.')
     await user.type(within(dialog).getByRole('textbox'), 'Too short')
     await user.click(within(dialog).getByRole('button', { name: 'End contract' }))
     expect(within(dialog).getByText('Give a reason of 10 to 500 characters.')).toBeInTheDocument()

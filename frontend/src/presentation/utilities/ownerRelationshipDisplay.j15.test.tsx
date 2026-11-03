@@ -28,7 +28,7 @@ describe('Owner relationship statuses (J15)', () => {
       expect(relationshipReasonText(reason, 'worker').length).toBeGreaterThan(0)
       expect(relationshipReasonText(reason, 'owner').length).toBeGreaterThan(0)
     }
-    expect(relationshipReasonText('contract_expired', 'worker')).toBe('The contract reached its end date.')
+    expect(relationshipReasonText('contract_expired', 'worker')).toBe("The contract's end date has passed (recorded on WashLink).")
     expect(relationshipReasonText('contract_terminated', 'worker')).toBe('The contract was ended.')
   })
 

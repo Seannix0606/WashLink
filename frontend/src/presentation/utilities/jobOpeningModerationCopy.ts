@@ -131,6 +131,12 @@ export const adminQueueIntro =
   'Job openings workers reported, oldest first. Pausing or closing a listing is a platform action, not a legal finding.'
 export const adminQueueEmptyTitle = 'No posting reports here'
 export const adminQueueEmptyText = 'Reports from workers appear here.'
+// W13 paged queue (D-71): 50 cases per page, oldest first.
+export const adminQueueLoadMoreLabel = 'Load more'
+export const adminQueueLoadMoreFailedTitle = 'More posting reports could not be loaded'
+export function adminQueueShowingText(shownCount: number, totalCount: number): string {
+  return `Showing ${String(shownCount)} of ${String(totalCount)}`
+}
 export const adminCaseAuditedText = 'Opening this case is recorded in the audit log.'
 export const adminCaseReporterProtectionText =
   'Reporters are shown as Reporter 1, 2 and so on. The owner never sees reports, statements or who reported.'

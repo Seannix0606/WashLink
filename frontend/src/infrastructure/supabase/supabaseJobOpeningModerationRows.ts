@@ -4,6 +4,7 @@ import type {
   AdminModerationCase,
   AdminModerationCaseOpening,
   AdminModerationQueueItem,
+  AdminModerationQueuePage,
   JobOpeningReportCategory,
   JobOpeningReportOutcome,
   JobOpeningReportRecord,
@@ -79,6 +80,11 @@ export interface SupabaseAdminModerationQueueRow {
   status_changed_at: string
 }
 
+/** `admin_job_opening_moderation_queue_page(...)` (w13c): the w14e columns plus `total_count`. */
+export interface SupabaseAdminModerationQueuePageRow extends SupabaseAdminModerationQueueRow {
+  total_count: number
+}
+
 function snapshotOrNull(snapshotJson: unknown): JobApplicationOpeningSnapshot | null {
   if (typeof snapshotJson !== 'object' || snapshotJson === null || Array.isArray(snapshotJson)) {
     return null
@@ -144,6 +150,12 @@ export function mapAdminModerationQueueRow(row: SupabaseAdminModerationQueueRow)
     openedAt: row.opened_at,
     statusChangedAt: row.status_changed_at,
   }
+}
+
+/** Every row carries the same total; an empty page has none, so the caller keeps the last known total. */
+export function mapAdminModerationQueuePageRows(rows: readonly SupabaseAdminModerationQueuePageRow[]): AdminModerationQueuePage {
+  const firstRow = rows.at(0)
+  return { items: rows.map(mapAdminModerationQueueRow), totalCount: firstRow === undefined ? null : firstRow.total_count }
 }
 
 function mapCaseOpening(openingJson: unknown): AdminModerationCaseOpening | null {

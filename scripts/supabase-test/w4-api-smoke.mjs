@@ -15,6 +15,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -222,7 +223,7 @@ async function main() {
   const versionedCleanup = await owner.client.from('job_openings').delete().eq('id', versionedId).eq('status', 'draft').select('id')
   check('occ_draft_cleanup_delete_affects_one_row', !versionedCleanup.error && versionedCleanup.data?.length === 1, versionedCleanup.error?.message)
 
-  const audit = await reviewer.client.from('workforce_audit_events').select('action').eq('subject_id', openingId)
+  const audit = await adminAuditRows(reviewer.client, { subjectId: openingId })
   check('super_admin_reads_job_opening_audit',
     !audit.error && audit.data?.filter((row) => row.action === 'job_opening.status_changed').length === 5,
     audit.error?.message ?? JSON.stringify(audit.data))
@@ -236,8 +237,7 @@ async function main() {
   if (await deleteUserChecked('owner_with_openings_through_gotrue', owner.id)) {
     const gone = await reviewer.client.from('job_openings').select('id').eq('id', openingId)
     check('owner_account_delete_cascades_openings', !gone.error && gone.data?.length === 0, gone.error?.message)
-    const deletedEvent = await reviewer.client.from('workforce_audit_events').select('payload')
-      .eq('subject_id', openingId).eq('action', 'job_opening.deleted')
+    const deletedEvent = await adminAuditRows(reviewer.client, { subjectId: openingId, action: 'job_opening.deleted' })
     check('owner_account_delete_writes_deleted_event',
       !deletedEvent.error && deletedEvent.data?.length === 1 && deletedEvent.data[0].payload?.deleted_by === 'owner_account_deleted',
       deletedEvent.error?.message ?? JSON.stringify(deletedEvent.data))

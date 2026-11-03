@@ -1,6 +1,8 @@
 import type {
   AdminModerationCase,
+  AdminModerationQueueCursor,
   AdminModerationQueueItem,
+  AdminModerationQueuePage,
   JobOpeningReportRecord,
   ModerateJobOpeningInput,
   ModerationCaseRecord,
@@ -12,11 +14,13 @@ import type {
 import type { JobOpeningModerationRepository } from '../../domain/repositories/JobOpeningModerationRepository'
 import {
   mapAdminModerationCase,
+  mapAdminModerationQueuePageRows,
   mapAdminModerationQueueRow,
   mapJobOpeningReportRecordRow,
   mapModerationCaseRecordRow,
   mapMyJobOpeningReportRow,
   mapOwnerJobOpeningModerationRow,
+  type SupabaseAdminModerationQueuePageRow,
   type SupabaseAdminModerationQueueRow,
   type SupabaseJobOpeningReportRecordRow,
   type SupabaseModerationCaseRecordRow,
@@ -78,6 +82,25 @@ export class SupabaseJobOpeningModerationRepository implements JobOpeningModerat
       'Could not load the posting reports.',
     )
     return queueRows.map(mapAdminModerationQueueRow)
+  }
+
+  /** Both cursor parts or neither are sent; the database refuses one part alone (22023). */
+  public async listAdminQueuePage(
+    filter: ModerationQueueFilter,
+    cursor: AdminModerationQueueCursor | null,
+    pageSize: number,
+  ): Promise<AdminModerationQueuePage> {
+    const pageRows = await callRpcRows<SupabaseAdminModerationQueuePageRow>(
+      'admin_job_opening_moderation_queue_page',
+      {
+        p_status: filter,
+        p_after_opened_at: cursor === null ? null : cursor.afterOpenedAt,
+        p_after_id: cursor === null ? null : cursor.afterCaseId,
+        p_limit: pageSize,
+      },
+      'Could not load the posting reports.',
+    )
+    return mapAdminModerationQueuePageRows(pageRows)
   }
 
   public async fetchAdminCase(caseId: string): Promise<AdminModerationCase> {

@@ -129,6 +129,47 @@ export interface AdminModerationQueueItem {
   readonly statusChangedAt: string
 }
 
+/** Keyset cursor of the paged queue (W13, D-71): the last row's `opened_at` and `case_id`. */
+export interface AdminModerationQueueCursor {
+  readonly afterOpenedAt: string
+  readonly afterCaseId: string
+}
+
+/**
+ * One page of `admin_job_opening_moderation_queue_page` (w13c), oldest first by (opened_at, case_id).
+ * `totalCount` is the number of cases matching the filter, or null when the page is empty (the
+ * database sends it on each row only). An empty page means the end of the queue.
+ */
+export interface AdminModerationQueuePage {
+  readonly items: readonly AdminModerationQueueItem[]
+  readonly totalCount: number | null
+}
+
+/** Page size bounds of the paged queue (w13c); 50 is the database default. */
+export const moderationQueuePageLimits = { defaultPageSize: 50, minimumPageSize: 1, maximumPageSize: 100 } as const
+
+/** The cursor for the page after `items`: the last row's opened_at and case id, or null when there is none. */
+export function nextModerationQueueCursor(items: readonly AdminModerationQueueItem[]): AdminModerationQueueCursor | null {
+  const lastItem = items.at(-1)
+  return lastItem === undefined ? null : { afterOpenedAt: lastItem.openedAt, afterCaseId: lastItem.caseId }
+}
+
+/** Appends a page, keeping the first copy of each case (a case can move between pages while paging). */
+export function appendUniqueQueueItems(
+  loadedItems: readonly AdminModerationQueueItem[],
+  pageItems: readonly AdminModerationQueueItem[],
+): readonly AdminModerationQueueItem[] {
+  const seenCaseIds = new Set(loadedItems.map((item) => item.caseId))
+  const newItems = pageItems.filter((item) => {
+    if (seenCaseIds.has(item.caseId)) {
+      return false
+    }
+    seenCaseIds.add(item.caseId)
+    return true
+  })
+  return newItems.length === 0 ? loadedItems : [...loadedItems, ...newItems]
+}
+
 export interface AdminModerationCaseSummary {
   readonly caseId: string
   readonly jobOpeningId: string | null

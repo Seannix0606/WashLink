@@ -25,7 +25,7 @@ Columns: `id` bigint identity (insertion order), `created_at` (forced to `now()`
 | INSERT | Only `record_workforce_audit_event(p_action, p_subject_type, p_subject_id, p_subject_profile_id, p_payload)` (definer, revoked from public, anon, authenticated, service_role). Actor fields are derived: `actor_id = auth.uid()`; `actor_kind` = user if uid, else trusted_session if `is_trusted_db_session()`, else system (e.g. GoTrue `deleteUser`); a trusted SQL session that sets `request.jwt.claims` is recorded as `user` (see Limitations); `actor_role = current_user_profile_role()`. Direct INSERT -> 42501 `Audit events are written only by the server.` (trigger) or permission denied. |
 | UPDATE | Never: 42501 `Audit events are append-only.` for every session, super_admin, service_role and trusted SQL included. |
 | DELETE / TRUNCATE | 42501 unless the trusted retention path below holds. |
-| SELECT | Raw: super_admin only (`wae_select_super_admin`, kept by D-54; W13 decides). An event about one party may carry the other party's id, so the policy is not widened: W14 adds the redacted per-user read `my_workforce_activity` (every role, no ids) and the audited `admin_workforce_audit_log`; see `PLATFORM_MODERATION_AND_AUDIT.md` (W14 events, payloads and notifications). |
+| SELECT | Raw: no client role (W13 D-70: w13b dropped `wae_select_super_admin` and added the deny-all `wae_no_client_select`; super_admin now gets 0 rows like everyone else). super_admin reads only through the audited `admin_workforce_audit_log` (writes `workforce_audit.log_searched` first); every role has the redacted `my_workforce_activity` (no ids). The review-log view is trusted-SQL only (select revoked from every client role, 42501). Trusted SQL (operators) can still read and is not logged (W13-L4). See `PLATFORM_MODERATION_AND_AUDIT.md`. |
 
 Payload rule `workforce_audit_payload_is_safe(jsonb)` (CHECK, 23514 on violation): at most 2048 bytes, nesting depth
 at most 3; no key (recursive) matching
@@ -34,7 +34,7 @@ at most 3; no key (recursive) matching
 removed, matches `^\+?[0-9]{7,15}$`); no number with absolute value 1e6 or more. Times are emitted as timestamptz
 strings (they contain `:`).
 
-### Trusted retention purge (human procedure, W13 defines the period)
+### Trusted retention purge (human procedure; no period is defined yet, W13-L5)
 
 Only in the SQL editor / psql (a trusted session; PostgREST clients, service_role JWTs and end users cannot do this),
 inside one transaction:
@@ -82,7 +82,7 @@ payload column.
 
 State machine: `unread (read_at null) -> read (read_at = now())`, recipient only, through `mark_notifications_read`.
 Any other UPDATE -> 42501 `Notifications cannot be edited.` (trigger, every session). No client DELETE; rows go with
-the recipient's profile; trusted SQL may purge (retention, W13).
+the recipient's profile; trusted SQL may purge (no retention period defined, W13-L5).
 
 Text rule `notification_text_is_safe(text)` (CHECK on title and body, 23514): no `@`, and no run of `[+0-9 ()-]`
 holding 7 or more digits. `notification_safe_label(label, fallback)` returns the trimmed label if it is 1..60 chars
@@ -320,7 +320,7 @@ write flag is a trusted repair). Draft saves are not audited (W5 / W6 rule); ref
 | declined (worker) | `worker_contract.declined` | owner: `A worker declined your contract offer.` / `A worker declined your proposed contract change.` |
 | start recorded (owner) | `worker_contract.activated` | worker: `<shop> recorded that your contract has started.` |
 | terminated | `worker_contract.terminated` (ended_by worker / owner) | the other party: `A worker ended a contract. Open it to see the reason.` / `<shop> ended a contract. Open it to see the reason.` |
-| expired (`expire_worker_contracts`) | `worker_contract.expired` (ended_by system) | worker: `Your contract with <shop> reached its end date and has expired.`; owner: `A contract reached its end date and has expired.` |
+| expired (`expire_worker_contracts`) | `worker_contract.expired` (ended_by system) | since W13 (D-72, w13d) worker: `Your contract with <shop> reached the end date written in it, so WashLink now shows it as expired. What this means for your work depends on the contract terms and the law.`; owner: `A contract reached the end date written in it, so WashLink now shows it as expired.` (W9 text "reached its end date and has expired." kept on notices already sent; W13-L1) |
 | unsent draft discarded | `worker_contract.draft_discarded` (version_kind initial / amendment, deleted_by owner_discarded / system) | none |
 | owner / shop / worker removed, contract kept (D-32, D-35) | `worker_contract.party_removed` (removed_party owner / shop / worker; once for owner + shop) | the remaining party: `A contract's other party left WashLink. Your contract record is kept.` (worker only if the offer was sent) |
 | contract removed by retention | `worker_contract.deleted` (deleted_by owner_account_deleted / shop_deleted / worker_account_deleted) | none |

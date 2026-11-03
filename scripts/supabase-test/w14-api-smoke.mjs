@@ -14,6 +14,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -177,7 +178,7 @@ async function main() {
   // Admin queue + audited case read.
   const queueRow = async (status = 'active', title = title1) => (await rows(sa.rpc('admin_job_opening_moderation_queue', { p_status: status }))).find((row) => row.opening_title_snapshot === title)
   const q1 = await queueRow()
-  const views = async () => (await rows(sa.from('workforce_audit_events').select('id').eq('action', 'job_opening_moderation.case_viewed'))).length
+  const views = async () => (await rows(adminAuditRows(sa, { action: 'job_opening_moderation.case_viewed' }))).length
   const viewsBefore = await views()
   const caseRead = await sa.rpc('admin_job_opening_moderation_case', { p_case_id: q1?.case_id })
   const outsiderCase = await Promise.all([ownerA, worker, customer].map((who) => who.client.rpc('admin_job_opening_moderation_case', { p_case_id: q1?.case_id })))
@@ -269,16 +270,21 @@ async function main() {
   check('activity_redacted_per_role_no_ids', Object.values(activity).every((list) => list.every((row) => !Object.keys(row).some((key) => idKeys.test(key)) && !UUID.test(JSON.stringify(row.details ?? {}))))
     && activity.worker.length > 0 && !activity.ownerA.some((row) => row.action.startsWith('job_opening_report') || ['job_opening_moderation.opened', 'job_opening_moderation.dismissed'].includes(row.action))
     && activity.ownerA.some((row) => row.action.startsWith('job_opening_moderation.')) && !(await anon.rpc('my_workforce_activity')).data?.length, Object.entries(activity).map(([k, v]) => `${k}:${v.length}`).join(','))
-  const searches = async () => (await rows(sa.from('workforce_audit_events').select('id').eq('action', 'workforce_audit.log_searched'))).length
-  const searchesBefore = await searches()
+  // W13 (D-70): the helper reads through admin_workforce_audit_log and pages (fix cycle 1, W13 N4); every RPC call adds
+  // one log_searched event after its rows are read, so the final count is before + before.calls + 1 (the log call) + last.calls.
+  const searches = async () => adminAuditRows(sa, { action: 'workforce_audit.log_searched' })
+  const before = await searches()
   const log = await rows(sa.rpc('admin_workforce_audit_log', { p_action_prefix: 'job_opening_moderation', p_limit: 50 }))
   const logDenied = await Promise.all([ownerA, worker, customer].map((who) => who.client.rpc('admin_workforce_audit_log', { p_limit: 5 })))
-  const lastSearch = await one(sa.from('workforce_audit_events').select('payload').eq('action', 'workforce_audit.log_searched').order('id', { ascending: false }).limit(1))
-  check('admin_audit_log_is_audited_and_admin_only', log.length > 0 && log.every((row) => row.action.startsWith('job_opening_moderation')) && (await searches()) === searchesBefore + 1
+  const last = await searches()
+  const lastSearch = last.data?.at(-1)
+  const after = await searches()
+  const expectedSearches = (before.data?.length ?? NaN) + before.calls + 1 + last.calls
+  check('admin_audit_log_is_audited_and_admin_only', log.length > 0 && log.every((row) => row.action.startsWith('job_opening_moderation')) && after.data?.length === expectedSearches
     && lastSearch?.payload?.action_prefix === 'job_opening_moderation' && lastSearch?.payload?.subject_type === null
-    && logDenied.every((r) => r.error) && Boolean((await anon.rpc('admin_workforce_audit_log', { p_limit: 5 })).error), `${log.length} / ${searchesBefore}->${await searches()}`)
+    && logDenied.every((r) => r.error) && Boolean((await anon.rpc('admin_workforce_audit_log', { p_limit: 5 })).error), `${log.length} / ${before.data?.length}->${after.data?.length} (expected ${expectedSearches})`)
   const lookup = (client, fn, id, purpose = 'policy_monitoring', note = text('lookup')) => client.rpc(fn, { [fn === 'admin_worker_relationships' ? 'p_worker_id' : 'p_owner_id']: id, p_purpose: purpose, p_note: note })
-  const accessEvents = async () => (await rows(sa.from('workforce_audit_events').select('id').eq('action', 'admin_access.relationships_viewed'))).length
+  const accessEvents = async () => (await rows(adminAuditRows(sa, { action: 'admin_access.relationships_viewed' }))).length
   const accessBefore = await accessEvents()
   const [badPurpose, shortNote] = [await lookup(sa, 'admin_worker_relationships', worker.id, 'curiosity'), await lookup(sa, 'admin_worker_relationships', worker.id, 'policy_monitoring', 'short')]
   const workerLookup = await lookup(sa, 'admin_worker_relationships', worker.id)

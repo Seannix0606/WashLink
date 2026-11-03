@@ -111,6 +111,11 @@ before Manila today as `expired` until it is recorded. Since W12 the `worker_con
 `expire_worker_contracts_batch` (no date, 25 per run, skip-locked, `ended_by 'system'`; the same update as the internal
 `expire_worker_contracts(date)`, which stays a test-clock tool); it runs only after a human registers the jobs
 (`NOTIFICATIONS_AND_SCHEDULING.md`). The recorded `expired` is a WashLink record, not the legal end of work (W12-L2).
+Since W13 (D-72) `worker_contracts_audit()` (w13d; only the two expiry bodies changed, pinned by a Vitest diff against
+w9j) tells the worker "Your contract with <shop> reached the end date written in it, so WashLink now shows it as
+expired. What this means for your work depends on the contract terms and the law." and the owner "A contract reached
+the end date written in it, so WashLink now shows it as expired."; the title stays `Contract expired`. Notices already
+sent keep the W9 text (W13-L1).
 
 ## Text format and hash (P48)
 
@@ -244,10 +249,17 @@ rule and keys `contract_dispute:<id>:<event>` (`DASHBOARDS_AND_OVERSIGHT.md`).
   below). The W10 distinct-owner count (`OWNER_RELATIONSHIPS.md`) is derived from
   these contracts and is informational only: no W9 RPC, guard or policy reads it, and decline / terminate never depend on it.
 - A commit-validator bug would block every send (R2); an audit failure aborts the action, cascades included (R3).
+- Termination copy (W13, D-73; `workerContractCopy.ts`): the worker sees "You can record the end of this contract on
+  WashLink at any time. Give a short reason; the shop will see it. Notice periods or other duties under your contract or
+  the law may still apply. Final pay and clearance are not handled on WashLink." The owner's terminate text ends with
+  "Ending a work relationship can have legal requirements such as a proper cause and notice. WashLink only records the
+  end." The list intro still says "You can always decline an offer or end an accepted contract." (W13-L2, W13-L3).
+- A trusted terminate leaves an open amendment (W9-S1, accepted); runbook in `ROLLBACK_GUIDE.md` "Trusted repairs",
+  pinned by `j15_w13_trusted_contract_end_runbook`. Every accepted limitation: `LIMITATIONS.md`.
 
 ## Rollback (local test stack only; reverse order j..a; valid only before W10 ships)
 
-W10 and W11 are now built: roll back W11 first (i..a, `DASHBOARDS_AND_OVERSIGHT.md`; `worker_contract_disputes` has an
+W13 d (expiry wording), W12, W14, W11 and W10 are built: follow `ROLLBACK_GUIDE.md`. Roll back W11 first (i..a, `DASHBOARDS_AND_OVERSIGHT.md`; `worker_contract_disputes` has an
 FK to `worker_contracts`), then W10 (g..a, `OWNER_RELATIONSHIPS.md`). Its w10b rollback restores the w9c guard
 body (re-opening W9-S1 / C1); the W10 sync trigger on `worker_contracts` must be gone before any W9 step.
 

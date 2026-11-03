@@ -1,5 +1,6 @@
--- J17 (W3): workforce_audit_events is append-only and server-written (AC5), super_admin read
--- only (AC6), payload rules (AC8), realtime exclusion (AC11) and R-1 search_path pinning (AC4).
+-- J17 (W3): workforce_audit_events is append-only and server-written (AC5), no raw client read
+-- since W13 (AC6, D-70; super_admin reads through admin_workforce_audit_log), payload rules (AC8),
+-- realtime exclusion (AC11) and R-1 search_path pinning (AC4).
 -- Local Docker stack only; fixtures are synthetic.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -132,19 +133,18 @@ select is(test_helpers.attempt($$insert into public.workforce_audit_events (id, 
           '428C9', 'j17_audit_created_at_cannot_be_backdated');
 select set_config('washlink.audit_writer', 'off', true);
 
--- ---------- read access: super_admin only ----------
-select set_config('fx.total', (select count(*) from public.workforce_audit_events)::text, true);
+-- ---------- read access: no client role reads the raw table (W13, D-70; was j17_audit_readable_only_by_super_admin) ----------
 select test_helpers.act_as_customer('j17a-c1@local.test');
-select is((select count(*)::int from public.workforce_audit_events), 0, 'j17_audit_readable_only_by_super_admin');
+select is((select count(*)::int from public.workforce_audit_events), 0, 'j17_audit_raw_table_not_readable_by_any_client_role');
 select test_helpers.act_as_owner('j17a-o1@local.test');
-select is((select count(*)::int from public.workforce_audit_events), 0, 'j17_audit_readable_only_by_super_admin');
+select is((select count(*)::int from public.workforce_audit_events), 0, 'j17_audit_raw_table_not_readable_by_any_client_role');
 select test_helpers.act_as_worker('j17a-w1@local.test');
-select is((select count(*)::int from public.workforce_audit_events), 0, 'j17_audit_readable_only_by_super_admin');
+select is((select count(*)::int from public.workforce_audit_events), 0, 'j17_audit_raw_table_not_readable_by_any_client_role');
 select test_helpers.act_as_anon();
-select is(test_helpers.attempt('select count(*) from public.workforce_audit_events'), '42501', 'j17_audit_readable_only_by_super_admin');
+select is(test_helpers.attempt('select count(*) from public.workforce_audit_events'), '42501', 'j17_audit_raw_table_not_readable_by_any_client_role');
 select test_helpers.act_as_admin('j17a-admin@local.test');
-select is((select count(*)::int from public.workforce_audit_events), current_setting('fx.total')::int,
-          'j17_audit_readable_only_by_super_admin');
+select is((select count(*)::int from public.workforce_audit_events), 0,
+          'j17_audit_raw_table_not_readable_by_any_client_role');
 
 -- ---------- payload rules (P13) ----------
 select test_helpers.act_as_service();

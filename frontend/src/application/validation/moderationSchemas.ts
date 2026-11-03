@@ -1,6 +1,13 @@
 import { z } from 'zod'
 import { adminOversightLimits, relationshipLookupPurposes, shopRereviewDecisions } from '../../domain/models/AdminOversight'
-import { jobOpeningModerationLimits, jobOpeningReportCategories, moderationActionKinds } from '../../domain/models/JobOpeningModeration'
+import {
+  jobOpeningModerationLimits,
+  jobOpeningReportCategories,
+  moderationActionKinds,
+  moderationQueueFilters,
+  moderationQueuePageLimits,
+  type ModerationQueueFilter,
+} from '../../domain/models/JobOpeningModeration'
 
 // Mirrors the W14 CHECKs and RPC rules (w14b, w14d, w14f, w14g, w14h) with the database's own
 // messages. The database stays the authority and re-checks every value.
@@ -21,6 +28,10 @@ export const actionFilterMessage = 'Use only lowercase letters, dots and undersc
 export const subjectTypeFilterMessage = 'Use only lowercase letters and underscores in the subject type filter.'
 export const rangeOrderMessage = 'The start of the range must be before the end.'
 export const idFilterMessage = 'Enter a full id (36 characters) or leave it empty.'
+// W13 paged moderation queue (w13c, D-71): the database's own 22023 messages.
+export const queueStatusMessage = 'Choose a case status.'
+export const queuePageSizeMessage = 'Page size must be between 1 and 100.'
+export const queueCursorMessage = 'Give both parts of the page cursor.'
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -84,6 +95,31 @@ export const optionalIdSchema = z
   .string()
   .trim()
   .refine((candidate) => candidate.length === 0 || uuidPattern.test(candidate), idFilterMessage)
+
+export const queueFilterSchema = z
+  .string()
+  .refine((candidate): candidate is ModerationQueueFilter => (moderationQueueFilters as readonly string[]).includes(candidate), queueStatusMessage)
+
+export const queuePageSizeSchema = z
+  .number({ error: queuePageSizeMessage })
+  .int(queuePageSizeMessage)
+  .min(moderationQueuePageLimits.minimumPageSize, queuePageSizeMessage)
+  .max(moderationQueuePageLimits.maximumPageSize, queuePageSizeMessage)
+
+/** No cursor (first page), or both parts: a parseable `opened_at` and a full case id. */
+export const queueCursorSchema = z
+  .object({ afterOpenedAt: z.string().nullish(), afterCaseId: z.string().nullish() })
+  .nullable()
+  .superRefine((cursor, context) => {
+    if (cursor === null) {
+      return
+    }
+    const openedAt = cursor.afterOpenedAt ?? ''
+    const caseId = cursor.afterCaseId ?? ''
+    if (openedAt.length === 0 || caseId.length === 0 || Number.isNaN(Date.parse(openedAt)) || !uuidPattern.test(caseId)) {
+      context.addIssue({ code: 'custom', message: queueCursorMessage })
+    }
+  })
 
 export class ModerationValidationError extends Error {
   public constructor(message: string) {

@@ -19,6 +19,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -257,8 +258,8 @@ async function main() {
     check('owner_account_delete_retains_worker_training_d18', retained?.length === 1 && retained[0].progress_status === 'shop_removed', JSON.stringify(retained))
   }
   if (await deleteUserChecked('trainee_with_training_through_gotrue', trainee.id)) {
-    const events = await one(reviewer.client.from('workforce_audit_events').select('action, payload').eq('subject_id', enrollmentId)
-      .in('action', ['training_enrollment.deleted', 'training_enrollment.shop_removed']))
+    const events = await one(adminAuditRows(reviewer.client, { subjectId: enrollmentId,
+      action: ['training_enrollment.deleted', 'training_enrollment.shop_removed'] }))
     check('worker_account_delete_removes_enrollment_and_keeps_audit', events?.length === 2
       && events.some((e) => e.action === 'training_enrollment.deleted' && e.payload?.deleted_by === 'worker_profile_deleted'), JSON.stringify(events))
   }

@@ -1,9 +1,10 @@
 -- W1..W14 migration replay: objects from each committed migration exist after
--- baseline + 90 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12) replayed in order,
--- with the owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W14 AC2; 92 staged migrations in total).
+-- baseline + 94 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12, 4 W13) replayed
+-- in order, with the owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W14 AC2; W13 AC2; 96 staged
+-- migrations in total).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(27);
 
 -- 2026_04_17
 select has_table('public', 'shops', 'replay_shops_created');
@@ -82,8 +83,9 @@ select results_eq(
             ('20261029000006'), ('20261029000007'), ('20261029000008'), ('20261029000009'), ('20261029000010'),
             ('20261029000011'), ('20261029000012'), ('20261029000013'), ('20261029000014'), ('20261029000015'),
             ('20261029000016'), ('20261029000017'), ('20261029000018'), ('20261030000001'), ('20261030000002'),
-            ('20261030000003'), ('20261030000004'), ('20261030000005') $$,
-  'replay_schema_migrations_has_baseline_w2_to_w14_and_w12'
+            ('20261030000003'), ('20261030000004'), ('20261030000005'), ('20261030000006'),
+            ('20261030000007'), ('20261030000008'), ('20261030000009') $$,
+  'replay_schema_migrations_has_baseline_w2_to_w14_w12_and_w13'
 );
 
 -- The local-test owner booking policies come from the staged MIGRATION 20260417000002, not
@@ -235,6 +237,10 @@ select is((select count(*)::int from pg_class c join pg_namespace n on n.oid = c
 select is((select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
            where n.nspname = 'public' and c.relrowsecurity and c.relname in ('notification_categories', 'workforce_scheduled_jobs')),
           2, 'replay_w12_registry_and_job_state_rls_enabled');
+-- W13 (D-70): the raw audit table has no client select policy other than the deny-all one.
+select is((select string_agg(policyname || ':' || coalesce(qual, ''), ',' order by policyname) from pg_policies
+           where schemaname = 'public' and tablename = 'workforce_audit_events' and cmd in ('SELECT', 'ALL')),
+          'wae_no_client_select:false', 'replay_w13_audit_table_has_no_client_select_policy');
 -- No public SECURITY DEFINER function runs without a pinned search_path.
 select is(
   (

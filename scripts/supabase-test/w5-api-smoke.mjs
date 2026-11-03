@@ -15,6 +15,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -235,8 +236,7 @@ async function main() {
   if (await deleteUserChecked('worker_with_applications_through_gotrue', worker.id)) {
     const remaining = await owner.client.from('job_applications').select('id')
     check('worker_account_delete_removes_applications', !remaining.error && remaining.data?.length === 0, remaining.error?.message)
-    const deletedEvents = await reviewer.client.from('workforce_audit_events').select('payload')
-      .in('subject_id', [applicationId, reapplicationId]).eq('action', 'job_application.deleted')
+    const deletedEvents = await adminAuditRows(reviewer.client, { subjectId: [applicationId, reapplicationId], action: 'job_application.deleted' })
     check('worker_account_delete_audited', !deletedEvents.error && deletedEvents.data?.length === 2
       && deletedEvents.data.every((row) => row.payload?.deleted_by === 'worker_profile_deleted'),
     deletedEvents.error?.message ?? JSON.stringify(deletedEvents.data))

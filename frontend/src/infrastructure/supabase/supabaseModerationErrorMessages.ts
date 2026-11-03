@@ -33,6 +33,9 @@ export const moderationDatabaseMessages: readonly string[] = [
   'Use only lowercase letters, dots and underscores in the action filter.',
   'Use only lowercase letters and underscores in the subject type filter.',
   'The start of the range must be before the end.',
+  // 22023 from admin_job_opening_moderation_queue_page (w13c; 'Choose a case status.' is listed above)
+  'Page size must be between 1 and 100.',
+  'Give both parts of the page cursor.',
   // 23505
   'You already reported this job opening.',
   // 23514

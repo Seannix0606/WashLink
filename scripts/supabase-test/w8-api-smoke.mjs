@@ -18,6 +18,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -231,7 +232,7 @@ async function main() {
   if (await deleteUserChecked('owner_with_templates_through_gotrue', owner.id)) {
     const left = trustedCount('select (select count(*) from public.contract_templates where id = $1) + (select count(*) from '
       + 'public.contract_template_versions where template_id = $1)', templateId)
-    const audit = await rows(superAdmin.client.from('workforce_audit_events').select('action, payload').eq('subject_id', templateId).order('id'))
+    const audit = await rows(adminAuditRows(superAdmin.client, { subjectId: templateId }))
     const actions = audit.map((event) => event.action)
     check('owner_delete_removes_templates_and_keeps_audit', left === '0' && actions[0] === 'contract_template.created'
       && actions.at(-1) === 'contract_template.deleted' && audit.at(-1)?.payload?.deleted_by === 'owner_account_deleted'

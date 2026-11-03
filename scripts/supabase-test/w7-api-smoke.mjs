@@ -18,6 +18,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -270,8 +271,7 @@ async function main() {
       JSON.stringify(kept))
   }
   if (await deleteUserChecked('worker_with_certificate_through_gotrue', worker.id)) {
-    const events = await one(reviewer.client.from('workforce_audit_events').select('action, payload').eq('subject_id', certId)
-      .eq('action', 'certification.deleted'))
+    const events = await one(adminAuditRows(reviewer.client, { subjectId: certId, action: 'certification.deleted' }))
     check('worker_account_delete_removes_certificate_and_keeps_audit', events?.length === 1
       && events[0].payload?.deleted_by === 'worker_profile_deleted', JSON.stringify(events))
   }

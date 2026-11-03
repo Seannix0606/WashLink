@@ -66,8 +66,8 @@ every client role); 32 are SECURITY DEFINER with `search_path = public, pg_temp`
 - D-52 hold: the owner edits, then asks WashLink to check (one submission at a time); WashLink lifts, keeps the pause or
   closes; the owner may close or archive at any time (resolves the case).
 - D-53 reporter protection (P73); applicants get only the existing W5 pause / close notices, without a reason.
-- D-54 audit reads: redacted per-user read for every role; admin log through an audited RPC; the W3 raw
-  `wae_select_super_admin` policy is kept (W13 decides); N6 flag = open >= 30 days and >= 5 case reads.
+- D-54 audit reads: redacted per-user read for every role; admin log through an audited RPC; N6 flag = open >= 30 days
+  and >= 5 case reads. W13 D-70 dropped the W3 raw `wae_select_super_admin` (super_admin raw select 0 rows; review-log view trusted SQL only).
 - D-55 relationship lookups: super_admin only, per worker or owner id, a fixed purpose plus a 20..300 note; every lookup
   recorded and audited; parties are not notified but see it in "Your activity".
 - D-56 unreviewed approved shops (D-10 row 14 predicate): super_admin confirms (stamps the reviewer, no status change,
@@ -136,7 +136,7 @@ super_admin (re-review, lookups, audit reads: sections below; others get 0 rows 
 42501 from actions and audited reads):
 - `admin_job_opening_moderation_queue(p_status default 'active')`: case_id, status, revision, report_count,
   open_report_count, categories[], opening_status, opening_present, opening_title_snapshot (D7), shop_name_snapshot,
-  opened_at, status_changed_at; `active` = open + paused + changes_submitted; oldest first; limit 200; no statements.
+  opened_at, status_changed_at; `active` = open + paused + changes_submitted; oldest first; limit 200; no statements. W13 (D-71, w13c) adds `admin_job_opening_moderation_queue_page(p_status, p_after_opened_at, p_after_id, p_limit 1..100 default 50)`: same rows plus `total_count`, keyset `(opened_at, case_id)` oldest first, an empty page = end; 22023 `Page size must be between 1 and 100.` / `Give both parts of the page cursor.`; non-admins 0 rows; not audited. The console calls only the page function ("Showing n of N", "Load more"); the 200-row function stays for compatibility.
 - `admin_job_opening_moderation_case(p_case_id) -> jsonb` (audited `job_opening_moderation.case_viewed`): `case` (incl.
   admin_note), `opening` (snapshot keys + status, first_published_at, status_changed_at, updated_at; null once removed),
   `shop` {name, verification_status, is_active, has_recorded_verification}, `reports` [{reporter_label, category,
@@ -335,7 +335,7 @@ Deviations: W14 LOG D1..D14 / F1..F10, cited above; D3 = internal helpers `job_o
 - R4 VOLATILE admin reads write one audit row per call; never polled, but StrictMode doubles mount reads in dev (F10).
   R5 `my_workforce_activity` scans actor / subject-profile events plus a contract join; paged at 100.
 - R6 brigading is limited only per worker (3 per opening, 10 open; under a per-worker advisory lock, N2). R7 one super_admin decides alone;
-  a database superuser can disable triggers (W3-L3). The W3 raw `wae_select_super_admin` read is not audited (W14-L9).
+  a database superuser can disable triggers (W3-L3). W13 (D-70) closed the unaudited raw read; trusted-SQL reads stay unlogged (W13-L4).
 - The PostgREST / GoTrue surface of the new RPCs is verified only by `w14-api-smoke.mjs` (test step); every Vitest test
   uses mocked repositories. The UI hides actions a role cannot take, but the database is the authorization.
 

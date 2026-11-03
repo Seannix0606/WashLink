@@ -1,6 +1,8 @@
 import type {
   AdminModerationCase,
+  AdminModerationQueueCursor,
   AdminModerationQueueItem,
+  AdminModerationQueuePage,
   JobOpeningReportRecord,
   ModerateJobOpeningInput,
   ModerationCaseRecord,
@@ -20,7 +22,10 @@ export interface JobOpeningModerationRepository {
   listMyReports(): Promise<MyJobOpeningReport[]>
   listOwnerModeration(): Promise<OwnerJobOpeningModeration[]>
   submitChanges(caseId: string, note: string | null): Promise<ModerationCaseRecord>
+  /** W14 200-row queue (w14e). Kept for compatibility only; the UI pages through `listAdminQueuePage`. */
   listAdminQueue(filter: ModerationQueueFilter): Promise<AdminModerationQueueItem[]>
+  /** W13 keyset page (w13c, D-71); `cursor` null = the first page. Not audited (no personal data). */
+  listAdminQueuePage(filter: ModerationQueueFilter, cursor: AdminModerationQueueCursor | null, pageSize: number): Promise<AdminModerationQueuePage>
   /** Audited by the database on every call; never polled. */
   fetchAdminCase(caseId: string): Promise<AdminModerationCase>
   moderate(input: ModerateJobOpeningInput): Promise<ModerationCaseRecord>

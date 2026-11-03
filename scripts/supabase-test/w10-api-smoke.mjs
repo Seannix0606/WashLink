@@ -17,6 +17,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -241,8 +242,7 @@ async function main() {
   policyRaised = !raised.error
   const afterRaise = await progress()
   const staleRevision = await setPolicy(superAdmin.client, 6, POLICY_REASON, revisionBefore)
-  const audit = await rows(superAdmin.client.from('workforce_audit_events').select('action, actor_id, subject_type, payload').eq('action', 'workforce_policy.changed')
-    .eq('subject_id', policyBefore?.id).order('created_at', { ascending: false }))
+  const audit = (await rows(adminAuditRows(superAdmin.client, { action: 'workforce_policy.changed', subjectId: policyBefore?.id }))).reverse()
   check('super_admin_raises_minimum_remaining_two', !raised.error && afterRaise?.minimum_distinct_owners === 5 && afterRaise?.qualifying_owner_count === 3 && afterRaise?.remaining_owner_count === 2
     && afterRaise?.goal_reached === false && staleRevision.error?.code === '55000', raised.error?.message ?? staleRevision.error?.code)
   check('policy_change_audited_without_reason_text', audit.length >= 1 && audit[0].actor_id === superAdmin.id && audit[0].payload?.from_value === 3 && audit[0].payload?.to_value === 5
@@ -270,7 +270,7 @@ async function main() {
 
   const restored = await setPolicy(superAdmin.client, 3)
   policyRaised = Boolean(restored.error)
-  const policyAuditCount = (await rows(superAdmin.client.from('workforce_audit_events').select('id').eq('action', 'workforce_policy.changed').eq('subject_id', policyBefore?.id))).length
+  const policyAuditCount = (await rows(adminAuditRows(superAdmin.client, { action: 'workforce_policy.changed', subjectId: policyBefore?.id }))).length
   check('policy_restored_to_three_and_audited_again', !restored.error && (await policy())?.integer_value === 3 && policyAuditCount >= 2, restored.error?.message ?? `${policyAuditCount} audit rows`)
 
   // Privacy (fix cycle 1): an owner has no direct table read (D-38) and sees only its own row through the RPC, with no
@@ -319,12 +319,12 @@ async function main() {
     const removed = (await mine()).find((row) => row.status === 'owner_removed')
     check('owner_delete_keeps_row_as_owner_removed_count_one', afterOwnerDelete?.qualifying_owner_count === 1 && removed?.owner_removed === true && removed?.counts_toward_goal === false
       && removed?.owner_name?.includes('owner-b'), JSON.stringify({ count: afterOwnerDelete?.qualifying_owner_count, removed: removed?.status }))
-    const removedEvents = await rows(superAdmin.client.from('workforce_audit_events').select('action').eq('subject_profile_id', worker.id).eq('action', 'worker_owner_relationship.owner_removed'))
+    const removedEvents = await rows(adminAuditRows(superAdmin.client, { profileId: worker.id, action: 'worker_owner_relationship.owner_removed' }))
     check('owner_removed_audited', removedEvents.length === 1, `${removedEvents.length} events`)
   }
   if (await deleteUserChecked('worker_with_relationships_through_gotrue', worker.id)) {
     const left = await rows(ownerA.client.rpc('owner_worker_relationships'))
-    const deletedEvents = await rows(superAdmin.client.from('workforce_audit_events').select('action, payload').eq('subject_profile_id', worker.id).eq('action', 'worker_owner_relationship.deleted'))
+    const deletedEvents = await rows(adminAuditRows(superAdmin.client, { profileId: worker.id, action: 'worker_owner_relationship.deleted' }))
     check('worker_delete_removes_relationships_and_audits', left.length === 0 && deletedEvents.length >= 3, `${left.length} rows, ${deletedEvents.length} events`)
   }
 }

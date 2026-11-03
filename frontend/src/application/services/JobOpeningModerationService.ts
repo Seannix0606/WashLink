@@ -2,7 +2,9 @@ import {
   availableModerationActions,
   moderationActionNeedsReason,
   type AdminModerationCase,
-  type AdminModerationQueueItem,
+  moderationQueuePageLimits,
+  type AdminModerationQueueCursor,
+  type AdminModerationQueuePage,
   type JobOpeningReportRecord,
   type ModerationActionKind,
   type ModerationCaseRecord,
@@ -18,6 +20,9 @@ import {
   moderationReasonSchema,
   ownerMessageSchema,
   parseModerationInput,
+  queueCursorSchema,
+  queueFilterSchema,
+  queuePageSizeSchema,
   reportCategorySchema,
   reportStatementSchema,
 } from '../validation/moderationSchemas'
@@ -73,8 +78,19 @@ export class JobOpeningModerationService {
     return this.moderationRepository.submitChanges(moderation.caseId, validNote.length === 0 ? null : validNote)
   }
 
-  public async listAdminQueue(filter: ModerationQueueFilter): Promise<AdminModerationQueueItem[]> {
-    return this.moderationRepository.listAdminQueue(filter)
+  /**
+   * One keyset page of the moderation queue (W13, D-71), oldest first. The filter, page size and
+   * cursor are checked before the request with the database's own messages; the database re-checks.
+   */
+  public async listAdminQueuePage(
+    filter: ModerationQueueFilter,
+    cursor: AdminModerationQueueCursor | null,
+    pageSize: number = moderationQueuePageLimits.defaultPageSize,
+  ): Promise<AdminModerationQueuePage> {
+    const validFilter = parseModerationInput(queueFilterSchema, filter)
+    const validPageSize = parseModerationInput(queuePageSizeSchema, pageSize)
+    parseModerationInput(queueCursorSchema, cursor)
+    return this.moderationRepository.listAdminQueuePage(validFilter, cursor, validPageSize)
   }
 
   /** Each call is a new audited read in the database; callers load it once per opening. */

@@ -50,7 +50,7 @@ const workerReasonText: Readonly<Record<WorkerOwnerRelationshipReason, string>> 
   shop_owner_changed: 'The shop on your contract now belongs to a different owner.',
   owner_role_changed: 'This account is no longer a shop owner account.',
   contract_terminated: 'The contract was ended.',
-  contract_expired: 'The contract reached its end date.',
+  contract_expired: "The contract's end date has passed (recorded on WashLink).",
   owner_account_removed: "The owner's account was removed. Your contract records are kept.",
 }
 
@@ -62,7 +62,7 @@ const ownerReasonText: Readonly<Record<WorkerOwnerRelationshipReason, string>> =
   shop_owner_changed: 'The shop on this contract now belongs to a different owner.',
   owner_role_changed: 'Your account is no longer a shop owner account.',
   contract_terminated: 'The contract was ended.',
-  contract_expired: 'The contract reached its end date.',
+  contract_expired: "The contract's end date has passed (recorded on WashLink).",
   owner_account_removed: 'The owner account was removed.',
 }
 

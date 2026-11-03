@@ -20,7 +20,7 @@ const ownerStatusDisplay: Readonly<Record<WorkerContractStatus, ContractDisplayL
   declined: { label: 'Declined by the worker', tone: 'neutral' },
   withdrawn: { label: 'Withdrawn', tone: 'neutral' },
   active: { label: 'Active', tone: 'success' },
-  expired: { label: 'Ended (end date passed)', tone: 'neutral' },
+  expired: { label: 'Past end date', tone: 'neutral' },
   terminated: { label: 'Ended', tone: 'danger' },
 }
 
@@ -57,7 +57,7 @@ export const contractOriginLabel: Readonly<Record<WorkerContractOrigin, string>>
 export const endedByLabel: Readonly<Record<ContractEndedBy, string>> = {
   worker: 'Ended by the worker',
   owner: 'Ended by the shop owner',
-  system: 'Ended when the end date passed',
+  system: 'End date passed (recorded on WashLink)',
   trusted_session: 'Ended by WashLink support',
 }
 

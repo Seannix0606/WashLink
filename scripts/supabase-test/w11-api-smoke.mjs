@@ -11,7 +11,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -197,9 +197,9 @@ async function main() {
   check('only_super_admin_decides_reviews', refusedDeciders.every((entry) => !entry.endsWith('undefined')), refusedDeciders.join(','))
   const queue = await rows(sa.rpc('admin_certification_platform_review_queue'))
   const outsiders = (await Promise.all([ownerA.client, worker.client, customer.client, anon].map((client) => rows(client.rpc('admin_certification_platform_review_queue'))))).flat()
-  const caseBefore = (await rows(sa.from('workforce_audit_events').select('id').eq('action', 'certification_platform_review.case_viewed'))).length
+  const caseBefore = (await rows(adminAuditRows(sa, { action: 'certification_platform_review.case_viewed' }))).length
   const reviewCase = await sa.rpc('admin_certification_platform_review_case', { p_review_id: reviewId })
-  const caseAfter = (await rows(sa.from('workforce_audit_events').select('id').eq('action', 'certification_platform_review.case_viewed'))).length
+  const caseAfter = (await rows(adminAuditRows(sa, { action: 'certification_platform_review.case_viewed' }))).length
   const workerCase = await worker.client.rpc('admin_certification_platform_review_case', { p_review_id: reviewId })
   check('admin_queue_and_audited_case_only_for_super_admin', queue.some((row) => row.review_id === reviewId) && outsiders.length === 0 && reviewCase.data?.review?.id === reviewId
     && caseAfter === caseBefore + 1 && Boolean(workerCase.error), `${queue.length} / ${outsiders.length} / ${caseBefore}->${caseAfter}`)
@@ -261,7 +261,7 @@ async function main() {
   const secondResponse = await ownerA.client.rpc('respond_to_contract_dispute', { p_dispute_id: dispute.data?.id, p_statement: text('owner again') }).single()
   check('other_party_responds_once_only', selfRespond.error?.code === '42501' && !response.error && secondResponse.error?.code === '23505', `${selfRespond.error?.code} / ${response.error?.message} / ${secondResponse.error?.code}`)
   const noAdmin = (await Promise.all([ownerA.client, worker.client, customer.client, admin, anon].map((client) => client.rpc('admin_contract_dispute_case', { p_dispute_id: dispute.data?.id })))).map((r) => r.error?.code)
-  const viewAudits = async () => (await rows(sa.from('workforce_audit_events').select('id, payload').eq('action', 'worker_contract_dispute.case_viewed').eq('subject_id', contract1.id)))
+  const viewAudits = async () => (await rows(adminAuditRows(sa, { action: 'worker_contract_dispute.case_viewed', subjectId: contract1.id })))
   const auditsBefore = (await viewAudits()).length
   const openCase = await sa.rpc('admin_contract_dispute_case', { p_dispute_id: dispute.data?.id })
   const sealedVersion = openCase.data?.versions?.[0]
@@ -331,7 +331,7 @@ async function main() {
   const anonRpc = await Promise.all(['admin_dashboard_summary', 'my_contract_disputes', 'my_certification_platform_reviews', 'admin_contract_dispute_queue'].map((fn) => anon.rpc(fn)))
   check('anon_cannot_call_w11_rpcs', anonRpc.every((result) => result.error), anonRpc.map((result) => result.error?.code).join(','))
   if (await deleteUserChecked('worker_with_review_and_disputes_through_gotrue', worker.id)) {
-    const events = await rows(sa.from('workforce_audit_events').select('action').in('action', ['certification_platform_review.deleted', 'worker_contract_dispute.deleted']))
+    const events = await rows(adminAuditRows(sa, { action: ['certification_platform_review.deleted', 'worker_contract_dispute.deleted'] }))
     const left = trustedFixture('select count(*) from public.certification_platform_reviews where worker_id = $1', worker.id)
     check('worker_delete_cascades_review_and_audits', left === '0' && events.some((e) => e.action === 'certification_platform_review.deleted'), `${left} rows, ${events.length} events`)
   }

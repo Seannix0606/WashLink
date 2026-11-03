@@ -28,7 +28,7 @@ export const ownerContractsIntroText =
   'Draft a contract for a worker with an accepted application or completed training at your shop. The worker reads it and can accept or decline. Every sent version is kept exactly as sent.'
 
 export const myContractsIntroText =
-  'Contract offers from shops appear here once they are sent to you. An offer applies only if you accept it. You can always decline an offer or end an accepted contract.'
+  'Contract offers from shops appear here once they are sent to you. An offer applies only if you accept it. You can decline an offer, or record the end of an accepted contract, on WashLink at any time.'
 
 export const ownerContractsEmptyTitle = 'No worker contracts yet'
 
@@ -66,11 +66,15 @@ export const declineOfferText = 'Declining ends this offer. You do not need to g
 
 export const declineAmendmentText = 'Declining keeps your current contract terms unchanged.'
 
+/** W13 (D-73, W13-L2): records the end; does not state a right to end without consequences. */
 export const workerTerminateText =
-  'You can end this contract at any time. Give a short reason; the shop will see it. Notice periods, final pay and clearance are not handled on WashLink.'
+  'You can record the end of this contract on WashLink at any time. Give a short reason; the shop will see it. Notice periods or other duties under your contract or the law may still apply. Final pay and clearance are not handled on WashLink.'
 
-export const ownerTerminateText =
-  'This records the end of the contract now. Give a reason; the worker will see it. Any pending change is withdrawn.'
+/** W13 owner caution (D-73, W13-L3). */
+export const ownerTerminationCautionText =
+  'Ending a work relationship can have legal requirements such as a proper cause and notice. WashLink only records the end.'
+
+export const ownerTerminateText = `This records the end of the contract now. Give a reason; the worker will see it. Any pending change is withdrawn. ${ownerTerminationCautionText}`
 
 export const shopGoneOfferText = 'This shop is no longer on WashLink, so this offer can only be declined.'
 
@@ -132,6 +136,7 @@ export const workerContractCopyConstants: readonly string[] = [
   declineAmendmentText,
   workerTerminateText,
   ownerTerminateText,
+  ownerTerminationCautionText,
   shopGoneOfferText,
   partyRemovedText,
   activateExplanationText,

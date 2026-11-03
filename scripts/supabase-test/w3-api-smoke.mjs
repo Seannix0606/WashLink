@@ -15,6 +15,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { adminAuditRows } from './smoke-admin-audit-log.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -161,28 +162,29 @@ async function main() {
   const directRead = await owner.client.from('notifications').update({ title: 'Edited' }).eq('id', notificationId).select()
   check('recipient_cannot_edit_notification', isPermissionError(directRead.error), directRead.error?.code)
 
-  // Super admin read; the review log; other roles see nothing.
-  const adminAudit = await reviewer.client.from('workforce_audit_events').select('id, action, actor_id, actor_kind').eq('subject_id', shopId)
-  check('super_admin_reads_shop_audit_events',
+  // Super admin reads only through the audited log (W13, D-70); the review-log view is trusted SQL only.
+  const adminAudit = await adminAuditRows(reviewer.client, { subjectId: shopId })
+  check('super_admin_reads_shop_audit_events_through_audited_log',
     !adminAudit.error && adminAudit.data?.some((row) => row.action === 'shop.verification_decided' && row.actor_id === reviewer.id && row.actor_kind === 'user'),
     adminAudit.error?.message ?? JSON.stringify(adminAudit.data))
   const reviewLog = await reviewer.client.from('shop_verification_review_log').select('shop_id, to_status, reviewed_by').eq('shop_id', shopId)
-  check('super_admin_reads_review_log',
-    !reviewLog.error && reviewLog.data?.length === 1 && reviewLog.data[0].reviewed_by === reviewer.id && reviewLog.data[0].to_status === 'approved',
-    reviewLog.error?.message ?? JSON.stringify(reviewLog.data))
+  check('review_log_view_denied_for_super_admin', isPermissionError(reviewLog.error) && reviewLog.data === null,
+    reviewLog.error?.code ?? JSON.stringify(reviewLog.data))
+  // Name kept (check counts unchanged); since W13 the customer gets 42501 and still no row.
   const customerLog = await customer.client.from('shop_verification_review_log').select('event_id')
-  check('customer_review_log_returns_zero_rows', !customerLog.error && customerLog.data?.length === 0, customerLog.error?.message)
+  check('customer_review_log_returns_zero_rows', isPermissionError(customerLog.error) && !customerLog.data?.length, customerLog.error?.code ?? 'no error')
 
   // The service_role key cannot touch audit rows either.
-  const eventId = adminAudit.data?.[0]?.id
+  const eventId = adminAudit.data?.find((row) => row.action === 'shop.verification_decided')?.id
   const serviceUpdate = await admin.from('workforce_audit_events').update({ action: 'smoke.tampered' }).eq('id', eventId).select()
   check('service_role_cannot_update_audit_rows', isPermissionError(serviceUpdate.error), serviceUpdate.error?.code)
   const serviceDelete = await admin.from('workforce_audit_events').delete().eq('id', eventId).select()
   check('service_role_cannot_delete_audit_rows', isPermissionError(serviceDelete.error), serviceDelete.error?.code)
   const serviceInsert = await admin.from('workforce_audit_events').insert({ actor_kind: 'system', action: 'smoke.forged', subject_type: 'shop' })
   check('service_role_cannot_insert_audit_rows', isPermissionError(serviceInsert.error), serviceInsert.error?.code)
-  const stillThere = await reviewer.client.from('workforce_audit_events').select('action').eq('id', eventId).single()
-  check('audit_row_unchanged_after_service_role_attempts', stillThere.data?.action === 'shop.verification_decided', stillThere.error?.message)
+  const stillThere = await adminAuditRows(reviewer.client, { subjectId: shopId })
+  check('audit_row_unchanged_after_service_role_attempts',
+    stillThere.data?.find((row) => row.id === eventId)?.action === 'shop.verification_decided', stillThere.error?.message)
 
   // Roster link producer, then a GoTrue account delete through the AFTER triggers.
   const roster = await owner.client.from('workers').insert({ owner_id: owner.id, name: 'Smoke W3 Roster' }).select('id').single()
@@ -198,15 +200,14 @@ async function main() {
   check('worker_does_not_see_owner_notifications', !workerInbox.error && workerInbox.data?.length === 0)
 
   if (await deleteUserChecked('linked_worker_through_gotrue', worker.id)) {
-    const unlinkEvent = await reviewer.client.from('workforce_audit_events').select('action, actor_kind, payload')
-      .eq('subject_id', rosterId).eq('action', 'roster.unlinked')
+    const unlinkEvent = await adminAuditRows(reviewer.client, { subjectId: rosterId, action: 'roster.unlinked' })
     check('gotrue_worker_delete_writes_account_deleted_unlink_event',
       !unlinkEvent.error && unlinkEvent.data?.length === 1 && unlinkEvent.data[0].payload?.unlinked_by === 'account_deleted'
         && unlinkEvent.data[0].actor_kind === 'system',
       unlinkEvent.error?.message ?? JSON.stringify(unlinkEvent.data))
   }
   if (await deleteUserChecked('owner_with_shop_and_roster_through_gotrue', owner.id)) {
-    const history = await reviewer.client.from('shop_verification_review_log').select('event_id').eq('shop_id', shopId)
+    const history = await adminAuditRows(reviewer.client, { subjectId: shopId, subjectType: 'shop', actionPrefix: 'shop.verification_' })
     check('review_log_survives_owner_and_shop_deletion', !history.error && history.data?.length === 1, history.error?.message)
   }
 }
