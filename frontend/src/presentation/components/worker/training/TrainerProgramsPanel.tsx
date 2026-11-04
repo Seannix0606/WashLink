@@ -80,7 +80,7 @@ export function TrainerProgramsPanel({
           The shop owner made you a trainer for these programs. You can record attendance and assessments.
         </p>
       </header>
-      <TrainingVersusPaidWorkNote />
+      <TrainingVersusPaidWorkNote audience="shop" />
       {selectedProgram !== null ? (
         <TrainerProgramView key={selectedProgram.id} trainingDependencies={trainingDependencies} program={selectedProgram}
           onBack={(): void => { setSelectedProgramId(null) }} />

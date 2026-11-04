@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Local-only API smoke runner (W13, D-77): runs every workforce API smoke in the LOOP.md order
-// w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w14, w12, w13 against the local stack that run-db-tests.mjs left running.
+// w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w14, w12, w15, w13 (W15 D-82: w13 stays last) against the local stack that
+// run-db-tests.mjs left running.
 //
 //   node scripts/supabase-test/run-db-tests.mjs && node scripts/supabase-test/run-api-smokes.mjs
 //
@@ -14,7 +15,7 @@ import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const SMOKE_ORDER = ['w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9', 'w10', 'w11', 'w14', 'w12', 'w13']
+export const SMOKE_ORDER = ['w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9', 'w10', 'w11', 'w14', 'w12', 'w15', 'w13']
 const FORBIDDEN_ARGUMENTS = ['--db-url', '--linked', '--project-ref']
 const FORBIDDEN_ENVIRONMENT = ['SUPABASE_DB_URL', 'SUPABASE_ACCESS_TOKEN', 'SUPABASE_PROJECT_ID', 'SUPABASE_DB_PASSWORD']
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))

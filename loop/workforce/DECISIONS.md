@@ -84,6 +84,10 @@ on its next increment and adds rework if needed.
 | D-76 | Test renames | W13 | Renames keep an evidence trail in ACCEPTANCE_TESTS.md "Renamed tests" | ADOPTED-DEFAULT (loop, 2026-11-03) |
 | D-77 | Smoke runner | W13 | `run-api-smokes.mjs` runs w2..w11, w14, w12, w13 in that order (w13 last), local only, stops at the first failure | ADOPTED-DEFAULT (loop, 2026-11-03) |
 | D-78 | Leftover grants | W13 | Revoke leftover default grants: service_role ALL on the five W2/W4 tables, TRUNCATE/REFERENCES/TRIGGER from anon/authenticated on job_openings and the six pre-workforce tables, client grants on certification_status_events_id_seq, service_role on washlink_private; kept only the authenticated CRUD the app uses under RLS; ROLLBACK does not re-grant unless the D-10 diff proves production needs them | ADOPTED-DEFAULT (loop, 2026-11-03) |
+| D-79 | Training gate scope | W15 | Gate keyed on the roster row's link history (current link plus every earlier linked account, backfilled from current links and `roster.linked` / `roster.unlinked` audit rows); no unlink is refused, for owner or worker (J16) | ADOPTED-DEFAULT (loop, 2026-11-04) |
+| D-80 | Re-used roster rows | W15 | A row once linked to a trainee stays gated for any later account while that trainee's required training with the owner is live; the new worker unlinks the old row and the owner adds a new one; misleading w6h message for that later worker is documented | ADOPTED-DEFAULT (loop, 2026-11-04) |
+| D-81 | Trainee notice copy | W15 | Trainee views state only what WashLink enforces and what it cannot detect; owner / trainer views use a separate shop-addressed text; `w6_v1` notice and owner attestation unchanged | ADOPTED-DEFAULT (loop, 2026-11-04) |
+| D-82 | Smoke order | W15 | `run-api-smokes.mjs` runs w2..w11, w14, w12, w15, w13 (w13 last; amends D-77) | ADOPTED-DEFAULT (loop, 2026-11-04) |
 
 ## Standing human gates (never automated — the only things the loop stops for)
 - Applying any migration to the linked/shared/production Supabase project.

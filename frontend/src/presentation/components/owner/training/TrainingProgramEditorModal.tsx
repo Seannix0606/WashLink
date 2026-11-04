@@ -91,7 +91,7 @@ export function TrainingProgramEditorModal({
           </p>
         ) : null}
         {isPreviewVisible ? (
-          <TrainingProgramDetailsView content={previewContent} shopName={previewShopName} />
+          <TrainingProgramDetailsView content={previewContent} shopName={previewShopName} audience="shop" />
         ) : (
           <>
             <p className="text-xs text-[var(--color-ink-500)]">

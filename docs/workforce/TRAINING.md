@@ -140,6 +140,43 @@ bookings until the training ends.`). Trusted sessions bypass; super_admin does n
 progress may complete. Unlinked rows, other owners' trainees and invited / declined / withdrawn / cancelled /
 completed / failed / shop_removed enrollments are not affected.
 
+W15 (D-79, D-80): migration `2026_11_03_w15a_training_gate_roster_link_history.sql`. Before W15 the gate judged
+only the current link, so the owner (or the worker, through `unlink_my_roster_entry`) could set `user_id` to null
+and the owner could then assign the row (F-C2). W15 adds the internal table `roster_link_history` (`worker_row_id`,
+`user_id`, `first_linked_at`, `source` = `link` / `backfill_current` / `backfill_audit`; RLS on, no policies, no
+client or `service_role` privilege; rows cascade with the roster row and the account). The AFTER trigger
+`workers_record_link_history` (function `record_roster_link_history`, definer, not client-executable) adds one row
+per new link. Fix cycle 1 (SEC-1): it records nothing for a no-op update (`user_id` unchanged) and skips an orphaned
+`user_id` with no `profiles` row (production w2d NOT VALID FK) instead of failing the roster write with 23503. The
+backfill is the private function `backfill_roster_link_history()` (definer, `search_path = public, pg_temp`, not
+executable by any client role or `service_role`), called once by the migration with a NOTICE of both counts. It adds
+current links (`backfill_current`) and, since fix cycle 1 (SEC-7), accounts from both `roster.linked` and
+`roster.unlinked` audit rows (`backfill_audit`); it is idempotent. `roster_worker_in_required_training`
+(same signature) now matches the enrollment when the current account OR any account in the row's history holds it,
+and no longer requires `user_id` to be set. `bookings_guard_training_assignment` is unchanged; it calls the function
+for both the assign check and the start check, so a booking assigned before the unlink cannot be started either.
+- No unlink, re-link, unassign, withdraw or decline is refused (J16).
+- Re-used rows (D-80): a row once linked to a trainee stays gated for any later account while that trainee's required
+  training with the owner is live. Side effects (W15 REVIEW SEC-3, C-SF-2; W15-L1): the later worker is refused with
+  the w6h texts, which wrongly read as if that worker were in training (owner: "This worker is in required
+  training ..."; worker on start: "You are in required training with this shop ..."); the w6h message is not changed.
+  Workaround: `workers_owner_user_unique` allows one row per owner per account, so the new worker first unlinks the old
+  row, then the owner adds a new roster row and the worker links to it with a new code. A leaked or misdirected link
+  code that a trainee accepts also taints that row while the trainee's training is live.
+- A booking already `in_progress` on a row can be completed by a trainee who links to that row later; completion is
+  never refused (SEC-4, W15-L1).
+- Not detected (P6, W15-L1): a row never linked to the trainee (name-only, or deleted and re-created), links ended
+  before the W3 audit trail existed, work for other shops, super_admin assignment to another owner's booking (W13-L11)
+  and trusted SQL sessions.
+- Trainee copy (D-81): `trainingVersusPaidWorkText` says WashLink refuses the training shop's requests to assign the
+  trainee through a roster entry that is or was linked to their account, and that it cannot detect a never-linked
+  entry or work arranged outside WashLink. The `w6_v1` notice and the owner attestation are unchanged. W15 fix
+  cycle 1 (C-SF-1, W15-L2): owner and trainer views (programs panel, program preview, manage view, editor preview,
+  "Training I run") show `shopTrainingVersusPaidWorkText` instead, a rule addressed to the shop: "Training is not
+  productive work for customers. The training shop may not assign trainees to customer bookings while their required
+  training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the
+  trainee's account. Terms for any later customer work are agreed separately and are not part of this training."
+
 ## Visibility (RLS and read RPCs)
 
 | Who | Programs | Sessions | Enrollments | Evidence | Designations |
@@ -158,7 +195,8 @@ is FOR ALL TABLES or lists a `training_*` table.
 
 - Local proof only (D-10 rows 29-32 in `ROLE_AND_PROFILE_SECURITY.md`); production drift is caught only by
   the w6a preflight.
-- The gate covers roster-linked trainees and on-platform bookings only; off-platform work is invisible.
+- The gate covers roster rows that are or were linked to the trainee and on-platform bookings only (W15-L1);
+  off-platform work is invisible.
 - Evidence is operational, not tamper-proof (a DB superuser can disable triggers); no electronic signatures.
 - Time-shift fixtures (past sessions, backdated acceptance) exist only in `test_helpers` and the smoke; real
   evidence needs the session day to have passed and an earlier acceptance.
@@ -186,4 +224,6 @@ Per-file `-- ROLLBACK` blocks in reverse order i..a, local stack only. i: produc
 notifications stay). h: the bookings trigger and its functions (bookings behave as after W5). g, f, e: RPCs,
 reads, notice-version function. d: view, predicate, evidence guards and tables (IRREVERSIBLE evidence loss;
 export with a trusted `copy` first). c: the shops trigger, enrollments and sessions. b: trainers and
-programs. a: nothing. Frontend: revert.
+programs. a: nothing. Frontend: revert. W15 (run first): the w15a `-- ROLLBACK` block restores the w6h body of
+`roster_worker_in_required_training` (and so the F-C2 bypass), then drops the trigger, `backfill_roster_link_history()`,
+`record_roster_link_history()` and `roster_link_history` (derived data; the links stay in the W3 audit). Frontend: revert the one copy line.

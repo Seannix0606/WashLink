@@ -1,5 +1,5 @@
 -- J17 roll-up (W13 PLAN section 6 test 1, section 8): database constraints and authorization prevent unauthorized
--- access, checked in ONE place over the whole workforce schema after all 96 migrations. The workforce table list below
+-- access, checked in ONE place over the whole workforce schema after all 97 migrations. The workforce table list below
 -- is explicit; the first test proves it equals every public base table that is not part of the pre-workforce schema
 -- (local baseline + the four pre-W2 migrations: profiles, workers, bookings, shops, shop_pricing,
 -- shop_verification_documents), so a new table that is not added here fails this file. Per-increment detail stays in
@@ -18,7 +18,7 @@ insert into j17r_tables values
   ('contract_problem_term_rules'), ('contract_template_clauses'), ('contract_template_placeholders'), ('contract_template_sections'),
   ('contract_template_versions'), ('contract_templates'), ('contract_version_clauses'), ('contract_version_flags'), ('contract_versions'),
   ('job_applications'), ('job_opening_moderation_actions'), ('job_opening_moderation_cases'), ('job_opening_reports'), ('job_openings'),
-  ('notification_categories'), ('notifications'), ('retained_job_application_records'), ('shop_certification_policies'),
+  ('notification_categories'), ('notifications'), ('retained_job_application_records'), ('roster_link_history'), ('shop_certification_policies'),
   ('training_assessments'), ('training_attendance_records'), ('training_enrollments'), ('training_program_trainers'), ('training_programs'),
   ('training_sessions'), ('worker_classification_options'), ('worker_contract_disputes'), ('worker_contracts'), ('worker_owner_relationships'),
   ('worker_private_contacts'), ('worker_profiles'), ('worker_roster_link_attempts'), ('worker_roster_link_codes'), ('workforce_audit_events'),
@@ -40,7 +40,7 @@ create temporary table j17r_grants (role_name text, rel text, privs text) on com
 insert into j17r_grants
   select 'authenticated', name, case when name in ('job_openings', 'worker_profiles', 'worker_private_contacts') then 'DELETE INSERT SELECT UPDATE'
                                      when name in ('workforce_scheduled_jobs', 'notification_categories', 'worker_roster_link_codes',
-                                                   'worker_roster_link_attempts') then null
+                                                   'worker_roster_link_attempts', 'roster_link_history') then null
                                      else 'SELECT' end
   from j17r_tables
   union all select 'authenticated', 'training_enrollment_progress', 'SELECT';
@@ -61,7 +61,7 @@ select is((select coalesce(string_agg(name, ',' order by name), '-') from j17r_t
            where name not in (select t from pg_temp.rels(array['r', 'p']::"char"[]) t)), '-', 'j17_workforce_table_list_is_complete');
 select is((select string_agg(t, ',' order by t) from pg_temp.rels(array['v', 'm', 'f']::"char"[]) t),
           (select string_agg(name, ',' order by name) from j17r_views), 'j17_workforce_table_list_is_complete');
-select is((select count(*)::int from j17r_tables), 43, 'j17_workforce_table_list_is_complete');
+select is((select count(*)::int from j17r_tables), 44, 'j17_workforce_table_list_is_complete');
 
 -- ---------- RLS on every workforce table ----------
 select is((select coalesce(string_agg(t.name, ',' order by t.name), '-') from j17r_tables t

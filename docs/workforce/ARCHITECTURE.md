@@ -1,4 +1,4 @@
-# Workforce module: architecture (as built, W0-W14)
+# Workforce module: architecture (as built, W0-W15)
 
 This is an overview of what the workforce loop built on branch `feature/workforce`. Each area has its own
 document, linked below, with the exact rules, error texts, tests and rollback steps. `ARCHITECTURE_AUDIT.md` is the
@@ -29,9 +29,10 @@ to a shared or production database. The production schema is unknown to the repo
 | W14 | Job-opening reports and moderation, oversight reads, audited admin reads | `PLATFORM_MODERATION_AND_AUDIT.md` |
 | W12 | Notification category registry, de-duplication, scheduled jobs (not registered) | `NOTIFICATIONS_AND_SCHEDULING.md` |
 | W13 | Audit reads only through the audited RPC, paged moderation queue, expiry wording, docs | this file and the W13 docs below |
+| W15 | Training booking gate keyed on roster link history (internal `roster_link_history`, its recorder trigger and the private `backfill_roster_link_history()`), training copy (D-79..D-81) | `TRAINING.md` |
 
 W14 was split from W11 (D-49) and built before W12. Its migrations are dated `2026_10_29`, W12's `2026_10_30`, so
-the apply order by file name is W2..W11, W14, W12, W13. Rollback runs in the exact reverse (`ROLLBACK_GUIDE.md`).
+the apply order by file name is W2..W11, W14, W12, W13, W15. Rollback runs in the exact reverse (`ROLLBACK_GUIDE.md`).
 
 Cross-cutting documents added in W13:
 
@@ -80,14 +81,14 @@ trigger. This is outside the threat model and listed in `LIMITATIONS.md`.
 
 ## Data model by area
 
-The J17 roll-up pins the list of 43 workforce tables and 2 views
+The J17 roll-up pins the list of 44 workforce tables (43 before W15 added `roster_link_history`) and 2 views
 (`j17_workforce_table_list_is_complete`). The pre-workforce tables `profiles`, `workers`, `bookings`, `shops`,
 `shop_pricing` and `shop_verification_documents` were hardened in W2 but are not workforce tables. J18 proves that
 bookings, pricing, verification and ratings still work.
 
 | Area | Tables (views in italics) | Main entry points |
 |---|---|---|
-| Roles, worker data, roster (W2) | `worker_profiles`, `worker_private_contacts`, `worker_roster_link_codes`, `worker_roster_link_attempts` | `submit_shop_for_verification`, `create_roster_link_code`, `preview_roster_link_code`, `accept_roster_link_code`, `list_my_roster_links` |
+| Roles, worker data, roster (W2, W15) | `worker_profiles`, `worker_private_contacts`, `worker_roster_link_codes`, `worker_roster_link_attempts`, `roster_link_history` (W15, internal, no client access) | `submit_shop_for_verification`, `create_roster_link_code`, `preview_roster_link_code`, `accept_roster_link_code`, `list_my_roster_links` |
 | Audit and notices (W3, W12) | `workforce_audit_events`, `notifications`, `notification_categories`, *`shop_verification_review_log`* | `record_workforce_audit_event` (internal), `enqueue_notification` (internal), `mark_notifications_read` |
 | Job openings (W4) | `job_openings` | `transition_job_opening`, `shop_has_recorded_verification` |
 | Applications (W5) | `job_applications`, `retained_job_application_records` (W9) | `search_job_openings`, `create_job_application`, `transition_job_application`, `applicant_profiles_for_job_opening` |
@@ -105,9 +106,10 @@ Key data rules (details in the area docs):
 - Snapshots are write-once: application snapshots of the opening (W5), the shop verification snapshot at certificate
   issue (W7), sealed contract versions with their rendered text and sha256 hash (W9).
 - Required initial training is free to the worker: `worker_fee` is forced to 0 by a CHECK, and no fee or deduction
-  column exists (J7). The w6h gate (D-17) refuses, for every client role including super_admin, to assign a
-  roster-linked trainee in required training to a customer booking of the training owner, or to let the trainee start
-  one. Trusted sessions bypass it. Exception: a super_admin can assign that trainee to another owner's booking, which is
+  column exists (J7). The w6h gate (D-17; keyed on link history since W15, D-79) refuses, for every
+  client role including super_admin, to assign a roster row that is or was linked to a trainee in required training to
+  a customer booking of the training owner, or to start a booking assigned to that row. Trusted sessions bypass it. A
+  row never linked to the trainee (name-only, or deleted and re-created) is not detected (W15-L1). Exception: a super_admin can assign that trainee to another owner's booking, which is
   outside the gate's scope (W6 REVIEW; W13-L11, `LIMITATIONS.md`). Off-platform work is not visible.
 - A certificate needs at least 3 attended supervised days and a current passed assessment, re-checked under locks (J6).
   Its issuer kind is always `shop_issued`.
@@ -159,9 +161,10 @@ Vitest runs with mocked repositories only (`LOCAL_TEST_HARNESS.md`).
 
 ## Tests and evidence
 
-- pgTAP: 105 files from a clean reset that applies 96 staged migrations. After W13 fix cycle 1 it gave 3198 assertions,
-  `Result: PASS` (W13 LOG "FIX CYCLE 1 (DB) runs").
-- API smokes: 13 local smokes, run in order by `scripts/supabase-test/run-api-smokes.mjs` (D-77).
+- pgTAP: 108 files from a clean reset that applies 97 staged migrations: `Files=108, Tests=3280`, `Result: PASS`
+  (W15 LOG "FIX CYCLE 1 (DB)"; 105 files / 96 migrations / 3198 assertions after W13 fix cycle 1).
+- API smokes: 14 local smokes, run in order by `scripts/supabase-test/run-api-smokes.mjs` (D-77; w15 before w13,
+  D-82): `run-api-smokes: PASS (14 smokes)` in the W15 test run.
 - Vitest, lint and build: numbers recorded in STATE.md by the W13 test step.
 - `ACCEPTANCE_TESTS.md` maps J1-J18 and SPEC K to files.
 

@@ -2,12 +2,15 @@ import type { ReactElement } from 'react'
 import type { TrainingProgramContent } from '../../../domain/models/TrainingProgram'
 import { trainingProgramLimits } from '../../../domain/models/TrainingProgram'
 import { notSpecifiedByShopText } from '../../utilities/jobOpeningDisplay'
+import type { TrainingNoteAudience } from './TrainingNotices'
 import { TrainingVersusPaidWorkNote } from './TrainingNotices'
 import { TrainingPayAndFeeView } from './TrainingPayAndFeeView'
 
 interface TrainingProgramDetailsViewProps {
   readonly content: TrainingProgramContent
   readonly shopName: string
+  /** Owner previews pass 'shop' (W15-L2); worker views keep the trainee text. */
+  readonly audience?: TrainingNoteAudience
 }
 
 function DetailBlock({ label, value }: { readonly label: string; readonly value: string }): ReactElement {
@@ -24,7 +27,7 @@ function listOrNotSpecified(values: readonly string[]): string {
 }
 
 /** Program details as workers see them; every value exactly as stored or entered. */
-export function TrainingProgramDetailsView({ content, shopName }: TrainingProgramDetailsViewProps): ReactElement {
+export function TrainingProgramDetailsView({ content, shopName, audience = 'trainee' }: TrainingProgramDetailsViewProps): ReactElement {
   const hasValidDayCount = content.minTrainingDays >= trainingProgramLimits.minTrainingDaysMinimum
   return (
     <div className="space-y-4">
@@ -45,7 +48,7 @@ export function TrainingProgramDetailsView({ content, shopName }: TrainingProgra
         <DetailBlock label="Training terms" value={content.terms ?? notSpecifiedByShopText} />
       </dl>
       <TrainingPayAndFeeView payContent={content} />
-      <TrainingVersusPaidWorkNote />
+      <TrainingVersusPaidWorkNote audience={audience} />
     </div>
   )
 }

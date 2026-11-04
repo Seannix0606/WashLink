@@ -121,16 +121,20 @@ describe.skipIf(!isW13DocsStepStarted)('Workforce docs (W13)', () => {
     const partRows = partTexts.map(registerRows)
     const everyRow = [...indexRows, ...partRows.flat()]
 
-    // 153 earlier items plus W13-L1..L11 (L8..L11 from the W13 compliance review), each a row exactly once across the index and the two parts.
+    // 153 earlier items plus W13-L1..L11 (L8..L11 from the W13 compliance review) and W15-L1..L3 (L2, L3 from the W15 compliance review), each a row exactly once across the index and the two parts.
     const rowIds = everyRow.map((row) => row.id)
     expect(new Set(rowIds).size).toBe(rowIds.length)
-    expect(rowIds).toHaveLength(164)
+    expect(rowIds).toHaveLength(167)
+    for (const w15ItemId of ['W15-L1', 'W15-L2', 'W15-L3']) {
+      expect(rowIds).toContain(w15ItemId)
+    }
     for (let itemNumber = 1; itemNumber <= 11; itemNumber += 1) {
       expect(rowIds).toContain(`W13-L${String(itemNumber)}`)
     }
-    // Earlier items sit in exactly one part; nothing is closed by the loop.
+    // Earlier items sit in exactly one part (W13 and W15 rows live in the index); nothing is closed by the loop.
     for (const row of [...partRows.flat()]) {
       expect(row.id.startsWith('W13-'), row.id).toBe(false)
+      expect(row.id.startsWith('W15-'), row.id).toBe(false)
     }
     for (const row of everyRow) {
       expect(row.status, row.id).toBe('OPEN')

@@ -109,7 +109,7 @@ export function OwnerTrainingProgramsPanel({
           </Button>
         ) : null}
       </header>
-      <TrainingVersusPaidWorkNote />
+      <TrainingVersusPaidWorkNote audience="shop" />
       {hasUnverifiedShop && !hasNoShops ? (
         <p role="status" className="flex items-start gap-2 rounded-[var(--radius-control)] bg-[var(--color-warning-50)] px-3 py-2 text-sm text-[var(--color-warning-600)]">
           <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -181,7 +181,7 @@ export function OwnerTrainingProgramsPanel({
       <Modal isOpen={previewedProgram !== null} onClose={(): void => { setPreviewedProgram(null) }} title="Training program details" maxWidthClassName="max-w-2xl">
         {previewedProgram !== null ? (
           <div className="max-h-[70dvh] overflow-y-auto pr-1">
-            <TrainingProgramDetailsView content={previewedProgram} shopName={shopNameOf(previewedProgram.shopId)} />
+            <TrainingProgramDetailsView content={previewedProgram} shopName={shopNameOf(previewedProgram.shopId)} audience="shop" />
           </div>
         ) : null}
       </Modal>

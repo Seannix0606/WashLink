@@ -51,7 +51,7 @@ export function TrainingProgramManageView({
           Back to training programs
         </Button>
       </div>
-      <TrainingVersusPaidWorkNote />
+      <TrainingVersusPaidWorkNote audience="shop" />
       <TrainingSessionsEditor
         trainingProgramService={trainingDependencies.trainingProgramService}
         program={program}

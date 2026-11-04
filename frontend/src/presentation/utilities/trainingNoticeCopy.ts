@@ -33,7 +33,14 @@ export const ownerAttestationFootnote =
 
 /** Shown wherever training and paid work could be confused (C7). */
 export const trainingVersusPaidWorkText =
-  'Training is not productive work for customers. Trainees cannot be assigned to customer bookings while their required training is unfinished. Terms for any later customer work are agreed separately and are not part of this training.'
+  "Training is not productive work for customers. While your required training is unfinished, WashLink refuses the training shop's requests to assign you to its customer bookings through a roster entry that is or was linked to your account. WashLink cannot detect a roster entry that was never linked to your account, or work arranged outside WashLink. Terms for any later customer work are agreed separately and are not part of this training."
+
+/**
+ * W15 fix cycle 1 (C-SF-1, W15-L2): the same distinction addressed to the shop, for owner and designated-trainer
+ * views. States the rule and what WashLink refuses; trainee views keep `trainingVersusPaidWorkText` (D-81).
+ */
+export const shopTrainingVersusPaidWorkText =
+  "Training is not productive work for customers. The training shop may not assign trainees to customer bookings while their required training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the trainee's account. Terms for any later customer work are agreed separately and are not part of this training."
 
 export const enrollmentIsNotContractText =
   'An invitation or an accepted enrollment is not a contract, a job offer or a certification.'

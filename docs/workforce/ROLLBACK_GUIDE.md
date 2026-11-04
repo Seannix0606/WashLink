@@ -1,8 +1,9 @@
-# Workforce module: rollback guide (W13)
+# Workforce module: rollback guide (W13, W15)
 
-**No ROLLBACK block has ever been executed.** That holds for every increment: W2 to W14, and the four W13
-migrations. Each migration ends with a commented `-- ROLLBACK` block. They were written and reviewed, but never run, not
-even on the local stack. Treat each block as an untested draft. Read it and try it on a fresh local stack before you
+**No ROLLBACK block has ever been executed, with one exception.** That holds for every increment: W2 to W14 and the
+four W13 migrations. The W15 (w15a) block was executed once, on the local stack only, inside a transaction that was
+rolled back (W15 LOG "BUILD (DB) + TEST"); it has run nowhere else, never with data kept. Each migration ends with a commented `-- ROLLBACK` block. Apart from
+that one local W15 run, they were written and reviewed but never run, not even on the local stack. Treat each block as an untested draft. Read it and try it on a fresh local stack before you
 rely on it. This guide does not claim that any rollback works.
 
 There is no second database (SPEC G). A rollback removes objects and, at several steps, data. Nothing here may run
@@ -17,7 +18,7 @@ against a shared or production database without the written approval of the proj
    recorded (`DEPLOYMENT_READINESS.md`). Several blocks restore W2..W12 bodies verbatim from the repo. If production
    bodies, policies or triggers differ, a block can silently drop production-only behaviour. Production also needs
    written approval before any step.
-3. **D-11 versions.** The local stager applies byte-identical copies under 14-digit versions (W13 = `20261030000006..09`).
+3. **D-11 versions.** The local stager applies byte-identical copies under 14-digit versions (W13 = `20261030000006..09`, W15 = `20261103000001`).
    The repo files are named `YYYY_MM_DD_*` (D-11). Which `schema_migrations` rows a production rollback must remove
    depends on how a human renames the files before any `db push`. Decide that first.
 4. **Export before every IRREVERSIBLE step.** Use a trusted `copy (select ...) to ...` of each table the step drops.
@@ -34,10 +35,10 @@ registered them anywhere. This step is still required, because a human may have 
 
 ## Order
 
-Order: W13 -> W12 -> W14 -> W11 -> W10 -> W9 -> W8 -> W7 -> W6 -> W5 -> W4 -> W3 -> W2.
+Order: W15 -> W13 -> W12 -> W14 -> W11 -> W10 -> W9 -> W8 -> W7 -> W6 -> W5 -> W4 -> W3 -> W2.
 
 This is the exact reverse of the apply order by file name. W14 comes after W12 because the W14 migrations are dated
-`2026_10_29` and W12's are `2026_10_30`. Within an increment, run its blocks in reverse letter order, starting at the
+`2026_10_29` and W12's are `2026_10_30`. W15 (`2026_11_03`) is last applied, so it is rolled back first. Within an increment, run its blocks in reverse letter order, starting at the
 last migration (for example W13 d, c, b, a). W1 and W0 have no migrations: the local baseline is test-only (D-1) and
 is not part of the repo's migrations.
 
@@ -50,6 +51,7 @@ while W9 FKs exist, W4 / W5 while the w14c triggers exist, W7 / W9 / W10 while W
 
 | Step | Blocks (reverse order) | Data lost | What stays | Stager / other |
 |---|---|---|---|---|
+| W15 | `2026_11_03_w15a_training_gate_roster_link_history.sql:154` | the link-history rows (derived; a re-apply backfills only current links and surviving `roster.linked` / `roster.unlinked` audit rows) | links stay as `workers.user_id` and the audit rows | restores the w6h body of `roster_worker_in_required_training` FIRST (it references the table), then drops the trigger, `backfill_roster_link_history()`, `record_roster_link_history()` and the table; this re-opens the F-C2 unlink bypass; revert the frontend copy line (`trainingVersusPaidWorkText`); `TRAINING.md` |
 | W13 | `2026_10_30_w13d_contract_expiry_notice_wording.sql:112`, `w13c...:68`, `w13b...:81`, `w13a...:80` | none | d: notices already sent keep the D-72 text; b: `log_searched` rows written meanwhile stay | revert the W13 frontend paging and copy; see "D-78 / S6 grant revokes and the w13b rollback" (b re-opens W14 N1) |
 | W12 | `w12e:206`, `w12d:186`, `w12c:150`, `w12b:219`, `w12a:101` | c: job state history | audit rows; notices (unchecked again); contracts recorded expired stay expired (D-40) | Step 0 first; drop the 8th helper from `HELPERS_SOURCE_NAMES`; `NOTIFICATIONS_AND_SCHEDULING.md` |
 | W14 | `w14i:152`, `w14h:211`, `w14g:224`, `w14f:204`, `w14e:147`, `w14d:286`, `w14c:179`, `w14b:290`, `w14a:102` | g: admin access records; b: reports, cases, actions (IRREVERSIBLE) | audit rows, notifications, stamped shop reviewers | w14c and w14f each in ONE `begin ... commit`; 7th helper; `PLATFORM_MODERATION_AND_AUDIT.md` |
@@ -64,7 +66,7 @@ while W9 FKs exist, W4 / W5 while the w14c triggers exist, W7 / W9 / W10 while W
 | W3 | `w3d:322`, `w3d0:42`, `w3c:260`, `w3b:269`, `w3a:96` | c: every notification (inbox); b: **the whole audit history** (IRREVERSIBLE) | rows other increments wrote are gone with b | a resets `search_path = public` (re-opens R-1); `AUDIT_AND_NOTIFICATIONS.md` |
 | W2 | `w2f:237`, `w2e:333`, `w2d:225`, `w2c:199`, `w2b:230`, `w2a:270` | f: worker profiles and private contacts (IRREVERSIBLE) | links already made stay as `workers.user_id` | a / c: restore the pre-W2 policies from the D-10 dump, not the local baseline; `ROLE_AND_PROFILE_SECURITY.md` |
 
-All files are `supabase/migrations/2026_10_<dd>_<id>_*.sql`. Use `ls supabase/migrations/*_w14c_*` to find the full name.
+All files are `supabase/migrations/2026_10_<dd>_<id>_*.sql`, except W15 (`2026_11_03_w15a_*.sql`). Use `ls supabase/migrations/*_w14c_*` to find the full name.
 
 ## Trigger-order caveats
 

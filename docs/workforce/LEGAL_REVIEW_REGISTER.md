@@ -1,6 +1,6 @@
-# Legal review register: index (W0-W14; split in W13, D-75)
+# Legal review register: index (W0-W15; split in W13, D-75)
 
-This register lists every legal-review flag raised by the workforce loop in W0-W14
+This register lists every legal-review flag raised by the workforce loop in W0-W15
 (`loop/workforce/increments/*/LEGAL_FLAGS.md` and W5 PLAN section 11). Every item is **OPEN** and is for review by a
 qualified Philippine labor-law professional (data-privacy items also by a qualified data-privacy professional). The loop
 cannot resolve any of them.
@@ -10,12 +10,12 @@ compliance for any feature, and no item here may be read as advice. Production u
 first (`DEPLOYMENT_READINESS.md`). Items are never deleted, merged or closed by the loop; only a human records an outcome.
 
 Layout (D-75). This file is the index: status summary, sign-off table, overlap map, a list naming every item ID, and
-the W13 items in full (section "W13 items" at the end). The text, sources and cross-reference paragraphs of the 153
+the W13 and W15 items in full (sections "W13 items" and "W15 items" at the end). The text, sources and cross-reference paragraphs of the 153
 earlier items are in two parts. W13 moved them there verbatim from the single-file register (153 items before W13, all
-OPEN, no duplicate IDs). Each item has exactly one full row, in one part or, for W13-L1..L11, in this file:
+OPEN, no duplicate IDs). Each item has exactly one full row, in one part or, for W13-L1..L11 and W15-L1..L3, in this file:
 
 - [`legal/REGISTER_PART_1_W0_W8.md`](legal/REGISTER_PART_1_W0_W8.md): W0, W2, W3, W4, W5, W6, W7, W8.
-- [`legal/REGISTER_PART_2_W9_W14.md`](legal/REGISTER_PART_2_W9_W14.md): W9, W10, W11, W14, W12 (in the earlier order). The W13 items are in this file, not in part 2.
+- [`legal/REGISTER_PART_2_W9_W14.md`](legal/REGISTER_PART_2_W9_W14.md): W9, W10, W11, W14, W12 (in the earlier order). The W13 and W15 items are in this file, not in part 2.
 
 Line-number pointers to `LEGAL_REVIEW_REGISTER.md` in earlier REVIEW / VERDICT files are historical (W13 PLAN R6). The
 item IDs are stable; look an ID up in the index below.
@@ -40,9 +40,10 @@ Status key: OPEN = not reviewed. Source paths are relative to the repository roo
 | W14 (platform moderation, oversight reads, admin audit) | 17 | 17 | 2 |
 | W12 (notification wiring and scheduled jobs) | 12 | 12 | 2 |
 | W13 (hardening, final documentation; L8..L11 from the W13 review) | 11 | 11 | index |
-| **Total** | **164** | **164** | Part 1: 81, Part 2: 72, index: 11 |
+| W15 (required-training booking gate keyed on roster link history; copy; L2, L3 from the W15 review) | 3 | 3 | index |
+| **Total** | **167** | **167** | Part 1: 81, Part 2: 72, index: 14 |
 
-W1 raised no legal flag (test harness only). Before W13 the register held 153 items; W13 added 11 (L1..L7 from the plan, L8..L11 from the W13 compliance review). Nothing was removed.
+W1 raised no legal flag (test harness only). Before W13 the register held 153 items; W13 added 11 (L1..L7 from the plan, L8..L11 from the W13 compliance review). W15 added 3 (W15-L1 from the plan, W15-L2 and W15-L3 from the W15 compliance review). Nothing was removed.
 
 ## Human sign-off (blank; the loop fills in nothing)
 
@@ -58,6 +59,8 @@ stays unchecked.
 | Part 2 (W9-W12, W14, 72 items) | Data privacy (RA 10173) | | | | |
 | W13 items in this index (11 items) | Philippine labor law | | | | |
 | W13 items in this index (11 items) | Data privacy (RA 10173) | | | | |
+| W15 items in this index (3 items) | Philippine labor law | | | | |
+| W15 items in this index (W15-L3) | Data privacy (RA 10173) | | | | |
 | Accepted limitations (`LIMITATIONS.md`, W13-L6) | Labor law and data privacy | | | | |
 | Deployment checklist (`DEPLOYMENT_READINESS.md`, W13-L6) | Project owner | | | | |
 
@@ -69,7 +72,7 @@ Items below share a topic. Review them together; each keeps its own row and its 
 |---|---|
 | Meaning of the three-distinct-owner count (informational only, D-3) | W0-L1, W10-L1, W10-L3, W10-L5, W10-L6, W10-L8, W10-L9, W10-L11, W11-L9, W12-L5 |
 | Concurrent engagements across owners | W10-L2 |
-| Free training versus productive work; training fees | W0-L2, W4-L3, W5-L3, W5-L9, W6-L1, W6-L2, W6-L3, W6-L9, W6-L10, W6-L11, W6-L12, W8-L11, W9-L9, W14-L13, W13-L11 |
+| Free training versus productive work; training fees | W0-L2, W4-L3, W5-L3, W5-L9, W6-L1, W6-L2, W6-L3, W6-L9, W6-L10, W6-L11, W6-L12, W8-L11, W9-L9, W14-L13, W13-L11, W15-L1, W15-L2 |
 | Relationship classification | W0-L3, W4-L2, W8-L3, W9-L2, W9-L13 |
 | Acceptance without an e-signature (D-6) | W0-L4, W8-L4, W9-L1, W9-L12 |
 | Certificate naming, validity and disclosure | W0-L5, W4-L5, W5-L5, W5-L11, W7-L1, W7-L2, W7-L4, W7-L5, W7-L9, W7-L11, W7-L15, W7-L16 |
@@ -81,8 +84,8 @@ Items below share a topic. Review them together; each keeps its own row and its 
 | Template safeguards and statutory content | W8-L1, W8-L2, W8-L6, W8-L7, W8-L8, W8-L10, W12-L12 |
 | Termination, notice and trusted repairs | W9-L6, W9-L14, W9-L15, W9-L17, W10-L7, W11-L7, W13-L2, W13-L3 |
 | Contract and certificate expiry notices | W7-L10, W12-L2, W12-L3, W12-L4, W12-L8, W12-L9, W12-L10, W12-L11, W13-L1, W13-L8, W13-L9 |
-| Retention periods (none defined) | W0-L6, W3-L1, W4-L6, W5-L10, W7-L8, W8-L9, W9-L5, W12-L6, W14-L8, W13-L5, W13-L10 |
-| Personal data and access (RA 10173) | W0-L6, W2-L1, W2-L5, W5-L1, W5-L6, W5-L7, W6-L8, W10-L4, W10-L10, W11-L5, W11-L8, W14-L6, W14-L7, W14-L8, W14-L15 |
+| Retention periods (none defined) | W0-L6, W3-L1, W4-L6, W5-L10, W7-L8, W8-L9, W9-L5, W12-L6, W14-L8, W13-L5, W13-L10, W15-L3 |
+| Personal data and access (RA 10173) | W0-L6, W2-L1, W2-L5, W5-L1, W5-L6, W5-L7, W6-L8, W10-L4, W10-L10, W11-L5, W11-L8, W14-L6, W14-L7, W14-L8, W14-L15, W15-L3 |
 | Audit trail: evidence value and who may read it | W3-L3, W14-L9, W13-L4 |
 | Notification channels and content | W3-L2, W12-L1, W12-L7 |
 | Reported problems and moderation process | W11-L4, W11-L5, W11-L6, W11-L10, W11-L12, W11-L13, W11-L14, W11-L15, W14-L3, W14-L4, W14-L5, W14-L12, W14-L14, W14-L16, W14-L17 |
@@ -95,7 +98,7 @@ Items below share a topic. Review them together; each keeps its own row and its 
 ## Every item ID
 
 One line per item ID. "Where" names the file that holds the full row (item text and source): part 1, part 2, or the
-"W13 items" section of this file. The topic is a short label only; the full row is authoritative.
+"W13 items" or "W15 items" section of this file. The topic is a short label only; the full row is authoritative.
 
 | Where | ID | Status | Topic | Human outcome |
 |---|---|---|---|---|
@@ -149,7 +152,7 @@ One line per item ID. "Where" names the file that holds the full row (item text 
 | 1 | W6-L9 | OPEN | Training notice w6_v1 wording | |
 | 1 | W6-L10 | OPEN | Booking gate lifts while no contract exists | |
 | 1 | W6-L11 | OPEN | Owner free text against the free-training rule | |
-| 1 | W6-L12 | OPEN | "Training is not paid work." copy | |
+| 1 | W6-L12 | OPEN | Training vs productive work copy (source updated W15) | |
 | 1 | W6-L13 | OPEN | Fair process for training records | |
 | 1 | W7-L1 | OPEN | Use of the name "certification" | |
 | 1 | W7-L2 | OPEN | Certificate validity and renewal | |
@@ -263,6 +266,9 @@ One line per item ID. "Where" names the file that holds the full row (item text 
 | index | W13-L9 | OPEN | UI labels for a contract past its end date | |
 | index | W13-L10 | OPEN | Production rollback deletes worker records | |
 | index | W13-L11 | OPEN | super_admin assigns a trainee to another owner's booking | |
+| index | W15-L1 | OPEN | Training booking gate scope (link history) and trainee copy | |
+| index | W15-L2 | OPEN | Trainee copy shown to owners and trainers; shop-side text | |
+| index | W15-L3 | OPEN | Roster link history retention and purpose (RA 10173) | |
 
 ## W13 items (hardening, final documentation, legal-review register)
 
@@ -290,3 +296,21 @@ legally ended, that anyone was legally notified, or claim compliance for any fea
 | W13-L9 | OPEN | (REVIEW, compliance) The contract UI described an expired contract as ended ("Ended (end date passed)", "Ended when the end date passed", "The contract reached its end date."). W13 fix cycle 1 (C3, C4) changed the labels to "Past end date" (status), "End date passed (recorded on WashLink)" (ended by) and "The contract's end date has passed (recorded on WashLink)." (relationship reason, worker and owner), and the w13d header now names "Past end date" as the UI label. Review these labels with W13-L1: whether they still read as a statement that the work relationship ended. | `frontend/src/presentation/utilities/workerContractDisplay.ts:23`, `:60`; `frontend/src/presentation/utilities/ownerRelationshipDisplay.ts:53`, `:65`; `supabase/migrations/2026_10_30_w13d_contract_expiry_notice_wording.sql` (header) |
 | W13-L10 | OPEN | (REVIEW, compliance) A production rollback of W9, W7, W6 or W5 irreversibly deletes contracts, sealed versions and acceptance records, issued certificates, training attendance and assessment evidence, and applications. The guide requires an export and the project owner's written approval, but no legal or data-privacy review and no notice to the workers whose records are removed. Review what records must be kept or handed to workers before such a step, and whether a rollback that deletes them may be done at all once the module is in use. | `docs/workforce/ROLLBACK_GUIDE.md` (preconditions, "Per-increment blocks" W5..W9 rows) |
 | W13-L11 | OPEN | (REVIEW, compliance) A super_admin can assign a worker who is in required (free) training with one owner to another owner's customer booking, outside the training booking gate (W6 REVIEW carry-forward, LIMITATIONS "W6 (admin assignment)"). This was never raised as a legal item. `ARCHITECTURE.md` stated without exception that a trainee in required training cannot be assigned to a customer booking (corrected in W13 fix cycle 1). Review whether productive work for any shop during required training must be refused for every role, including WashLink administrators. | w6h `bookings_guard_training_assignment`; `docs/workforce/LIMITATIONS.md` (free-training gaps); `docs/workforce/ARCHITECTURE.md` (key data rules) |
+
+## W15 items (required-training booking gate, training copy, link history)
+
+What W15 does (database local proof only, D-10): migration
+`2026_11_03_w15a_training_gate_roster_link_history.sql` records every account ever linked to a roster row in an
+internal table (`roster_link_history`, no client access) and keys the w6h training booking gate on that history, so an
+owner or worker unlinking the trainee's roster row no longer lets the training shop assign that row (D-79, D-80). No
+unlink is refused. The trainee copy `trainingVersusPaidWorkText` now states only what the gate enforces (D-81). Notes
+(all stay **OPEN**): **W6-L12** (source note added, copy quoted as shipped) -> W15-L1; **W13-L11** (super_admin
+assignment, unchanged) is related, not replaced. W15 review (compliance): **W15-L1** -> W15-L2 (the copy shown to owners
+and trainers); **W3-L1 / W12-L6 / W13-L5** -> W15-L3 (retention). Later increments cross-reference W15-L1 for F-C2 /
+F-C3 instead of adding duplicates.
+
+| ID | Status | Item for review | Source |
+|---|---|---|---|
+| W15-L1 | OPEN | The training booking gate (w6h, W15 D-79) refuses the training shop's assignment of a roster row that is or was linked to a trainee in live required training. It cannot detect a row never linked to the trainee (name-only, or deleted and re-created), links ended before the W3 audit trail, work for other shops, super_admin assignment to another owner's booking (W13-L11) or trusted SQL sessions. Review whether this is enough for the free-training rule and whether the D-81 worker copy describes it fairly (F-C2, F-C3). The worker copy as shipped: "Training is not productive work for customers. While your required training is unfinished, WashLink refuses the training shop's requests to assign you to its customer bookings through a roster entry that is or was linked to your account. WashLink cannot detect a roster entry that was never linked to your account, or work arranged outside WashLink. Terms for any later customer work are agreed separately and are not part of this training." Fix cycle 1 additions (W15 REVIEW SEC-3, SEC-4, C-SF-2): (a) D-80 re-used rows: a later worker on a row once linked to a trainee is refused with the w6h texts, which read as if that worker were in training (owner: "This worker is in required training with your shop ..."; worker on start: "You are in required training with this shop ..."); the workaround is that the new worker unlinks the old row first (`workers_owner_user_unique` allows one row per owner per account), then the owner adds a new row; a leaked or misdirected link code accepted by a trainee taints that row while the training is live. (b) A booking already in progress on a row can be completed by a trainee who links to that row later (completion is never refused). | `supabase/migrations/2026_11_03_w15a_training_gate_roster_link_history.sql`; w6h `roster_worker_in_required_training`; `frontend/src/presentation/utilities/trainingNoticeCopy.ts` (`trainingVersusPaidWorkText`); `docs/workforce/LIMITATIONS.md` (free-training gaps) |
+| W15-L2 | OPEN | (REVIEW, compliance) The D-81 trainee copy is written to the trainee ("your required training", "assign you", "your account"). It is also shown unchanged to owners and to designated trainers: the owner programs panel, the program manage view, the owner program preview and editor preview, and the trainer's "Training I run" panel. In those views it does not describe the reader. It also tells the shop that the gate restrains how it can be avoided ("WashLink cannot detect a roster entry that was never linked to your account"). The owner views no longer carry a rule statement that trainees must not be given customer work; before W15 they read the absolute W6 sentence quoted as "Copy before" in `loop/workforce/increments/W15/LEGAL_FLAGS.md` (not repeated here, so the W15 AC10 grep for it stays empty). Review the owner- and trainer-facing wording, and whether the detection limits should be disclosed to the shop. Fix cycle 1 (C-SF-1): owner and trainer views now show a separate shop-side text, `shopTrainingVersusPaidWorkText`, as shipped: "Training is not productive work for customers. The training shop may not assign trainees to customer bookings while their required training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the trainee's account. Terms for any later customer work are agreed separately and are not part of this training." Trainee views keep the D-81 text. Review this wording too, including whether naming the linked-row scope tells the shop too much. | `frontend/src/presentation/utilities/trainingNoticeCopy.ts` (`trainingVersusPaidWorkText`, `shopTrainingVersusPaidWorkText`); `frontend/src/presentation/components/training/TrainingNotices.tsx` (`audience`); `frontend/src/presentation/components/owner/training/OwnerTrainingProgramsPanel.tsx:112`, `:184`; `.../owner/training/TrainingProgramManageView.tsx:54`; `.../owner/training/TrainingProgramEditorModal.tsx:94` (via `TrainingProgramDetailsView.tsx:51`); `.../worker/training/TrainerProgramsPanel.tsx:83` |
+| W15-L3 | OPEN | (REVIEW, compliance; data privacy) `roster_link_history` keeps a permanent record that an account was once linked to an owner's roster row. The record survives the worker's own unlink and is never shown to the worker. It is deleted only with the roster row or the account, and it has no retention period. Its stated purpose is the training booking gate, but it is kept after the training ends. Review the purpose limitation, the retention, and whether the worker must be told (with W3-L1, W12-L6 and W13-L5). | `supabase/migrations/2026_11_03_w15a_training_gate_roster_link_history.sql:38-52` (table), `:54-84` (recorder trigger), `:86-123` (backfill function and call; after W15 fix cycle 1) |

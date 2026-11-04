@@ -16,7 +16,8 @@ Sources are REVIEW findings (`loop/workforce/increments/W<n>/REVIEW.md`, for exa
   Until a human does the D-10 schema dump and diff (`DEPLOYMENT_READINESS.md`), no result says anything about
   production. Several migrations only NOTICE-log production drift (W2a policies, the w12b categories, the w13a unknown
   audit policies), so a human must read those NOTICEs at apply time.
-- Vitest runs with mocked repositories. The real PostgREST / GoTrue surface is covered only by the 13 local API smokes.
+- Vitest runs with mocked repositories. The real PostgREST / GoTrue surface is covered only by the local API smokes
+  (14 since W15: `run-api-smokes: PASS (14 smokes)`, W15 LOG).
 - Migration file names parse as version `2026` in the Supabase CLI (D-11). Local tests stage 14-digit copies. A human
   decides on renaming before any `db push`.
 
@@ -31,7 +32,8 @@ Sources are REVIEW findings (`loop/workforce/increments/W<n>/REVIEW.md`, for exa
   never observed.
 - **Time windows across real days.** The W11 N2 30-day window, the 14-day escalation window and the 90-day reporting
   window were tested with backdated rows, not over real time.
-- **ROLLBACK blocks.** No `-- ROLLBACK` block of any increment has been executed (`ROLLBACK_GUIDE.md`).
+- **ROLLBACK blocks.** No `-- ROLLBACK` block has been executed, except the w15a block once on the local stack inside
+  a rolled-back transaction (`ROLLBACK_GUIDE.md`).
 - **GoTrue silent-restore branch** of the profile guard (W2 R4): covered by review only.
 - **The w13a NOTICE about unknown audit select policies.** The local stack has no such policy, so the NOTICE never
   fired.
@@ -44,8 +46,18 @@ Sources are REVIEW findings (`loop/workforce/increments/W<n>/REVIEW.md`, for exa
 - In-app notices only. No email, SMS or push (D-61), no Realtime, and polling up to 60 s late (D-62).
 - No e-signature provider. An acceptance is a recorded acceptance, not an electronic signature (D-6, W0-L4).
 - **Free-training gaps.** The database forces the worker fee to 0 and blocks the training owner's customer bookings
-  for a trainee in required training. Three gaps remain:
+  for a trainee in required training, through a roster row that is or was linked to the trainee. Since W15 (D-79) the gate is keyed on the roster row's link history: unlinking
+  the trainee's row, by the owner or the worker, no longer lets the training shop assign or start bookings through
+  that row (F-C2 closed for rows that are or were linked). Gaps that remain:
+  - a roster row never linked to the trainee (name-only, or deleted and re-created, P6) is not detected; links ended
+    before the W3 audit trail are not in the history (W15-L1);
+  - other owners' bookings are outside the gate: the trainee can be assigned work by any other shop (W15-L1);
+  - trusted SQL sessions bypass the gate (W15-L1);
   - a super_admin can still assign that trainee to another owner's booking (W13-L11);
+  - a booking already in progress on a row can be completed by a trainee who links to that row later (W15-L1);
+  - re-used rows (D-80) stay gated for a later worker, who gets a w6h message that reads as if that worker were in
+    training; the new worker must unlink the old row first (`workers_owner_user_unique`), then the owner adds a new
+    row. A leaked link code accepted by a trainee taints that row (W15-L1, `TRAINING.md`);
   - once training ends, fails or the shop is removed, paid work can be assigned without any contract (W6-L10);
   - owner-typed training terms can describe a fee, bond or deduction, and nothing flags it (W6-L11).
 
@@ -131,9 +143,9 @@ Sources are REVIEW findings (`loop/workforce/increments/W<n>/REVIEW.md`, for exa
 
 ## Open legal topics
 
-All 164 register items are OPEN (`LEGAL_REVIEW_REGISTER.md`; overlap map there). Main topics: the meaning of the
-three-owner count (W0-L1, W10-L1), free training versus productive work (W0-L2, W6-L1), classification (W0-L3,
+All 167 register items are OPEN (`LEGAL_REVIEW_REGISTER.md`; overlap map there). Main topics: the meaning of the
+three-owner count (W0-L1, W10-L1), free training versus productive work (W0-L2, W6-L1, W15-L1, W15-L2), classification (W0-L3,
 W9-L2, W9-L13), acceptance without an e-signature (W0-L4, W9-L1), certificate naming and fairness (W7-L1, W7-L3,
 W11-L11), owner free text and waivers (W4-L8, W9-L16), termination and notice (W9-L6, W13-L2, W13-L3), expiry wording
-(W12-L9, W13-L1), retention (W3-L1, W12-L6, W13-L5), personal data (RA 10173), audit access (W13-L4), and human
+(W12-L9, W13-L1), retention (W3-L1, W12-L6, W13-L5, W15-L3), personal data (RA 10173), audit access (W13-L4), and human
 sign-off of this file (W13-L6).

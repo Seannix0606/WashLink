@@ -14,9 +14,16 @@ The repo does not know the production schema. All loop results are local only (`
 
 - [ ] A human takes a schema-only dump of the production project themselves (read-only, outside the loop) and keeps
       it as a restricted file.
-- [ ] The dump is diffed against a clean local reset (96 staged migrations). Every row of the D-10 checklist in
-      `ROLE_AND_PROFILE_SECURITY.md` (rows 1-56) is answered and recorded: W2 rows 1-16, W3 17-20, W4 21-23,
-      W5 24-26, W6 27-32, W7 33-35, W8 36-37, W9 38-39, W10 40-42, W11 43-45, W14 46-48, W12 49-52, W13 53-56.
+- [ ] The dump is diffed against a clean local reset (97 staged migrations). Every row of the D-10 checklist in
+      `ROLE_AND_PROFILE_SECURITY.md` (rows 1-57) is answered and recorded: W2 rows 1-16, W3 17-20, W4 21-23,
+      W5 24-26, W6 27-32, W7 33-35, W8 36-37, W9 38-39, W10 40-42, W11 43-45, W14 46-48, W12 49-52, W13 53-56,
+      W15 57.
+- [ ] **Triggers on `public.workers` (row 57, W15 R4 / SEC-8).** List every production trigger on `public.workers`
+      (BEFORE and AFTER, with function bodies). Record any trigger the repo does not create, in particular a BEFORE
+      trigger that changes or nulls `user_id`, and decide with the project owner before applying W15. The w15a AFTER
+      trigger `workers_record_link_history` writes only `roster_link_history` and skips no-op updates and orphaned
+      `user_id` values (SEC-1); `backfill_roster_link_history()` (private, not client- or service_role-executable)
+      reports its row counts (current links; `roster.linked` / `roster.unlinked` audit rows) in a NOTICE.
 - [ ] **Trigger name order (rows 46-48).** On `public.job_openings` the BEFORE UPDATE order is exactly
       `job_openings_guard_moderation` < `job_openings_guard_write_update` < `job_openings_moderation_hold` <
       `job_openings_normalize`, with no production trigger sorting between them. On `public.shops`,
@@ -72,7 +79,7 @@ The repo does not know the production schema. All loop results are local only (`
 ## 4. Legal and privacy review
 
 - [ ] A qualified Philippine labor-law professional reviews every item of the legal register
-      (`LEGAL_REVIEW_REGISTER.md`, 164 items, all OPEN) and records an outcome per item and a signed row in its
+      (`LEGAL_REVIEW_REGISTER.md`, 167 items, all OPEN) and records an outcome per item and a signed row in its
       "Human sign-off" table.
 - [ ] A qualified data-privacy professional (RA 10173) reviews the data-privacy items: retention (W13-L5), personal
       data and access (see the overlap map), audit access (W13-L4), and the privacy notice at collection (W2-L1).
@@ -105,7 +112,8 @@ The repo does not know the production schema. All loop results are local only (`
       suite is re-run from a clean reset: `run-db-tests.mjs`, then `run-api-smokes.mjs` (w13 last), Vitest, lint,
       build and pytest.
 - [ ] A human reviews the `feature/workforce` diff against `main`, including every migration and every `-- ROLLBACK`
-      block. The blocks have never been executed.
+      block. The blocks have never been executed, except the w15a block once on the local stack inside a
+      rolled-back transaction.
 - [ ] A human with authority approves the merge of `feature/workforce` into `main` and performs it.
 - [ ] A human with authority approves applying the migrations to production after gates 1-5, and applies them.
 - [ ] A human with authority approves the frontend deploy (Render) and performs it.

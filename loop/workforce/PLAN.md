@@ -20,6 +20,8 @@ and must leave the existing booking, pricing, verification and rating flows work
 | W12 | Notification wiring for all events | I | W11, W14 | no-duplicate, no-private-leak |
 | W13 | Hardening, docs, rollback guide, legal-review register | K | all | full J1–J18 green |
 | W14 | Platform moderation, oversight reads & admin audit (super_admin) | A, B, H, I | W11 | J2, J3, J17, J18 + moderation / audit tests |
+| W15 | Close the required-training booking-gate bypass (unlink path) and fix the trainee notice | D | W13 | J7, J8, J16, J18 + probe replay |
+| W16 | Complete LIMITATIONS and the legal register; final docs nits | K | W15 | K10 evidence |
 
 ## Increment details
 
@@ -117,6 +119,11 @@ and must leave the existing booking, pricing, verification and rating flows work
 - Audited super_admin relationship reads outside disputes (W10, D-38).
 - Queue of approved shops with no recorded reviewer, re-review from it, runbook (D-10, W4).
 - Admin take-over of overdue / stranded shop review requests, only if a human changes D-44.
+
+### W15, W16 — from the failed final verification (2026-11-03, `FINAL_VERDICT.md`)
+- W15: refuse the unlink → assign path (owner unlinks a linked trainee mid required training, then assigns the roster row to a customer booking), in a new migration (no edit to w2d / w6h); pgTAP replaying the verifier probe; accurate trainee notice copy; register item for the gate's limits; W6-L12 source update.
+- W16: LIMITATIONS.md free-training paragraph corrected, plus F-C1 (core clause text changeable by a super_admin), F-C2 remainder (name-only rows), F-C7 (no interview feature), F-S2 (shop deletion cascade + decision); register adds F-C1 / F-C2 / F-C3 and any W15 item (all OPEN); DEPLOYMENT_READINESS trigger-order gate covers bookings and profiles; ACCEPTANCE_TESTS K9 nit; STATE.md final-suite output.
+- Then re-run the full-diff security and compliance review and the final verification.
 
 ### W11–W13
 - Dashboards prioritizing next action; admin queues only for `super_admin`.

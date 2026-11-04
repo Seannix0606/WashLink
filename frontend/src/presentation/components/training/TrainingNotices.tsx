@@ -1,7 +1,12 @@
 import type { ReactElement, ReactNode } from 'react'
 import { useId } from 'react'
 import { GraduationCap, Info } from 'lucide-react'
-import { trainingNoticeText, trainingNoticeTitle, trainingVersusPaidWorkText } from '../../utilities/trainingNoticeCopy'
+import {
+  shopTrainingVersusPaidWorkText,
+  trainingNoticeText,
+  trainingNoticeTitle,
+  trainingVersusPaidWorkText,
+} from '../../utilities/trainingNoticeCopy'
 
 interface FreeTrainingNoticeProps {
   /** Optional content under the notice, such as the acknowledgement checkbox. */
@@ -26,12 +31,19 @@ export function FreeTrainingNotice({ children }: FreeTrainingNoticeProps): React
   )
 }
 
+/** Who reads the note: the trainee (D-81 text) or the shop side, owners and designated trainers (W15-L2). */
+export type TrainingNoteAudience = 'trainee' | 'shop'
+
+interface TrainingVersusPaidWorkNoteProps {
+  readonly audience?: TrainingNoteAudience
+}
+
 /** The training-vs-paid-work distinction, shown on every training view. */
-export function TrainingVersusPaidWorkNote(): ReactElement {
+export function TrainingVersusPaidWorkNote({ audience = 'trainee' }: TrainingVersusPaidWorkNoteProps): ReactElement {
   return (
     <p role="note" className="flex items-start gap-2 text-xs text-[var(--color-ink-500)]">
       <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-      {trainingVersusPaidWorkText}
+      {audience === 'shop' ? shopTrainingVersusPaidWorkText : trainingVersusPaidWorkText}
     </p>
   )
 }

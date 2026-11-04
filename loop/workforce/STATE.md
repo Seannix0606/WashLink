@@ -1,7 +1,7 @@
 # Loop State
 
 Loop status: **RUNNING** (continuous mode, resumed 2026-11-03 after Docker Desktop restart; W13 fix cycle 1 DB checks pending)
-Next increment: **none** (W13 passed 2026-11-03; all W0–W14 passed). Next step: final whole-branch verification → `FINAL_VERDICT.md`
+Next increment: **W16** (W15 passed 2026-11-04; then re-run the full-diff review and final verification)
 Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 
 | ID | Status | Branch | Fix cycles | Checks (actual) | Verifier |
@@ -21,6 +21,8 @@ Integration branch: `feature/workforce` (created from `main` at `ec6570a`)
 | W12 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 282/282 · pytest 4 · stager 19/19 · pgTAP 3051 PASS (92 migrations, 99 files) · smoke W2–W12, W14 0 failed (w12 22) | PASS (increments/W12/VERDICT.md) |
 | W13 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 299/299 · pytest 4 · stager 19/19 · pgTAP 3198 PASS (96 migrations, 105 files) · run-api-smokes PASS (13 smokes, 0 failed; w13 17) | PASS (increments/W13/VERDICT.md) |
 | W14 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 263/263 · pytest 4 · stager 19/19 · pgTAP 2876 PASS (87 migrations, 91 files) · smoke W2–W11, W14 0 failed (w14 33) | PASS (increments/W14/VERDICT.md) |
+| W15 | passed | feature/workforce | 1 | lint 0 · build 0 · vitest 306/306 · pytest 4 · stager 19/19 · pgTAP 3280 PASS (97 migrations, 108 files) · run-api-smokes PASS (14 smokes; w15 17) · probe 23514 | PASS (increments/W15/VERDICT.md) |
+| W16 | planning | feature/workforce | 0 | — | — |
 
 Statuses: pending → planning → building → testing → reviewing → verifying → passed | blocked (retried after each later pass)
 
@@ -43,4 +45,5 @@ Not run. Requires all increments passed, then whole-branch verifier → `FINAL_V
 - W14: `increments/W14/REVIEW.md`. BLOCKING B1 (owner activity revealed report count / categories) fixed in fix cycle 1 and confirmed by security re-review and verifier; also closed N2, N4–N9, S1, S3–S5. Carry-forwards to W13: N1 (drop W3 raw super_admin audit select, route through `admin_workforce_audit_log`), N3 (admin moderation queue paging). Production must keep the w14c / w14f trigger name order (R1, D-10 rows 46–48). Legal W14-L1…L17 OPEN. D-50…D-58 ADOPTED-DEFAULT.
 - W12: `increments/W12/REVIEW.md`, no BLOCKING. Fix cycle 1 closed N2–N4, N6–N9, S1, C1, C3–C5. Carry-forwards to W13: C2 (W9 contract expiry notice says "has expired" as a legal fact; needs a reviewed W9 producer change, W12-L9); `j13_w12_scheduled_jobs` reuses one test name for 3 assertions; w12 smoke is narrower than planned (no contract send/accept/expire run, no second-run check, no certification notice run; covered by pgTAP and verifier's rolled-back runs). Cron jobs are NOT registered anywhere: production registration is a human step (runbook). Row-lock contention and a real cron firing never tested. Legal W12-L1…L12 OPEN. D-59…D-69 ADOPTED-DEFAULT.
 - W13: `increments/W13/REVIEW.md`, no BLOCKING. Fix cycle 1 closed S1–S7, N1–N4, N6, C1–C8 (restrictive audit policy, md5-pinned W9 body, stronger J17 roll-up, S6 pre-workforce revokes, rollback no longer re-grants, expiry / termination copy). Interrupted once by a Docker Desktop crash (2026-10-31, hard stop), resumed 2026-11-03. Legal W13-L1…L11 OPEN; register 164 items OPEN. D-70…D-78 ADOPTED-DEFAULT. Accepted gaps in `docs/workforce/LIMITATIONS.md`; human gates in `docs/workforce/DEPLOYMENT_READINESS.md` (32, unticked).
+- W15: `increments/W15/REVIEW.md`, no BLOCKING. F-C2 unlink bypass closed (P1-P5). SEC-5 REPRODUCED by the verifier (`increments/W15/VERDICT.md`): owner deleting the training shop (progress `shop_removed`) lifts the gate while the enrollment stays accepted; recording a failed assessment is the sibling path (code reading). Routed to W16 to fix or decide, not only document. Legal W15-L1…L3 OPEN; register 167 items OPEN.
 - E1/E2 fixes are verified on the local baseline only; production parity requires the D-10 checklist (`docs/workforce/ROLE_AND_PROFILE_SECURITY.md`).

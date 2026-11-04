@@ -1,10 +1,10 @@
--- W1..W14 migration replay: objects from each committed migration exist after
--- baseline + 94 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12, 4 W13) replayed
--- in order, with the owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W14 AC2; W13 AC2; 96 staged
--- migrations in total).
+-- W1..W15 migration replay: objects from each committed migration exist after
+-- baseline + 95 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12, 4 W13, 1 W15)
+-- replayed in order, with the owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W14 AC2; W13 AC2;
+-- W15 AC2; 97 staged migrations in total).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(27);
+select plan(28);
 
 -- 2026_04_17
 select has_table('public', 'shops', 'replay_shops_created');
@@ -84,7 +84,7 @@ select results_eq(
             ('20261029000011'), ('20261029000012'), ('20261029000013'), ('20261029000014'), ('20261029000015'),
             ('20261029000016'), ('20261029000017'), ('20261029000018'), ('20261030000001'), ('20261030000002'),
             ('20261030000003'), ('20261030000004'), ('20261030000005'), ('20261030000006'),
-            ('20261030000007'), ('20261030000008'), ('20261030000009') $$,
+            ('20261030000007'), ('20261030000008'), ('20261030000009'), ('20261103000001') $$,
   'replay_schema_migrations_has_baseline_w2_to_w14_w12_and_w13'
 );
 
@@ -241,6 +241,15 @@ select is((select count(*)::int from pg_class c join pg_namespace n on n.oid = c
 select is((select string_agg(policyname || ':' || coalesce(qual, ''), ',' order by policyname) from pg_policies
            where schemaname = 'public' and tablename = 'workforce_audit_events' and cmd in ('SELECT', 'ALL')),
           'wae_no_client_select:false', 'replay_w13_audit_table_has_no_client_select_policy');
+-- W15 (D-79): the private link-history table (RLS on, no policies), its AFTER trigger on workers, and the backfill
+-- (every currently linked roster row has a history row).
+select is((select c.relrowsecurity::text || ',' || (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = 'roster_link_history')
+                  || ',' || (select count(*) from pg_trigger g where g.tgrelid = 'public.workers'::regclass and g.tgname = 'workers_record_link_history'
+                             and not g.tgisinternal)
+                  || ',' || (select count(*) from public.workers w where w.user_id is not null and not exists (
+                               select 1 from public.roster_link_history h where h.worker_row_id = w.id and h.user_id = w.user_id))
+           from pg_class c where c.oid = to_regclass('public.roster_link_history')),
+          'true,0,1,0', 'replay_w15_link_history_table_trigger_and_backfill_present');
 -- No public SECURITY DEFINER function runs without a pinned search_path.
 select is(
   (

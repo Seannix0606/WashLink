@@ -20,13 +20,13 @@ npx supabase db reset --local --workdir .local-supabase-test
 npx supabase test db  --local --workdir .local-supabase-test
 ```
 
-Expected (after the W13 DB build): the reset applies 96 migrations (baseline `00000000000000`, the 2026_04_17 copy, owner-policies baseline
+Expected (after the W15 DB build): the reset applies 97 migrations (96 after W13; baseline `00000000000000`, the 2026_04_17 copy, owner-policies baseline
 `20260417000002`, the other 4 pre-W2 copies, then per increment, each starting with its preflight where it has one: W2 `20261024000001..06`, W3
 `20261024000007..11` (w3a, w3b, w3c, w3d0 preflight, w3d), W4 `20261024000012..15`, W5 `20261025000001..05`, W6 `20261025000006..14`, W7
 `20261026000001..08`, W8 `20261026000009..16`, W9 `20261026000017..26`, W10 `20261028000001..07`, W11 `20261029000001..09`, W14 `20261029000010..18`:
-w14a preflight, w14b..w14i; W12 `20261030000001..05`: w12a preflight, w12b..w12e; W13 `20261030000006..09`: w13a preflight, w13b..w13d) and seeds the eight helper files in order (`test_helpers.sql`, `test_helpers_certifications.sql`,
+w14a preflight, w14b..w14i; W12 `20261030000001..05`: w12a preflight, w12b..w12e; W13 `20261030000006..09`: w13a preflight, w13b..w13d; W15 `20261103000001`: w15a, preflight inside the file) and seeds the eight helper files in order (`test_helpers.sql`, `test_helpers_certifications.sql`,
 `test_helpers_contract_templates.sql`, `test_helpers_worker_contracts.sql`, `test_helpers_owner_relationships.sql`, `test_helpers_oversight.sql`,
-`test_helpers_moderation.sql`, then `test_helpers_scheduling.sql`); `test db` ran 105 files / 3198 tests `Result: PASS` after W13 fix cycle 1 (2026-11-03, W13 LOG "FIX CYCLE 1 (DB) runs"; 105 / 3185 after the W13 DB build and the D-78 addendum; 99 / 3051 after W12 fix cycle 1; 98 / 3028 after the W12 DB build; 91 / 2876 after W14 fix cycle 1; 90 / 2850 after the W14 DB build; 82 / 2622 after W11 fix cycle 1; 81 / 2589 after the W11 DB build; 72 /
+`test_helpers_moderation.sql`, then `test_helpers_scheduling.sql`); `test db` ran 108 files / 3280 tests `Result: PASS` after W15 fix cycle 1 (2026-11-03, W15 LOG "FIX CYCLE 1 (DB)"; 105 / 3198 after W13 fix cycle 1, W13 LOG "FIX CYCLE 1 (DB) runs"; 105 / 3185 after the W13 DB build and the D-78 addendum; 99 / 3051 after W12 fix cycle 1; 98 / 3028 after the W12 DB build; 91 / 2876 after W14 fix cycle 1; 90 / 2850 after the W14 DB build; 82 / 2622 after W11 fix cycle 1; 81 / 2589 after the W11 DB build; 72 /
 2347 after the W10 DB build; 63 / 2178 after W9; 54 / 1947 before W9; 47 / 1713 before W8; 38 / 1409 before W7) and ends with `Result: PASS`. There
 are 0 TODO blocks: any `Failed (TODO)` or `TODO passed` line is a finding.
 
@@ -110,12 +110,12 @@ supabase/tests/database/*.sql` is 0 for every file. The j17 assertions are uncha
 direct UPDATE stays rejected: `j17_owner_cannot_directly_resubmit_changes_requested_shop`). The baseline still reproduces the weaknesses on purpose,
 so those assertions only pass because the W2 migrations fix them. Any new `todo_start(` is a FAIL unless a plan allows it.
 
-## pgTAP files (105 files; 3198 assertions after W13 fix cycle 1, `Result: PASS`)
+## pgTAP files (108 files; 3280 assertions after W15 fix cycle 1, `Result: PASS`)
 
 | File | Plan | Covers |
 |---|---|---|
 | `000_harness_sanity.test.sql` | 9 | helpers, identity switching |
-| `001_migration_replay.test.sql` | 27 | replay of 96 migrations (`replay_schema_migrations_has_baseline_w2_to_w14_w12_and_w13`; W13 renamed it from `..._w2_to_w14_and_w12`, D-76), W2 objects, W2..W10 RLS on, `replay_w11_review_and_dispute_tables_rls_enabled`, `replay_w14_moderation_tables_rls_enabled`, `replay_w12_registry_and_job_state_rls_enabled`, definer search_path, `replay_w13_audit_table_has_no_client_select_policy` |
+| `001_migration_replay.test.sql` | 28 (27 before W15) | replay of 97 migrations (W15 added `20261103000001` and `replay_w15_link_history_table_trigger_and_backfill_present`; `replay_schema_migrations_has_baseline_w2_to_w14_w12_and_w13`; W13 renamed it from `..._w2_to_w14_and_w12`, D-76), W2 objects, W2..W10 RLS on, `replay_w11_review_and_dispute_tables_rls_enabled`, `replay_w14_moderation_tables_rls_enabled`, `replay_w12_registry_and_job_state_rls_enabled`, definer search_path, `replay_w13_audit_table_has_no_client_select_policy` |
 | `j17_authorization_harness.test.sql` | 40 | W1 J17 + former placeholders, S4 counterparties, S5 |
 | `j17_w2_fix1_fk_cascades.test.sql` | 31 | S-B1: `on delete set null` cascades (customer, linked worker account, reviewing admin, owner, roster rows in any booking status) pass every guard and change only the FK column |
 | `j17_w2_fix1_review_and_hardening.test.sql` | 42 | C-B1 review stamping, stricter gate, D-10 audit query; fail-closed trusted session; booking/shop/document hardening; peppered, locked, pruned link-code attempts; realtime exclusion; no availability default |
@@ -206,11 +206,14 @@ so those assertions only pass because the W2 migrations fix them. Any new `todo_
 | `j16_w12_scheduler_locking.test.sql` | 18 | dblink second session: pair try-lock collides with the w10e key both ways (same key text), busy contract skipped then expired, busy pair skipped, busy job `already_running` writes nothing, terminate and decline succeed after runs (J16) |
 | `j17_w12_scheduler_authorization.test.sql` | 25 | both tables RLS on with no client privilege, internal functions closed to every client role, admin read super_admin only with no ids or names, `pg_temp` pinned, no migration created pg_cron or a cron job, state guard refuses direct writes (runbook change only; the runner flag needs a trusted session, fix cycle 1 N2) |
 | `j18_w12_flows.test.sql` | 16 | W3..W14 flows write the same notices as before W12, bookings / quotes / ratings / verification unchanged, `mark_notifications_read` unchanged, raw W7 / W9 / W10 functions internal and still accept a future test clock |
-| `j17_database_constraints_and_authorization_prevent_unauthorized_access.test.sql` | 37 (29 before fix cycle 1) | W13 J17 roll-up: explicit list of 43 workforce tables + 2 views equals the catalogue, RLS on every table, client write grants only on the 3 justified tables, no service_role privilege (D-78) and no client sequence grant, no unconditional client policy, definer `pg_temp` last, anon executes no workforce function, nothing in Realtime, raw audit unreadable, private contract tables unreadable by non-parties, no `set_config` wrapper; fix cycle 1: every public sequence, column-level grants, TRUNCATE / REFERENCES / TRIGGER on every public table, pepper / `washlink_private` for service_role, guard triggers on the three client-writable tables pinned, N1 renames |
-| `j18_existing_booking_pricing_verification_and_rating_workflows_still_work.test.sql` | 25 | W13 J18 roll-up after all 96 migrations with workforce data present: server quote, owner assigns a contracted roster worker, completion, one rating, own pricing only, verification submit / review / resubmit, trainee still not assignable, no workforce columns on booking tables |
+| `j17_database_constraints_and_authorization_prevent_unauthorized_access.test.sql` | 37 (29 before fix cycle 1) | W13 J17 roll-up: explicit list of 44 workforce tables (W15 added `roster_link_history`) + 2 views equals the catalogue, RLS on every table, client write grants only on the 3 justified tables, no service_role privilege (D-78) and no client sequence grant, no unconditional client policy, definer `pg_temp` last, anon executes no workforce function, nothing in Realtime, raw audit unreadable, private contract tables unreadable by non-parties, no `set_config` wrapper; fix cycle 1: every public sequence, column-level grants, TRUNCATE / REFERENCES / TRIGGER on every public table, pepper / `washlink_private` for service_role, guard triggers on the three client-writable tables pinned, N1 renames |
+| `j18_existing_booking_pricing_verification_and_rating_workflows_still_work.test.sql` | 27 (25 before W15, 26 at the W15 DB build) | W13 J18 roll-up after all 97 migrations (W15 added `j18_trainee_not_assignable_after_owner_unlink`) with workforce data present: server quote, owner assigns a contracted roster worker, completion, one rating, own pricing only, verification submit / review / resubmit, trainee still not assignable, no workforce columns on booking tables |
 | `j17_w13_admin_audit_reads.test.sql` | 25 (21 before fix cycle 1) | D-70: super_admin raw select 0 rows, review-log view 42501 for every client and readable by trusted SQL, `admin_workforce_audit_log` returns rows and records the search, `my_workforce_activity` unchanged, deny-all select policies, rows still append-only; `w13_audit_select_deny_all_is_restrictive` (S1: a planted permissive policy still yields 0 rows) |
 | `j2_w13_moderation_queue_paging.test.sql` | 27 | D-71: oldest first, default 50, keyset walk without gaps or duplicates, `total_count`, newest case reachable, rows equal the w14e queue, limit and cursor 22023, super_admin only, no statement / reporter / note columns |
 | `j15_w13_contract_expiry_notice_wording.test.sql` | 20 (19 before fix cycle 1) | D-72: worker and owner bodies use the record wording, no body says "has expired", title / category / key unchanged, other contract notice bodies unchanged, one notice per party, expired still stops counting, function comment records W13; owner caveat (C2); md5 of the w9j and live w13d bodies (S4) |
+| `j7_w15_training_gate_survives_roster_unlink.test.sql` | 51 (45 before fix cycle 1) | W15 D-79 / D-80: probe replay (owner unlink then assign 23514), worker self-unlink, link before training, re-linked row, pre-assigned booking cannot start (API-style updates by super_admin and the former worker match 0 rows under RLS; the start check is run in an RLS-bypassing session with a super_admin JWT: 23514), unassign allowed, gate lifts, other owner unaffected, never-linked row not detected (W15-L1 pin), history rows, no-op `user_id` update records nothing (SEC-1), backfill from `roster.linked` and `roster.unlinked` audit rows (SEC-7), RLS / no client access, cascades, functions not executable, trusted bypass |
+| `j16_w15_worker_unlink_and_decline_still_succeed.test.sql` | 12 | J16: worker and owner unlink, withdraw after unlink, decline with a history row, re-link after unlink |
+| `j18_w15_flows.test.sql` | 16 | non-trainee roster add / edit / unlink, assign / reassign / unassign, start and complete, row delete unassigns, customer booking insert unchanged (an insert carrying a worker is refused 42501 by the w2c guard) |
 | `j15_w13_trusted_contract_end_runbook.test.sql` | 12 | W9-S1 (accepted): raw trusted terminate leaves an open amendment; the runbook closes it, then terminates; notifies nobody, audited as trusted_session; worker decline and terminate unaffected (J16) |
 
 ## Safety rules
@@ -255,12 +258,13 @@ cd frontend && npm run test:watch
 ## API smokes (local stack only)
 
 Run after `run-db-tests.mjs`, before stopping the stack, with one command (W13, D-77): `node scripts/supabase-test/run-api-smokes.mjs`.
-It runs `w2-` .. `w11-`, `w14-`, `w12-`, then `w13-api-smoke.mjs` in that required order (w13 must be last: it runs the real
+It runs `w2-` .. `w11-`, `w14-`, `w12-`, `w15-`, then `w13-api-smoke.mjs` in that required order (14 smokes since W15, D-82) (w13 must be last: it runs the real
 `worker_contract_expiry` job, which commits, so re-running w12 alone afterwards on the same stack fails until a fresh reset), prints each
 NOT OK line and tail line, and stops at the first non-zero exit. It runs no Supabase CLI command and refuses remote arguments and
 environment variables. Since W13 every super_admin audit read in the smokes goes through `smoke-admin-audit-log.mjs` (`adminAuditRows`,
 the audited `admin_workforce_audit_log`; D-70; since fix cycle 1 (N4) it pages with `p_before_id` until a short page, at most 50 pages, then fails loudly). After W13 fix cycle 1 (2026-11-03, same counts as at the W13 DB step) every smoke ended `0 failed`: w2 48, w3 33,
-w4 43, w5 39, w6 40, w7 38, w8 30, w9 34, w10 39, w11 36, w14 33, w12 22, w13 17; `run-api-smokes: PASS (13 smokes)`.
+w4 43, w5 39, w6 40, w7 38, w8 30, w9 34, w10 39, w11 36, w14 33, w12 22, w13 17; `run-api-smokes: PASS (13 smokes)`. With the w15 smoke
+the W15 run ended `w15-api-smoke: 17 passed, 0 failed`, `w13-api-smoke: 17 passed, 0 failed`, `run-api-smokes: PASS (14 smokes)`.
 Shared safety rules: loopback API URL only (a non-loopback URL is refused); URL and keys come from `supabase status -o env --workdir
 .local-supabase-test`, stay in memory and are never printed; no `.env`; synthetic `@local.test` users (`smoke<n>-*` from W7) are deleted and the
 deletion is asserted. TEST-ONLY time shifts (W6, W7, W11) run through `docker exec supabase_db_<staged project_id> psql` as a trusted local session
@@ -324,3 +328,7 @@ emails are interpolated). Each must end `0 failed`; counts are the passed checks
   logs the search; queue page walks three cases two per page, `total_count`, 0 rows for owner and worker, denied for anon and service_role;
   a real contract through the expiry runner gives one notice per party with the D-72 wording, no notice body says "has expired", and a second
   runner call creates nothing; `set_config` not exposed; the `smoke13-*` users are deleted and the deletion asserted. Run last (see above).
+- **W15** (`w15-api-smoke.mjs`, PLAN section 6; 17 checks at the W15 test step; TEST-ONLY `docker exec` psql fixtures through `test_helpers`):
+  owner unlink of a trainee row succeeds, assign afterwards 23514, booking still unassigned; worker self-unlink succeeds, assign 23514; withdraw
+  then assign succeeds; a non-trainee row assigns; `roster_link_history` not readable or writable by anon, owner, worker or service_role; the
+  gate functions not callable; `deleteUser` removes the history rows. Runs before w13 (D-82).
