@@ -53,13 +53,13 @@ describe.skipIf(!isW13DocsStepStarted)('Workforce docs (W13)', () => {
     expect(rollbackGuide).toContain('unregister_workforce_jobs.sql')
     expect(rollbackGuide).toMatch(/\bD-10\b/)
     expect(rollbackGuide).toMatch(/\bD-11\b/)
-    // One line gives the full reverse order: W13, W12, W14, W11, W10, W9 ... W2.
-    const reverseOrder = ['W13', 'W12', 'W14', 'W11', 'W10', 'W9', 'W8', 'W7', 'W6', 'W5', 'W4', 'W3', 'W2']
+    // One line gives the full reverse order: W16, W15, W13, W12, W14, W11, W10, W9 ... W2.
+    const reverseOrder = ['W16', 'W15', 'W13', 'W12', 'W14', 'W11', 'W10', 'W9', 'W8', 'W7', 'W6', 'W5', 'W4', 'W3', 'W2']
     const hasOrderLine = rollbackGuide.split('\n').some((line) => {
       const positions = reverseOrder.map((increment) => line.search(new RegExp(`\\b${increment}\\b`)))
       return positions.every((position, index) => position >= 0 && (index === 0 || position > (positions[index - 1] ?? -1)))
     })
-    expect(hasOrderLine, 'ROLLBACK_GUIDE.md has one line with the order W13 -> W12 -> W14 -> W11 ... -> W2').toBe(true)
+    expect(hasOrderLine, 'ROLLBACK_GUIDE.md has one line with the order W16 -> W15 -> W13 -> W12 -> W14 -> W11 ... -> W2').toBe(true)
 
     const limitations = readDoc(join(docsDirectory, 'LIMITATIONS.md'))
     const compactLimitations = compact(limitations)
@@ -121,20 +121,24 @@ describe.skipIf(!isW13DocsStepStarted)('Workforce docs (W13)', () => {
     const partRows = partTexts.map(registerRows)
     const everyRow = [...indexRows, ...partRows.flat()]
 
-    // 153 earlier items plus W13-L1..L11 (L8..L11 from the W13 compliance review) and W15-L1..L3 (L2, L3 from the W15 compliance review), each a row exactly once across the index and the two parts.
+    // 153 earlier items plus W13-L1..L11 (L8..L11 from the W13 compliance review) , W15-L1..L3 (L2, L3 from the W15 compliance review) and W16-L1..L7 (L7 from the W16 compliance review), each a row exactly once across the index and the two parts.
     const rowIds = everyRow.map((row) => row.id)
     expect(new Set(rowIds).size).toBe(rowIds.length)
-    expect(rowIds).toHaveLength(167)
+    expect(rowIds).toHaveLength(174)
     for (const w15ItemId of ['W15-L1', 'W15-L2', 'W15-L3']) {
       expect(rowIds).toContain(w15ItemId)
     }
     for (let itemNumber = 1; itemNumber <= 11; itemNumber += 1) {
       expect(rowIds).toContain(`W13-L${String(itemNumber)}`)
     }
-    // Earlier items sit in exactly one part (W13 and W15 rows live in the index); nothing is closed by the loop.
+    for (let itemNumber = 1; itemNumber <= 7; itemNumber += 1) {
+      expect(rowIds).toContain(`W16-L${String(itemNumber)}`)
+    }
+    // Earlier items sit in exactly one part (W13, W15 and W16 rows live in the index); nothing is closed by the loop.
     for (const row of [...partRows.flat()]) {
       expect(row.id.startsWith('W13-'), row.id).toBe(false)
       expect(row.id.startsWith('W15-'), row.id).toBe(false)
+      expect(row.id.startsWith('W16-'), row.id).toBe(false)
     }
     for (const row of everyRow) {
       expect(row.status, row.id).toBe('OPEN')

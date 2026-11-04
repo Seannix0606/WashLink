@@ -9,6 +9,7 @@ import type { TrainingSessionKind } from '../../domain/models/TrainingSession'
 import type { TrainingProgramOpenReadiness } from '../../domain/utilities/trainingProgramLifecycle'
 import type { BadgeTone } from '../design/ui/Badge'
 import { notSpecifiedByShopText } from './jobOpeningDisplay'
+import { failedAfterShopRemovedExplanation, leaveTrainingLocationText } from './trainingNoticeCopy'
 
 export interface TrainingStatusDisplay {
   readonly displayLabel: string
@@ -148,5 +149,18 @@ export function describeOpenReadiness(readiness: TrainingProgramOpenReadiness): 
   }
 }
 
-export const shopRemovedExplanation =
-  'This shop is no longer on WashLink. Your training records are kept for you; nobody can add new records. You can still leave unfinished training.'
+export const shopRemovedExplanation = `This shop is no longer on WashLink. Your training records are kept for you; nobody can add new records. This training stays open until you leave it. While it stays open, WashLink refuses this owner's requests to assign you to their customer bookings through a linked roster entry. ${leaveTrainingLocationText}`
+
+/** W16 D-85: shown to the worker when the server reports progress `failed`. */
+export const failedTrainingExplanation = `Your assessment is recorded as not passed. This training stays open until the shop records a passing correction or cancels it, or you leave it. While it stays open, WashLink refuses this owner's requests to assign you to their customer bookings through a linked roster entry. ${leaveTrainingLocationText}`
+
+/** The explanation the worker sees for a progress status that keeps the booking gate on with no next step (D-84). */
+export function describeTrainingHoldForWorker(
+  progressStatus: TrainingProgressStatus | null,
+  enrollmentShopId: string | null,
+): string | null {
+  if (progressStatus === 'failed') {
+    return enrollmentShopId === null ? failedAfterShopRemovedExplanation : failedTrainingExplanation
+  }
+  return progressStatus === 'shop_removed' ? shopRemovedExplanation : null
+}

@@ -6,7 +6,7 @@ import type { MyTraining } from '../../../../domain/models/TrainingEnrollment'
 import { Skeleton } from '../../../design/ui'
 import { useTrainingEvidence } from '../../../hooks/useTrainingEvidence'
 import { formatShortDateTime } from '../../../utilities/datetimeFormatting'
-import { shopRemovedExplanation } from '../../../utilities/trainingDisplay'
+import { describeTrainingHoldForWorker } from '../../../utilities/trainingDisplay'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 import { TrainingEvidenceHistory } from '../../training/TrainingEvidenceHistory'
 import { TrainingVersusPaidWorkNote } from '../../training/TrainingNotices'
@@ -29,6 +29,7 @@ export function MyTrainingProgress({ trainingEvidenceService, myTraining }: MyTr
     noOpRefresh,
   )
   const agreedTerms = enrollment.termsSnapshot
+  const holdExplanation = describeTrainingHoldForWorker(progress?.progressStatus ?? null, enrollment.shopId)
 
   return (
     <div className="space-y-5">
@@ -42,12 +43,12 @@ export function MyTrainingProgress({ trainingEvidenceService, myTraining }: MyTr
           currentAssessmentResult={progress.currentAssessmentResult}
         />
       )}
-      {progress?.progressStatus === 'shop_removed' ? (
+      {holdExplanation === null ? null : (
         <p role="status" className="flex items-start gap-2 rounded-[var(--radius-control)] bg-[var(--color-surface-muted)] px-3 py-2 text-sm text-[var(--color-ink-700)]">
           <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          {shopRemovedExplanation}
+          {holdExplanation}
         </p>
-      ) : null}
+      )}
       {enrollment.cancelReason === null ? null : (
         <p className="text-sm break-words text-[var(--color-ink-700)]">Reason given by the shop: {enrollment.cancelReason}</p>
       )}

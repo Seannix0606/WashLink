@@ -1,11 +1,11 @@
 -- J18 roll-up (W13 PLAN section 6 test 2, section 8): the existing booking, pricing, shop verification and rating
--- workflows still work after all 97 migrations, with workforce data present: a roster-linked worker who holds an active
+-- workflows still work after all 99 migrations, with workforce data present: a roster-linked worker who holds an active
 -- contract and a shop-issued certificate at the shop, and a trainee in required training at the same shop. Every step uses
 -- the same writes the frontend sends (the j18_existing_flows payloads); per-increment detail stays in j18_existing_flows
 -- and the j18_w<n>_* files. Local Docker stack only; synthetic fixtures.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(27);
+select plan(28);
 
 create temporary table j18r_ids (label text primary key, id uuid) on commit drop;
 grant all on j18r_ids to public;
@@ -32,7 +32,7 @@ select count(test_helpers.add_training_session(pg_temp.id('p1'), test_helpers.ma
 select test_helpers.open_training_program(pg_temp.id('p1')) is not null as opened;
 insert into j18r_ids values ('et', test_helpers.create_accepted_enrollment(pg_temp.id('p1'), pg_temp.id('wt')));
 insert into j18r_ids values ('b1', gen_random_uuid()), ('b2', test_helpers.create_booking_fixture(pg_temp.id('c1'), pg_temp.id('s1')));
-select ok((select count(*) from supabase_migrations.schema_migrations) = 97
+select ok((select count(*) from supabase_migrations.schema_migrations) = 99
           and (select status from public.worker_contracts where id = pg_temp.id('k1')) = 'active'
           and (select status from public.certifications where id = pg_temp.id('cert')) = 'active'
           and (select status from public.training_enrollments where id = pg_temp.id('et')) = 'accepted',
@@ -123,6 +123,21 @@ select is(test_helpers.attempt(format('update public.bookings set assigned_worke
           || test_helpers.attempt(format('update public.bookings set assigned_worker_id = %L where id = %L', pg_temp.id('rt'), pg_temp.id('b2'))),
           'succeeded,succeeded,23514', 'j18_trainee_not_assignable_after_owner_unlink');
 select is((select user_id is null from public.workers where id = pg_temp.id('rt')), true, 'j18_trainee_not_assignable_after_owner_unlink');
+
+-- ---------- W16 (SEC-5): deleting the training shop does not re-open assignment at the owner's other shop ----------
+select test_helpers.act_as_service();
+insert into j18r_ids values ('s_x', test_helpers.create_verified_shop(pg_temp.id('o1'), pg_temp.id('a1'))),
+                            ('wx', test_helpers.create_worker_profile(test_helpers.create_worker('j18r-wx@local.test'))),
+                            ('b_x', test_helpers.create_booking_fixture(pg_temp.id('c1'), pg_temp.id('s1')));
+insert into j18r_ids values ('p_x', test_helpers.create_training_program(pg_temp.id('s_x'))), ('r_x', test_helpers.create_roster_worker(pg_temp.id('o1'), pg_temp.id('wx')));
+select count(test_helpers.add_training_session(pg_temp.id('p_x'), test_helpers.manila_today() + n)) as sessions_x from generate_series(1, 3) n;
+select test_helpers.open_training_program(pg_temp.id('p_x')) is not null as opened_x;
+insert into j18r_ids values ('e_x', test_helpers.create_accepted_enrollment(pg_temp.id('p_x'), pg_temp.id('wx')));
+select test_helpers.act_as_owner('j18r-o1@local.test');
+select is(test_helpers.attempt(format('update public.bookings set assigned_worker_id = %L where id = %L', pg_temp.id('r_x'), pg_temp.id('b_x'))) || ','
+          || test_helpers.attempt(format('delete from public.shops where id = %L', pg_temp.id('s_x'))) || ','
+          || test_helpers.attempt(format('update public.bookings set assigned_worker_id = %L where id = %L', pg_temp.id('r_x'), pg_temp.id('b_x'))),
+          '23514,succeeded,23514', 'j18_trainee_not_assignable_after_training_shop_deleted');
 
 -- ---------- the booking tables gained no workforce columns ----------
 select test_helpers.act_as_service();

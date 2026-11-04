@@ -26,7 +26,7 @@ function expectTraineeNoteOnly(container: HTMLElement): void {
 describe('Training vs productive work note by audience (W15 fix cycle 1)', () => {
   it('w15_shop_note_states_the_rule_without_second_person_or_detection_limits', () => {
     expect(shopTrainingVersusPaidWorkText).toContain('Training is not productive work for customers.')
-    expect(shopTrainingVersusPaidWorkText).toContain('may not assign trainees to customer bookings')
+    expect(shopTrainingVersusPaidWorkText).toContain("may not assign trainees to that owner's customer bookings")
     expect(shopTrainingVersusPaidWorkText).not.toMatch(/\byou(r)?\b/i)
     expect(shopTrainingVersusPaidWorkText).not.toMatch(/cannot detect|never linked|outside WashLink/i)
     expect(shopTrainingVersusPaidWorkText.toLowerCase()).not.toMatch(/not paid work|unpaid/)

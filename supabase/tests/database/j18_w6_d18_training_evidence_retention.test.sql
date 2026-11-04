@@ -80,9 +80,10 @@ select is((select count(*)::int from public.workforce_audit_events where action 
 select is((select count(*)::int from public.notifications where category like 'training%') - (select notes from d18_counts)::int, 0, 'd18_shop_removal_audited');
 
 select test_helpers.act_as_owner('d18-o1@local.test');
-select is(pg_temp.progress('e2'), 'shop_removed', 'd18_booking_gate_lifts_after_shop_removal');
+-- W16 (D-83): renamed from d18_booking_gate_lifts_after_shop_removal; the enrollment still reads accepted, so the gate holds.
+select is(pg_temp.progress('e2'), 'shop_removed', 'd18_booking_gate_holds_after_shop_removal');
 select is(test_helpers.attempt(format('update public.bookings set assigned_worker_id = %L where id = %L', pg_temp.id('r_w2'), current_setting('fx.b1'))),
-          'succeeded', 'd18_booking_gate_lifts_after_shop_removal');
+          '23514', 'd18_booking_gate_holds_after_shop_removal');
 
 -- ---------- the worker keeps reading; nobody can record any more ----------
 select test_helpers.act_as(pg_temp.u('w1'));

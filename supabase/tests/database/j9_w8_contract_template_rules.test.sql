@@ -174,8 +174,7 @@ select throws_ok($$ select pg_temp.publish(1, pg_temp.platform_input()) $$, '425
                  'w8_super_admin_publishes_platform_version_existing_owner_versions_unchanged');
 select test_helpers.act_as_admin('w8r-a1@local.test');
 insert into w8r_ids select 'p2', pg_temp.publish(1, pg_temp.platform_input(jsonb_build_object(
-  'schedule', jsonb_build_object('body', '[Shop: describe the working days and hours {{schedule_summary}}.]'),
-  'customer_data_minimum', jsonb_build_object('body', 'Customer information seen during work is used only to perform the service and is never shared.'))));
+  'schedule', jsonb_build_object('body', '[Shop: describe the working days and hours {{schedule_summary}}.]'))));
 select test_helpers.act_as_service();
 select is((select row(version_number, saved_by_role, base_platform_version_id is null)::text from public.contract_template_versions where id = pg_temp.id('p2')),
           row(2, 'super_admin', true)::text, 'w8_super_admin_publishes_platform_version_existing_owner_versions_unchanged');
@@ -203,7 +202,8 @@ select is((select jsonb_object_agg(clause_key, body) from public.contract_templa
            and clause_key in ('pay_terms', 'schedule', 'customer_data_minimum')),
           jsonb_build_object('pay_terms', 'We pay {{pay_details}} at the end of each week.',
                              'schedule', '[Shop: describe the working days and hours {{schedule_summary}}.]',
-                             'customer_data_minimum', 'Customer information seen during work is used only to perform the service and is never shared.'),
+                             -- W16 (D-87): core text no longer changes in a super_admin publish; the rule is in j9_w16_core_safeguard_text_pinned.
+                             'customer_data_minimum', (select body from public.contract_template_clauses where version_id = pg_temp.id('p1') and clause_key = 'customer_data_minimum')),
           'w8_rebase_to_latest_standard_keeps_edits_by_key');
 select is((select row(base_platform_version_id = pg_temp.id('p2'), edited_count, added_count)::text from public.contract_template_versions
            where id = pg_temp.id('t1v3')), row(true, 1, 0)::text, 'w8_rebase_to_latest_standard_keeps_edits_by_key');

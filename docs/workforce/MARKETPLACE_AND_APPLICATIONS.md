@@ -176,6 +176,12 @@ pause and opening removal. Draft edits write nothing. Keys embed the audit event
   Other statuses and worker-side deletions are not retained. Retention periods and erasure rights stay open (W9-L5).
   Accepted applications can also be the D-31 origin of a W9 worker contract (`worker_contracts.job_application_id`,
   `on delete set null`); `accepted` itself is still not a contract (W5-L2).
+- Shop deletion with live openings (W16 D-86, F-S2, W16-L4): the owner can delete a shop that has live openings and
+  applications. Not-accepted applications and all cover notes are permanently deleted, and applicants are told only that
+  an application ended. No guard refuses this. The owner confirm (`shopRemovalConfirmationText`) states it, but a confirm
+  does not bind a direct API call. Keeping more would add retained personal data while retention periods are undefined.
+  Keeping the shop and only deactivating it (soft-deactivation) was not chosen because it would change the existing owner flows
+  and every read path, and it is a product decision left to a human.
 - Flags rely on PostgREST not exposing `set_config` (smoke `rpc_set_config_not_exposed`, R6). An audit failure aborts the action, cascades included (R9); w5a reduces drift risk.
 - The guard message `A submitted application cannot be edited.` is defence in depth: the RPCs never change a non-draft cover note and no client has UPDATE.
 - The 500-per-opening cap is tested with 499 trusted fixtures (`j4_w5_opening_application_cap`); the advisory-lock race fix is checked structurally (lock order in the function body, `j17_w5_fix1_closed_drafts_and_current_owner`), not with two concurrent sessions.

@@ -14,10 +14,10 @@ The repo does not know the production schema. All loop results are local only (`
 
 - [ ] A human takes a schema-only dump of the production project themselves (read-only, outside the loop) and keeps
       it as a restricted file.
-- [ ] The dump is diffed against a clean local reset (97 staged migrations). Every row of the D-10 checklist in
-      `ROLE_AND_PROFILE_SECURITY.md` (rows 1-57) is answered and recorded: W2 rows 1-16, W3 17-20, W4 21-23,
+- [ ] The dump is diffed against a clean local reset (99 staged migrations). Every row of the D-10 checklist in
+      `ROLE_AND_PROFILE_SECURITY.md` (rows 1-58) is answered and recorded: W2 rows 1-16, W3 17-20, W4 21-23,
       W5 24-26, W6 27-32, W7 33-35, W8 36-37, W9 38-39, W10 40-42, W11 43-45, W14 46-48, W12 49-52, W13 53-56,
-      W15 57.
+      W15 57, W16 58.
 - [ ] **Triggers on `public.workers` (row 57, W15 R4 / SEC-8).** List every production trigger on `public.workers`
       (BEFORE and AFTER, with function bodies). Record any trigger the repo does not create, in particular a BEFORE
       trigger that changes or nulls `user_id`, and decide with the project owner before applying W15. The w15a AFTER
@@ -28,7 +28,24 @@ The repo does not know the production schema. All loop results are local only (`
       `job_openings_guard_moderation` < `job_openings_guard_write_update` < `job_openings_moderation_hold` <
       `job_openings_normalize`, with no production trigger sorting between them. On `public.shops`,
       `shops_zz_rereview_stamp` sorts after `shops_prevent_owner_verification_mutation`, with no other BEFORE UPDATE
-      trigger after it. The production `job_openings_guard_write()` body matches w4c.
+      trigger after it. The production `job_openings_guard_write()` body matches w4c. On `public.bookings`,
+      `bookings_guard_update_training_gate` sorts after `bookings_guard_update`. On `public.profiles`,
+      `profiles_sanitize_role_on_insert` and `profiles_guard_protected_columns` are present, with no production BEFORE
+      trigger writing `role` after the guard (F-S4). On `public.contract_template_versions`,
+      `contract_template_versions_zz_core_text_pin` sorts after `contract_template_versions_validate_at_commit`.
+- [ ] **W16 pre-apply count (row 58).** On a restored copy of production with w16a applied (the rule is w16a's, and it reads
+      link history), as a trusted session: `select count(*) from public.bookings where booking_status = 'accepted' and
+      assigned_worker_id is not null and public.roster_worker_in_required_training(assigned_worker_id, shop_id);`. These
+      bookings stop being startable once w16a is applied. The count is expected to be 0 because the workforce tables are not yet in
+      production; the actual result is recorded, and any hit is decided with the project owner before applying W16.
+- [ ] **Anon default grants (F-S3).** Using the diff, a human decides whether to revoke `anon` SELECT / INSERT / UPDATE /
+      DELETE on the six pre-workforce tables, records the decision, and on a revoke adds it to J17.
+- [ ] **EXECUTE on the 3 trigger functions (W16 REVIEW N7).** `authenticated` can execute `handle_new_user`,
+      `set_booking_quote_from_shop_pricing` and `set_shop_pricing_updated_at` (pinned in `j17_w16_authenticated_executable_function_list`).
+      After the D-10 diff, a human decides whether to revoke it and records the decision; a revoke updates that list.
+- [ ] **Trusted-session allow-list (F-S5).** `is_trusted_db_session()` trusts any no-JWT session except three API logins.
+      A human lists the production database roles and login paths from the diff and decides whether an allow-list is
+      needed.
 - [ ] **Realtime and every publication (row 52, S7).** Across **all** publications, not only `supabase_realtime`:
       `select pubname, puballtables from pg_publication;` shows no `puballtables = true`, and
       `select * from pg_publication_namespace;` shows no publication of the whole `public` schema, and
@@ -48,7 +65,7 @@ The repo does not know the production schema. All loop results are local only (`
 - [ ] **Replaced bodies (rows 35, 42, 53).** The production bodies of the functions that W7 g, W10 b and W13 d replace
       match the repo versions. w13a aborts unless md5(prosrc) of `worker_contracts_audit()` is exactly the w9j
       or the w13d body (S4). A differing body is reviewed by a human before w13d runs.
-- [ ] Every preflight (w3d0, w4a, w5a, w6a, w7a, w8a, w9a, w10a, w11a, w14a, w12a, w13a) passes against a restored copy
+- [ ] Every preflight (w3d0, w4a, w5a, w6a, w7a, w8a, w9a, w10a, w11a, w14a, w12a, w13a, w15a, w16a, w16b) passes against a restored copy
       of the production schema, and every NOTICE is recorded.
 - [ ] **J17 catalogue on the production copy (S7).** On a restored copy of the production schema, with every migration
       applied (never on production itself), the catalogue assertions of
@@ -79,7 +96,7 @@ The repo does not know the production schema. All loop results are local only (`
 ## 4. Legal and privacy review
 
 - [ ] A qualified Philippine labor-law professional reviews every item of the legal register
-      (`LEGAL_REVIEW_REGISTER.md`, 167 items, all OPEN) and records an outcome per item and a signed row in its
+      (`LEGAL_REVIEW_REGISTER.md`, 174 items, all OPEN) and records an outcome per item and a signed row in its
       "Human sign-off" table.
 - [ ] A qualified data-privacy professional (RA 10173) reviews the data-privacy items: retention (W13-L5), personal
       data and access (see the overlap map), audit access (W13-L4), and the privacy notice at collection (W2-L1).
@@ -88,12 +105,14 @@ The repo does not know the production schema. All loop results are local only (`
 - [ ] `LIMITATIONS.md` is reviewed and accepted in writing (W13-L6).
 - [ ] **Spec D training model.** A qualified labor-law professional reviews the training model before any trainee
       uses it: free required training of at least 3 supervised days, the trainee booking gate and its gaps (W6-L10,
-      W6-L11, W13-L11), owner attestations and the notice wording.
+      W6-L11, W13-L11, W15-L1, W16-L1), the hold and the leave action (W16-L2, W16-L7), owner attestations and the notice wording.
 - [ ] **Spec E templates and workflow.** The final contract template content ("Draft template — requires legal review",
       D-28) and the whole draft, send, accept, amend and terminate workflow are reviewed before any owner relies on them.
-      Any change goes through a reviewed platform version.
+      A change to a locked clause goes through a human-run migration (D-87, W16-L3); a change to an editable clause goes
+      through a platform version. Either needs its own review, which nothing in the system requires.
 - [ ] All user-facing safety copy is reviewed: the free-training notice, the shop-issued certificate labels, the
-      acceptance label, the D-72 expiry notice and the D-73 termination copy.
+      acceptance label, the D-72 expiry notice, the D-73 termination copy, the D-85 training copy (W16-L2), the D-86 shop-removal
+      confirm (W16-L4) and the landing copy "Verified car wash professionals" (W16-L6).
 
 ## 5. Scheduled jobs (D-63, row 51)
 
@@ -112,8 +131,8 @@ The repo does not know the production schema. All loop results are local only (`
       suite is re-run from a clean reset: `run-db-tests.mjs`, then `run-api-smokes.mjs` (w13 last), Vitest, lint,
       build and pytest.
 - [ ] A human reviews the `feature/workforce` diff against `main`, including every migration and every `-- ROLLBACK`
-      block. The blocks have never been executed, except the w15a block once on the local stack inside a
-      rolled-back transaction.
+      block. The blocks have never been executed, except the w15a, w16a and w16b blocks, on the local stack
+      only, inside rolled-back transactions.
 - [ ] A human with authority approves the merge of `feature/workforce` into `main` and performs it.
 - [ ] A human with authority approves applying the migrations to production after gates 1-5, and applies them.
 - [ ] A human with authority approves the frontend deploy (Render) and performs it.

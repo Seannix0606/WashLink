@@ -223,6 +223,8 @@ const userFacingDatabaseMessagePatterns: readonly RegExp[] = [
   /^Every contract section needs at least one clause \(missing: [\d, ]{1,60}\)\.$/,
   /^The standard template must keep these WashLink safeguard clauses locked: [a-z_, ]{3,600}\.$/,
   /^These WashLink safeguard clauses must stay in their own sections: [a-z_, ]{3,600}\.$/,
+  // W16 (w16b, D-87): raised at commit; ends with the changed locked clause keys.
+  /^WashLink safeguard text in the standard template can change only through a human-run migration: [a-z0-9_, ]{3,600}\.$/,
   ...workerContractDatabaseMessagePatterns,
 ]
 

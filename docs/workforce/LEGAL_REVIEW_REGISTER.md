@@ -1,6 +1,6 @@
-# Legal review register: index (W0-W15; split in W13, D-75)
+# Legal review register: index (W0-W16; split in W13, D-75)
 
-This register lists every legal-review flag raised by the workforce loop in W0-W15
+This register lists every legal-review flag raised by the workforce loop in W0-W16
 (`loop/workforce/increments/*/LEGAL_FLAGS.md` and W5 PLAN section 11). Every item is **OPEN** and is for review by a
 qualified Philippine labor-law professional (data-privacy items also by a qualified data-privacy professional). The loop
 cannot resolve any of them.
@@ -10,12 +10,12 @@ compliance for any feature, and no item here may be read as advice. Production u
 first (`DEPLOYMENT_READINESS.md`). Items are never deleted, merged or closed by the loop; only a human records an outcome.
 
 Layout (D-75). This file is the index: status summary, sign-off table, overlap map, a list naming every item ID, and
-the W13 and W15 items in full (sections "W13 items" and "W15 items" at the end). The text, sources and cross-reference paragraphs of the 153
+the W13, W15 and W16 items in full (sections "W13 items", "W15 items" and "W16 items" at the end). The text, sources and cross-reference paragraphs of the 153
 earlier items are in two parts. W13 moved them there verbatim from the single-file register (153 items before W13, all
-OPEN, no duplicate IDs). Each item has exactly one full row, in one part or, for W13-L1..L11 and W15-L1..L3, in this file:
+OPEN, no duplicate IDs). Each item has exactly one full row, in one part or, for W13-L1..L11, W15-L1..L3 and W16-L1..L7, in this file:
 
 - [`legal/REGISTER_PART_1_W0_W8.md`](legal/REGISTER_PART_1_W0_W8.md): W0, W2, W3, W4, W5, W6, W7, W8.
-- [`legal/REGISTER_PART_2_W9_W14.md`](legal/REGISTER_PART_2_W9_W14.md): W9, W10, W11, W14, W12 (in the earlier order). The W13 and W15 items are in this file, not in part 2.
+- [`legal/REGISTER_PART_2_W9_W14.md`](legal/REGISTER_PART_2_W9_W14.md): W9, W10, W11, W14, W12 (in the earlier order). The W13, W15 and W16 items are in this file, not in part 2.
 
 Line-number pointers to `LEGAL_REVIEW_REGISTER.md` in earlier REVIEW / VERDICT files are historical (W13 PLAN R6). The
 item IDs are stable; look an ID up in the index below.
@@ -41,9 +41,10 @@ Status key: OPEN = not reviewed. Source paths are relative to the repository roo
 | W12 (notification wiring and scheduled jobs) | 12 | 12 | 2 |
 | W13 (hardening, final documentation; L8..L11 from the W13 review) | 11 | 11 | index |
 | W15 (required-training booking gate keyed on roster link history; copy; L2, L3 from the W15 review) | 3 | 3 | index |
-| **Total** | **167** | **167** | Part 1: 81, Part 2: 72, index: 14 |
+| W16 (gate hold rule, locked clause pin, final review K10 items; L7 from the W16 review) | 7 | 7 | index |
+| **Total** | **174** | **174** | Part 1: 81, Part 2: 72, index: 21 |
 
-W1 raised no legal flag (test harness only). Before W13 the register held 153 items; W13 added 11 (L1..L7 from the plan, L8..L11 from the W13 compliance review). W15 added 3 (W15-L1 from the plan, W15-L2 and W15-L3 from the W15 compliance review). Nothing was removed.
+W1 raised no legal flag (test harness only). Before W13 the register held 153 items; W13 added 11 (L1..L7 from the plan, L8..L11 from the W13 compliance review). W15 added 3 (W15-L1 from the plan, W15-L2 and W15-L3 from the W15 compliance review). W16 added 7 (W16-L1..L6 from the plan, W16-L7 from the W16 compliance review; F-C2 and F-C3 cross-reference W15-L1 and W15-L2). Nothing was removed.
 
 ## Human sign-off (blank; the loop fills in nothing)
 
@@ -61,6 +62,8 @@ stays unchecked.
 | W13 items in this index (11 items) | Data privacy (RA 10173) | | | | |
 | W15 items in this index (3 items) | Philippine labor law | | | | |
 | W15 items in this index (W15-L3) | Data privacy (RA 10173) | | | | |
+| W16 items in this index (7 items) | Philippine labor law | | | | |
+| W16 items in this index (W16-L4) | Data privacy (RA 10173) | | | | |
 | Accepted limitations (`LIMITATIONS.md`, W13-L6) | Labor law and data privacy | | | | |
 | Deployment checklist (`DEPLOYMENT_READINESS.md`, W13-L6) | Project owner | | | | |
 
@@ -72,7 +75,7 @@ Items below share a topic. Review them together; each keeps its own row and its 
 |---|---|
 | Meaning of the three-distinct-owner count (informational only, D-3) | W0-L1, W10-L1, W10-L3, W10-L5, W10-L6, W10-L8, W10-L9, W10-L11, W11-L9, W12-L5 |
 | Concurrent engagements across owners | W10-L2 |
-| Free training versus productive work; training fees | W0-L2, W4-L3, W5-L3, W5-L9, W6-L1, W6-L2, W6-L3, W6-L9, W6-L10, W6-L11, W6-L12, W8-L11, W9-L9, W14-L13, W13-L11, W15-L1, W15-L2 |
+| Free training versus productive work; training fees | W0-L2, W4-L3, W5-L3, W5-L9, W6-L1, W6-L2, W6-L3, W6-L9, W6-L10, W6-L11, W6-L12, W8-L11, W9-L9, W14-L13, W13-L11, W15-L1, W15-L2, W16-L1, W16-L2, W16-L7 |
 | Relationship classification | W0-L3, W4-L2, W8-L3, W9-L2, W9-L13 |
 | Acceptance without an e-signature (D-6) | W0-L4, W8-L4, W9-L1, W9-L12 |
 | Certificate naming, validity and disclosure | W0-L5, W4-L5, W5-L5, W5-L11, W7-L1, W7-L2, W7-L4, W7-L5, W7-L9, W7-L11, W7-L15, W7-L16 |
@@ -81,24 +84,25 @@ Items below share a topic. Review them together; each keeps its own row and its 
 | Owner free text: waivers, fees, deposits, unpaid trials | W4-L1, W4-L8, W4-L11, W5-L8, W6-L11, W8-L5, W8-L12, W8-L13, W9-L3, W9-L4, W9-L16, W14-L2 |
 | Discrimination and publisher duties | W4-L4, W4-L7, W4-L9, W5-L4, W14-L1, W13-L7 |
 | Recruitment and placement | W4-L10 |
-| Template safeguards and statutory content | W8-L1, W8-L2, W8-L6, W8-L7, W8-L8, W8-L10, W12-L12 |
-| Termination, notice and trusted repairs | W9-L6, W9-L14, W9-L15, W9-L17, W10-L7, W11-L7, W13-L2, W13-L3 |
+| Template safeguards and statutory content | W8-L1, W8-L2, W8-L6, W8-L7, W8-L8, W8-L10, W12-L12, W16-L3 |
+| Termination, notice and trusted repairs | W9-L6, W9-L14, W9-L15, W9-L17, W10-L7, W11-L7, W13-L2, W13-L3, W16-L5 |
 | Contract and certificate expiry notices | W7-L10, W12-L2, W12-L3, W12-L4, W12-L8, W12-L9, W12-L10, W12-L11, W13-L1, W13-L8, W13-L9 |
-| Retention periods (none defined) | W0-L6, W3-L1, W4-L6, W5-L10, W7-L8, W8-L9, W9-L5, W12-L6, W14-L8, W13-L5, W13-L10, W15-L3 |
-| Personal data and access (RA 10173) | W0-L6, W2-L1, W2-L5, W5-L1, W5-L6, W5-L7, W6-L8, W10-L4, W10-L10, W11-L5, W11-L8, W14-L6, W14-L7, W14-L8, W14-L15, W15-L3 |
+| Retention periods (none defined) | W0-L6, W3-L1, W4-L6, W5-L10, W7-L8, W8-L9, W9-L5, W12-L6, W14-L8, W13-L5, W13-L10, W15-L3, W16-L4 |
+| Personal data and access (RA 10173) | W0-L6, W2-L1, W2-L5, W5-L1, W5-L6, W5-L7, W6-L8, W10-L4, W10-L10, W11-L5, W11-L8, W14-L6, W14-L7, W14-L8, W14-L15, W15-L3, W16-L4 |
 | Audit trail: evidence value and who may read it | W3-L3, W14-L9, W13-L4 |
-| Notification channels and content | W3-L2, W12-L1, W12-L7 |
+| Notification channels and content | W3-L2, W12-L1, W12-L7, W16-L7 |
 | Reported problems and moderation process | W11-L4, W11-L5, W11-L6, W11-L10, W11-L12, W11-L13, W11-L14, W11-L15, W14-L3, W14-L4, W14-L5, W14-L12, W14-L14, W14-L16, W14-L17 |
 | Roster-link consent | W0-L7, W2-L2 |
 | Single-administrator governance | W10-L5, W11-L10, W14-L11 |
 | Contract lifecycle details | W5-L2, W9-L7, W9-L8, W9-L10, W9-L11 |
 | Training operations and safety | W6-L4, W6-L5, W6-L7 |
 | Human sign-off of limitations and readiness | W13-L6 |
+| Claims about worker verification in marketing copy | W16-L6 |
 
 ## Every item ID
 
 One line per item ID. "Where" names the file that holds the full row (item text and source): part 1, part 2, or the
-"W13 items" or "W15 items" section of this file. The topic is a short label only; the full row is authoritative.
+"W13 items", "W15 items" or "W16 items" section of this file. The topic is a short label only; the full row is authoritative.
 
 | Where | ID | Status | Topic | Human outcome |
 |---|---|---|---|---|
@@ -269,6 +273,13 @@ One line per item ID. "Where" names the file that holds the full row (item text 
 | index | W15-L1 | OPEN | Training booking gate scope (link history) and trainee copy | |
 | index | W15-L2 | OPEN | Trainee copy shown to owners and trainers; shop-side text | |
 | index | W15-L3 | OPEN | Roster link history retention and purpose (RA 10173) | |
+| index | W16-L1 | OPEN | Gate hold rule; recorded pass, cancel and active contract routes | |
+| index | W16-L2 | OPEN | D-85 worker copy and leaving under pressure | |
+| index | W16-L3 | OPEN | Locked clause text changes only by human-run migration | |
+| index | W16-L4 | OPEN | Shop deletion removes applications and cover notes (RA 10173) | |
+| index | W16-L5 | OPEN | Required reason to end a contract, seen by the shop | |
+| index | W16-L6 | OPEN | Landing copy "Verified car wash professionals" | |
+| index | W16-L7 | OPEN | Whether the worker is told enough about the hold and leaving | |
 
 ## W13 items (hardening, final documentation, legal-review register)
 
@@ -314,3 +325,20 @@ F-C3 instead of adding duplicates.
 | W15-L1 | OPEN | The training booking gate (w6h, W15 D-79) refuses the training shop's assignment of a roster row that is or was linked to a trainee in live required training. It cannot detect a row never linked to the trainee (name-only, or deleted and re-created), links ended before the W3 audit trail, work for other shops, super_admin assignment to another owner's booking (W13-L11) or trusted SQL sessions. Review whether this is enough for the free-training rule and whether the D-81 worker copy describes it fairly (F-C2, F-C3). The worker copy as shipped: "Training is not productive work for customers. While your required training is unfinished, WashLink refuses the training shop's requests to assign you to its customer bookings through a roster entry that is or was linked to your account. WashLink cannot detect a roster entry that was never linked to your account, or work arranged outside WashLink. Terms for any later customer work are agreed separately and are not part of this training." Fix cycle 1 additions (W15 REVIEW SEC-3, SEC-4, C-SF-2): (a) D-80 re-used rows: a later worker on a row once linked to a trainee is refused with the w6h texts, which read as if that worker were in training (owner: "This worker is in required training with your shop ..."; worker on start: "You are in required training with this shop ..."); the workaround is that the new worker unlinks the old row first (`workers_owner_user_unique` allows one row per owner per account), then the owner adds a new row; a leaked or misdirected link code accepted by a trainee taints that row while the training is live. (b) A booking already in progress on a row can be completed by a trainee who links to that row later (completion is never refused). | `supabase/migrations/2026_11_03_w15a_training_gate_roster_link_history.sql`; w6h `roster_worker_in_required_training`; `frontend/src/presentation/utilities/trainingNoticeCopy.ts` (`trainingVersusPaidWorkText`); `docs/workforce/LIMITATIONS.md` (free-training gaps) |
 | W15-L2 | OPEN | (REVIEW, compliance) The D-81 trainee copy is written to the trainee ("your required training", "assign you", "your account"). It is also shown unchanged to owners and to designated trainers: the owner programs panel, the program manage view, the owner program preview and editor preview, and the trainer's "Training I run" panel. In those views it does not describe the reader. It also tells the shop that the gate restrains how it can be avoided ("WashLink cannot detect a roster entry that was never linked to your account"). The owner views no longer carry a rule statement that trainees must not be given customer work; before W15 they read the absolute W6 sentence quoted as "Copy before" in `loop/workforce/increments/W15/LEGAL_FLAGS.md` (not repeated here, so the W15 AC10 grep for it stays empty). Review the owner- and trainer-facing wording, and whether the detection limits should be disclosed to the shop. Fix cycle 1 (C-SF-1): owner and trainer views now show a separate shop-side text, `shopTrainingVersusPaidWorkText`, as shipped: "Training is not productive work for customers. The training shop may not assign trainees to customer bookings while their required training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the trainee's account. Terms for any later customer work are agreed separately and are not part of this training." Trainee views keep the D-81 text. Review this wording too, including whether naming the linked-row scope tells the shop too much. | `frontend/src/presentation/utilities/trainingNoticeCopy.ts` (`trainingVersusPaidWorkText`, `shopTrainingVersusPaidWorkText`); `frontend/src/presentation/components/training/TrainingNotices.tsx` (`audience`); `frontend/src/presentation/components/owner/training/OwnerTrainingProgramsPanel.tsx:112`, `:184`; `.../owner/training/TrainingProgramManageView.tsx:54`; `.../owner/training/TrainingProgramEditorModal.tsx:94` (via `TrainingProgramDetailsView.tsx:51`); `.../worker/training/TrainerProgramsPanel.tsx:83` |
 | W15-L3 | OPEN | (REVIEW, compliance; data privacy) `roster_link_history` keeps a permanent record that an account was once linked to an owner's roster row. The record survives the worker's own unlink and is never shown to the worker. It is deleted only with the roster row or the account, and it has no retention period. Its stated purpose is the training booking gate, but it is kept after the training ends. Review the purpose limitation, the retention, and whether the worker must be told (with W3-L1, W12-L6 and W13-L5). | `supabase/migrations/2026_11_03_w15a_training_gate_roster_link_history.sql:38-52` (table), `:54-84` (recorder trigger), `:86-123` (backfill function and call; after W15 fix cycle 1) |
+
+## W16 items (gate hold rule, locked clause pin, final review)
+
+What W16 does (database local proof only, D-10): w16a keeps the training booking gate on until the enrollment ends or
+truly completes (D-83, D-84); w16b refuses any added, removed or changed locked clause in a new platform version (D-87); the owner shop
+removal confirm states what is deleted (D-86, no guard). Notes (all stay **OPEN**): F-C2 and F-C3 stay with **W15-L1 / W15-L2**,
+which quote the W15 copy as shipped (D-85 text: W16-L2). **W6-L10 / W6-L12** have W16 notes in part 1.
+
+| ID | Status | Item for review | Source |
+|---|---|---|---|
+| W16-L1 | OPEN | Training booking gate hold rule (D-83, D-84): the gate holds while the enrollment is accepted, required initial and not completed, also after a failed assessment or a shop deletion; there is no time limit. Review whether this fits the free-training rule; whether a cancel at 0 attended days followed by assignment, or a recorded pass the worker cannot dispute (W6-L13), leaves too wide a route; and whether an active contract should release the hold (today a contract can activate while assignment is refused). Fix cycle 1 additions (W16 REVIEW N2, N4): (a) a later worker on a re-used roster row (D-79, D-80) can be held permanently, has nothing of their own to leave, and reads a refusal message that is false for them; the workaround is a new roster row, and changing D-79 is a human decision. (b) An accepted booking pre-assigned to a held trainee at a deleted shop has no way forward except the trainee leaving; the customer's cancel is refused too. (c) The owner deleting their account also removes the gate (audited), with the enrollment still reading accepted. Related W15-L1, W6-L10, W9-L9. | `supabase/migrations/2026_11_04_w16a_training_gate_holds_until_enrollment_ends.sql`; `docs/workforce/LIMITATIONS.md` ("Final review outcomes") |
+| W16-L2 | OPEN | D-85 worker copy and the leave action: whether leaving under owner pressure, or a `failed` display becoming `withdrawn`, disadvantages the worker; whether the worker is told enough. The owner cannot lift a `shop_removed` hold alone, so may press the worker to leave; shop copy avoids suggesting it and WashLink cannot detect it. Texts as shipped (after W16 fix cycle 1). Worker note: "Training is not productive work for customers. While your required training is unfinished, WashLink refuses requests by the training shop's owner to assign you to that owner's customer bookings through a roster entry that is or was linked to your account. This continues after a not-passed assessment or if the shop is removed, until the training is completed, is cancelled or you leave it; once the shop is removed, only leaving ends it. WashLink cannot detect a roster entry that was never linked to your account, or work arranged outside WashLink. Terms for any later customer work are agreed separately and are not part of this training." Shop note: "Training is not productive work for customers. The training shop's owner may not assign trainees to that owner's customer bookings while their required training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the trainee's account. This continues after a not-passed assessment or a shop removal, until the training is completed, is cancelled or the trainee leaves. Terms for any later customer work are agreed separately and are not part of this training." Failed: "Your assessment is recorded as not passed. This training stays open until the shop records a passing correction or cancels it, or you leave it. While it stays open, WashLink refuses this owner's requests to assign you to their customer bookings through a linked roster entry. You can leave at any time: close this window and press "Leave training" on this training in your list." Failed after a shop removal, where only the worker can end the training: "Your assessment is recorded as not passed and the shop is no longer on WashLink. This training stays open until you leave it. While it stays open, WashLink refuses this owner's requests to assign you to their customer bookings through a linked roster entry. You can leave at any time: close this window and press "Leave training" on this training in your list." Shop removed: "This shop is no longer on WashLink. Your training records are kept for you; nobody can add new records. This training stays open until you leave it. While it stays open, WashLink refuses this owner's requests to assign you to their customer bookings through a linked roster entry. You can leave at any time: close this window and press "Leave training" on this training in your list." Leave confirm: "Your training ends unfinished. Your records stay visible to you. This cannot be undone; the shop would need to invite you again. This training's owner may then be able to assign you to their customer bookings. If a not-passed assessment is recorded, it can no longer be corrected once you leave. A new invitation starts again at 0 attended days." Related W15-L2, W6-L13, W16-L7. | `frontend/src/presentation/utilities/trainingNoticeCopy.ts`; `frontend/src/presentation/utilities/trainingDisplay.ts` (`failedTrainingExplanation`, `shopRemovedExplanation`); `frontend/src/domain/utilities/trainingEnrollmentLifecycle.ts` |
+| W16-L3 | OPEN | F-C1 (D-87, widened in W16 fix cycle 1): a non-trusted session cannot add, remove or change any locked safeguard clause in a new platform version, so that text changes only by a human-run migration. Nothing requires a second reviewer on that migration, and no such migration has been run. Added or changed editable clauses are still allowed and can contradict a safeguard (W8-L12). Clause order is not compared, so an administrator can reorder locked clauses within a section. Versions published before the pin are not re-checked. Related W8-L1, W8-L10, W8-L11, W8-L12. | `supabase/migrations/2026_11_04_w16b_contract_template_core_text_pin.sql` |
+| W16-L4 | OPEN | F-S2 (D-86): shop deletion deletes not-accepted applications and cover notes; accepted applications keep a copy without the note; applicants are told only that an application ended. Whether workers must keep more, and for how long (RA 10173). Related W5-L10, W9-L5, W13-L5. | `frontend/src/presentation/utilities/shopRemovalCopy.ts`; w9i `job_applications_retain_accepted` |
+| W16-L5 | OPEN | F-C6: a worker must give a 10..500 character reason to end a contract, and the shop sees it. Related W13-L2, W7-L14. | `frontend/src/presentation/utilities/workerContractCopy.ts`; w9 `terminate_worker_contract` |
+| W16-L6 | OPEN | F-C5: pre-existing landing copy "Verified car wash professionals" against no worker identity verification. | `frontend/src/features/auth/AuthLandingPage.tsx:143` |
+| W16-L7 | OPEN | (REVIEW, compliance) Whether the worker is told enough, at the moment it matters, about the hold and about leaving. W16-L2 asks this in general; this item lists the specific gaps. No notification is sent when the training shop is deleted (audit only). The not-passed notification says only "Not passed." and mentions neither the hold nor leaving. The hold explanation is inside "View progress and records", while "Leave training" is on the list card behind that dialog, and the explanation does not name the button. The refusal on starting a booking says "until the training ends" and does not name the leave action. The leave confirm does not say that the same owner can then assign customer bookings with no contract required (W6-L10), that a not-passed record can no longer be corrected after leaving, or that attended days count only for that enrollment, so a new invitation starts again at 0 days. Nothing tells the worker that leaving is their own choice, which matters where the owner presses them to leave. Review whether these notices are needed, and their wording. Related W16-L1, W16-L2, W6-L10, W6-L13. Fix cycle 1 (C-S1, C-S2) changed part of this: the hold explanations now name the "Leave training" button and where it is, and the leave confirm now states that the owner may then be able to assign customer bookings, that a not-passed record can no longer be corrected and that a new invitation starts at 0 attended days (texts in W16-L2). It does not say that no contract is required, or that leaving is the worker's own choice. The notification gaps and the refusal message are unchanged. | w6i training enrollment audit trigger (`training_enrollment.shop_removed`) and `training_evidence_audit`; w6g `insert_training_assessment`; w6d `training_enrollment_attended_days`; w6h `bookings_guard_training_assignment`; `frontend/src/presentation/components/worker/training/MyTrainingsPanel.tsx:97-102`, `:142`; `frontend/src/presentation/utilities/trainingDisplay.ts`; `docs/workforce/TRAINING.md:40-41` |

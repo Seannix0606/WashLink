@@ -7,6 +7,7 @@ import type { TrainingDependencies } from '../../../dependencyInjection/createTr
 import { Button, Card, EmptyState, Modal, Skeleton } from '../../../design/ui'
 import { useMyTrainings } from '../../../hooks/useMyTrainings'
 import { formatShortDateTime } from '../../../utilities/datetimeFormatting'
+import { leaveTrainingConfirmationText } from '../../../utilities/trainingNoticeCopy'
 import { LoadErrorNotice } from '../../shared/LoadErrorNotice'
 import { TrainingConfirmModal } from '../../training/TrainingConfirmModals'
 import { TrainingVersusPaidWorkNote } from '../../training/TrainingNotices'
@@ -52,7 +53,7 @@ export function MyTrainingsPanel({ trainingDependencies }: MyTrainingsPanelProps
           <GraduationCap className="h-4 w-4 text-[var(--color-brand-700)]" aria-hidden="true" />
           My training
         </h2>
-        <p className="mt-0.5 text-xs text-[var(--color-ink-500)]">Required initial training from shops that accepted your application. Always free for you.</p>
+        <p className="mt-0.5 text-xs text-[var(--color-ink-500)]">Required initial training from shops that accepted your application. WashLink rule: it is free for you.</p>
       </header>
       <TrainingVersusPaidWorkNote />
 
@@ -138,7 +139,7 @@ export function MyTrainingsPanel({ trainingDependencies }: MyTrainingsPanelProps
         message={
           pendingAction?.kind === 'decline'
             ? 'The shop is told you declined. You cannot accept this invitation later.'
-            : 'Your training ends unfinished. Your records stay visible to you. This cannot be undone; the shop would need to invite you again.'
+            : leaveTrainingConfirmationText
         }
         confirmButtonLabel={pendingAction?.kind === 'decline' ? 'Decline invitation' : 'Leave training'}
         isDestructive

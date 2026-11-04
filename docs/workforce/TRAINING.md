@@ -4,7 +4,7 @@ Migrations `2026_10_25_w6a` .. `w6i` (staged `20261025000006..14`). Spec D (trai
 requirement), A (verified shop), C (accepted offers lead to required training), G, I; acceptance tests
 J6 (training part), J7, J8, J17, J18. Decisions: D-4, D-7, D-15..D-19 (`loop/workforce/DECISIONS.md`).
 Verified on the local Docker stack only (D-10); nothing here says anything about the linked project.
-No item in this document is a compliance claim; open legal questions are W6-L1..L13 in
+No item in this document is a compliance claim; open legal questions are W6-L1..L13, W15-L1 and W16-L1, L2 in
 `LEGAL_REVIEW_REGISTER.md`.
 
 ## Principles (continue P1-P23)
@@ -38,7 +38,7 @@ Deleting a shop or an owner account must succeed, but must NOT delete the worker
 - After removal nobody can record (the recorder rule needs the current shop owner), the worker still reads
   the enrollment, program, sessions and evidence, may still withdraw, and progress shows `shop_removed`
   for unfinished training (`completed` / `failed` stay). Audit `training_enrollment.shop_removed`; no
-  notification. The C7 gate lifts for such enrollments.
+  notification. Since W16 (D-83) the C7 gate keeps holding for such enrollments until the worker leaves.
 - The worker's OWN account deletion still removes their enrollments and evidence (cascade from
   `worker_profiles`); audit rows stay.
 - Tests: `j18_w6_d18_training_evidence_retention.test.sql` (30), `j18_shop_and_account_deletion_still_succeed_with_training`,
@@ -85,8 +85,8 @@ compliance statement.
 | invited | accepted | worker (self) | program open and shop present; `p_notice_version = 'w6_v1'` else 23514; `p_expected_schedule_changed_at` = program value else 55000 `This training program changed. Review it again.`; enough upcoming days; stamps accepted_at, notice, terms snapshot |
 | invited | declined | worker (self) | any program status |
 | invited | cancelled | owning owner | invitation withdrawn (reason optional) |
-| accepted | withdrawn | worker (self) | progress not completed (a failed trainee may leave) |
-| accepted | cancelled | owning owner | progress not completed (a failed enrollment may be cancelled); reason 10..300 |
+| accepted | withdrawn | worker (self) | progress not completed (a failed trainee may leave; the UI offers it since W16, D-84) |
+| accepted | cancelled | owning owner | progress not completed (a failed enrollment may be cancelled; the UI offers it since W16, D-84); reason 10..300; after a shop removal the owner gets 42501 and the UI offers nothing |
 
 A program with failed (or completed) enrollments can be closed (open -> closed has no enrollment condition) and
 archived (closed -> archived refuses only invitations and unfinished accepted training).
@@ -130,15 +130,15 @@ enrollment), and must not rely on an earlier read or a notification.
 
 `roster_worker_in_required_training(worker_row, shop)`: the roster row belongs to the booking shop's owner
 (`workers.owner_id = shops.owner_id`), has `user_id` set and that worker holds an
-ACCEPTED enrollment with the same `owner_id`, required initial training, an existing shop and progress
-scheduled / in_progress / awaiting_assessment. Trigger `bookings_guard_update_training_gate` (BEFORE UPDATE,
+ACCEPTED enrollment with the same `owner_id`, required initial training and progress other than `completed` (W16, below;
+W6 also required an existing shop and progress scheduled / in_progress / awaiting_assessment). Trigger `bookings_guard_update_training_gate` (BEFORE UPDATE,
 function `bookings_guard_training_assignment`; named to fire after the W2c `bookings_guard_update`, so a
 caller W2 refuses gets the W2 error, never the training message) refuses with 23514 assigning such a roster row (`This worker is in required
 training with your shop and cannot be assigned to customer bookings until the training ends.`) and the
 assigned worker starting the booking (`You are in required training with this shop and cannot start customer
 bookings until the training ends.`). Trusted sessions bypass; super_admin does not. A booking already in
-progress may complete. Unlinked rows, other owners' trainees and invited / declined / withdrawn / cancelled /
-completed / failed / shop_removed enrollments are not affected.
+progress may complete. Other owners' trainees and invited / declined / withdrawn / cancelled / completed
+enrollments are not affected.
 
 W15 (D-79, D-80): migration `2026_11_03_w15a_training_gate_roster_link_history.sql`. Before W15 the gate judged
 only the current link, so the owner (or the worker, through `unlink_my_roster_entry`) could set `user_id` to null
@@ -168,14 +168,46 @@ for both the assign check and the start check, so a booking assigned before the 
 - Not detected (P6, W15-L1): a row never linked to the trainee (name-only, or deleted and re-created), links ended
   before the W3 audit trail existed, work for other shops, super_admin assignment to another owner's booking (W13-L11)
   and trusted SQL sessions.
-- Trainee copy (D-81): `trainingVersusPaidWorkText` says WashLink refuses the training shop's requests to assign the
-  trainee through a roster entry that is or was linked to their account, and that it cannot detect a never-linked
-  entry or work arranged outside WashLink. The `w6_v1` notice and the owner attestation are unchanged. W15 fix
+- Trainee copy (D-81, D-85): `trainingVersusPaidWorkText` says WashLink refuses requests by the training shop's owner to
+  assign the trainee to that owner's bookings through a roster entry that is or was linked to their account, that this
+  continues after a not-passed assessment or a shop removal until the training ends (once the shop is removed, only leaving
+  ends it), and that it cannot detect a
+  never-linked entry or work arranged outside WashLink. The `w6_v1` notice and the owner attestation are unchanged. W15 fix
   cycle 1 (C-SF-1, W15-L2): owner and trainer views (programs panel, program preview, manage view, editor preview,
   "Training I run") show `shopTrainingVersusPaidWorkText` instead, a rule addressed to the shop: "Training is not
-  productive work for customers. The training shop may not assign trainees to customer bookings while their required
+  productive work for customers. The training shop's owner may not assign trainees to that owner's customer bookings while their required
   training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the
-  trainee's account. Terms for any later customer work are agreed separately and are not part of this training."
+  trainee's account. This continues after a not-passed assessment or a shop removal, until the training is completed,
+  is cancelled or the trainee leaves. Terms for any later customer work are agreed separately and are not part of this
+  training." (Sentence "This continues ..." added by D-85; owner scope added by W16 fix cycle 1, C-S5.)
+
+W16 (D-83, D-84, SEC-5): migration `2026_11_04_w16a_training_gate_holds_until_enrollment_ends.sql` replaces the body of
+`roster_worker_in_required_training` (same signature). `bookings_guard_training_assignment` and its messages are
+unchanged. Before W16 the owner lifted the gate, with the record still reading `accepted`, by deleting the training shop
+or recording a fail. A null `p_shop_id` (a booking at the deleted shop) now skips the shop check and the roster row's
+owner decides.
+
+| Enrollment / progress | Gate before | Gate after | Who can end the hold |
+|---|---|---|---|
+| accepted: scheduled, in_progress, awaiting_assessment | holds | holds | worker leaves; owner cancels (reason 10..300); or it completes |
+| accepted: failed | lifted | **holds** | worker leaves; owner cancels; owner / trainer corrects to a pass |
+| accepted: shop_removed | lifted | **holds** | worker leaves only (owner 42501; no recorder remains) |
+| accepted: failed, shop deleted | lifted | **holds** | worker leaves only |
+| accepted: completed (also after shop deletion) | lifted | lifted | - |
+| invited, declined, withdrawn, cancelled | lifted | lifted | - |
+
+- Never refused by the gate: unassign, completing a booking already `in_progress`, unlink, re-link, withdraw, decline,
+  trusted sessions. Refused as before: assigning, or starting, through the current or any historic link (D-79).
+- D-84, no time limit: the hold restrains only that owner's roster rows. A trainee can end it alone at any time with no
+  reason (a later worker on a re-used row has nothing to leave, `LIMITATIONS.md`), and the owner can end a failed enrollment with a recorded reason and a notice to the worker.
+- UI: `failedTrainingExplanation` and the extended `shopRemovedExplanation` in `MyTrainingProgress`; "Leave training" and
+  "Cancel enrollment" are offered on `failed`; owner cancel is no longer offered on `shop_removed`. Each explanation says where the "Leave training" button is, and the leave confirm states the facts of leaving (`leaveTrainingConfirmationText`; W16 fix cycle 1, C-S1, C-S2; texts in W16-L2). After a fail and a
+  shop removal progress stays `failed`, and the worker reads `failedAfterShopRemovedExplanation` (D-85 amendment): only
+  leaving ends it. Owner cancel, owner correction and designated-trainer correction get 42501 (run-tested, under `w16_failed_then_shop_removed_still_gated`).
+- The w6h messages are unchanged and can read oddly after a shop is deleted ("... with your shop ...", "... with this shop ..."; `LIMITATIONS.md`).
+- W16-L1, not stopped: a recorded pass the worker cannot dispute (W6-L13), a cancel at 0 attended days, pressure to leave,
+  and a contract that activates while assignment is refused (`training_enrollment_is_live` excludes `failed` and
+  `shop_removed`). See `LIMITATIONS.md`.
 
 ## Visibility (RLS and read RPCs)
 
@@ -196,7 +228,7 @@ is FOR ALL TABLES or lists a `training_*` table.
 - Local proof only (D-10 rows 29-32 in `ROLE_AND_PROFILE_SECURITY.md`); production drift is caught only by
   the w6a preflight.
 - The gate covers roster rows that are or were linked to the trainee and on-platform bookings only (W15-L1);
-  off-platform work is invisible.
+  off-platform work is invisible. A recorded pass or a cancellation lifts it (W16-L1).
 - Evidence is operational, not tamper-proof (a DB superuser can disable triggers); no electronic signatures.
 - Time-shift fixtures (past sessions, backdated acceptance) exist only in `test_helpers` and the smoke; real
   evidence needs the session day to have passed and an earlier acceptance.
@@ -224,6 +256,6 @@ Per-file `-- ROLLBACK` blocks in reverse order i..a, local stack only. i: produc
 notifications stay). h: the bookings trigger and its functions (bookings behave as after W5). g, f, e: RPCs,
 reads, notice-version function. d: view, predicate, evidence guards and tables (IRREVERSIBLE evidence loss;
 export with a trusted `copy` first). c: the shops trigger, enrollments and sessions. b: trainers and
-programs. a: nothing. Frontend: revert. W15 (run first): the w15a `-- ROLLBACK` block restores the w6h body of
+programs. a: nothing. Frontend: revert. W16 (run first): the w16b block, then the w16a block, which restores the w15a body and re-opens SEC-5; no data involved; revert the frontend lifecycle and copy edits together. W15 (next): the w15a `-- ROLLBACK` block restores the w6h body of
 `roster_worker_in_required_training` (and so the F-C2 bypass), then drops the trigger, `backfill_roster_link_history()`,
 `record_roster_link_history()` and `roster_link_history` (derived data; the links stay in the W3 audit). Frontend: revert the one copy line.

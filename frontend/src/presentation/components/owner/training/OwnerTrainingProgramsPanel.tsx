@@ -100,7 +100,7 @@ export function OwnerTrainingProgramsPanel({
             Training programs
           </h2>
           <p className="mt-0.5 text-xs text-[var(--color-ink-500)]">
-            Required initial training for applicants you accepted. It is always free for the worker.
+            Required initial training for applicants you accepted. WashLink rule: it is free for the worker.
           </p>
         </div>
         {!hasNoShops && managedProgram === null ? (

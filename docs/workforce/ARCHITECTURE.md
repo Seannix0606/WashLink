@@ -1,4 +1,4 @@
-# Workforce module: architecture (as built, W0-W15)
+# Workforce module: architecture (as built, W0-W16)
 
 This is an overview of what the workforce loop built on branch `feature/workforce`. Each area has its own
 document, linked below, with the exact rules, error texts, tests and rollback steps. `ARCHITECTURE_AUDIT.md` is the
@@ -30,9 +30,10 @@ to a shared or production database. The production schema is unknown to the repo
 | W12 | Notification category registry, de-duplication, scheduled jobs (not registered) | `NOTIFICATIONS_AND_SCHEDULING.md` |
 | W13 | Audit reads only through the audited RPC, paged moderation queue, expiry wording, docs | this file and the W13 docs below |
 | W15 | Training booking gate keyed on roster link history (internal `roster_link_history`, its recorder trigger and the private `backfill_roster_link_history()`), training copy (D-79..D-81) | `TRAINING.md` |
+| W16 | Gate holds until the enrollment ends (D-83, D-84), leave and cancel reachable on `failed`, training and shop-removal copy (D-85, D-86), locked clause pin (D-87), authenticated function list pin (D-89) | `TRAINING.md`, `CONTRACT_TEMPLATES.md`, `LIMITATIONS.md` |
 
 W14 was split from W11 (D-49) and built before W12. Its migrations are dated `2026_10_29`, W12's `2026_10_30`, so
-the apply order by file name is W2..W11, W14, W12, W13, W15. Rollback runs in the exact reverse (`ROLLBACK_GUIDE.md`).
+the apply order by file name is W2..W11, W14, W12, W13, W15, W16. Rollback runs in the exact reverse (`ROLLBACK_GUIDE.md`).
 
 Cross-cutting documents added in W13:
 
@@ -106,14 +107,17 @@ Key data rules (details in the area docs):
 - Snapshots are write-once: application snapshots of the opening (W5), the shop verification snapshot at certificate
   issue (W7), sealed contract versions with their rendered text and sha256 hash (W9).
 - Required initial training is free to the worker: `worker_fee` is forced to 0 by a CHECK, and no fee or deduction
-  column exists (J7). The w6h gate (D-17; keyed on link history since W15, D-79) refuses, for every
+  column exists (J7). The w6h gate (D-17; keyed on link history since W15, D-79; holding until the enrollment ends since W16, D-83) refuses, for every
   client role including super_admin, to assign a roster row that is or was linked to a trainee in required training to
-  a customer booking of the training owner, or to start a booking assigned to that row. Trusted sessions bypass it. A
+  a customer booking of the training owner, or to start a booking assigned to that row. It holds after a recorded fail
+  and after the training shop is deleted, and lifts on completion, withdrawal or cancellation, so a recorded pass or a
+  cancel by the owner lifts it (W16-L1). Trusted sessions bypass it. A
   row never linked to the trainee (name-only, or deleted and re-created) is not detected (W15-L1). Exception: a super_admin can assign that trainee to another owner's booking, which is
   outside the gate's scope (W6 REVIEW; W13-L11, `LIMITATIONS.md`). Off-platform work is not visible.
 - A certificate needs at least 3 attended supervised days and a current passed assessment, re-checked under locks (J6).
   Its issuer kind is always `shop_issued`.
-- Contract templates carry `review_status = draft_requires_legal_review` only (D-28). A contract acceptance is a
+- Contract templates carry `review_status = draft_requires_legal_review` only (D-28). A locked clause in the standard
+  template changes only through a human-run migration (D-87, W16-L3). A contract acceptance is a
   recorded acceptance, not an electronic signature (D-6).
 - The distinct-owner count is informational. No contract action reads it, so declining, leaving and terminating are
   never blocked (D-3, J16).
@@ -161,10 +165,10 @@ Vitest runs with mocked repositories only (`LOCAL_TEST_HARNESS.md`).
 
 ## Tests and evidence
 
-- pgTAP: 108 files from a clean reset that applies 97 staged migrations: `Files=108, Tests=3280`, `Result: PASS`
-  (W15 LOG "FIX CYCLE 1 (DB)"; 105 files / 96 migrations / 3198 assertions after W13 fix cycle 1).
-- API smokes: 14 local smokes, run in order by `scripts/supabase-test/run-api-smokes.mjs` (D-77; w15 before w13,
-  D-82): `run-api-smokes: PASS (14 smokes)` in the W15 test run.
+- pgTAP: 113 files from a clean reset that applies 99 staged migrations: `Files=113, Tests=3423`, `Result: PASS`
+  (W16 LOG "FIX CYCLE 1 (DB)"; 113 / 99 / 3405 at the W16 DB build; 108 files / 97 migrations / 3280 assertions after W15 fix cycle 1; 105 / 96 / 3198 after W13 fix cycle 1).
+- API smokes: 15 local smokes, run in order by `scripts/supabase-test/run-api-smokes.mjs` (D-77; w15, then w16, before
+  w13, D-88): `run-api-smokes: PASS (15 smokes)` in the W16 test step.
 - Vitest, lint and build: numbers recorded in STATE.md by the W13 test step.
 - `ACCEPTANCE_TESTS.md` maps J1-J18 and SPEC K to files.
 

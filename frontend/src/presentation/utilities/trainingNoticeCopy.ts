@@ -33,14 +33,28 @@ export const ownerAttestationFootnote =
 
 /** Shown wherever training and paid work could be confused (C7). */
 export const trainingVersusPaidWorkText =
-  "Training is not productive work for customers. While your required training is unfinished, WashLink refuses the training shop's requests to assign you to its customer bookings through a roster entry that is or was linked to your account. WashLink cannot detect a roster entry that was never linked to your account, or work arranged outside WashLink. Terms for any later customer work are agreed separately and are not part of this training."
+  "Training is not productive work for customers. While your required training is unfinished, WashLink refuses requests by the training shop's owner to assign you to that owner's customer bookings through a roster entry that is or was linked to your account. This continues after a not-passed assessment or if the shop is removed, until the training is completed, is cancelled or you leave it; once the shop is removed, only leaving ends it. WashLink cannot detect a roster entry that was never linked to your account, or work arranged outside WashLink. Terms for any later customer work are agreed separately and are not part of this training."
 
 /**
  * W15 fix cycle 1 (C-SF-1, W15-L2): the same distinction addressed to the shop, for owner and designated-trainer
  * views. States the rule and what WashLink refuses; trainee views keep `trainingVersusPaidWorkText` (D-81).
  */
 export const shopTrainingVersusPaidWorkText =
-  "Training is not productive work for customers. The training shop may not assign trainees to customer bookings while their required training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the trainee's account. Terms for any later customer work are agreed separately and are not part of this training."
+  "Training is not productive work for customers. The training shop's owner may not assign trainees to that owner's customer bookings while their required training is unfinished. WashLink refuses such assignments through roster entries that are or were linked to the trainee's account. This continues after a not-passed assessment or a shop removal, until the training is completed, is cancelled or the trainee leaves. Terms for any later customer work are agreed separately and are not part of this training."
+
+/** W16 fix cycle 1 (C-S1): the explanations are read in the progress window; "Leave training" is on the list behind it. */
+export const leaveTrainingLocationText =
+  'You can leave at any time: close this window and press "Leave training" on this training in your list.'
+
+/**
+ * W16 D-85 amendment: progress `failed` with the shop gone. No owner or trainer can correct or cancel any more
+ * (`is_current_training_program_owner` and `is_authorised_training_recorder` need the shop), so only leaving ends it.
+ */
+export const failedAfterShopRemovedExplanation = `Your assessment is recorded as not passed and the shop is no longer on WashLink. This training stays open until you leave it. While it stays open, WashLink refuses this owner's requests to assign you to their customer bookings through a linked roster entry. ${leaveTrainingLocationText}`
+
+/** W16 fix cycle 1 (C-S2): plain facts about what leaving changes; the worker reads them before confirming. */
+export const leaveTrainingConfirmationText =
+  "Your training ends unfinished. Your records stay visible to you. This cannot be undone; the shop would need to invite you again. This training's owner may then be able to assign you to their customer bookings. If a not-passed assessment is recorded, it can no longer be corrected once you leave. A new invitation starts again at 0 attended days."
 
 export const enrollmentIsNotContractText =
   'An invitation or an accepted enrollment is not a contract, a job offer or a certification.'

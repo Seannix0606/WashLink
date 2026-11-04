@@ -83,7 +83,7 @@ set only by the per-contract choice; W8-L11 adds the locked, neutral `training_p
 offer pay for training time or reimbursement of training costs as written in the contract, no amounts, no legal
 claim; `safeguards_prevail` now covers shop-specific terms, attachments and any clause text the shop writes or
 edits). The section-14 wording follows the D-6 proposed default (draft-and-acceptance, not an e-signature); if D-6
-changes, a super_admin publishes a new platform version.
+changes, locked text changes only through a human-run migration (W16 D-87) and editable text through a new platform version.
 
 Placeholders `{{worker_classification}}`, `{{owner_full_name}}` and `{{worker_full_name}}` are locked-only by
 design: they may appear only in `locked_safeguard` clauses (platform and owner versions). The other placeholders
@@ -97,7 +97,7 @@ may appear in editable and shop text.
 | owner template | active | active, v n+1 | the template owner | `save_owner_contract_template_version`; expected version; content changed; base = current base or latest standard |
 | owner template | active <-> archived | | the template owner | `set_owner_contract_template_status`; restore respects the 25 limit; versions kept |
 | owner template | any | deleted | nobody directly | cascade when the owner account is deleted (audit `deleted`) |
-| platform template | v n | v n+1 | super_admin | `publish_platform_contract_template_version`; core keys stay locked; review_status stays draft |
+| platform template | v n | v n+1 | super_admin | `publish_platform_contract_template_version`; core keys stay locked; no locked clause added, removed or changed (W16 D-87); review_status stays draft |
 | version | (none) | sealed | the RPCs, the w8e seed | version + clauses in one transaction, validated at once and at commit, then immutable |
 
 Everything else is refused: worker, customer, anon, another owner, super_admin on owner templates, an owner on
@@ -178,6 +178,21 @@ still passes.
 
 ## Limitations
 
+- W16 D-87 (F-C1, W16-L3): migration `2026_11_04_w16b_contract_template_core_text_pin.sql` adds the deferred constraint
+  trigger `contract_template_versions_zz_core_text_pin` (sorts after `contract_template_versions_validate_at_commit`, so
+  earlier refusals keep their order). For a non-trusted session, a new platform version that adds or removes a locked clause, or changes
+  the section, heading, body or `requires_owner_input` of one, compared with the highest lower version, is refused with 23514 at commit: "WashLink safeguard text in the standard template can change
+  only through a human-run migration: <keys>." The publish flow shows this text, with the keys. The function comment starts
+  with `W8`, because the w8a preflight and `w8p_every_w8_function_has_w8_comment` require it of every `contract_template`
+  function; `j17_w8_contract_template_authorization` lists it as internal (26 -> 27). Limits: no second reviewer is required; added or changed editable clauses are still allowed and can contradict a safeguard
+  (W8-L12); clause order is not compared, because an added editable clause moves positions, so locked clauses can be reordered
+  within a section; versions published before the pin are not re-checked. Owner templates are not affected. The refusals of an added or removed locked clause ran in pgTAP with the constraint forced immediate. Through PostgREST at a real commit, only the changed-core-body refusal is exercised (same trigger).
+  The function and trigger keep their `core_text_pin` names, although the rule now covers every locked clause.
+- Human-run migration route (W16 D-87; D-28 covers recording review, not changing text). In one trusted-session transaction:
+  `contract_template_insert_version(<template id>, null, <full clause list>, 0, 0)`; then
+  `update public.contract_templates set current_version_number = <new version> where id = <template id>`; then
+  `select set_config('washlink.contract_template_write', '', true)`. Later versions compare against the new text. Only the
+  test fixture does this (`j9_w16_core_safeguard_text_pinned`:45-62, the `trusted_publish` helper); no such migration has been run.
 - R4: the write flag relies on PostgREST not exposing `set_config` (smoke-tested). Trusted SQL can set it but
   still meets the commit validator; not tamper-proof against a superuser or table owner (who can disable
   triggers).
@@ -192,7 +207,7 @@ still passes.
   lists versions itself (`ContractTemplateVersionHistory` stays owner-only and unchanged); it calls the unchanged W8
   `publish_platform_contract_template_version(p_expected_version_number, p_clauses)`, reusing
   `platform_contract_template_current`, `contract_template_version_history` and `contract_template_version_clauses`.
-  Locked clauses are read-only in the UI; `ContractTemplatePreview` is reused; the server still enforces every W8 rule. Publishing does not make the standard
+  Locked clauses are read-only in the UI (since W16 the server also refuses any added, removed or changed locked clause); `ContractTemplatePreview` is reused; the server still enforces every W8 rule. Publishing does not make the standard
   template legally reviewed: it stays "Draft — requires review by a qualified Philippine labor-law professional" (D-28,
   W14-L11). Owner versions and sent contracts are unchanged
   (`j18_w14_platform_publish_leaves_owner_versions_and_contract_hashes_unchanged`). No W14 migration touches W8 objects.
@@ -204,7 +219,7 @@ still passes.
 
 ## Rollback
 
-Per-file `-- ROLLBACK` blocks in reverse order h..a, local stack only. h: producers (audit rows stay). g: reads.
+W16 first: the w16b `-- ROLLBACK` block drops the core text pin (no data involved). Then per-file `-- ROLLBACK` blocks in reverse order h..a, local stack only. h: producers (audit rows stay). g: reads.
 f: RPCs. e: the platform rows (the guards refuse deleting them; disable the guards as a trusted session or roll
 back c instead). d: rules and the commit validator. c: the three template tables (IRREVERSIBLE loss of owner
 templates; export with a trusted `copy` first). b: reference tables. a: nothing. Stager: drop the third

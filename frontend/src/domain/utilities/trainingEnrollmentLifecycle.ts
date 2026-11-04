@@ -13,7 +13,11 @@ export type WorkerTrainingAction = 'accept' | 'decline' | 'leave'
 
 export type OwnerTrainingEnrollmentAction = 'cancel_invitation' | 'cancel_enrollment'
 
-const finishedProgressStatuses: ReadonlySet<TrainingProgressStatus> = new Set(['completed', 'failed'])
+/**
+ * Owner cancel mirrors `cancel_training_enrollment`: a failed enrollment can be cancelled (D-84), a completed one
+ * cannot, and after a shop removal the owner no longer passes the RPC's program-owner check (42501).
+ */
+const ownerCannotCancelProgressStatuses: ReadonlySet<TrainingProgressStatus> = new Set(['completed', 'shop_removed'])
 
 export function workerTrainingActions(
   enrollmentStatus: TrainingEnrollmentStatus,
@@ -25,8 +29,8 @@ export function workerTrainingActions(
     return canAccept ? ['accept', 'decline'] : ['decline']
   }
   if (enrollmentStatus === 'accepted') {
-    // A worker may always leave unfinished training, also after the shop was removed.
-    return progressStatus !== null && finishedProgressStatuses.has(progressStatus) ? [] : ['leave']
+    // A worker may leave anything not completed, also after a not-passed assessment or a shop removal (D-84).
+    return progressStatus === 'completed' ? [] : ['leave']
   }
   return []
 }
@@ -38,7 +42,7 @@ export function ownerTrainingEnrollmentActions(
   if (enrollmentStatus === 'invited') {
     return ['cancel_invitation']
   }
-  if (enrollmentStatus === 'accepted' && !finishedProgressStatuses.has(progressStatus)) {
+  if (enrollmentStatus === 'accepted' && !ownerCannotCancelProgressStatuses.has(progressStatus)) {
     return ['cancel_enrollment']
   }
   return []

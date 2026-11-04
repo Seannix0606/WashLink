@@ -28,7 +28,7 @@ interface StandardContractEditorProps {
 
 /**
  * Editor for a new standard version. WashLink safeguard clauses are read-only here (the database
- * also copies them unchanged); editable clauses can change heading and text.
+ * also refuses any added, removed or changed safeguard clause, W16 D-87); editable clauses can change heading and text.
  */
 export function StandardContractEditor({
   draft,

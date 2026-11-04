@@ -133,9 +133,9 @@ create temporary table j17t_internal (sig) on commit drop as select unnest(array
   'contract_template_latest_platform_version()', 'contract_template_name_or_fail(text)', 'contract_template_assert_active_limit(uuid)',
   'lock_owner_contract_template(uuid)', 'contract_template_checked_shop_terms(jsonb)', 'contract_template_owner_clause_list(uuid, jsonb, jsonb)',
   'contract_template_editable_bodies(uuid)', 'contract_template_shop_terms(uuid)', 'contract_template_changed_by()', 'contract_templates_audit()',
-  'contract_template_versions_audit()']);
+  'contract_template_versions_audit()', 'contract_template_core_text_pin()']);  -- W16 (D-87) adds the core text pin
 grant all on j17t_rpcs, j17t_internal to public;
-select is((select count(*)::int from j17t_internal where to_regprocedure('public.' || sig) is not null), 26, 'j17_w8_internal_functions_not_client_executable');
+select is((select count(*)::int from j17t_internal where to_regprocedure('public.' || sig) is not null), 27, 'j17_w8_internal_functions_not_client_executable');
 select is((select count(*)::int from j17t_internal i, unnest(array['anon', 'authenticated', 'service_role']) r(role_name)
            where has_function_privilege(r.role_name, to_regprocedure('public.' || i.sig), 'execute')), 0, 'j17_w8_internal_functions_not_client_executable');
 select is((select count(*)::int from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname ~ 'contract_template'

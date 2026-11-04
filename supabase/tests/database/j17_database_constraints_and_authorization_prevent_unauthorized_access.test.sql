@@ -1,11 +1,12 @@
 -- J17 roll-up (W13 PLAN section 6 test 1, section 8): database constraints and authorization prevent unauthorized
--- access, checked in ONE place over the whole workforce schema after all 97 migrations. The workforce table list below
+-- access, checked in ONE place over the whole workforce schema after all 99 migrations. The workforce table list below
 -- is explicit; the first test proves it equals every public base table that is not part of the pre-workforce schema
 -- (local baseline + the four pre-W2 migrations: profiles, workers, bookings, shops, shop_pricing,
 -- shop_verification_documents), so a new table that is not added here fails this file. Per-increment detail stays in
 -- j17_authorization_harness and the j17_w<n>_* files. Allow-lists name every grant / function that exists by design;
 -- anything new fails. Fix cycle 1 (W13 S2 / S3 / S6 / N1 / N2 / N3) adds: every public sequence, column-level grants,
 -- TRUNCATE / REFERENCES / TRIGGER on every public table (pre-workforce included), the pepper and the guard trigger set.
+-- The authenticated-executable function list is pinned separately (W16 D-89): j17_w16_authenticated_executable_function_list.
 -- Local Docker stack only; synthetic fixtures.
 begin;
 create extension if not exists pgtap with schema extensions;

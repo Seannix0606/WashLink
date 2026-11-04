@@ -1,10 +1,10 @@
--- W1..W15 migration replay: objects from each committed migration exist after
--- baseline + 95 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12, 4 W13, 1 W15)
+-- W1..W16 migration replay: objects from each committed migration exist after
+-- baseline + 97 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12, 4 W13, 1 W15, 2 W16)
 -- replayed in order, with the owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W14 AC2; W13 AC2;
--- W15 AC2; 97 staged migrations in total).
+-- W15 AC2; W16 AC2; 99 staged migrations in total).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(29);
 
 -- 2026_04_17
 select has_table('public', 'shops', 'replay_shops_created');
@@ -84,7 +84,8 @@ select results_eq(
             ('20261029000011'), ('20261029000012'), ('20261029000013'), ('20261029000014'), ('20261029000015'),
             ('20261029000016'), ('20261029000017'), ('20261029000018'), ('20261030000001'), ('20261030000002'),
             ('20261030000003'), ('20261030000004'), ('20261030000005'), ('20261030000006'),
-            ('20261030000007'), ('20261030000008'), ('20261030000009'), ('20261103000001') $$,
+            ('20261030000007'), ('20261030000008'), ('20261030000009'), ('20261103000001'),
+            ('20261104000001'), ('20261104000002') $$,
   'replay_schema_migrations_has_baseline_w2_to_w14_w12_and_w13'
 );
 
@@ -250,6 +251,12 @@ select is((select c.relrowsecurity::text || ',' || (select count(*) from pg_poli
                                select 1 from public.roster_link_history h where h.worker_row_id = w.id and h.user_id = w.user_id))
            from pg_class c where c.oid = to_regclass('public.roster_link_history')),
           'true,0,1,0', 'replay_w15_link_history_table_trigger_and_backfill_present');
+-- W16 (D-83, D-87): the gate no longer needs the training shop and reads "not completed"; the core text pin is a deferred constraint trigger.
+select is((select (p.prosrc !~ 'e.shop_id')::text || ',' || (p.prosrc ~ '<> ''completed''')::text from pg_proc p
+           where p.oid = 'public.roster_worker_in_required_training(uuid, uuid)'::regprocedure)
+          || ',' || (select g.tgdeferrable::text || ',' || g.tginitdeferred::text from pg_trigger g where g.tgrelid = 'public.contract_template_versions'::regclass
+                     and g.tgname = 'contract_template_versions_zz_core_text_pin' and not g.tgisinternal),
+          'true,true,true,true', 'replay_w16_gate_and_core_pin_present');
 -- No public SECURITY DEFINER function runs without a pinned search_path.
 select is(
   (

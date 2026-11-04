@@ -33,7 +33,7 @@ describe('Training lifecycles (W6)', () => {
     expect(workerTrainingActions('accepted', 'in_progress', 'open')).toEqual(['leave'])
     expect(workerTrainingActions('accepted', 'shop_removed', null)).toEqual(['leave'])
     expect(workerTrainingActions('accepted', 'completed', 'open')).toEqual([])
-    expect(workerTrainingActions('accepted', 'failed', 'open')).toEqual([])
+    expect(workerTrainingActions('accepted', 'failed', 'open')).toEqual(['leave']) // W16 D-84
     expect(workerTrainingActions('declined', 'declined', 'open')).toEqual([])
     expect(workerTrainingActions('withdrawn', 'withdrawn', 'open')).toEqual([])
     // Owner: withdraw an invitation, cancel unfinished accepted training; nothing else.
