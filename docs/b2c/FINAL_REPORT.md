@@ -60,7 +60,7 @@ See `ARCHITECTURE.md`. Web and Expo share `packages/shared`, and both talk to on
 | `packages/shared/` | New shared package |
 | `supabase/migrations/2026_11_06_b2c{a..e}_*.sql` | 5 new migrations |
 | `supabase/functions/send-service-push/` | Push sender, never run |
-| `supabase/tests/database/j19_*` | New tests. Six earlier roll-up tests had their expected counts extended; no checks were removed |
+| `supabase/tests/database/j19_*` | New tests. Five earlier roll-up tests had their expected counts extended; no checks were removed |
 | `frontend/src/features/b2c/` | Landing, customer, washer and admin screens |
 | `frontend/` existing files | `App.tsx`, role picker, admin dashboard and tabs, sign-in copy, map labels, build config |
 | `mobile/` | New Expo app |
@@ -115,7 +115,7 @@ Latest run on this code:
 | API smokes | 16 smokes, pass (B2C: 49 checks) |
 | Web unit tests | 155 files, 352 tests, pass |
 | Web lint and type-check | Clean |
-| Web production build | Pass, run before the final small mobile-only and wizard changes |
+| Web production build | Pass |
 | Mobile type-check | Clean |
 | Mobile unit tests | 5 pass. This is thin coverage: logic only, no screens |
 | Expo Doctor | 20 of 20 |
