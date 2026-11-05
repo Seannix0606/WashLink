@@ -81,3 +81,9 @@ node scripts/supabase-test/b2c-dev-server.mjs
 ```
 
 The seed script's header lists its test accounts. They exist only on the local stack.
+
+`docker compose up` uses the Supabase project named in your `.env`, not the local stack. Until the B2C migrations are on that project, the site loads but services show as unavailable and booking fails. The dev server above also uses port 5173, so stop the Docker frontend first:
+
+```bash
+docker compose stop frontend
+```
