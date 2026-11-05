@@ -36,7 +36,7 @@ Cash only. WashLink records expected amounts and does not confirm that cash chan
 
 | Use | Web | Mobile |
 | --- | --- | --- |
-| Map tiles | OpenStreetMap | OpenStreetMap tiles |
+| Map | OpenStreetMap tiles | Apple Maps on iPhone, Google Maps on Android (needs a key) |
 | Address lookup | Nominatim public service | Nominatim public service |
 | Directions | Opens Google Maps by link | Opens the phone's maps app by link |
 

@@ -1,7 +1,15 @@
 import type { ReactElement } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
-import { createBookingSubmissionKey, type CatalogAddon, type CatalogService, type VehicleCategory } from '@washlink/shared'
+import {
+  bookingStepProblem,
+  bookingStepTitles,
+  createBookingSubmissionKey,
+  emptyBookingDraft,
+  type BookingDraft,
+  type CatalogAddon,
+  type CatalogService,
+} from '@washlink/shared'
 import { Button, Skeleton } from '../../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../../b2cApiClient'
 import { StepWhen } from './StepWhen'
@@ -10,20 +18,7 @@ import { StepService } from './StepService'
 import { StepVehicle } from './StepVehicle'
 import { StepReview } from './StepReview'
 
-export interface WizardDraft {
-  readonly isImmediate: boolean
-  readonly scheduledAt: string | null
-  readonly address: string
-  readonly latitude: number | null
-  readonly longitude: number | null
-  readonly landmark: string
-  readonly instructions: string
-  readonly serviceId: string | null
-  readonly addonIds: readonly string[]
-  readonly vehicleCategory: VehicleCategory
-  readonly vehicleMake: string
-  readonly vehicleModel: string
-}
+export type WizardDraft = BookingDraft
 
 export interface StepProps {
   readonly draft: WizardDraft
@@ -31,24 +26,6 @@ export interface StepProps {
   readonly services: readonly CatalogService[]
   readonly addons: readonly CatalogAddon[]
   readonly customerId: string
-}
-
-const stepTitles = ['When', 'Where', 'Service', 'Vehicle', 'Review'] as const
-
-function stepProblem(step: number, draft: WizardDraft): string | null {
-  if (step === 0 && !draft.isImmediate && draft.scheduledAt === null) {
-    return 'Choose a time, or book for as soon as possible.'
-  }
-  if (step === 1 && (draft.latitude === null || draft.address.trim().length < 8)) {
-    return 'Pin the location and confirm the full address.'
-  }
-  if (step === 2 && draft.serviceId === null) {
-    return 'Choose a service.'
-  }
-  if (step === 3 && (draft.vehicleMake.trim() === '' || draft.vehicleModel.trim() === '')) {
-    return 'Enter the vehicle make and model.'
-  }
-  return null
 }
 
 interface BookingWizardProps {
@@ -62,10 +39,7 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
   const [addons, setAddons] = useState<readonly CatalogAddon[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [stepError, setStepError] = useState<string | null>(null)
-  const [draft, setDraft] = useState<WizardDraft>({
-    isImmediate: false, scheduledAt: null, address: '', latitude: null, longitude: null, landmark: '', instructions: '',
-    serviceId: null, addonIds: [], vehicleCategory: 'sedan', vehicleMake: '', vehicleModel: '',
-  })
+  const [draft, setDraft] = useState<WizardDraft>(emptyBookingDraft)
   // One key per wizard: a repeated or interrupted submit returns the same booking, never a second one.
   const submissionKey = useMemo(() => createBookingSubmissionKey(crypto.randomUUID()), [])
 
@@ -95,7 +69,7 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
   }
 
   const goNext = (): void => {
-    const problem = stepProblem(step, draft)
+    const problem = bookingStepProblem(step, draft)
     setStepError(problem)
     if (problem === null) {
       setStep(step + 1)
@@ -110,8 +84,8 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
           Leave booking
         </button>
         <h1 className="mt-1 text-2xl font-bold text-[var(--color-ink-900)]">Book a car wash</h1>
-        <ol className="mt-3 flex gap-1.5" aria-label={`Step ${String(step + 1)} of ${String(stepTitles.length)}`}>
-          {stepTitles.map((title, index) => (
+        <ol className="mt-3 flex gap-1.5" aria-label={`Step ${String(step + 1)} of ${String(bookingStepTitles.length)}`}>
+          {bookingStepTitles.map((title, index) => (
             <li key={title} aria-current={index === step ? 'step' : undefined} className="min-w-0 flex-1">
               <span className={index <= step ? 'block h-1.5 rounded-full bg-[var(--color-brand-600)]' : 'block h-1.5 rounded-full bg-[var(--color-ink-200)]'} />
               <span className={index === step ? 'mt-1 block truncate text-xs font-semibold text-[var(--color-ink-900)]' : 'mt-1 block truncate text-xs text-[var(--color-ink-500)]'}>{title}</span>
