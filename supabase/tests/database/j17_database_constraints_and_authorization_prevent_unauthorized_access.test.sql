@@ -27,7 +27,11 @@ insert into j17r_tables values
 create temporary table j17r_views (name text primary key) on commit drop;
 insert into j17r_views values ('shop_verification_review_log'), ('training_enrollment_progress');
 create function pg_temp.pre_workforce() returns text[] language sql immutable as $$
-  select array['bookings', 'profiles', 'shop_pricing', 'shop_verification_documents', 'shops', 'workers'] $$;
+  select array['bookings', 'profiles', 'shop_pricing', 'shop_verification_documents', 'shops', 'workers',
+    -- B2C tables: grants, RLS and Realtime are pinned in j19_b2c_authorization.
+    'customer_addresses', 'customer_vehicles', 'device_push_tokens', 'dispatch_requests', 'independent_worker_hours',
+    'independent_worker_services', 'independent_workers', 'platform_settings', 'service_addons', 'service_booking_reviews',
+    'service_booking_status_events', 'service_bookings', 'service_vehicle_prices', 'services'] $$;
 create function pg_temp.rels(p_kinds "char"[]) returns setof text language sql stable as $$
   select c.relname::text from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = any (p_kinds) $$;
 -- (role, table, privileges) held by design. Anything else on a workforce table or view fails (D-78: w13b revoked the
@@ -175,7 +179,7 @@ select ok((select count(*) from pg_proc p where p.pronamespace = 'public'::regna
 -- ---------- anon executes only the five pre-workforce functions ----------
 select is((select string_agg(p.oid::regprocedure::text, ',' order by p.oid::regprocedure::text) from pg_proc p
            where p.pronamespace = 'public'::regnamespace and has_function_privilege('anon', p.oid, 'execute')),
-          'can_manage_shop_verification_storage(text),handle_new_user(),is_super_admin(),set_booking_quote_from_shop_pricing(),'
+          'b2c_public_status(),can_manage_shop_verification_storage(text),handle_new_user(),is_super_admin(),set_booking_quote_from_shop_pricing(),'
           || 'set_shop_pricing_updated_at()', 'j17_anon_executes_no_workforce_function');
 select is((select count(*)::int from pg_proc p where p.pronamespace = 'washlink_private'::regnamespace
              and (has_function_privilege('anon', p.oid, 'execute') or has_function_privilege('authenticated', p.oid, 'execute'))),

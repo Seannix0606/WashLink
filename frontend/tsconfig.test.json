@@ -15,6 +15,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    "paths": { "@washlink/shared": ["../packages/shared/src/index.ts"] },
 
     /* Linting */
     "noUnusedLocals": true,
@@ -24,6 +25,7 @@
   "include": [
     "src/vite-env.d.ts",
     "src/test",
+    "../packages/shared/src",
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
   ]

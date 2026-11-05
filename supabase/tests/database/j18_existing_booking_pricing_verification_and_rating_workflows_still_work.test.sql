@@ -32,7 +32,7 @@ select count(test_helpers.add_training_session(pg_temp.id('p1'), test_helpers.ma
 select test_helpers.open_training_program(pg_temp.id('p1')) is not null as opened;
 insert into j18r_ids values ('et', test_helpers.create_accepted_enrollment(pg_temp.id('p1'), pg_temp.id('wt')));
 insert into j18r_ids values ('b1', gen_random_uuid()), ('b2', test_helpers.create_booking_fixture(pg_temp.id('c1'), pg_temp.id('s1')));
-select ok((select count(*) from supabase_migrations.schema_migrations) = 99
+select ok((select count(*) from supabase_migrations.schema_migrations) = 104
           and (select status from public.worker_contracts where id = pg_temp.id('k1')) = 'active'
           and (select status from public.certifications where id = pg_temp.id('cert')) = 'active'
           and (select status from public.training_enrollments where id = pg_temp.id('et')) = 'accepted',

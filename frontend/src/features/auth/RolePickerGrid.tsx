@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { HardHat, Store, User } from 'lucide-react'
 import type { SignUpRole } from '../../domain/models/AuthenticatedUser'
+import { featureFlags } from '../../application/featureFlags'
 import { joinClassNames } from '../../presentation/design/classNames'
 
 interface RolePickerOption {
@@ -31,6 +32,11 @@ const rolePickerOptions: readonly RolePickerOption[] = [
   },
 ]
 
+// Owner sign-up is a B2B feature. Hiding it is a release choice, not authorization.
+const visibleRolePickerOptions = featureFlags.isB2bEnabled
+  ? rolePickerOptions
+  : rolePickerOptions.filter((rolePickerOption) => rolePickerOption.value !== 'owner')
+
 interface RolePickerGridProps {
   readonly selectedRole: SignUpRole
   readonly onRoleSelected: (nextRole: SignUpRole) => void
@@ -46,8 +52,8 @@ export function RolePickerGrid({
       <legend className="text-sm font-medium text-[var(--color-ink-900)]">
         Choose your account type
       </legend>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {rolePickerOptions.map((rolePickerOption) => {
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {visibleRolePickerOptions.map((rolePickerOption) => {
           const isSelected = rolePickerOption.value === selectedRole
           return (
             <button

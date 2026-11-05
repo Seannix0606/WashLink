@@ -1,4 +1,5 @@
 import { Fragment, createElement, lazy, Suspense, type ReactElement } from 'react'
+import { featureFlags } from './application/featureFlags'
 import { isSupabaseConfigured } from './infrastructure/supabase/supabaseClient'
 import {
   AuthenticatedUserProvider,
@@ -24,6 +25,10 @@ const ResetPasswordPage = lazy(async () => ({
 }))
 const SuperAdminDashboardPage = lazy(async () => ({
   default: (await import('./presentation/pages/SuperAdminDashboardPage')).SuperAdminDashboardPage,
+}))
+
+const OwnerAccountPausedScreen = lazy(async () => ({
+  default: (await import('./features/auth/OwnerAccountPausedScreen')).OwnerAccountPausedScreen,
 }))
 
 function SupabaseEnvMissingScreen(): ReactElement {
@@ -103,6 +108,14 @@ function AppContent(): ReactElement {
       createElement(SuperAdminDashboardPage, {
         superAdminIdentifier: authenticatedUser.userIdentifier,
       }),
+    )
+  }
+
+  if (authenticatedUser.role === 'owner' && !featureFlags.isB2bEnabled) {
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(OwnerAccountPausedScreen),
     )
   }
 
