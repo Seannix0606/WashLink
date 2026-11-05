@@ -15,7 +15,7 @@ import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const SMOKE_ORDER = ['w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9', 'w10', 'w11', 'w14', 'w12', 'w15', 'w16', 'w13']
+export const SMOKE_ORDER = ['w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9', 'w10', 'w11', 'w14', 'w12', 'w15', 'w16', 'b2c', 'w13']
 const FORBIDDEN_ARGUMENTS = ['--db-url', '--linked', '--project-ref']
 const FORBIDDEN_ENVIRONMENT = ['SUPABASE_DB_URL', 'SUPABASE_ACCESS_TOKEN', 'SUPABASE_PROJECT_ID', 'SUPABASE_DB_PASSWORD']
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))

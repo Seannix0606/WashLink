@@ -20,6 +20,7 @@ export default mergeConfig(
         VITE_SUPABASE_ANON_KEY: 'vitest-placeholder-not-a-key',
         // Existing owner and workforce tests run with B2B on; the B2C default has its own tests.
         VITE_FEATURE_B2B: 'true',
+        VITE_FEATURE_B2C: 'false',
       },
     },
   }),

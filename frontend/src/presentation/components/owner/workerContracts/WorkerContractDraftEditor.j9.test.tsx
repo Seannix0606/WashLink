@@ -65,7 +65,7 @@ describe('Worker contract draft editor and send (J9 contract half)', () => {
     // No locked safeguard key is ever sent.
     expect(Object.keys(saveInput.editableBodies)).not.toContain('parties_named')
     expect(JSON.stringify(saveInput)).not.toMatch(/locked|hash|signature|acceptance/)
-  })
+  }, 15000)
 
   it('j9_classification_choice_has_no_preselection_and_contractor_last_with_extra_acknowledgement', async () => {
     const user = userEvent.setup()

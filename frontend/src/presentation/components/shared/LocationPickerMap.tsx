@@ -31,6 +31,8 @@ interface LocationPickerMapProps {
   readonly fallbackCenter?: PickedLocationValue
   readonly zoomLevel?: number
   readonly heightClassName?: string
+  readonly overlayTitle?: string
+  readonly overlayHint?: string
 }
 
 const defaultFallbackCenter: PickedLocationValue = {
@@ -76,6 +78,8 @@ export function LocationPickerMap({
   fallbackCenter = defaultFallbackCenter,
   zoomLevel = 14,
   heightClassName = 'h-[23rem] sm:h-[27rem]',
+  overlayTitle = 'Choose your wash location',
+  overlayHint,
 }: LocationPickerMapProps): ReactElement {
   const mapCenterLatitude = pickedLocation?.latitude ?? fallbackCenter.latitude
   const mapCenterLongitude =
@@ -175,12 +179,12 @@ export function LocationPickerMap({
       <div className="pointer-events-none absolute inset-x-3 top-3 z-[400] flex items-start justify-between gap-2">
         <div className="rounded-2xl bg-white/95 px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur">
           <p className="text-xs font-semibold text-[var(--color-ink-900)]">
-            Choose your wash location
+            {overlayTitle}
           </p>
           <p className="mt-0.5 text-[10px] text-[var(--color-ink-500)]">
-            {isShopPicker
+            {overlayHint ?? (isShopPicker
               ? 'Drag the pin or tap the map. Tap a shop pin to select it.'
-              : 'Tap the map to place a pin, then drag it to adjust.'}
+              : 'Tap the map to place a pin, then drag it to adjust.')}
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-1.5">

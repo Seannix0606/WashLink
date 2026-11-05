@@ -1,3 +1,5 @@
+import { featureFlags } from '../../application/featureFlags'
+import { B2cOperationsPanel } from '../b2c/admin/B2cOperationsPanel'
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useMemo, useState } from 'react'
 import { createSuperAdminDependencies } from '../../presentation/dependencyInjection/createSuperAdminDependencies'
@@ -64,13 +66,24 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
     () => createSuperAdminDependencies(),
     [],
   )
-  const [activeTab, setActiveTab] = useState<SuperAdminTabKey>(defaultSuperAdminTab)
+  const [activeTab, setActiveTab] = useState<SuperAdminTabKey>(
+    featureFlags.isB2cEnabled ? 'b2c_operations' : defaultSuperAdminTab,
+  )
   const moderationDependencies = oversightDependencies.moderationDependencies
-  const tabItems = superAdminTabItemsFor(moderationDependencies !== undefined)
+  const workforceTabItems = superAdminTabItemsFor(moderationDependencies !== undefined)
+  // With shop features off, their tabs are hidden, not removed: VITE_FEATURE_B2B=true brings them back.
+  const visibleWorkforceTabs = featureFlags.isB2bEnabled
+    ? workforceTabItems
+    : workforceTabItems.filter((tabItem) => tabItem.value === 'audit_log')
+  const tabItems = featureFlags.isB2cEnabled
+    ? [{ value: 'b2c_operations' as const, label: 'Bookings and washers' }, ...visibleWorkforceTabs]
+    : workforceTabItems
   const panelFallback = <Skeleton heightClassName="h-40" />
 
   const renderActivePanel = (): ReactElement => {
     switch (activeTab) {
+      case 'b2c_operations':
+        return <B2cOperationsPanel />
       case 'overview':
         return (
           <AdminOverviewPanel
@@ -124,7 +137,10 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
         <header className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-[var(--color-ink-900)] sm:text-3xl">Platform administration</h1>
           <p className="text-sm text-[var(--color-ink-500)]">
+            {featureFlags.isB2bEnabled ? null : 'Bookings, washers, prices and the audit log.'}
+            {featureFlags.isB2bEnabled ? (<>
             Shop verification, posting reports, WashLink reviews of certification decisions, reported contract problems, the standard contract template, audited lookups and workforce policies.
+            </>) : null}
           </p>
         </header>
 

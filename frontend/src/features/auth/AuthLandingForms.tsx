@@ -1,4 +1,5 @@
 import type { ReactElement, SyntheticEvent } from 'react'
+import { featureFlags } from '../../application/featureFlags'
 import { Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react'
 import type { SignUpRole } from '../../domain/models/AuthenticatedUser'
 import { Button, Card, IconButton, Input } from '../../presentation/design/ui'
@@ -37,7 +38,7 @@ export function SignInForm({
           Welcome back
         </h1>
         <p className="text-sm text-[var(--color-ink-500)]">
-          Sign in to book a wash or manage your shop.
+          {featureFlags.isB2bEnabled ? 'Sign in to book a wash or manage your shop.' : 'Sign in to book a wash or manage your work.'}
         </p>
       </header>
 

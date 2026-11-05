@@ -6,6 +6,7 @@ import type { TabItemDefinition } from '../../design/ui'
  * the W14 services (callers that predate W14) the W11 five tabs are kept.
  */
 export type SuperAdminTabKey =
+  | 'b2c_operations'
   | 'overview'
   | 'shop_verification'
   | 'posting_reports'

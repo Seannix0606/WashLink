@@ -35,7 +35,13 @@ const rolePickerOptions: readonly RolePickerOption[] = [
 // Owner sign-up is a B2B feature. Hiding it is a release choice, not authorization.
 const visibleRolePickerOptions = featureFlags.isB2bEnabled
   ? rolePickerOptions
-  : rolePickerOptions.filter((rolePickerOption) => rolePickerOption.value !== 'owner')
+  : rolePickerOptions
+      .filter((rolePickerOption) => rolePickerOption.value !== 'owner')
+      .map((rolePickerOption) =>
+        rolePickerOption.value === 'worker'
+          ? { ...rolePickerOption, description: 'Accept bookings as an independent washer.' }
+          : rolePickerOption,
+      )
 
 interface RolePickerGridProps {
   readonly selectedRole: SignUpRole

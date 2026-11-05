@@ -5,10 +5,15 @@
 export interface FeatureFlags {
   /** Shop owner sign-up, sign-in routing, dashboards and workforce tools (docs/b2c/B2B_REACTIVATION.md). */
   readonly isB2bEnabled: boolean
+  /** The on-demand customer and independent worker experience. On unless explicitly turned off. */
+  readonly isB2cEnabled: boolean
 }
 
 type EnvironmentReader = (name: string) => string | undefined
 
 export function readFeatureFlags(readEnvironment: EnvironmentReader): FeatureFlags {
-  return { isB2bEnabled: readEnvironment('FEATURE_B2B') === 'true' }
+  return {
+    isB2bEnabled: readEnvironment('FEATURE_B2B') === 'true',
+    isB2cEnabled: readEnvironment('FEATURE_B2C') !== 'false',
+  }
 }
