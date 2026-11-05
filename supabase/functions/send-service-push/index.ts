@@ -4,6 +4,8 @@
 // The service role key is only available here, on the server. It is never in the web or mobile apps.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
+import { secretsMatch } from './secretsMatch.ts'
+
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send'
 const PUSH_CATEGORIES = new Set(['service_booking.update', 'service_booking.request', 'service_booking.request_closed'])
 
@@ -15,8 +17,7 @@ interface NotificationRow {
 }
 
 Deno.serve(async (request) => {
-  const secret = Deno.env.get('PUSH_WEBHOOK_SECRET')
-  if (!secret || request.headers.get('x-webhook-secret') !== secret) {
+  if (!secretsMatch(request.headers.get('x-webhook-secret'), Deno.env.get('PUSH_WEBHOOK_SECRET'))) {
     return new Response('Forbidden', { status: 403 })
   }
   const payload = (await request.json()) as { record?: NotificationRow }

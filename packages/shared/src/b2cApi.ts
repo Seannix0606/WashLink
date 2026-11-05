@@ -98,6 +98,7 @@ export interface DispatchRequest {
   readonly isImmediate: boolean
   readonly scheduledAt: string
   readonly durationMinutes: number
+  /** The upper bound of a distance band (2, 5, 10, 20, 50 or 200 km), never a measured distance. Show it with `distanceBandLabel`. */
   readonly distanceKm: number | null
   readonly workerEarningsCents: number
   readonly expiresAt: string

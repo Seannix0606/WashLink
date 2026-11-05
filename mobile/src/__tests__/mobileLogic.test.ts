@@ -1,4 +1,14 @@
-import { bookingStepProblem, emptyBookingDraft } from '@washlink/shared'
+import {
+  OVERDUE_CANCEL_GRACE_MINUTES,
+  WORKER_START_WINDOW_MINUTES,
+  bookingStepProblem,
+  canCustomerCancel,
+  canCustomerCancelOverdue,
+  canWorkerAdvanceNow,
+  distanceBandLabel,
+  emptyBookingDraft,
+  workerPausedNotice,
+} from '@washlink/shared'
 import * as SecureStore from 'expo-secure-store'
 import { secureSessionStorage } from '../lib/secureSessionStorage'
 import { routeFromNotification } from '../push/pushNotifications'
@@ -59,5 +69,47 @@ describe('booking steps', () => {
     expect(bookingStepProblem(2, emptyBookingDraft)).not.toBeNull()
     expect(bookingStepProblem(3, emptyBookingDraft)).not.toBeNull()
     expect(bookingStepProblem(4, emptyBookingDraft)).toBeNull()
+  })
+})
+
+describe('time rules', () => {
+  const scheduledAt = '2026-11-10T10:00:00.000Z'
+
+  it('uses the same defaults as the platform settings', () => {
+    expect(WORKER_START_WINDOW_MINUTES).toBe(120)
+    expect(OVERDUE_CANCEL_GRACE_MINUTES).toBe(60)
+  })
+
+  it('opens the job steps exactly two hours before the scheduled time', () => {
+    expect(canWorkerAdvanceNow(scheduledAt, new Date('2026-11-10T07:59:59.999Z'))).toBe(false)
+    expect(canWorkerAdvanceNow(scheduledAt, new Date('2026-11-10T08:00:00.000Z'))).toBe(true)
+    expect(canWorkerAdvanceNow(scheduledAt, new Date('2026-11-10T09:30:00.000Z'), 'worker_on_the_way')).toBe(true)
+    expect(canWorkerAdvanceNow(scheduledAt, new Date('2026-11-10T09:29:59.999Z'), 'worker_on_the_way')).toBe(false)
+  })
+
+  it('opens overdue cancel exactly at the scheduled time plus duration plus grace, on a started job only', () => {
+    expect(canCustomerCancelOverdue('arrived', scheduledAt, 90, new Date('2026-11-10T12:29:59.999Z'))).toBe(false)
+    expect(canCustomerCancelOverdue('arrived', scheduledAt, 90, new Date('2026-11-10T12:30:00.000Z'))).toBe(true)
+    expect(canCustomerCancelOverdue('in_progress', scheduledAt, 90, new Date('2026-11-10T12:30:00.000Z'))).toBe(true)
+    expect(canCustomerCancelOverdue('accepted', scheduledAt, 90, new Date('2026-11-10T12:30:00.000Z'))).toBe(false)
+    expect(canCustomerCancelOverdue('completed', scheduledAt, 90, new Date('2026-11-10T12:30:00.000Z'))).toBe(false)
+  })
+
+  it('leaves the plain customer cancel rule unchanged', () => {
+    expect(canCustomerCancel('arrived')).toBe(false)
+    expect(canCustomerCancel('accepted')).toBe(true)
+  })
+})
+
+describe('washer display rules', () => {
+  it('shows a stored distance as its band', () => {
+    expect(distanceBandLabel(2)).toBe('Within 2 km')
+  })
+
+  it('shows the paused notice when suspended or when a job is held, and not to a new washer under review', () => {
+    expect(workerPausedNotice('suspended', 0)).toContain('paused your account')
+    expect(workerPausedNotice('pending', 1)).toContain('paused your account')
+    expect(workerPausedNotice('pending', 0)).toBeNull()
+    expect(workerPausedNotice('verified', 2)).toBeNull()
   })
 })

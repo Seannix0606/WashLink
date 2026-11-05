@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { AssignedBooking, B2cApi, DispatchRequest, WorkerAccount, WorkerSummary } from '@washlink/shared'
-import { formatPesos, terminalServiceBookingStatuses } from '@washlink/shared'
+import { formatPesos, terminalServiceBookingStatuses, workerPausedNotice } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
 import { Badge, Button, Card, Skeleton, Tabs } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
@@ -94,6 +94,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
 
   const activeJobs = jobs.filter((job) => !terminalServiceBookingStatuses.includes(job.status))
   const pastJobs = jobs.filter((job) => terminalServiceBookingStatuses.includes(job.status))
+  const pausedNotice = account ? workerPausedNotice(account.verificationStatus, activeJobs.length) : null
 
   return (
     <div className="min-h-[100dvh] bg-[var(--color-surface-muted)]">
@@ -117,6 +118,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
                 {isOnline ? 'Go offline' : 'Go online'}
               </Button>
             </Card>
+            {pausedNotice !== null ? <p role="status" className="rounded-[var(--radius-control)] bg-[var(--color-warning-50)] p-3 text-sm text-[var(--color-ink-900)]">{pausedNotice}</p> : null}
             <Tabs accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />
             {tab === 'work' ? (
               <div className="space-y-5">
@@ -128,7 +130,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
                 <section aria-labelledby="jobs-title" className="space-y-3">
                   <h2 id="jobs-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Your bookings</h2>
                   {activeJobs.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No accepted bookings.</p> : null}
-                  {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} onChanged={refresh} />)}
+                  {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} onChanged={refresh} />)}
                 </section>
               </div>
             ) : null}

@@ -4,7 +4,10 @@ import { getSupabaseClient } from '../../infrastructure/supabase/supabaseClient'
 import { Button, Card, Input } from '../../presentation/design/ui'
 import { errorMessage, getB2cApi } from './b2cApiClient'
 
-/** The password check guards an unlocked device. The database still decides whether the account may be deleted. */
+/**
+ * The sign-in below is also what the database checks: delete_my_account needs a password sign-in from the last 5 minutes, and
+ * this client carries that fresh token into the call. The database still decides whether the account may be deleted.
+ */
 export function DeleteAccountSection(): ReactElement {
   const [isOpen, setIsOpen] = useState(false)
   const [password, setPassword] = useState('')
@@ -36,8 +39,11 @@ export function DeleteAccountSection(): ReactElement {
     <Card className="space-y-3 p-4">
       <h2 className="font-semibold text-[var(--color-ink-900)]">Delete account</h2>
       <p className="text-sm text-[var(--color-ink-700)]">
-        This permanently removes your sign-in, profile, saved addresses and vehicles. WashLink keeps an anonymous record of past bookings
-        (price, status and date), without your name, location or vehicle. This can&apos;t be undone.
+        This permanently removes your sign-in, profile, saved addresses and vehicles. WashLink keeps a record of past bookings
+        (price, status, date and vehicle type) and any rating you gave, without your name, location or vehicle details. Its audit log keeps your internal account ID. This can&apos;t be undone.
+      </p>
+      <p className="text-sm text-[var(--color-ink-700)]">
+        You can&apos;t delete the account here if it has shop booking history or shop workforce records. Only WashLink can close these accounts.
       </p>
       {isOpen ? (
         <>

@@ -2,19 +2,24 @@ import { useRouter } from 'expo-router'
 import { useEffect, useState, type ReactElement } from 'react'
 import { Linking } from 'react-native'
 import {
+  canWorkerAdvanceNow,
   directionsUrl,
+  distanceBandLabel,
   formatManilaDateTime,
   formatPesos,
   nextWorkerActionLabel,
   serviceBookingStatusLabel,
   terminalServiceBookingStatuses,
   vehicleCategoryLabel,
+  workerEarlyStepNotice,
+  workerPausedNotice,
   type AssignedBooking,
   type DispatchRequest,
 } from '@washlink/shared'
 import { useWorkerData } from '../../src/features/worker/useWorkerData'
 import { useUserId } from '../../src/lib/AuthProvider'
 import { api, errorMessage } from '../../src/lib/api'
+import { useCurrentTime } from '../../src/lib/useCurrentTime'
 import { Badge, Body, Button, Card, Field, Heading, Notice, Row, Screen, Title } from '../../src/ui'
 
 const statusText = {
@@ -56,7 +61,7 @@ function RequestCard({ request, onChanged }: { readonly request: DispatchRequest
       <Heading>{request.serviceName}</Heading>
       <Body>You earn {formatPesos(request.workerEarningsCents)}</Body>
       <Body>{vehicleCategoryLabel[request.vehicleCategory]} · {request.isImmediate ? 'As soon as possible' : formatManilaDateTime(request.scheduledAt)} · about {request.durationMinutes} min</Body>
-      {request.distanceKm !== null ? <Body>{request.distanceKm} km away</Body> : null}
+      {request.distanceKm !== null ? <Body>{distanceBandLabel(request.distanceKm)}</Body> : null}
       {request.addonNames.length > 0 ? <Body>Add-ons: {request.addonNames.join(', ')}</Body> : null}
       <Body muted>Expires in {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}</Body>
       <Notice tone="error" message={error} />
@@ -68,13 +73,15 @@ function RequestCard({ request, onChanged }: { readonly request: DispatchRequest
   )
 }
 
-function JobCard({ job, onChanged }: { readonly job: AssignedBooking; readonly onChanged: () => Promise<void> }): ReactElement {
+function JobCard({ job, isPaused, onChanged }: { readonly job: AssignedBooking; readonly isPaused: boolean; readonly onChanged: () => Promise<void> }): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [noteMode, setNoteMode] = useState<'problem' | 'release' | null>(null)
   const [note, setNote] = useState('')
   const action = nextWorkerActionLabel[job.status]
   const canRelease = job.status === 'accepted' || job.status === 'worker_on_the_way'
+  // The server has the last word; a refusal still reaches the washer through act().
+  const canAdvance = canWorkerAdvanceNow(job.scheduledAt, useCurrentTime(), job.status)
 
   const act = async (run: () => Promise<void>): Promise<void> => {
     setIsBusy(true)
@@ -104,7 +111,8 @@ function JobCard({ job, onChanged }: { readonly job: AssignedBooking; readonly o
       {job.customerName ? <Body>Customer: {job.customerName}</Body> : null}
       <Body>Collect {formatPesos(job.customerTotalCents)} in cash. You earn {formatPesos(job.workerEarningsCents)}.</Body>
       <Notice tone="error" message={error} />
-      {action !== undefined ? <Button label={action} isLoading={isBusy} onPress={(): void => void act(() => api.advanceBooking(job.id, job.status))} /> : null}
+      {action !== undefined && !canAdvance ? <Body>{workerEarlyStepNotice(job.status)}</Body> : null}
+      {action !== undefined ? <Button label={action} isLoading={isBusy} isDisabled={!canAdvance || isPaused} onPress={(): void => void act(() => api.advanceBooking(job.id, job.status))} /> : null}
       <Row>
         {job.latitude !== null && job.longitude !== null ? <Button label="Navigate" variant="secondary" onPress={(): void => void Linking.openURL(directionsUrl(job.latitude as number, job.longitude as number))} /> : null}
         {job.customerPhone ? <Button label="Call customer" variant="secondary" onPress={(): void => void Linking.openURL(`tel:${String(job.customerPhone)}`)} /> : null}
@@ -134,6 +142,7 @@ export default function WorkerHome(): ReactElement {
   const [toggleError, setToggleError] = useState<string | null>(null)
   const isOnline = account?.isOnline === true
   const activeJobs = jobs.filter((job) => !terminalServiceBookingStatuses.includes(job.status))
+  const pausedNotice = account ? workerPausedNotice(account.verificationStatus, activeJobs.length) : null
 
   const toggle = async (): Promise<void> => {
     setIsToggling(true)
@@ -169,12 +178,13 @@ export default function WorkerHome(): ReactElement {
           <Button label={isOnline ? 'Go offline' : 'Go online'} variant={isOnline ? 'secondary' : 'primary'} isLoading={isToggling} isDisabled={!isOnline && account.verificationStatus !== 'verified'} onPress={(): void => void toggle()} />
         </Card>
       ) : null}
+      {pausedNotice !== null ? <Notice message={pausedNotice} /> : null}
       <Heading>Booking requests</Heading>
       {requests.length === 0 ? <Body muted>No requests right now.</Body> : null}
       {requests.map((request) => <RequestCard key={request.id} request={request} onChanged={refresh} />)}
       <Heading>Your bookings</Heading>
       {activeJobs.length === 0 ? <Body muted>No accepted bookings.</Body> : null}
-      {activeJobs.map((job) => <JobCard key={job.id} job={job} onChanged={refresh} />)}
+      {activeJobs.map((job) => <JobCard key={job.id} job={job} isPaused={pausedNotice !== null} onChanged={refresh} />)}
     </Screen>
   )
 }

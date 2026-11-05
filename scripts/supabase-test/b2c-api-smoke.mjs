@@ -6,8 +6,11 @@
 //
 // Same safety rules as the w*-api-smoke.mjs files: talks ONLY to the local Supabase stack of the staged `.local-supabase-test`
 // workdir, keys come from `npx supabase status` and stay in memory, non-loopback URLs are refused, no .env is read. Users are
-// synthetic and deleted at the end. Every write goes through real RPCs; there is no time shift and no trusted write except the
-// promotion of the synthetic super admin. Bookings are closed again at the end; prices stay until the next run-db-tests reset.
+// synthetic and deleted at the end. Every write goes through real RPCs, with two exceptions: the promotion of the synthetic super
+// admin, and one time-shift fixture (TEST ONLY, as in W6) that backdates a synthetic user's sign-in through `docker exec
+// supabase_db_<staged project_id> psql`, a trusted local session. The container name comes from the asserted `*-local-test`
+// project_id and only validated uuids are interpolated. Each real deletion signs in again first, on the same client, as the apps do.
+// Bookings are closed again at the end; prices stay until the next run-db-tests reset.
 
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -23,7 +26,8 @@ const workdir = path.join(repoRoot, STAGED_DIRECTORY_NAME)
 const require = createRequire(path.join(repoRoot, 'frontend', 'package.json'))
 const { createClient } = require('@supabase/supabase-js')
 const ts = require('typescript')
-assertLocalTestProjectId(fs.readFileSync(path.join(workdir, 'supabase', 'config.toml'), 'utf8'), 'staged config.toml')
+const projectId = assertLocalTestProjectId(fs.readFileSync(path.join(workdir, 'supabase', 'config.toml'), 'utf8'), 'staged config.toml')
+const dbContainer = `supabase_db_${projectId}`
 
 /** Compiles the dependency-free shared package to a temp folder, so this script runs the source the apps run. */
 function loadSharedPackage() {
@@ -55,6 +59,16 @@ function readLocalStackConfig() {
     process.exit(2)
   }
   return { apiUrl, anonKey, serviceKey }
+}
+
+const SAFE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+function trustedFixture(sql, ...values) {
+  if (!values.every((value) => SAFE_UUID.test(value))) throw new Error('trusted fixture: unsafe value')
+  const text = values.reduce((acc, value, index) => acc.replaceAll(`$${index + 1}`, `'${value}'`), sql)
+  const result = spawnSync('docker', ['exec', '-i', dbContainer, 'psql', '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1',
+    '-U', 'postgres', '-d', 'postgres', '-c', text], { encoding: 'utf8' })
+  if (result.status !== 0) throw new Error(`trusted fixture failed: ${(result.stderr ?? '').split('\n')[0]}`)
+  return result.stdout.trim()
 }
 
 const shared = loadSharedPackage()
@@ -101,7 +115,7 @@ async function signUp(label, role) {
   const client = newClient(anonKey)
   const { error } = await client.auth.signInWithPassword({ email, password })
   if (error) throw new Error(`sign-in failed for ${label}: ${error.message}`)
-  return { id, client, api: shared.createB2cApi(client) }
+  return { id, email, client, api: shared.createB2cApi(client) }
 }
 
 const BASE = { latitude: 14.5547, longitude: 121.0244 }
@@ -130,6 +144,26 @@ function bookingInput(service, startsAt, submissionKey) {
     scheduledAt: startsAt, submissionKey,
   }
 }
+
+const immediateInput = (service, submissionKey) => ({ ...bookingInput(service, null, submissionKey), isImmediate: true })
+
+/** The same client that made the RPC calls signs in again, as the delete screens do just before deleting. */
+async function signInAgain(person) {
+  const { error } = await person.client.auth.signInWithPassword({ email: person.email, password })
+  if (error) throw new Error(`sign-in again failed: ${error.message}`)
+}
+
+async function accessTokenClaims(person) {
+  const { data } = await person.client.auth.getSession()
+  return JSON.parse(Buffer.from(data.session.access_token.split('.')[1], 'base64url').toString('utf8'))
+}
+
+const PASSWORD_AGAIN = 'Enter your password again to delete this account.'
+const ACCOUNT_PAUSED = 'WashLink has paused your account. Contact WashLink about this booking.'
+const TOO_EARLY = "This booking can't start yet. You can begin up to 2 hours before its scheduled time."
+const BOOKINGS_CLOSED = 'WashLink is not taking bookings right now. Try again later.'
+const BASE_LOCKED = 'Finish or decline your open requests before changing your base location.'
+const RULES = { commissionBps: 1000, requestTtlSeconds: 300, searchWindowMinutes: 30, travelBufferMinutes: 20 }
 
 async function main() {
   const anonApi = shared.createB2cApi(newClient(anonKey))
@@ -186,9 +220,9 @@ async function main() {
   const slot = slots.find((candidate) => candidate.isAvailable)
   check('slots_available_from_worker_hours', slot !== undefined, `${slots.length} slots`)
   const key = shared.createBookingSubmissionKey(`first-${runId}`)
-  const booking = await customer.api.createBooking(bookingInput(service, slot.startsAt, key))
+  const booking = await customer.api.createBooking(immediateInput(service, key))
   check('booking_searching_for_worker', booking.status === 'searching_for_worker', booking.status)
-  const repeat = await customer.api.createBooking(bookingInput(service, slot.startsAt, key))
+  const repeat = await customer.api.createBooking(immediateInput(service, key))
   check('repeat_submission_returns_same_booking', repeat.id === booking.id)
   const mine = await customer.api.myBookings()
   check('customer_sees_one_booking_with_server_total', mine.length === 1 && mine[0].customerTotalCents === quote.customerTotalCents)
@@ -250,16 +284,94 @@ async function main() {
   check('admin_case_has_history', Array.isArray(caseFile.events) && caseFile.events.length >= 5)
   check('admin_workers_lists_workers', (await superAdmin.api.adminWorkers()).some((row) => row.profile_id === workerA.id))
 
+  // Prices of 10,000 pesos or more save, because audit payloads record pesos.
+  const pricey = catalog.services.find((candidate) => candidate.id !== service.id)
+  const priceInput = (cents) => ({
+    p_id: pricey.id, p_key: pricey.key, p_category: pricey.category, p_name: pricey.name, p_description: pricey.description, p_image_url: pricey.image_url,
+    p_requirements: pricey.requirements, p_base_price_cents: cents, p_duration_minutes: pricey.duration_minutes, p_is_active: pricey.is_active, p_price_is_draft: false, p_sort_order: pricey.sort_order,
+  })
+  const priceError = await refused(() => superAdmin.api.adminSaveService(priceInput(1500000)))
+  const savedPrice = (await superAdmin.api.adminCatalog()).services.find((candidate) => candidate.id === pricey.id)?.base_price_cents
+  check('admin_saves_price_over_ten_thousand', priceError === null && savedPrice === 1500000, priceError?.message ?? String(savedPrice))
+  await superAdmin.api.adminSaveService(priceInput(50000))
+
+  // Two more washers for the B2C-6 cases; every booking here belongs to the other customer and is ended before the deletion flow.
+  const workerC = await readyWorker('workerc', superAdmin.api, serviceIds)
+  const workerD = await readyWorker('workerd', superAdmin.api, serviceIds)
+  const requestFor = async (worker, bookingId) => (await worker.api.dispatchRequests()).find((request) => request.bookingId === bookingId)
+  const statusFor = async (bookingId) => (await otherCustomer.api.myBookings()).find((item) => item.id === bookingId)?.status
+
+  // A scheduled booking: distance is a band everywhere, the base is locked by an open offer, and the job cannot start early.
+  // The day's last available slot is always well outside the 2-hour window.
+  const lastSlot = slots.filter((candidate) => candidate.isAvailable).at(-1)
+  const early = await otherCustomer.api.createBooking(bookingInput(service, lastSlot.startsAt, shared.createBookingSubmissionKey(`early-${runId}`)))
+  const earlyRequest = await requestFor(workerC, early.id)
+  const rpcDistance = (await workerC.client.rpc('my_dispatch_requests')).data?.find((row) => row.booking_id === early.id)?.distance_km
+  const tableDistance = (await workerC.client.from('dispatch_requests').select('distance_km').eq('id', earlyRequest.id).single()).data?.distance_km
+  check('request_distance_is_band_in_rpc_and_table', rpcDistance === 2 && tableDistance === 2, `${rpcDistance}/${tableDistance}`)
+  const moved = await refused(() => workerC.api.saveWorkerProfile({ bio: 'Smoke washer', skills: ['Exterior'], latitude: BASE.latitude + 0.01, longitude: BASE.longitude, radiusKm: 25 }))
+  check('base_change_refused_with_open_offer', moved?.message === BASE_LOCKED, moved?.message)
+  await workerC.api.acceptRequest(earlyRequest.id)
+  const tooEarly = await refused(() => workerC.api.advanceBooking(early.id, 'accepted'))
+  check('scheduled_booking_cannot_start_early', tooEarly?.message === TOO_EARLY, tooEarly?.message)
+  await otherCustomer.api.cancelBooking(early.id)
+
+  // Washer C reaches the customer; washer D holds a job that has not started. Both are then suspended.
+  const startedJob = await otherCustomer.api.createBooking(immediateInput(service, shared.createBookingSubmissionKey(`started-${runId}`)))
+  await workerC.api.acceptRequest((await requestFor(workerC, startedJob.id)).id)
+  await workerC.api.advanceBooking(startedJob.id, 'accepted')
+  await workerC.api.advanceBooking(startedJob.id, 'worker_on_the_way')
+  const openJob = await otherCustomer.api.createBooking(immediateInput(service, shared.createBookingSubmissionKey(`open-${runId}`)))
+  await workerD.api.acceptRequest((await requestFor(workerD, openJob.id)).id)
+  await superAdmin.api.adminReviewWorker(workerD.id, 'suspended', '')
+  const nextRequest = await requestFor(workerA, openJob.id)
+  const nextAccept = nextRequest ? await refused(() => workerA.api.acceptRequest(nextRequest.id)) : new Error('no offer reached the next washer')
+  check('suspended_worker_booking_reaches_next_washer', nextAccept === null && (await statusFor(openJob.id)) === 'accepted', nextAccept?.message)
+  await otherCustomer.api.cancelBooking(openJob.id)
+
+  await superAdmin.api.adminReviewWorker(workerC.id, 'suspended', '')
+  const pausedView = (await workerC.client.rpc('my_assigned_service_bookings')).data?.find((row) => row.booking_id === startedJob.id)
+  const pausedAdvance = await refused(() => workerC.api.advanceBooking(startedJob.id, 'arrived'))
+  check('suspended_worker_loses_address_and_advance', pausedView !== undefined && pausedView.address === null && pausedView.customer_phone === null
+    && pausedView.instructions === null && pausedAdvance?.message === ACCOUNT_PAUSED, pausedAdvance?.message)
+  await superAdmin.api.cancelBooking(startedJob.id, 'Washer was suspended during this job')
+  check('admin_cancels_started_job', (await statusFor(startedJob.id)) === 'cancelled')
+
+  // Closing bookings stops acceptance of an offer that is already out.
+  const closingJob = await otherCustomer.api.createBooking(immediateInput(service, shared.createBookingSubmissionKey(`closing-${runId}`)))
+  const closingRequest = await requestFor(workerA, closingJob.id)
+  await superAdmin.api.adminUpdateRules({ bookingsOpen: false, ...RULES })
+  const closedAccept = await refused(() => workerA.api.acceptRequest(closingRequest.id))
+  check('closed_bookings_refuse_acceptance', closedAccept?.message === BOOKINGS_CLOSED, closedAccept?.message)
+  await superAdmin.api.adminUpdateRules({ bookingsOpen: true, ...RULES })
+  await otherCustomer.api.cancelBooking(closingJob.id)
+
   // Account deletion: refused while work is active, then past bookings stay as anonymous records.
+  // The token carries the sign-in method and time. A token from an old sign-in stays old through a refresh, so it cannot delete.
+  const claims = await accessTokenClaims(customer)
+  check('amr_claim_has_password_method_and_timestamp', Array.isArray(claims.amr)
+    && claims.amr.some((entry) => entry.method === 'password' && typeof entry.timestamp === 'number'), JSON.stringify(claims.amr))
+  trustedFixture("update auth.mfa_amr_claims set updated_at = now() - interval '10 minutes' where session_id in (select id from auth.sessions where user_id = $1)", customer.id)
+  const refreshedSession = await customer.client.auth.refreshSession()
+  if (refreshedSession.error) throw new Error(`refresh failed: ${refreshedSession.error.message}`)
+  const staleDelete = await refused(() => customer.api.deleteMyAccount())
+  check('stale_password_token_cannot_delete', staleDelete?.message === PASSWORD_AGAIN, staleDelete?.message)
+
   const thirdSlot = slots.filter((candidate) => candidate.isAvailable)[12] ?? slot
   const third = await customer.api.createBooking(bookingInput(service, thirdSlot.startsAt, shared.createBookingSubmissionKey(`third-${runId}`)))
-  check('customer_with_open_booking_cannot_delete', (await refused(() => customer.api.deleteMyAccount())) !== null)
+  await signInAgain(customer)
+  const openBookingDelete = await refused(() => customer.api.deleteMyAccount())
+  check('customer_with_open_booking_cannot_delete', openBookingDelete?.code === '55000', openBookingDelete?.message)
   const [thirdRequest] = await winner.api.dispatchRequests()
   await winner.api.acceptRequest(thirdRequest.id)
-  check('worker_with_active_job_cannot_delete', (await refused(() => winner.api.deleteMyAccount())) !== null)
+  await signInAgain(winner)
+  const activeJobDelete = await refused(() => winner.api.deleteMyAccount())
+  check('worker_with_active_job_cannot_delete', activeJobDelete?.code === '55000', activeJobDelete?.message)
   await customer.api.cancelBooking(third.id)
-  await customer.api.deleteMyAccount()
-  createdUserIds.splice(createdUserIds.indexOf(customer.id), 1)
+  await signInAgain(customer)
+  const freshDelete = await refused(() => customer.api.deleteMyAccount())
+  check('fresh_sign_in_on_same_client_can_delete', freshDelete === null, freshDelete?.message)
+  if (freshDelete === null) createdUserIds.splice(createdUserIds.indexOf(customer.id), 1)
   check('deleted_customer_sign_in_is_gone', (await admin.auth.admin.getUserById(customer.id)).error !== null)
   const retained = await superAdmin.api.adminBookingCase(booking.id)
   check('deleted_customer_booking_is_kept_with_its_price', retained.booking.customer_total_cents === quote.customerTotalCents && retained.booking.status === 'completed')
@@ -267,6 +379,7 @@ async function main() {
     && retained.booking.latitude === 0 && retained.booking.instructions === '' && retained.booking.vehicle_make === 'Removed', JSON.stringify(retained.booking))
   check('deleted_customer_review_keeps_rating_not_words', retained.review.comment === '' && retained.review.rating === 5)
   check('worker_history_no_longer_shows_customer_address', !JSON.stringify(await winner.api.assignedBookings()).includes('SMOKEADDRESS'))
+  await signInAgain(winner)
   await winner.api.deleteMyAccount()
   createdUserIds.splice(createdUserIds.indexOf(winner.id), 1)
   const afterWorker = await superAdmin.api.adminBookingCase(booking.id)

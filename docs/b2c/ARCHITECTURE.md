@@ -21,6 +21,25 @@ customer, washer, admin      customer, washer
 - **Addresses stay private.** Requests hold no location. A washer sees the address and customer only after accepting.
 - **Status moves are checked.** A trigger allows only valid transitions, and each worker action sends the status it was looking at, so a stale screen is refused.
 - **Dispatch doesn't depend on a scheduler.** Expired requests are swept whenever the app is used. An optional scheduled sweep keeps quiet periods timely.
+- **Self-deletion needs a recent password.** See below.
+
+## Search rounds
+
+A booking's search runs in rounds, so a washer isn't sampled repeatedly and a customer can still reach one who only missed a request.
+
+- Within a round, a washer with an `offered`, `expired` or `declined` request on that booking isn't offered it again, and the search moves outward.
+- A customer retry, a washer handing back, and a washer losing verification each start a new round. `service_booking_reset_search` sets a new deadline and turns `expired` requests into `superseded`, which makes those washers eligible again. Retry needs **No washer found**, so there is at most one per search window.
+- `declined` stays for good. A washer who hands a booking back, or is removed from it by a status change, has their requests marked `declined`, so they aren't offered that booking again.
+- The new deadline is `now + search_window_minutes` for an immediate booking, which also has its `scheduled_at` reset to now. For a scheduled booking it's `least(scheduled_at, now + scheduled_search_window_hours)`.
+- `dispatch_requests.distance_km` stores only the band's upper bound (2, 5, 10, 20, 50 or 200), so neither the table, Realtime nor an RPC reveals a precise distance. Service radius stays editable, so a washer changing it repeatedly could still narrow down a location. That gap is known and open.
+
+## Recent-password rule
+
+`delete_my_account` needs a password sign-in from the last 300 seconds, read from the JWT `amr` claim by the internal `auth_recent_password_sign_in`. It uses `amr` and not `iat`, because a token refresh keeps the original sign-in time. A recovery session has method `otp`, so it's refused. A future timestamp is allowed only within 60 seconds of skew.
+
+Neither client has a separate step for this. Each signs in with the password on the same client that makes the RPC, so the call carries the fresh token.
+
+This has been checked only on the local GoTrue version. A different `amr` shape in production refuses every self-deletion, so it fails closed. `docs/b2c/DEPLOYMENT.md` says to confirm the shape before applying.
 
 ## B2B separation
 

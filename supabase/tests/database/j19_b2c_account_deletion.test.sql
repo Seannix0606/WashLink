@@ -1,4 +1,6 @@
 -- Who may delete their own account. The full flow with bookings and retained records is in b2c-api-smoke.mjs.
+-- The password check is covered in j19_b2c6_account_deletion_reauth. These paths carry a recent password sign-in, and the exact
+-- refusal messages show the role check refused them, not the password check.
 begin;
 create extension if not exists pgtap with schema extensions;
 select plan(11);
@@ -22,13 +24,13 @@ insert into public.customer_addresses (customer_id, label, address, latitude, lo
 insert into public.customer_addresses (customer_id, label, address, latitude, longitude)
   select id, 'Home', '14 Ayala Avenue, Makati', 14.5, 121 from people where kind = 'other';
 
-select test_helpers.act_as((select id from people where kind = 'admin'));
-select throws_ok('select public.delete_my_account()', '42501', null, 'delete_account_refuses_super_admin');
+select test_helpers.act_as_with_amr((select id from people where kind = 'admin'));
+select throws_ok('select public.delete_my_account()', '42501', 'This account can''t be deleted here. Only WashLink can close it.', 'delete_account_refuses_super_admin');
 
-select test_helpers.act_as((select id from people where kind = 'b2b_worker'));
-select throws_ok('select public.delete_my_account()', '42501', null, 'delete_account_refuses_worker_with_shop_records');
+select test_helpers.act_as_with_amr((select id from people where kind = 'b2b_worker'));
+select throws_ok('select public.delete_my_account()', '42501', 'This account can''t be deleted here. Only WashLink can close it.', 'delete_account_refuses_worker_with_shop_records');
 
-select test_helpers.act_as((select id from people where kind = 'customer'));
+select test_helpers.act_as_with_amr((select id from people where kind = 'customer'));
 select lives_ok('select public.delete_my_account()', 'delete_account_customer_succeeds');
 
 select test_helpers.act_as_service();
@@ -37,7 +39,7 @@ select is((select count(*)::int from public.profiles where id = (select id from 
 select is((select count(*)::int from public.customer_addresses where address like '12 Ayala%'), 0, 'delete_account_removes_saved_addresses');
 select is((select count(*)::int from public.customer_addresses where address like '14 Ayala%'), 1, 'delete_account_leaves_other_people_alone');
 
-select test_helpers.act_as((select id from people where kind = 'b2c_worker'));
+select test_helpers.act_as_with_amr((select id from people where kind = 'b2c_worker'));
 select lives_ok('select public.delete_my_account()', 'delete_account_b2c_worker_succeeds');
 
 select * from finish();

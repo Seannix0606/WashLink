@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Navigation, Phone } from 'lucide-react'
 import {
+  canWorkerAdvanceNow,
   directionsUrl,
   formatManilaDateTime,
   formatPesos,
@@ -10,21 +11,27 @@ import {
   nextWorkerStatus,
   serviceBookingStatusLabel,
   vehicleCategoryLabel,
+  workerEarlyStepNotice,
   type AssignedBooking,
 } from '@washlink/shared'
 import { Badge, Button, Card, Input } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
+import { useCurrentTime } from '../useCurrentTime'
 
 interface AssignedJobCardProps {
   readonly job: AssignedBooking
+  /** The server refuses every step while the account is paused, so the step is not offered as available. */
+  readonly isPaused?: boolean
   readonly onChanged: () => Promise<void>
 }
 
-export function AssignedJobCard({ job, onChanged }: AssignedJobCardProps): ReactElement {
+export function AssignedJobCard({ job, isPaused = false, onChanged }: AssignedJobCardProps): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [note, setNote] = useState('')
   const [noteMode, setNoteMode] = useState<'problem' | 'release' | null>(null)
   const canRelease = job.status === 'accepted' || job.status === 'worker_on_the_way'
+  // The server has the last word; a refusal still reaches the washer through act().
+  const canAdvance = canWorkerAdvanceNow(job.scheduledAt, useCurrentTime(), job.status)
 
   const act = async (action: () => Promise<void>, success: string): Promise<void> => {
     setIsBusy(true)
@@ -58,9 +65,10 @@ export function AssignedJobCard({ job, onChanged }: AssignedJobCardProps): React
         {job.customerName ? <p>Customer: {job.customerName}</p> : null}
         <p className="tabular-nums">Collect {formatPesos(job.customerTotalCents)} in cash. You earn {formatPesos(job.workerEarningsCents)}.</p>
       </div>
+      {actionLabel !== undefined && !canAdvance ? <p className="text-sm text-[var(--color-ink-700)]">{workerEarlyStepNotice(job.status)}</p> : null}
       <div className="flex flex-wrap gap-2">
         {actionLabel !== undefined ? (
-          <Button isLoading={isBusy} onClick={(): void => void act(() => getB2cApi().advanceBooking(job.id, job.status), nextWorkerStatus(job.status) === 'completed' ? 'Booking completed' : 'Status updated')}>
+          <Button isLoading={isBusy} disabled={isBusy || !canAdvance || isPaused} onClick={(): void => void act(() => getB2cApi().advanceBooking(job.id, job.status), nextWorkerStatus(job.status) === 'completed' ? 'Booking completed' : 'Status updated')}>
             {actionLabel}
           </Button>
         ) : null}

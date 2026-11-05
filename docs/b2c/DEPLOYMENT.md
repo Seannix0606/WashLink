@@ -4,7 +4,13 @@ Nothing here has been run against production. Each step is for a person to decid
 
 ## 1. Database
 
-Review the six migrations named `2026_11_06_b2c*`. They only add things, and bookings stay closed afterwards, so customers see no change until step 5.
+Review the eleven migrations named `2026_11_06_b2c*`. Bookings stay closed afterwards, so customers see no change until step 5.
+
+The first six (`b2ca` to `b2cf`) only add things. The last five (`b2cg` to `b2ck`) also replace B2C functions and change existing rows, and those row changes can't be undone: request distances become bands, skills and vehicle years outside the new limits are trimmed or cleared, malformed push tokens are deleted, and distance and vehicle year are cleared on bookings of already-deleted customers. They don't change `public.bookings` or any workforce table.
+
+Before applying `b2ck`, confirm that the production Auth version issues the `amr` claim as an array of `method` and `timestamp`, as the local version does. With any other shape, every self-deletion is refused.
+
+In the production Auth settings, turn on secure password change (`secure_password_change`, off in the local `supabase/config.toml`). Without it, a stolen session could set a new password, sign in with it and pass the deletion check. The setting may not fully close this, because it may only apply to older sessions. None of this was run locally, so test it.
 
 The repository's safe local test scripts never touch a linked project. Applying to production is a deliberate, separate action with your own Supabase access.
 
@@ -26,6 +32,8 @@ Set these on the web host, then build from the repository root. `render.yaml` an
 See `OPERATIONS.md`.
 
 ## 4. Push (optional at launch)
+
+The `send-service-push` function has never been deployed or run. Its secret comparison (`secretsMatch.ts`) has only been unit-tested under Node, not on Deno.
 
 1. Deploy the function:
 

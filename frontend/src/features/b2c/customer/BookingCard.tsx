@@ -4,6 +4,8 @@ import { toast } from 'sonner'
 import { Star } from 'lucide-react'
 import {
   canCustomerCancel,
+  canCustomerCancelOverdue,
+  customerOverdueCancelNotice,
   formatManilaDateTime,
   formatPesos,
   serviceBookingStatusLabel,
@@ -11,6 +13,7 @@ import {
 } from '@washlink/shared'
 import { Badge, Button, Card } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
+import { useCurrentTime } from '../useCurrentTime'
 
 interface BookingCardProps {
   readonly booking: CustomerBooking
@@ -21,6 +24,7 @@ export function BookingCard({ booking, onChanged }: BookingCardProps): ReactElem
   const [isBusy, setIsBusy] = useState(false)
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false)
   const [rating, setRating] = useState(0)
+  const isOverdue = canCustomerCancelOverdue(booking.status, booking.scheduledAt, booking.durationMinutes, useCurrentTime())
 
   const act = async (action: () => Promise<void>, success: string): Promise<void> => {
     setIsBusy(true)
@@ -70,7 +74,8 @@ export function BookingCard({ booking, onChanged }: BookingCardProps): ReactElem
         </div>
       ) : null}
 
-      {canCustomerCancel(booking.status) ? (
+      {isOverdue ? <p className="text-sm text-[var(--color-ink-700)]">{customerOverdueCancelNotice}</p> : null}
+      {canCustomerCancel(booking.status) || isOverdue ? (
         isConfirmingCancel ? (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-[var(--color-ink-700)]">Cancel this booking?</span>

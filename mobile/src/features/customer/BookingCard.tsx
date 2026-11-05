@@ -2,12 +2,15 @@ import { useState, type ReactElement } from 'react'
 import { Alert, Linking, Platform, View } from 'react-native'
 import {
   canCustomerCancel,
+  canCustomerCancelOverdue,
+  customerOverdueCancelNotice,
   formatManilaDateTime,
   formatPesos,
   serviceBookingStatusLabel,
   type CustomerBooking,
 } from '@washlink/shared'
 import { api, errorMessage } from '../../lib/api'
+import { useCurrentTime } from '../../lib/useCurrentTime'
 import { Badge, Body, Button, Card, Heading, Notice, Row } from '../../ui'
 
 interface BookingCardProps {
@@ -20,6 +23,7 @@ export function BookingCard({ booking, onChanged }: BookingCardProps): ReactElem
   const [error, setError] = useState<string | null>(null)
   const [rating, setRating] = useState(0)
   const [isConfirming, setIsConfirming] = useState(false)
+  const isOverdue = canCustomerCancelOverdue(booking.status, booking.scheduledAt, booking.durationMinutes, useCurrentTime())
 
   const act = async (action: () => Promise<void>): Promise<void> => {
     setIsBusy(true)
@@ -57,10 +61,11 @@ export function BookingCard({ booking, onChanged }: BookingCardProps): ReactElem
       <Body muted>Reference {booking.reference}</Body>
       {booking.workerName !== '' ? <Body>Your washer: {booking.workerName}</Body> : null}
       <Notice tone="error" message={error} />
+      {isOverdue ? <Body>{customerOverdueCancelNotice}</Body> : null}
       <Row>
         {booking.workerPhone ? <Button label="Call washer" variant="secondary" onPress={(): void => void Linking.openURL(`tel:${String(booking.workerPhone)}`)} /> : null}
         {booking.status === 'no_worker_available' ? <Button label="Search again" isLoading={isBusy} onPress={(): void => void act(() => api.retrySearch(booking.id))} /> : null}
-        {canCustomerCancel(booking.status) && !isConfirming ? <Button label="Cancel booking" variant="ghost" isDisabled={isBusy} onPress={cancel} /> : null}
+        {(canCustomerCancel(booking.status) || isOverdue) && !isConfirming ? <Button label="Cancel booking" variant="ghost" isDisabled={isBusy} onPress={cancel} /> : null}
         {isConfirming ? (
           <>
             <Button label="Yes, cancel booking" variant="danger" isLoading={isBusy} onPress={(): void => void act(() => api.cancelBooking(booking.id))} />

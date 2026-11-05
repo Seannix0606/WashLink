@@ -1,7 +1,6 @@
 import { useState, type ReactElement } from 'react'
 import { api, errorMessage, supabase } from '../lib/api'
 import { useAuth } from '../lib/AuthProvider'
-import { unregisterPush } from '../push/pushNotifications'
 import { Body, Button, Card, Field, Heading, Notice, Screen, Title } from '../ui'
 
 export function AccountScreen(): ReactElement {
@@ -11,7 +10,8 @@ export function AccountScreen(): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // The password check guards an unlocked phone. The database still decides whether the account may be deleted.
+  // The sign-in below is also what the database checks: delete_my_account needs a password sign-in from the last 5 minutes, and
+  // this client carries that fresh token into the call. The database still decides whether the account may be deleted.
   const deleteAccount = async (): Promise<void> => {
     setIsBusy(true)
     setError(null)
@@ -21,8 +21,7 @@ export function AccountScreen(): ReactElement {
         setError('That password is not correct. Check it and try again.')
         return
       }
-      // Tokens must go first: this needs the account to still exist. If deletion is then refused, the app registers again on next launch.
-      await unregisterPush()
+      // Device tokens go with the profile on the server, so a refused deletion leaves push working.
       await api.deleteMyAccount()
       await supabase.auth.signOut({ scope: 'local' })
     } catch (caught) {
@@ -43,8 +42,11 @@ export function AccountScreen(): ReactElement {
       <Card>
         <Heading>Delete account</Heading>
         <Body>
-          This permanently removes your sign-in, profile, saved addresses and vehicles. WashLink keeps an anonymous record of past bookings
-          (price, status and date), without your name, location or vehicle. This can&apos;t be undone.
+          This permanently removes your sign-in, profile, saved addresses and vehicles. WashLink keeps a record of past bookings
+          (price, status, date and vehicle type) and any rating you gave, without your name, location or vehicle details. Its audit log keeps your internal account ID. This can&apos;t be undone.
+        </Body>
+        <Body>
+          You can&apos;t delete the account here if it has shop booking history or shop workforce records. Only WashLink can close these accounts.
         </Body>
         {isDeleting ? (
           <>

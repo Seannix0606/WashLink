@@ -71,6 +71,25 @@ begin
   perform set_config('role', 'authenticated', true);
 end;
 $$;
+-- B2C-6: the same session as act_as, with the amr claim GoTrue puts in a token. A negative age is a timestamp in the future.
+create or replace function test_helpers.act_as_with_amr(p_user uuid, p_age_seconds integer default 0, p_method text default 'password')
+returns void language plpgsql security invoker
+as $$
+declare
+  user_email text;
+begin
+  perform test_helpers.act_as_service();
+  select email into user_email from auth.users where id = p_user;
+  if user_email is null then
+    raise exception 'test_helpers.act_as_with_amr: no auth user with id %', p_user;
+  end if;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', p_user, 'role', 'authenticated', 'email', user_email,
+      'amr', json_build_array(json_build_object('method', p_method,
+        'timestamp', floor(extract(epoch from now()))::bigint - p_age_seconds)))::text, true);
+  perform set_config('role', 'authenticated', true);
+end;
+$$;
 create or replace function test_helpers.act_as_role(p_email text, p_expected_role text)
 returns void language plpgsql security invoker
 as $$

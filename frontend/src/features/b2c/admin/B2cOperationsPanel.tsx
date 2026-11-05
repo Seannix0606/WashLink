@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { formatPesos } from '@washlink/shared'
 import { Badge, Button, Card, Input, Select, Skeleton } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
+import { AdminCancelBookingControl } from './AdminCancelBookingControl'
 
 type Row = Record<string, unknown>
 const text = (value: unknown): string => (typeof value === 'string' ? value : typeof value === 'number' || typeof value === 'boolean' ? String(value) : '')
@@ -152,6 +153,7 @@ export function B2cOperationsPanel(): ReactElement {
               <p className="text-[var(--color-ink-700)]">{text(booking.status).replaceAll('_', ' ')} · {text(booking.customer_name)} · washer: {text(booking.worker_name) || 'none'} · {text(booking.open_offers)} open requests</p>
             </div>
             <Button size="sm" variant="secondary" onClick={(): void => { getB2cApi().adminBookingCase(text(booking.booking_id)).then(setCaseData).catch((caught: unknown) => { toast.error(errorMessage(caught)) }) }}>Open case</Button>
+            {booking.status === 'arrived' || booking.status === 'in_progress' ? <AdminCancelBookingControl bookingId={text(booking.booking_id)} onCancelled={refresh} /> : null}
           </Card>
         ))}
         {caseData !== null ? (

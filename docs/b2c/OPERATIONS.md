@@ -12,11 +12,52 @@ Bookings start closed, with draft prices and 0% commission. The database refuses
 
 ## How matching works
 
-- When a customer books, every verified washer who offers the service, covers the location and is free at that time gets a request.
-- A request shows the service, vehicle type, time, distance and earnings. The address and customer details appear only after that washer accepts.
+- When a customer books, the five nearest verified washers who offer the service, cover the location and are free at that time get a request. As requests run out, the search moves on to the next nearest.
+- A request shows the service, vehicle type, time, rough distance and earnings. The address and customer details appear only after that washer accepts.
 - The first washer to accept gets the booking. The database enforces this, so two washers can't both win.
 - As-soon-as-possible bookings only reach washers who are online with a recent heartbeat. Scheduled bookings also reach offline washers, if the time is inside their hours.
-- If nobody accepts before the search window ends, the booking becomes **No washer found**. The customer can search again or cancel.
+- As-soon-as-possible requests last for the platform's request time (`request_ttl_seconds`). Scheduled requests last at least 60 minutes, unless the search window ends sooner.
+- Within one search, a washer whose request expired isn't asked again. A washer who declined is never asked again for that booking.
+- If nobody accepts before the search window ends, the booking becomes **No washer found**. The customer can search again or cancel. Searching again starts a new round, which can reach washers who only missed a request.
+- A washer can't move their base location while they have an open request. This doesn't apply while bookings are closed, because open requests are hidden then.
+
+### Rough distance
+
+Requests store only a distance band: within 2, 5, 10, 20, 50 or 200 km. The exact distance isn't kept, for washers or in the admin view, and older requests were converted to bands. The apps show this as **Within N km**.
+
+### When a job can start
+
+A washer can start travelling to a scheduled booking from 2 hours before its time, and can mark arrival or later steps from 30 minutes before it. Neither can happen any earlier. As-soon-as-possible bookings can start straight away.
+
+## Closing bookings
+
+**Close bookings** in the admin console stops new work:
+
+- Customers can't create a booking or search again.
+- Washers get no new requests and can't accept one, and open requests are hidden from them. They reappear if bookings reopen before they expire.
+- Searches still expire on time.
+
+Work already accepted carries on. Washers can still move jobs forward, hand them back and report problems, and customers can still cancel.
+
+## Cancelling bookings
+
+| Status | Customer | Admin |
+| --- | --- | --- |
+| Before the washer arrives | Can cancel | Can cancel, with a reason |
+| **Arrived** or **In progress** | Only once overdue: 60 minutes after the scheduled time plus the job's duration | Can cancel, with a reason |
+| Completed, cancelled or expired | Can't cancel | Can't cancel |
+
+An admin reason needs at least 10 characters. It's saved in the booking history, and the cancellation is recorded in the audit log.
+
+An overdue cancel can happen after a real wash, if the washer never marked it complete. The app doesn't record cash, and a customer who cancels may not pay. Commission and earnings figures leave that job out, and reason text is cleared if the customer later deletes their account. This clock starts from the scheduled time rather than arrival, so a late job can be cancelled while still under way. See `LEGAL_REVIEW_REGISTER.md`, B2C6-L7.
+
+## Suspending a washer
+
+Suspending or rejecting a washer, or moving them back to pending, takes effect immediately:
+
+- They go offline, can't move jobs forward and can't see customer details. Their app shows a paused notice if they're suspended or still hold a booking.
+- Their open requests close. Their bookings that haven't started go back to search, with that washer left out. Verifying them again doesn't return those bookings.
+- **Started jobs stay put** (**Arrived** or **In progress**). The customer stays blocked until an admin cancels or the job becomes overdue. To find these jobs, filter **Bookings** by status and look for the washer's name, because the list doesn't show verification status. Each one has a **Cancel booking** control.
 
 ## Scheduled sweep (recommended)
 
@@ -48,13 +89,16 @@ The database stores device tokens through `register_device_push_token` and queue
 
 ## Account deletion
 
-Customers and washers can delete their own account on the website and in the app, after re-entering their password. It's refused while they have a current booking.
+Customers and washers can delete their own account on the website and in the app, after re-entering their password. The server checks for a password sign-in from the last 5 minutes. It's refused while they have a current booking.
 
 - **Removed:** sign-in, profile, saved addresses and vehicles, device tokens, notifications and washer profile.
-- **Kept, without the person's identity:** past bookings with price, status and dates, and review ratings. Location, vehicle, notes and review text are cleared.
-- **Refused in the app:** admins, shop owners and washers with shop workforce records. Their contract and training records have retention rules, so WashLink closes those accounts by hand.
+- **Kept, without the person's name or contact details:** past bookings with price, status, dates and vehicle category, and review ratings. On a customer's own bookings, location, vehicle make, model and year, notes and review text are cleared. Deleting a washer doesn't change the customer's side: the customer's review text stays, and it may name the washer.
+- **Kept with the internal account ID:** the append-only audit log keeps the person's internal ID beside booking IDs, and adds a record of the deletion. So these records are not anonymous.
+- **Refused in the app:** admins, shop owners and washers with shop workforce records, whose contract and training records have retention rules, and anyone with a shop booking (`public.bookings`) in any status. These people are told "Only WashLink can close it", and the delete screen explains the shop records reason. No contact channel or procedure for this exists yet, so one is a launch requirement.
 
-What to keep and for how long is a legal decision. **Have this policy reviewed against Philippine privacy and tax rules before launch.**
+**Warning:** closing an account with shop bookings by hand leaves personal data behind unless someone deals with it. Deleting the user only empties the `customer_id` link. `customer_name`, `address`, location and notes stay on `public.bookings`. What to do with them **needs a legal decision**. There is no written procedure or named contact channel for manual closure yet, and a person must define both before launch.
+
+Refusing these people in the app may also conflict with store rules and Philippine privacy rights. What to keep and for how long is a legal decision too. **Have this policy reviewed against Philippine privacy and tax rules before launch.**
 
 Google Play also asks for a web link where people can request deletion. The website's Account tab can serve as that link once it's live.
 

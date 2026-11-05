@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
   B2cRequestError,
+  OVERDUE_CANCEL_GRACE_MINUTES,
+  WORKER_START_WINDOW_MINUTES,
   bookingLimits,
   brandColors,
   canCustomerCancel,
+  canCustomerCancelOverdue,
+  canWorkerAdvanceNow,
   createB2cApi,
   createBookingSubmissionKey,
   directionsUrl,
+  distanceBandLabel,
   formatPesos,
   isActiveServiceBooking,
   nextWorkerStatus,
@@ -19,6 +24,7 @@ import {
   validateServiceAddress,
   vehicleCategories,
   vehicleCategoryLabel,
+  workerPausedNotice,
   type B2cSupabaseClient,
 } from '@washlink/shared'
 
@@ -94,6 +100,63 @@ describe('shared booking rules', () => {
   })
 })
 
+describe('shared time rules', () => {
+  const scheduledAt = '2026-11-10T10:00:00.000Z'
+  const at = (iso: string): Date => new Date(iso)
+
+  it('keeps the same defaults as the platform settings', () => {
+    expect(WORKER_START_WINDOW_MINUTES).toBe(120)
+    expect(OVERDUE_CANCEL_GRACE_MINUTES).toBe(60)
+  })
+
+  it('opens the job steps exactly two hours before the scheduled time', () => {
+    expect(canWorkerAdvanceNow(scheduledAt, at('2026-11-10T07:59:59.999Z'))).toBe(false)
+    expect(canWorkerAdvanceNow(scheduledAt, at('2026-11-10T08:00:00.000Z'))).toBe(true)
+    expect(canWorkerAdvanceNow(scheduledAt, at('2026-11-12T10:00:00.000Z'))).toBe(true)
+    expect(canWorkerAdvanceNow(scheduledAt, at('2026-11-10T09:29:59.999Z'), 'worker_on_the_way')).toBe(false)
+    expect(canWorkerAdvanceNow(scheduledAt, at('2026-11-10T09:30:00.000Z'), 'worker_on_the_way')).toBe(true)
+  })
+
+  it('lets a job with a scheduled time of about now advance at once', () => {
+    expect(canWorkerAdvanceNow(scheduledAt, at(scheduledAt))).toBe(true)
+  })
+
+  it('opens overdue cancel exactly at the scheduled time plus duration plus grace', () => {
+    expect(canCustomerCancelOverdue('arrived', scheduledAt, 90, at('2026-11-10T12:29:59.999Z'))).toBe(false)
+    expect(canCustomerCancelOverdue('arrived', scheduledAt, 90, at('2026-11-10T12:30:00.000Z'))).toBe(true)
+    expect(canCustomerCancelOverdue('in_progress', scheduledAt, 90, at('2026-11-10T12:29:59.999Z'))).toBe(false)
+    expect(canCustomerCancelOverdue('in_progress', scheduledAt, 90, at('2026-11-10T12:30:00.000Z'))).toBe(true)
+  })
+
+  it('offers overdue cancel only on a started job', () => {
+    const muchLater = at('2026-12-01T00:00:00.000Z')
+    for (const status of serviceBookingStatuses) {
+      expect(canCustomerCancelOverdue(status, scheduledAt, 90, muchLater)).toBe(status === 'arrived' || status === 'in_progress')
+    }
+  })
+
+  it('leaves the plain customer cancel rule unchanged', () => {
+    expect(canCustomerCancel('arrived')).toBe(false)
+    expect(canCustomerCancel('in_progress')).toBe(false)
+  })
+})
+
+describe('shared washer display rules', () => {
+  it('shows a stored distance as its band', () => {
+    expect(distanceBandLabel(2)).toBe('Within 2 km')
+    expect(distanceBandLabel(200)).toBe('Within 200 km')
+  })
+
+  it('tells a washer they are paused when suspended or when a job is held, and not a new washer under review', () => {
+    expect(workerPausedNotice('suspended', 0)).toContain('paused your account')
+    expect(workerPausedNotice('rejected', 1)).toContain('paused your account')
+    expect(workerPausedNotice('pending', 1)).toContain('paused your account')
+    expect(workerPausedNotice('pending', 0)).toBeNull()
+    expect(workerPausedNotice('rejected', 0)).toBeNull()
+    expect(workerPausedNotice('verified', 3)).toBeNull()
+  })
+})
+
 describe('shared client errors', () => {
   function clientReturning(message: string): B2cSupabaseClient {
     return {
@@ -107,5 +170,19 @@ describe('shared client errors', () => {
     const caught = await api.cancelBooking('id').catch((error: unknown) => error)
     expect(caught).toBeInstanceOf(B2cRequestError)
     expect((caught as Error).message).not.toContain('service_bookings_pkey')
+  })
+
+  it.each([
+    ['23514', "This booking can't start yet. You can begin up to 2 hours before its scheduled time."],
+    ['23514', 'WashLink has paused your account. Contact WashLink about this booking.'],
+    ['42501', 'Enter your password again to delete this account.'],
+    ['42501', "This account can't be deleted here. Only WashLink can close it."],
+    ['55000', 'Finish or decline your open requests before changing your base location.'],
+  ])('passes the written refusal with code %s through unchanged: %s', async (code, message) => {
+    const api = createB2cApi({
+      rpc: () => Promise.resolve({ data: null, error: { message, code } }),
+      from: () => { throw new Error('not used') },
+    } as unknown as B2cSupabaseClient)
+    await expect(api.deleteMyAccount()).rejects.toThrow(message)
   })
 })

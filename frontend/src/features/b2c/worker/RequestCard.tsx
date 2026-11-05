@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { formatManilaDateTime, formatPesos, vehicleCategoryLabel, type DispatchRequest } from '@washlink/shared'
+import { distanceBandLabel, formatManilaDateTime, formatPesos, vehicleCategoryLabel, type DispatchRequest } from '@washlink/shared'
 import { Button, Card } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 
@@ -44,7 +44,7 @@ export function RequestCard({ request, onChanged }: RequestCardProps): ReactElem
       </div>
       <p className="text-sm text-[var(--color-ink-700)]">
         {vehicleCategoryLabel[request.vehicleCategory]} · {request.isImmediate ? 'As soon as possible' : formatManilaDateTime(request.scheduledAt)} · about {request.durationMinutes} min
-        {request.distanceKm !== null ? ` · ${String(request.distanceKm)} km away` : ''}
+        {request.distanceKm !== null ? ` · ${distanceBandLabel(request.distanceKm)}` : ''}
       </p>
       {request.addonNames.length > 0 ? <p className="text-sm text-[var(--color-ink-700)]">Add-ons: {request.addonNames.join(', ')}</p> : null}
       <p className="text-xs tabular-nums text-[var(--color-ink-500)]">Reference {request.reference} · expires in {minutes}:{String(secondsLeft % 60).padStart(2, '0')}</p>

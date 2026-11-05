@@ -95,6 +95,25 @@ on its next increment and adds rework if needed.
 | D-87 | Locked clause pin | W16 | A non-trusted session cannot add, remove or change any `locked_safeguard` clause of a platform version (section, heading, body, requires_owner_input), not only the 15 core ones; changes go through a human-run migration (recipe in CONTRACT_TEMPLATES.md, none has run); added or changed editable clauses, clause order within a section and pre-pin versions stay documented limits (W16-L3). Templates stay draft requiring legal review | ADOPTED-DEFAULT (loop, 2026-11-05) |
 | D-88 | Smoke order | W16 | `run-api-smokes.mjs` runs w2..w11, w14, w12, w15, w16, w13 (w13 last; 15 smokes; amends D-82) | ADOPTED-DEFAULT (loop, 2026-11-05) |
 | D-89 | Authenticated function list | W16 | The 155 authenticated-executable function signatures are pinned in `j17_w16_authenticated_executable_function_list`; EXECUTE on the 3 pre-workforce trigger functions is revisited after the D-10 diff | ADOPTED-DEFAULT (loop, 2026-11-05) |
+| D-90 | B2C-6 hardening | B2C-6 | Recent password means `amr` method `password`, 300 seconds old at most, 60 seconds future skew allowed. Refusal is 42501 with its own message | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-91 | B2C-6 hardening | B2C-6 | Any `public.bookings` row as customer, in any status, refuses self-deletion | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-92 | B2C-6 hardening | B2C-6 | Any non-verified status (`suspended`, `rejected`, `pending`) masks data, blocks advance and returns unstarted jobs. Re-verifying does not return them, and that washer stays excluded for those bookings | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-93 | B2C-6 hardening | B2C-6 | Admin cancel reuses `cancel_service_booking`, 10-character reason, existing audit event. No new RPC | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-94 | B2C-6 hardening | B2C-6 | `expired` is excluded within a search round. Retry, release and requeue start a new round. `declined` is excluded for good | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-95 | B2C-6 hardening | B2C-6 | Added to the review's fix: scheduled offers last at least 60 minutes (`scheduled_request_ttl_minutes`); immediate offers keep `request_ttl_seconds` | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-96 | B2C-6 hardening | B2C-6 | Stored distance bands: at most 2, 5, 10, 20, 50 km, otherwise 200 (the radius maximum) | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-97 | B2C-6 hardening | B2C-6 | Base location is locked while an unexpired offer exists, except while bookings are closed and offers are hidden (fix cycle 1). Radius is not locked | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-98 | B2C-6 hardening | B2C-6 | Start window 120 minutes, scheduled bookings only, every worker step | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-99 | B2C-6 hardening | B2C-6 | Overdue cancel grace 60 minutes after `scheduled_at + duration`. Customer reason optional | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-100 | B2C-6 hardening | B2C-6 | Caps: 5 reports per actor per booking, 20 addresses, 20 vehicles, 40-character skills, years 1950 to 2100, 10 tokens with oldest evicted | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-101 | B2C-6 hardening | B2C-6 | Legacy rows are normalised, then `NOT VALID`, then `VALIDATE`, in one migration | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-102 | B2C-6 hardening | B2C-6 | Closed bookings stop retries, new offers and acceptance, and hide open offers. Accepted work continues. Offer rows are not rewritten | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-103 | B2C-6 hardening | B2C-6 | Audit payloads record money as pesos with 2 decimals under new key names | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-104 | B2C-6 hardening | B2C-6 | New-round deadline: immediate `now + search_window_minutes`; scheduled `least(scheduled_at, now + scheduled_search_window_hours)`. Release of a scheduled booking therefore gets the longer window | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-105 | B2C-6 hardening | B2C-6 | Sweeps pick only rows needing action, soonest deadline first | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-106 | B2C-6 hardening | B2C-6 | Status events on system transitions have a null actor. The audit row still derives its actor from the session, because `record_workforce_audit_event` is shared with B2B; its payload says `changed_by: system` | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-107 | B2C-6 hardening | B2C-6 | Amends D-98 after review: travel opens 120 minutes before a scheduled booking, but arrival and later steps open only 30 minutes before (`worker_arrival_window_minutes`), so a washer cannot block a customer's cancel for hours | ADOPTED-DEFAULT (loop, 2026-11-06) |
+| D-108 | B2C-6 hardening | B2C-6 | B2C legal items live in `docs/b2c/LEGAL_REVIEW_REGISTER.md`, separate from the workforce register, whose item counts are pinned by B2B tests | ADOPTED-DEFAULT (loop, 2026-11-06) |
 
 ## Standing human gates (never automated — the only things the loop stops for)
 - Applying any migration to the linked/shared/production Supabase project.

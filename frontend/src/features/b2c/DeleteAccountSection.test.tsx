@@ -36,7 +36,7 @@ beforeEach(() => {
 describe('delete account', () => {
   it('says what is removed and what is kept, and asks before anything happens', async () => {
     render(<DeleteAccountSection />)
-    expect(screen.getByText(/anonymous record of past bookings/)).toBeInTheDocument()
+    expect(screen.getByText(/keeps a record of past bookings/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Delete account' }))
     expect(mocks.deleteMyAccount).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Permanently delete my account' })).toBeDisabled()
@@ -64,5 +64,28 @@ describe('delete account', () => {
     await confirmWith('correct-password')
     expect(await screen.findByRole('alert')).toHaveTextContent('current bookings')
     expect(mocks.signOut).not.toHaveBeenCalled()
+  })
+
+  it('says up front that shop history stops deletion here, and that only WashLink can close the account', () => {
+    render(<DeleteAccountSection />)
+    expect(screen.getByText(/shop booking history or shop workforce records/)).toHaveTextContent('Only WashLink can close these accounts.')
+  })
+
+  it.each([
+    "This account can't be deleted here. Only WashLink can close it.",
+    'Enter your password again to delete this account.',
+  ])('shows the server refusal word for word: %s', async (refusal) => {
+    mocks.deleteMyAccount.mockRejectedValue(new Error(refusal))
+    render(<DeleteAccountSection />)
+    await confirmWith('correct-password')
+    expect(await screen.findByRole('alert')).toHaveTextContent(refusal)
+    expect(mocks.signOut).not.toHaveBeenCalled()
+  })
+
+  it('signs in with the password before asking the server to delete, so the call carries the fresh token', async () => {
+    render(<DeleteAccountSection />)
+    await confirmWith('correct-password')
+    await waitFor(() => { expect(mocks.deleteMyAccount).toHaveBeenCalledTimes(1) })
+    expect(mocks.signInWithPassword.mock.invocationCallOrder[0]).toBeLessThan(mocks.deleteMyAccount.mock.invocationCallOrder[0])
   })
 })
