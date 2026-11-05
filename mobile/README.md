@@ -73,5 +73,4 @@ Set these in EAS environment variables, not in source control:
 
 - Replace the default icon and splash with real logo files. None exist in the repository yet.
 - Confirm the bundle ID `com.washlink.app` is the one you want. It is hard to change after release.
-- Add in-app account deletion, which both stores require. See `docs/b2c/FINAL_REPORT.md`.
 - Test on real Android and iPhone devices.

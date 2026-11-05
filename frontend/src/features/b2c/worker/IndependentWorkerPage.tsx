@@ -7,6 +7,7 @@ import { AuthenticatedTopBar } from '../../../presentation/components/Authentica
 import { Badge, Button, Card, Skeleton, Tabs } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
+import { DeleteAccountSection } from '../DeleteAccountSection'
 import { AssignedJobCard } from './AssignedJobCard'
 import { RequestCard } from './RequestCard'
 import { WorkerSetupPanel } from './WorkerSetupPanel'
@@ -160,7 +161,12 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
                 </section>
               </div>
             ) : null}
-            {tab === 'setup' ? <WorkerSetupPanel workerId={workerId} account={account} onSaved={refresh} /> : null}
+            {tab === 'setup' ? (
+              <div className="space-y-5">
+                <WorkerSetupPanel workerId={workerId} account={account} onSaved={refresh} />
+                <DeleteAccountSection />
+              </div>
+            ) : null}
           </>
         ) : null}
       </main>

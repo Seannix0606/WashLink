@@ -20,13 +20,13 @@ Native builds, maps, location, secure storage on a device, push, production depl
 - Draft prices, 0% commission, cash, bookings closed until set in admin.
 
 ## Latest test results
-- DB: 115 files, 3471 tests pass. API smokes: 16 pass (b2c 49 checks).
-- Frontend: lint 0, 155 files / 352 tests pass. Mobile: tsc clean, 5 tests pass, Expo Doctor 20/20.
+- DB: 116 files, 3482 tests pass. API smokes: 16 pass (b2c 57 checks).
+- Frontend: lint 0, 156 files / 356 tests pass. Mobile: tsc clean, 5 tests pass, Expo Doctor 20/20.
 
 ## Next action
-Needs the owner: an Expo account and devices for a first Android build, then fix what real devices show. Then add in-app account deletion.
+Needs the owner: an Expo account and devices for a first Android build, then fix what real devices show.
 
 ## Known blockers
 - Real prices, logo files, photos, map provider, production migration approval.
-- In-app account deletion is required by both stores and not built.
+- Legal review of what is kept after account deletion.
 - Workforce W17 parked unverified on `feature/workforce`; W18 not started.

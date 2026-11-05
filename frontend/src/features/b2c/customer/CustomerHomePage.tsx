@@ -6,16 +6,18 @@ import { AuthenticatedTopBar } from '../../../presentation/components/Authentica
 import { Button, EmptyState, Skeleton, Tabs } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
+import { DeleteAccountSection } from '../DeleteAccountSection'
 import { BookingCard } from './BookingCard'
 import { SavedDetailsPanel } from './SavedDetailsPanel'
 
 const BookingWizard = lazy(async () => ({ default: (await import('./wizard/BookingWizard')).BookingWizard }))
 
-type CustomerTab = 'home' | 'bookings' | 'saved'
+type CustomerTab = 'home' | 'bookings' | 'saved' | 'account'
 const tabItems = [
   { value: 'home' as const, label: 'Home' },
   { value: 'bookings' as const, label: 'Bookings' },
   { value: 'saved' as const, label: 'Addresses and vehicles' },
+  { value: 'account' as const, label: 'Account' },
 ]
 
 interface CustomerHomePageProps {
@@ -121,6 +123,7 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
         ) : null}
         {tab === 'bookings' ? list(bookings ?? [], 'No bookings yet') : null}
         {tab === 'saved' ? <SavedDetailsPanel customerId={customerId} /> : null}
+        {tab === 'account' ? <DeleteAccountSection /> : null}
       </main>
     </div>
   )

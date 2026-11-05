@@ -2,7 +2,7 @@
 -- one signature per line and sorted, so a failure shows the diff. Generated once from the local catalog after the 99 migrations.
 -- 155 rows: 152 non-trigger functions, the figure in FINAL_REVIEW, plus the three pre-workforce trigger functions
 -- (handle_new_user, set_booking_quote_from_shop_pricing, set_shop_pricing_updated_at). W15 and W16 added none. By design (R6) any new
--- 32 B2C functions added at b2c (each reviewed). authenticated-executable function fails this file: update the list in the same increment, after checking the function is caller-scoped.
+-- 33 B2C functions added at b2c (each reviewed). authenticated-executable function fails this file: update the list in the same increment, after checking the function is caller-scoped.
 -- Local Docker stack only.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -76,6 +76,7 @@ decide_certification_review(uuid, text, text)
 decline_dispatch_request(uuid)
 decline_worker_contract_version(uuid, uuid, text)
 delete_job_application_draft(uuid)
+delete_my_account()
 delete_training_program_draft(uuid)
 delete_training_session_draft(uuid)
 designate_training_trainer(uuid, uuid)

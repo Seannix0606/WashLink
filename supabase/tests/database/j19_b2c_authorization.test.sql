@@ -1,4 +1,4 @@
--- B2C authorization pins: RLS on, exact grants per role, no service_role access, what anon may read, what Realtime
+-- B2C authorization pins: RLS on, exact grants per role, service_role limited to push tokens, what anon may read, what Realtime
 -- publishes, and which functions no client may call. Any new grant on a B2C table fails here.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -32,8 +32,8 @@ select is((select coalesce(string_agg(name, ','), '-') from b2c_tables where pg_
           'b2c_anon_reads_only_the_public_catalog');
 select is((select coalesce(string_agg(name, ','), '-') from b2c_tables where pg_temp.privs('authenticated', name) <> authenticated_privs), '-',
           'b2c_authenticated_grants_are_exact');
-select is((select coalesce(string_agg(name, ','), '-') from b2c_tables where pg_temp.privs('service_role', name) <> '-'), '-',
-          'b2c_service_role_has_no_table_access');
+select is((select coalesce(string_agg(name || ':' || pg_temp.privs('service_role', name), ','), '-') from b2c_tables where pg_temp.privs('service_role', name) <> '-'),
+          'device_push_tokens:DELETE SELECT', 'b2c_service_role_only_reaches_push_tokens');
 select is((select coalesce(string_agg(name, ','), '-') from b2c_tables where pg_temp.privs('public', name) <> '-'), '-',
           'b2c_public_role_has_no_table_access');
 select is((select string_agg(tablename, ',' order by tablename) from pg_publication_tables

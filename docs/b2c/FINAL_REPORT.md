@@ -21,6 +21,7 @@ Checked by automated tests and, where noted, by hand in a browser against the lo
 | Web washer: profile, verification, going online, accept, address reveal, first status step | Browser, 375px |
 | Web customer: live status update, rating | Browser. One live update seen about 2 seconds after the change |
 | Web admin: verify a washer, summary, tabs hidden while B2B is off | Browser |
+| Account deletion: refused during active work, past bookings anonymised, sign-in removed | Database tests, API smoke, and by hand on web and in the mobile browser preview |
 | B2B regression: all earlier database tests and API smokes | Pass |
 
 ### Partly implemented, or checked in a limited way
@@ -45,7 +46,6 @@ Nothing below has ever run. Don't rely on any of it yet.
 
 ### Not built
 
-- **In-app account deletion for B2C users.** Apple and Google both require it, so this blocks store release.
 - Online payment, phone number verification, and washer document upload
 - Worker GPS tracking, and logo and store assets
 
@@ -58,7 +58,7 @@ See `ARCHITECTURE.md`. Web and Expo share `packages/shared`, and both talk to on
 | Path | Contents |
 | --- | --- |
 | `packages/shared/` | New shared package |
-| `supabase/migrations/2026_11_06_b2c{a..e}_*.sql` | 5 new migrations |
+| `supabase/migrations/2026_11_06_b2c{a..f}_*.sql` | 6 new migrations |
 | `supabase/functions/send-service-push/` | Push sender, never run |
 | `supabase/tests/database/j19_*` | New tests. Five earlier roll-up tests had their expected counts extended; no checks were removed |
 | `frontend/src/features/b2c/` | Landing, customer, washer and admin screens |
@@ -76,8 +76,8 @@ One existing B2B test (`WorkerContractDraftEditor.j9`) timed out at 5 seconds wh
 ## 5. Web features
 
 - Dark landing page: hero, how it works, locations, live services and prices, washer sign-up and app section. The hero is a CSS scene until real photos exist.
-- Customer: 5-step booking, map pin with search and device location, saved addresses and vehicles, live tracking, cancel, search again, rating.
-- Washer: profile, service area, hours, services, online toggle, requests with countdown, job steps, directions, earnings, reviews.
+- Customer: 5-step booking, map pin with search and device location, saved addresses and vehicles, live tracking, cancel, search again, rating, account deletion.
+- Washer: profile, service area, hours, services, online toggle, requests with countdown, job steps, directions, earnings, reviews, account deletion.
 - Admin: open or close bookings, prices, commission, washer verification and suspension, booking monitor, audited case view.
 
 ## 6. Mobile features
@@ -85,11 +85,11 @@ One existing B2B test (`WorkerContractDraftEditor.j9`) timed out at 5 seconds wh
 - Native React Native screens, not a WebView.
 - Customer and washer tabs that follow the role stored in the database. Admin and shop accounts are sent to the website.
 - Native booking steps, `react-native-maps`, device location, and a secure session.
-- Push registration, an offline banner, and pull to refresh.
+- Push registration, an offline banner, pull to refresh, and account deletion.
 
 ## 7. Migrations
 
-Five additive migrations: catalog and accounts, bookings and dispatch, booking engine, washer actions, admin operations. They're applied only to the local stack. Nothing is deleted or changed in existing tables, apart from new notification categories being registered.
+Six additive migrations: catalog and accounts, bookings and dispatch, booking engine, washer actions, admin operations, account deletion. They're applied only to the local stack. Nothing is deleted or changed in existing tables, apart from new notification categories being registered.
 
 ## 8. Security improvements
 
@@ -99,6 +99,7 @@ Five additive migrations: catalog and accounts, bookings and dispatch, booking e
 - Clients only see error sentences written for people, never raw database errors.
 - Notification tap targets are limited to an allowed list.
 - No service role reference exists in the app source, and none was found in the Android or iOS bundles.
+- The service role reaches only `device_push_tokens` among B2C tables, pinned by a test. The push sender needs that access.
 - Mobile sessions use the keychain or keystore. That code passes unit tests with a mock but is untested on a device.
 
 **Dependency audit (mobile):** 25 moderate or low advisories, none high or critical. The 5 in production dependencies are in Expo's command-line tooling (`glob`, `minimatch`), which is not app runtime code. I didn't force upgrades, because the suggested fix would break the Expo SDK version.
@@ -111,9 +112,9 @@ Latest run on this code:
 
 | Check | Result |
 | --- | --- |
-| Database tests (pgTAP) | 115 files, 3,471 tests, pass |
-| API smokes | 16 smokes, pass (B2C: 49 checks) |
-| Web unit tests | 155 files, 352 tests, pass |
+| Database tests (pgTAP) | 116 files, 3,482 tests, pass |
+| API smokes | 16 smokes, pass (B2C: 57 checks) |
+| Web unit tests | 156 files, 356 tests, pass |
 | Web lint and type-check | Clean |
 | Web production build | Pass |
 | Mobile type-check | Clean |
@@ -148,7 +149,7 @@ These need you:
 2. Approval to apply the migrations to production.
 3. An Expo account and real devices, to test builds and push.
 4. Logo files and real photos. The repository only has the CSS brand mark.
-5. In-app account deletion, which needs a decision on keeping completed booking records.
+5. Legal review of what's kept after account deletion. See `OPERATIONS.md`.
 
 Parked: W17 on `feature/workforce` (`48f7fb0`) is unverified and W18 hasn't started. B-1 and B-2 in the worker profile editor stay open; B2C washer screens don't show that editor.
 

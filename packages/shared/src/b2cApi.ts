@@ -397,6 +397,9 @@ export function createB2cApi(client: B2cSupabaseClient) {
       const result = await rows(client.rpc('my_independent_worker_reviews'))
       return result.map((r) => ({ rating: num(r.rating), comment: str(r.comment), createdAt: str(r.created_at) }))
     },
+    deleteMyAccount: async (): Promise<void> => {
+      await run(client.rpc('delete_my_account'))
+    },
     registerPushToken: async (token: string, platform: 'ios' | 'android'): Promise<void> => {
       await run(client.rpc('register_device_push_token', { p_token: token, p_platform: platform }))
     },

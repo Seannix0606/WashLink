@@ -250,6 +250,32 @@ async function main() {
   check('admin_case_has_history', Array.isArray(caseFile.events) && caseFile.events.length >= 5)
   check('admin_workers_lists_workers', (await superAdmin.api.adminWorkers()).some((row) => row.profile_id === workerA.id))
 
+  // Account deletion: refused while work is active, then past bookings stay as anonymous records.
+  const thirdSlot = slots.filter((candidate) => candidate.isAvailable)[12] ?? slot
+  const third = await customer.api.createBooking(bookingInput(service, thirdSlot.startsAt, shared.createBookingSubmissionKey(`third-${runId}`)))
+  check('customer_with_open_booking_cannot_delete', (await refused(() => customer.api.deleteMyAccount())) !== null)
+  const [thirdRequest] = await winner.api.dispatchRequests()
+  await winner.api.acceptRequest(thirdRequest.id)
+  check('worker_with_active_job_cannot_delete', (await refused(() => winner.api.deleteMyAccount())) !== null)
+  await customer.api.cancelBooking(third.id)
+  await customer.api.deleteMyAccount()
+  createdUserIds.splice(createdUserIds.indexOf(customer.id), 1)
+  check('deleted_customer_sign_in_is_gone', (await admin.auth.admin.getUserById(customer.id)).error !== null)
+  const retained = await superAdmin.api.adminBookingCase(booking.id)
+  check('deleted_customer_booking_is_kept_with_its_price', retained.booking.customer_total_cents === quote.customerTotalCents && retained.booking.status === 'completed')
+  check('deleted_customer_link_location_and_vehicle_are_gone', retained.booking.customer_id === null && retained.booking.address === 'Removed at customer request'
+    && retained.booking.latitude === 0 && retained.booking.instructions === '' && retained.booking.vehicle_make === 'Removed', JSON.stringify(retained.booking))
+  check('deleted_customer_review_keeps_rating_not_words', retained.review.comment === '' && retained.review.rating === 5)
+  check('worker_history_no_longer_shows_customer_address', !JSON.stringify(await winner.api.assignedBookings()).includes('SMOKEADDRESS'))
+  await winner.api.deleteMyAccount()
+  createdUserIds.splice(createdUserIds.indexOf(winner.id), 1)
+  const afterWorker = await superAdmin.api.adminBookingCase(booking.id)
+  check('deleted_worker_link_is_gone_and_record_kept', afterWorker.booking.worker_id === null && afterWorker.booking.customer_total_cents === quote.customerTotalCents)
+  check('deleted_worker_profile_is_gone', !(await superAdmin.api.adminWorkers()).some((row) => row.profile_id === winner.id))
+  const serviceTokens = await admin.from('device_push_tokens').select('token').limit(1)
+  const serviceBookings = await admin.from('service_bookings').select('id').limit(1)
+  check('service_role_reaches_push_tokens_but_not_bookings', serviceTokens.error === null && serviceBookings.error !== null, serviceTokens.error?.message)
+
   await superAdmin.api.adminUpdateRules({ bookingsOpen: false, commissionBps: 0, requestTtlSeconds: 300, searchWindowMinutes: 30, travelBufferMinutes: 20 })
   check('bookings_closed_again', (await anonApi.bookingsAreOpen()) === false)
 }

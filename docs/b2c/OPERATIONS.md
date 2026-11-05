@@ -46,6 +46,18 @@ The public OpenStreetMap and Nominatim services have usage policies that limit p
 
 The database stores device tokens through `register_device_push_token` and queues in-app notifications. Sending to Expo's push service needs a trusted server job, and needs real devices to verify, so push is **not verified**. See `docs/b2c/ARCHITECTURE.md`.
 
+## Account deletion
+
+Customers and washers can delete their own account on the website and in the app, after re-entering their password. It's refused while they have a current booking.
+
+- **Removed:** sign-in, profile, saved addresses and vehicles, device tokens, notifications and washer profile.
+- **Kept, without the person's identity:** past bookings with price, status and dates, and review ratings. Location, vehicle, notes and review text are cleared.
+- **Refused in the app:** admins, shop owners and washers with shop workforce records. Their contract and training records have retention rules, so WashLink closes those accounts by hand.
+
+What to keep and for how long is a legal decision. **Have this policy reviewed against Philippine privacy and tax rules before launch.**
+
+Google Play also asks for a web link where people can request deletion. The website's Account tab can serve as that link once it's live.
+
 ## Testing locally
 
 From the repository root, with Docker running:

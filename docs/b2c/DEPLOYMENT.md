@@ -4,7 +4,7 @@ Nothing here has been run against production. Each step is for a person to decid
 
 ## 1. Database
 
-Review the five migrations named `2026_11_06_b2c*`. They only add things, and bookings stay closed afterwards, so customers see no change until step 5.
+Review the six migrations named `2026_11_06_b2c*`. They only add things, and bookings stay closed afterwards, so customers see no change until step 5.
 
 The repository's safe local test scripts never touch a linked project. Applying to production is a deliberate, separate action with your own Supabase access.
 
@@ -51,7 +51,7 @@ See `mobile/README.md`. Also needed:
 
 - Apple Developer and Google Play accounts
 - A Google Maps Android key
-- Logo files, a privacy policy, store listings, and in-app account deletion
+- Logo files, a privacy policy and store listings
 
 ## Rolling back
 
