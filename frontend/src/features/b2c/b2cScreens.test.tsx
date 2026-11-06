@@ -15,7 +15,7 @@ import type { WizardDraft } from './customer/wizard/BookingWizard'
 
 const api = vi.hoisted(() => ({
   acceptRequest: vi.fn(), declineRequest: vi.fn(), advanceBooking: vi.fn(), cancelBooking: vi.fn(), reviewBooking: vi.fn(), quote: vi.fn(),
-  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(),
+  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(),
   workerAccount: vi.fn(), dispatchRequests: vi.fn(), assignedBookings: vi.fn(), workerSummary: vi.fn(), workerReviews: vi.fn(),
 }))
 vi.mock('./b2cApiClient', () => ({ getB2cApi: (): unknown => api, errorMessage: (error: Error): string => error.message }))
@@ -145,6 +145,20 @@ describe('worker home', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('WashLink has paused your account')
   })
 
+  it('does not say a pending washer is being reviewed when nothing may have been uploaded', async () => {
+    api.workerAccount.mockResolvedValue({ ...account, verificationStatus: 'pending' })
+    render(<IndependentWorkerPage workerId="w1" />)
+    expect(await screen.findByText(/WashLink reviews your account after you upload your verification photos in Profile and hours\. You can go online once it is verified\./)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Profile and hours' })).toBeInTheDocument()
+    expect(screen.queryByText(/WashLink is reviewing your account/)).toBeNull()
+  })
+
+  it('shows the note WashLink left, under the status', async () => {
+    api.workerAccount.mockResolvedValue({ ...account, verificationNote: 'Repeated customer complaints' })
+    render(<IndependentWorkerPage workerId="w1" />)
+    expect(await screen.findByText(/WashLink's note: Repeated customer complaints/)).toBeInTheDocument()
+  })
+
   it('shows a verified washer no paused notice', async () => {
     api.workerAccount.mockResolvedValue({ ...account, verificationStatus: 'verified' })
     render(<IndependentWorkerPage workerId="w1" />)
@@ -250,6 +264,8 @@ describe('admin panel', () => {
     api.adminCatalog.mockResolvedValue({ settings: { bookings_open: false, commission_bps: 0 }, services: [], addons: [] })
     api.adminWorkers.mockResolvedValue([{ profile_id: 'w1', full_name: 'Wes', verification_status: 'verified', has_service_area: true, service_radius_km: 10, completed_count: 0 }])
     api.adminBookings.mockResolvedValue([])
+    api.adminWorkerDocuments.mockResolvedValue([])
+    api.adminWorkerDocumentOverview.mockResolvedValue({ documentsToReview: 3, filesWaitingForRemoval: 2, oldestFileWaitingSince: '2026-11-01T01:00:00Z' })
   })
 
   it('warns about draft prices and does not call cash received', async () => {
@@ -264,8 +280,9 @@ describe('admin panel', () => {
     render(<B2cOperationsPanel />)
     await userEvent.click(await screen.findByRole('button', { name: 'Suspend' }))
     expect(api.adminReviewWorker).not.toHaveBeenCalled()
+    await userEvent.type(screen.getByLabelText(/Reason for suspending/), ' Repeated customer complaints ')
     await userEvent.click(screen.getByRole('button', { name: 'Confirm suspend' }))
-    expect(api.adminReviewWorker).toHaveBeenCalledWith('w1', 'suspended', '')
+    expect(api.adminReviewWorker).toHaveBeenCalledWith('w1', 'suspended', 'Repeated customer complaints')
   })
 
   describe('cancelling a started job', () => {

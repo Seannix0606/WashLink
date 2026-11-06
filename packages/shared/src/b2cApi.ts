@@ -1,213 +1,18 @@
 import type { ServiceBookingStatus } from './bookingStatus'
 import type { BookingQuote, PaymentStatus, VehicleCategory } from './catalog'
+import type { AssignedBooking, CatalogAddon, CatalogService, CustomerBooking, DispatchRequest, NewBookingInput, SavedAddress, SavedVehicle, TimeSlot, WorkerAccount, WorkerHoursRow, WorkerSummary } from './b2cTypes'
+import { nullableNum, nullableStr, num, rows, run, str, strs, type B2cSupabaseClient, type Row } from './b2cRequest'
+import { createWorkerDocumentsApi } from './workerDocuments'
+
+export { B2cRequestError } from './b2cRequest'
+export type { B2cSupabaseClient } from './b2cRequest'
+export * from './b2cFormat'
+export * from './b2cTypes'
 
 /**
  * The B2C data calls, shared by web and mobile so neither can drift. The database decides everything; this
  * only maps rows and errors. It takes a Supabase client structurally, so the package stays free of dependencies.
  */
-type QueryResult = PromiseLike<{ data: unknown; error: { message: string; code?: string } | null }>
-
-interface TableQuery extends QueryResult {
-  select: (columns?: string) => TableQuery
-  order: (column: string, options?: { ascending: boolean }) => TableQuery
-  eq: (column: string, value: unknown) => TableQuery
-  insert: (row: Record<string, unknown>) => TableQuery
-  update: (row: Record<string, unknown>) => TableQuery
-  delete: () => TableQuery
-}
-
-export interface B2cSupabaseClient {
-  rpc: (name: string, args?: Record<string, unknown>) => QueryResult
-  from: (table: string) => TableQuery
-}
-
-export interface CatalogService {
-  readonly id: string
-  readonly key: string
-  readonly category: string
-  readonly name: string
-  readonly description: string
-  readonly imageUrl: string | null
-  readonly requirements: string
-  readonly basePriceCents: number
-  readonly durationMinutes: number
-  readonly priceIsDraft: boolean
-  readonly supportedVehicles: readonly VehicleCategory[]
-}
-
-export interface CatalogAddon {
-  readonly id: string
-  readonly name: string
-  readonly description: string
-  readonly priceCents: number
-  readonly durationMinutes: number
-  readonly priceIsDraft: boolean
-}
-
-export interface SavedAddress {
-  readonly id: string
-  readonly label: string
-  readonly address: string
-  readonly latitude: number
-  readonly longitude: number
-  readonly landmark: string
-  readonly instructions: string
-}
-
-export interface SavedVehicle {
-  readonly id: string
-  readonly category: VehicleCategory
-  readonly make: string
-  readonly model: string
-  readonly year: number | null
-}
-
-export interface TimeSlot {
-  readonly startsAt: string
-  readonly isAvailable: boolean
-}
-
-export interface CustomerBooking {
-  readonly id: string
-  readonly reference: string
-  readonly status: ServiceBookingStatus
-  readonly serviceName: string
-  readonly addonNames: readonly string[]
-  readonly vehicleCategory: VehicleCategory
-  readonly vehicleMake: string
-  readonly vehicleModel: string
-  readonly address: string
-  readonly isImmediate: boolean
-  readonly scheduledAt: string
-  readonly durationMinutes: number
-  readonly customerTotalCents: number
-  readonly paymentMethod: string
-  readonly paymentStatus: PaymentStatus
-  readonly workerName: string
-  readonly workerPhone: string | null
-  readonly hasReview: boolean
-}
-
-export interface DispatchRequest {
-  readonly id: string
-  readonly bookingId: string
-  readonly reference: string
-  readonly serviceName: string
-  readonly addonNames: readonly string[]
-  readonly vehicleCategory: VehicleCategory
-  readonly isImmediate: boolean
-  readonly scheduledAt: string
-  readonly durationMinutes: number
-  /** The upper bound of a distance band (2, 5, 10, 20, 50 or 200 km), never a measured distance. Show it with `distanceBandLabel`. */
-  readonly distanceKm: number | null
-  readonly workerEarningsCents: number
-  readonly expiresAt: string
-}
-
-export interface AssignedBooking {
-  readonly id: string
-  readonly reference: string
-  readonly status: ServiceBookingStatus
-  readonly serviceName: string
-  readonly addonNames: readonly string[]
-  readonly vehicleCategory: VehicleCategory
-  readonly vehicleMake: string
-  readonly vehicleModel: string
-  readonly scheduledAt: string
-  readonly durationMinutes: number
-  readonly workerEarningsCents: number
-  readonly customerTotalCents: number
-  readonly paymentMethod: string
-  readonly address: string | null
-  readonly latitude: number | null
-  readonly longitude: number | null
-  readonly landmark: string | null
-  readonly instructions: string | null
-  readonly customerName: string | null
-  readonly customerPhone: string | null
-}
-
-export interface WorkerAccount {
-  readonly verificationStatus: 'pending' | 'verified' | 'rejected' | 'suspended'
-  readonly verificationNote: string | null
-  readonly bio: string
-  readonly skills: readonly string[]
-  readonly baseLatitude: number | null
-  readonly baseLongitude: number | null
-  readonly serviceRadiusKm: number
-  readonly isOnline: boolean
-}
-
-export interface WorkerSummary {
-  readonly completedCount: number
-  readonly activeCount: number
-  readonly earningsCents: number
-  readonly reviewCount: number
-  readonly averageRating: number | null
-}
-
-export interface WorkerHoursRow {
-  readonly weekday: number
-  readonly startMinute: number
-  readonly endMinute: number
-}
-
-export interface NewBookingInput {
-  readonly serviceId: string
-  readonly vehicleCategory: VehicleCategory
-  readonly vehicleMake: string
-  readonly vehicleModel: string
-  readonly vehicleYear: number | null
-  readonly addonIds: readonly string[]
-  readonly address: string
-  readonly latitude: number
-  readonly longitude: number
-  readonly landmark: string
-  readonly instructions: string
-  readonly isImmediate: boolean
-  readonly scheduledAt: string | null
-  readonly submissionKey: string
-}
-
-const genericFailure = 'Something went wrong. Check your connection and try again.'
-const databaseRefusalCodes = new Set(['23505', '23514', '22023', '42501', '55000'])
-
-export class B2cRequestError extends Error {
-  readonly code: string | undefined
-  constructor(message: string, code?: string) {
-    super(message)
-    this.name = 'B2cRequestError'
-    this.code = code
-  }
-}
-
-type Row = Record<string, unknown>
-
-// Our functions raise sentences written for people. Anything else stays generic so internals are never shown.
-function toFailure(error: { message: string; code?: string }): B2cRequestError {
-  const isWritten = error.code !== undefined && databaseRefusalCodes.has(error.code)
-    && /^[A-Z].*\.$/.test(error.message) && !error.message.includes('violates')
-  return new B2cRequestError(isWritten ? error.message : genericFailure, error.code)
-}
-
-async function run(query: QueryResult): Promise<unknown> {
-  const { data, error } = await query
-  if (error) {
-    throw toFailure(error)
-  }
-  return data
-}
-
-async function rows(query: QueryResult): Promise<readonly Row[]> {
-  const data = await run(query)
-  return Array.isArray(data) ? (data as Row[]) : []
-}
-
-const str = (value: unknown): string => (typeof value === 'string' ? value : '')
-const num = (value: unknown): number => Number(value ?? 0)
-const nullableNum = (value: unknown): number | null => (value === null || value === undefined ? null : Number(value))
-const nullableStr = (value: unknown): string | null => (typeof value === 'string' ? value : null)
-const strs = (value: unknown): readonly string[] => (Array.isArray(value) ? (value as string[]) : [])
 
 function toAssigned(r: Row): AssignedBooking {
   return {
@@ -234,6 +39,7 @@ export type B2cApi = ReturnType<typeof createB2cApi>
 
 export function createB2cApi(client: B2cSupabaseClient) {
   return {
+    ...createWorkerDocumentsApi(client),
     async bookingsAreOpen(): Promise<boolean> {
       const result = await rows(client.rpc('b2c_public_status'))
       return result[0]?.bookings_open === true
@@ -431,28 +237,4 @@ export function createB2cApi(client: B2cSupabaseClient) {
     adminBookings: async (status: string | null): Promise<readonly Row[]> => rows(client.rpc('admin_service_bookings', { p_status: status })),
     adminBookingCase: async (id: string): Promise<Row> => (await run(client.rpc('admin_service_booking_case', { p_booking: id }))) as Row,
   }
-}
-
-/** Directions to the assigned job, opened in the phone's or browser's own maps app. */
-export function directionsUrl(latitude: number, longitude: number): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${String(latitude)},${String(longitude)}`
-}
-
-/** Today in Manila as YYYY-MM-DD plus the next days, for the date picker. */
-export function upcomingManilaDates(count: number, now: Date = new Date()): readonly string[] {
-  const manila = new Date(now.getTime() + 8 * 60 * 60 * 1000)
-  return Array.from({ length: count }, (_, index) => {
-    const day = new Date(Date.UTC(manila.getUTCFullYear(), manila.getUTCMonth(), manila.getUTCDate() + index))
-    return day.toISOString().slice(0, 10)
-  })
-}
-
-export function formatManilaDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-PH', {
-    timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-  })
-}
-
-export function formatManilaTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })
 }

@@ -1,10 +1,11 @@
 import * as Location from 'expo-location'
 import { useEffect, useState, type ReactElement } from 'react'
-import type { CatalogService } from '@washlink/shared'
+import type { CatalogService, WorkerVerificationStatus } from '@washlink/shared'
 import { useUserId } from '../../src/lib/AuthProvider'
 import { api, errorMessage } from '../../src/lib/api'
 import { Body, Button, Card, Choice, Field, Heading, Notice, Row, Screen, Title } from '../../src/ui'
 import { PinMap } from '../../src/ui/PinMap'
+import { WorkerDocumentsSection } from '../../src/features/worker/WorkerDocumentsSection'
 
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -39,11 +40,18 @@ export default function WorkerSetup(): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Undefined until the account has loaded, so the section can't claim that no profile exists.
+  const [accountStatus, setAccountStatus] = useState<WorkerVerificationStatus | null | undefined>(undefined)
 
   useEffect(() => {
+    // The session loads after the first render, and an empty id is not a washer with no profile.
+    if (workerId === '') {
+      return
+    }
     void (async (): Promise<void> => {
       setServices(await api.listServices())
       const account = await api.workerAccount(workerId)
+      setAccountStatus(account?.verificationStatus ?? null)
       if (account === null) {
         return
       }
@@ -101,6 +109,7 @@ export default function WorkerSetup(): ReactElement {
         ...offered.filter((id) => !current.includes(id)).map((id) => api.setWorkerService(workerId, id, true)),
         ...current.filter((id) => !offered.includes(id)).map((id) => api.setWorkerService(workerId, id, false)),
       ])
+      setAccountStatus((await api.workerAccount(workerId))?.verificationStatus ?? null)
       setNotice('Profile saved.')
     } catch (caught) {
       setError(errorMessage(caught))
@@ -112,6 +121,7 @@ export default function WorkerSetup(): ReactElement {
   return (
     <Screen>
       <Title>Profile and hours</Title>
+      {accountStatus !== undefined ? <WorkerDocumentsSection verificationStatus={accountStatus} /> : null}
       <Field label="Short bio" value={bio} maxLength={500} onChangeText={setBio} />
       <Field label="Skills and experience" helper="Separate with commas." value={skills} onChangeText={setSkills} />
       <Heading>Service area</Heading>

@@ -14,7 +14,8 @@
 //                     migrations can drop or replace these policies)
 //   test_helpers.sql, test_helpers_certifications.sql (W7), test_helpers_contract_templates.sql (W8),
 //   test_helpers_worker_contracts.sql (W9), test_helpers_owner_relationships.sql (W10), test_helpers_oversight.sql (W11),
-//   test_helpers_moderation.sql (W14) then test_helpers_scheduling.sql (W12) are the staged seed (helpers only), in order.
+//   test_helpers_moderation.sql (W14), test_helpers_scheduling.sql (W12) then test_helpers_worker_documents.sql (B2C-7) are the
+//   staged seed (helpers only), in order.
 // - The staged dir never contains `.temp/project-ref`, so the CLI cannot target a linked project.
 // - W2 (S10/S11): the repo config keeps [db.seed] enabled = false (only the staged copy enables
 //   it), the staged project_id must end in "-local-test", and no .sql may exist under supabase/
@@ -37,10 +38,10 @@ const BASELINE_SOURCE_NAME = 'local_test_baseline.sql'
 const OWNER_POLICIES_SOURCE_NAME = 'local_test_baseline_owner_policies.sql'
 // Seeded in this order (second file: W7 certification helpers, third: W8 contract template helpers, fourth: W9
 // worker contract helpers, fifth: W10 owner relationship helpers, sixth: W11 oversight helpers, seventh: W14 moderation
-// helpers, eighth: W12 scheduling helpers; test_helpers.sql is at its size limit).
+// helpers, eighth: W12 scheduling helpers, ninth: B2C-7 worker document helpers; test_helpers.sql is at its size limit).
 export const HELPERS_SOURCE_NAMES = ['test_helpers.sql', 'test_helpers_certifications.sql', 'test_helpers_contract_templates.sql',
   'test_helpers_worker_contracts.sql', 'test_helpers_owner_relationships.sql', 'test_helpers_oversight.sql', 'test_helpers_moderation.sql',
-  'test_helpers_scheduling.sql']
+  'test_helpers_scheduling.sql', 'test_helpers_worker_documents.sql']
 const PROJECT_ID_LINE = 'project_id = "washlink"'
 const STAGED_PROJECT_ID_LINE = 'project_id = "washlink-local-test"'
 const SEED_PATHS_LINE = 'sql_paths = ["./seed.sql"]'

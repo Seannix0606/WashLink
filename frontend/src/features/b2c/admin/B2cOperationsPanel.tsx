@@ -1,10 +1,12 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { formatPesos } from '@washlink/shared'
+import type { WorkerDocumentOverview } from '@washlink/shared'
+import { formatManilaDateTime, formatPesos } from '@washlink/shared'
 import { Badge, Button, Card, Input, Select, Skeleton } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { AdminCancelBookingControl } from './AdminCancelBookingControl'
+import { WasherVerificationCard } from './WasherVerificationCard'
 
 type Row = Record<string, unknown>
 const text = (value: unknown): string => (typeof value === 'string' ? value : typeof value === 'number' || typeof value === 'boolean' ? String(value) : '')
@@ -26,18 +28,19 @@ export function B2cOperationsPanel(): ReactElement {
   const [filter, setFilter] = useState('')
   const [caseData, setCaseData] = useState<Row | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [confirmSuspend, setConfirmSuspend] = useState<string | null>(null)
+  const [overview, setOverview] = useState<WorkerDocumentOverview | null>(null)
 
   const refresh = useCallback(async (): Promise<void> => {
     try {
       const api = getB2cApi()
-      const [nextSummary, nextCatalog, nextWorkers, nextBookings] = await Promise.all([
-        api.adminSummary(), api.adminCatalog(), api.adminWorkers(), api.adminBookings(filter === '' ? null : filter),
+      const [nextSummary, nextCatalog, nextWorkers, nextBookings, nextOverview] = await Promise.all([
+        api.adminSummary(), api.adminCatalog(), api.adminWorkers(), api.adminBookings(filter === '' ? null : filter), api.adminWorkerDocumentOverview(),
       ])
       setSummary(nextSummary)
       setCatalog(nextCatalog)
       setWorkers(nextWorkers)
       setBookings(nextBookings)
+      setOverview(nextOverview)
       setError(null)
     } catch (caught) {
       setError(errorMessage(caught))
@@ -121,25 +124,15 @@ export function B2cOperationsPanel(): ReactElement {
 
       <section aria-labelledby="workers-title" className="space-y-3">
         <h2 id="workers-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Washers</h2>
+        {overview !== null ? (
+          <div className="space-y-1 text-sm text-[var(--color-ink-700)]">
+            <p>Documents to review: <span className="font-semibold tabular-nums">{overview.documentsToReview}</span></p>
+            <p>Files waiting for removal: <span className="font-semibold tabular-nums">{overview.filesWaitingForRemoval}</span>{overview.oldestFileWaitingSince !== null ? `, the oldest since ${formatManilaDateTime(overview.oldestFileWaitingSince)}` : ''}</p>
+            {overview.filesWaitingForRemoval > 0 ? <p className="text-xs text-[var(--color-ink-500)]">This count includes items the job hasn&apos;t reached yet, so it can be higher than the number of real files. These files stay in storage until the removal job runs. See the operations guide.</p> : null}
+          </div>
+        ) : null}
         {workers.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No washers have signed up yet.</p> : null}
-        {workers.map((worker) => (
-          <Card key={text(worker.profile_id)} className="flex flex-wrap items-center justify-between gap-3 p-3">
-            <div className="text-sm">
-              <p className="font-medium text-[var(--color-ink-900)]">{text(worker.full_name) || 'Name not set'} <Badge tone={worker.verification_status === 'verified' ? 'success' : 'warning'}>{text(worker.verification_status)}</Badge></p>
-              <p className="text-[var(--color-ink-700)]">{[text(worker.phone_number), worker.has_service_area === true ? `${text(worker.service_radius_km)} km area` : 'No service area', `${text(worker.completed_count)} completed`].filter(Boolean).join(' · ')}</p>
-            </div>
-            <div className="flex gap-2">
-              {worker.verification_status !== 'verified' ? <Button size="sm" onClick={(): void => void run(() => getB2cApi().adminReviewWorker(text(worker.profile_id), 'verified', ''), 'Washer verified')}>Verify</Button> : null}
-              {worker.verification_status === 'verified' && confirmSuspend !== text(worker.profile_id) ? <Button size="sm" variant="secondary" onClick={(): void => { setConfirmSuspend(text(worker.profile_id)) }}>Suspend</Button> : null}
-              {confirmSuspend === text(worker.profile_id) ? (
-                <>
-                  <Button size="sm" variant="danger" onClick={(): void => { setConfirmSuspend(null); void run(() => getB2cApi().adminReviewWorker(text(worker.profile_id), 'suspended', ''), 'Washer suspended') }}>Confirm suspend</Button>
-                  <Button size="sm" variant="ghost" onClick={(): void => { setConfirmSuspend(null) }}>Keep active</Button>
-                </>
-              ) : null}
-            </div>
-          </Card>
-        ))}
+        {workers.map((worker) => <WasherVerificationCard key={text(worker.profile_id)} worker={worker} runAction={run} onChanged={refresh} />)}
       </section>
 
       <section aria-labelledby="bookings-title" className="space-y-3">

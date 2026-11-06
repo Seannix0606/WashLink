@@ -31,6 +31,11 @@ const config: ExpoConfig = {
     'expo-secure-store',
     'expo-notifications',
     ['expo-location', { locationWhenInUsePermission: 'WashLink uses your location to help you pin where your vehicle is, or where you start work.' }],
+    ['expo-image-picker', {
+      photosPermission: 'WashLink uses your photos so you can choose a verification photo to send for review.',
+      cameraPermission: 'WashLink uses your camera so you can take a verification photo to send for review.',
+      microphonePermission: false,
+    }],
     ['expo-splash-screen', { backgroundColor: '#134e4a', resizeMode: 'contain' }],
   ],
   experiments: { typedRoutes: false },

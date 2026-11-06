@@ -10,6 +10,9 @@ insert into b2c_tables values
   ('customer_vehicles', '-', 'DELETE INSERT SELECT UPDATE'),
   ('device_push_tokens', '-', '-'),
   ('dispatch_requests', '-', 'SELECT'),
+  ('independent_worker_document_file_queue', '-', '-'),
+  ('independent_worker_document_types', '-', '-'),
+  ('independent_worker_documents', '-', '-'),
   ('independent_worker_hours', '-', 'DELETE INSERT SELECT UPDATE'),
   ('independent_worker_services', '-', 'DELETE INSERT SELECT UPDATE'),
   ('independent_workers', '-', 'SELECT'),
@@ -46,14 +49,18 @@ select is((select coalesce(string_agg(f, ','), '-') from unnest(array[
     'public.service_dispatch_sweep(uuid)', 'public.service_dispatch_sweep_all()', 'public.service_dispatch_close_offers(uuid,text,boolean)',
     'public.service_booking_price(uuid,text,uuid[],boolean)', 'public.b2c_require_super_admin()',
     'public.independent_worker_is_eligible(uuid,uuid,timestamptz,integer,double precision,double precision,boolean,uuid)',
-    'public.independent_worker_has_conflict(uuid,timestamptz,integer,uuid)', 'public.service_bookings_guard_update()']) f
+    'public.independent_worker_has_conflict(uuid,timestamptz,integer,uuid)', 'public.service_bookings_guard_update()',
+    'public.independent_worker_withdraw_from_work(uuid,text)', 'public.independent_workers_reset_unevidenced()',
+    'public.independent_worker_documents_queue_file_on_delete()', 'public.independent_worker_has_required_documents(uuid)',
+    'public.worker_document_retire_file(uuid,text)', 'public.independent_worker_apply_status(uuid,text,text)',
+    'public.independent_worker_document_versions_match(uuid)']) f
   where has_function_privilege('authenticated', f::regprocedure, 'execute')
      or has_function_privilege('anon', f::regprocedure, 'execute')
      or has_function_privilege('service_role', f::regprocedure, 'execute')), '-', 'b2c_internal_functions_not_callable_by_clients');
 
 select is((select coalesce(string_agg(p.proname, ','), '-') from pg_proc p
            where p.pronamespace = 'public'::regnamespace and p.prosecdef
-             and p.proname ~ '^(service_|independent_worker|my_service|my_dispatch|my_assigned|my_independent|accept_dispatch|decline_dispatch|advance_service|release_service|report_service|cancel_service|create_service|retry_service|review_service|admin_save|admin_set_service|admin_catalog|admin_update_platform|admin_independent|admin_review_independent|admin_service|admin_b2c|b2c_|register_device|remove_device|save_independent|set_independent)'
+             and p.proname ~ '^(service_|independent_worker|my_service|my_dispatch|my_assigned|my_independent|accept_dispatch|decline_dispatch|advance_service|release_service|report_service|cancel_service|create_service|retry_service|review_service|admin_save|admin_set_service|admin_catalog|admin_update_platform|admin_independent|admin_review_independent|admin_service|admin_b2c|b2c_|register_device|remove_device|save_independent|set_independent|admin_open_worker_document|admin_review_worker_document|admin_worker_document|begin_worker_document|submit_worker_document|my_worker_documents|worker_document_)'
              and not coalesce(p.proconfig::text ~ 'search_path=public, pg_temp', false)), '-', 'b2c_definer_functions_pin_search_path');
 
 -- A worker's request read carries no location or identity.

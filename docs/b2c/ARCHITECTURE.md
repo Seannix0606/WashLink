@@ -7,7 +7,7 @@ customer, washer, admin      customer, washer
       @washlink/shared (packages/shared)
       API client, status rules, draft rules, validation, brand tokens
                    |
-       Supabase: Auth, Postgres + row rules, RPCs, Realtime
+       Supabase: Auth, Postgres + row rules, RPCs, Realtime, Storage
                    |
    Maps and address lookup, Expo push (not verified), future payments
 ```
@@ -45,9 +45,21 @@ This has been checked only on the local GoTrue version. A different `amr` shape 
 
 B2C has its own tables (`service_bookings`, `dispatch_requests`, `services` and others). The B2B `bookings` table and its guards are untouched, and all earlier database tests still run. The B2B feature flag only changes what screens offer. See `B2B_REACTIVATION.md`.
 
+## Washer verification documents
+
+Migrations `b2cl` to `b2cn` add a private bucket, document tables and a removal queue. No client role has a table grant, so all reads and writes go through database functions. `packages/shared/src/workerDocuments.ts` holds the client logic for web and mobile.
+
+- **Upload:** the client checks the bytes, then `begin_worker_document_upload` opens a slot and builds the path `<worker id>/<document id>`, the file goes to Storage, and `submit_worker_document_upload` reads type and size from `storage.objects`. No filename is sent or stored. The checks in the client only give a clear message early.
+- **Storage policies:** there are exactly two on this bucket. A washer may insert only into their own open slot, through the plain upload route. An admin may select only inside their own 60-second window, through the download route. Each policy names one storage operation, so TUS, S3, signing, copy and move are refused, and a renamed route fails closed. No washer can read back, overwrite or remove a file.
+- **Limits:** the bucket allows JPEG and PNG up to 10 MiB. Storage doesn't read the bytes, so a lying file can reach the bucket. It's served only with an image type, and the admin screen shows files only in an `<img>`, never a frame, an embedded document or a new window. Local probes on Storage v1.88.0 show a request for a link is refused, hosted Storage is unverified, and the bucket's type list is the real control.
+- **Opening:** `admin_open_worker_document` writes the audit row and opens the read window in one transaction. The client then downloads the bytes and shows them through a blob URL, built with the type the server read at submit, and revoked when the view closes. Signing a link is refused in local probes. Uploads ask for `cache-control: no-store`, which Storage sends back on the admin's download, telling a browser not to keep a copy. The header is measured; a browser's behaviour isn't; that is the client's request, and the database doesn't check it. One audited opening allows repeated downloads for 60 seconds, and each admin can open 60 documents an hour.
+- **The gate:** `admin_review_independent_worker` refuses `verified` unless every required type has an approved row, and it fails closed if no type is required. The admin screen's list of blocking documents is only a guide, and it knows types with no row from a copy of the seed in the shared package, because no function lists types to an admin.
+- **Removal:** SQL can't remove a Storage file. Replacing, abandoning or deleting queues the name, by trigger on every deletion path. `purge-worker-documents` claims names, removes the files through the Storage API, and clears a name only when the database sees the object row is gone. A false report removes nothing. It has never been deployed. See `DEPLOYMENT.md`.
+- **Mobile:** `expo-image-picker` supplies the file, then `fetch(uri).arrayBuffer()` reads it, because Blob and FormData don't work with storage-js on React Native. Size and type come from the bytes: on Android the picker's reported size is the source file's, not the compressed result's. HEIC can still arrive from an iOS library and is refused. The picked copy is deleted from the app's cache after it's read, and a failure there doesn't block the upload. None of this has run on a device.
+
 ## Secrets and sessions
 
-- Web and mobile hold only the public anon key. The service role key is used only in `supabase/functions/send-service-push`, on the server.
+- Web and mobile hold only the public anon key. The service role key is used only in `supabase/functions/send-service-push` and `supabase/functions/purge-worker-documents`, on the server.
 - Mobile keeps its session in the device keychain or keystore (`mobile/src/lib/secureSessionStorage.ts`). The browser preview uses session storage and isn't shipped to phones.
 
 ## Live updates

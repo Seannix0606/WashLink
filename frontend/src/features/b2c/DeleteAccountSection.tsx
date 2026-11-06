@@ -43,6 +43,9 @@ export function DeleteAccountSection(): ReactElement {
         (price, status, date and vehicle type) and any rating you gave, without your name, location or vehicle details. Its audit log keeps your internal account ID. This can&apos;t be undone.
       </p>
       <p className="text-sm text-[var(--color-ink-700)]">
+        If you uploaded washer verification photos, they are queued for permanent removal from file storage. This doesn&apos;t happen instantly: they stay in private storage until WashLink runs its removal job, which has no fixed date yet.
+      </p>
+      <p className="text-sm text-[var(--color-ink-700)]">
         You can&apos;t delete the account here if it has shop booking history or shop workforce records. Only WashLink can close these accounts.
       </p>
       {isOpen ? (

@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import {
-  BadgeCheck,
-  ShieldCheck,
+  Car,
+  Tag,
   Sparkles,
 } from 'lucide-react'
 import { BrandMark } from '../../presentation/design/ui'
@@ -133,18 +133,18 @@ function AuthBrandHeroPanel(): ReactElement {
             Your car wash, on demand.
           </h2>
           <p className="text-sm leading-relaxed text-white/80">
-            Book a detail in seconds, track it live, and let verified pros bring
-            the shine to your driveway.
+            Book a detail in seconds, track it live, and let a washer bring the
+            shine to your driveway.
           </p>
 
           <ul className="mt-6 space-y-3 text-sm">
             <AuthHeroFeatureRow
-              icon={<BadgeCheck className="h-4 w-4" />}
-              text="Verified car wash professionals"
+              icon={<Car className="h-4 w-4" />}
+              text="Car wash professionals, booked online"
             />
             <AuthHeroFeatureRow
-              icon={<ShieldCheck className="h-4 w-4" />}
-              text="Secure payments & transparent pricing"
+              icon={<Tag className="h-4 w-4" />}
+              text="Upfront pricing"
             />
             <AuthHeroFeatureRow
               icon={<Sparkles className="h-4 w-4" />}

@@ -23,7 +23,7 @@ import { useCurrentTime } from '../../src/lib/useCurrentTime'
 import { Badge, Body, Button, Card, Field, Heading, Notice, Row, Screen, Title } from '../../src/ui'
 
 const statusText = {
-  pending: 'WashLink is reviewing your account. You can go online once it is verified.',
+  pending: 'WashLink reviews your account after you upload your verification photos in the Profile tab. You can go online once it is verified.',
   verified: 'Go online for as-soon-as-possible bookings. Scheduled requests inside your hours can still reach you.',
   rejected: 'WashLink did not verify your account.',
   suspended: 'Your account is suspended, so you cannot go online.',
@@ -174,6 +174,7 @@ export default function WorkerHome(): ReactElement {
         <Card>
           <Heading>{isOnline ? 'You are online' : 'You are offline'}</Heading>
           <Body>{isOnline ? 'New booking requests can reach you.' : statusText[account.verificationStatus]}</Body>
+          {account.verificationNote !== null ? <Body>WashLink&apos;s note: {account.verificationNote}</Body> : null}
           <Notice tone="error" message={toggleError} />
           <Button label={isOnline ? 'Go offline' : 'Go online'} variant={isOnline ? 'secondary' : 'primary'} isLoading={isToggling} isDisabled={!isOnline && account.verificationStatus !== 'verified'} onPress={(): void => void toggle()} />
         </Card>

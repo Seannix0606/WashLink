@@ -30,6 +30,7 @@ create function pg_temp.pre_workforce() returns text[] language sql immutable as
   select array['bookings', 'profiles', 'shop_pricing', 'shop_verification_documents', 'shops', 'workers',
     -- B2C tables: grants, RLS and Realtime are pinned in j19_b2c_authorization.
     'customer_addresses', 'customer_vehicles', 'device_push_tokens', 'dispatch_requests', 'independent_worker_hours',
+    'independent_worker_document_file_queue', 'independent_worker_document_types', 'independent_worker_documents',
     'independent_worker_services', 'independent_workers', 'platform_settings', 'service_addons', 'service_booking_reviews',
     'service_booking_status_events', 'service_bookings', 'service_vehicle_prices', 'services'] $$;
 create function pg_temp.rels(p_kinds "char"[]) returns setof text language sql stable as $$

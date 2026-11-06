@@ -84,11 +84,12 @@ delete from j17r_scan where value is null;
 insert into j17r_expected values
   ('service_booking.update', 'W19', array['service_booking'], array['service_booking'], 'either_party'),
   ('service_booking.request', 'W19', array['service_request'], array['service_booking'], 'worker'),
-  ('service_booking.request_closed', 'W19', array['service_request'], array['service_booking'], 'worker');
+  ('service_booking.request_closed', 'W19', array['service_request'], array['service_booking'], 'worker'),
+  ('independent_worker.documents', 'W19', array['worker_documents'], array['independent_worker_document', 'independent_worker'], 'worker');
 grant all on j17r_expected, j17r_scan to public;
 
 -- ---------- 1) the registry matches the producers ----------
-select is((select count(*)::int from public.notification_categories where category !~ '^test\.'), 40, 'w12_registry_has_37_categories_matching_producers');
+select is((select count(*)::int from public.notification_categories where category !~ '^test\.'), 41, 'w12_registry_has_37_categories_matching_producers');
 select is((select count(*)::int from (
              (select category, source_increment, key_prefixes, subject_types, recipient_kind from public.notification_categories where category !~ '^test\.'
               except select * from j17r_expected)
@@ -98,7 +99,7 @@ select is((select count(*)::int from (
           'w12_registry_has_37_categories_matching_producers');
 select is((select count(distinct value)::int || ',' || (select count(distinct value) from j17r_scan where kind = 'family')
                   || ',' || (select count(distinct value) from j17r_scan where kind = 'key')
-           from j17r_scan where kind = 'category'), '34,2,21', 'w12_registry_has_37_categories_matching_producers');
+           from j17r_scan where kind = 'category'), '35,2,22', 'w12_registry_has_37_categories_matching_producers');
 select is((select array_agg(distinct s.kind || ':' || s.value || ' in ' || s.fn) from j17r_scan s
            where (s.kind = 'category' and not exists (select 1 from public.notification_categories c where c.category = s.value))
               or (s.kind = 'family' and not exists (select 1 from public.notification_categories c where starts_with(c.category, s.value)))

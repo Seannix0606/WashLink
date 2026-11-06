@@ -10,6 +10,7 @@ import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { DeleteAccountSection } from '../DeleteAccountSection'
 import { AssignedJobCard } from './AssignedJobCard'
 import { RequestCard } from './RequestCard'
+import { WorkerDocumentsPanel } from './WorkerDocumentsPanel'
 import { WorkerSetupPanel } from './WorkerSetupPanel'
 
 type WorkerTab = 'work' | 'history' | 'setup'
@@ -20,7 +21,7 @@ const tabItems = [
 ]
 
 const statusText: Readonly<Record<WorkerAccount['verificationStatus'], string>> = {
-  pending: 'WashLink is reviewing your account. You can go online once it is verified.',
+  pending: 'WashLink reviews your account after you upload your verification photos in Profile and hours. You can go online once it is verified.',
   verified: 'Go online for as-soon-as-possible bookings. Scheduled requests inside your hours can still reach you.',
   rejected: 'WashLink did not verify your account.',
   suspended: 'Your account is suspended, so you cannot go online.',
@@ -104,6 +105,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
         {account === null ? (
           <>
             <h1 className="text-2xl font-bold text-[var(--color-ink-900)]">Set up your washer profile</h1>
+            <WorkerDocumentsPanel verificationStatus={null} />
             <WorkerSetupPanel workerId={workerId} account={null} onSaved={refresh} />
           </>
         ) : null}
@@ -113,6 +115,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
               <div>
                 <h1 className="text-lg font-semibold text-[var(--color-ink-900)]">{isOnline ? 'You are online' : 'You are offline'}</h1>
                 <p className="text-sm text-[var(--color-ink-700)]">{isOnline ? 'New booking requests can reach you.' : statusText[account.verificationStatus]}</p>
+                {account.verificationNote !== null ? <p className="mt-1 text-sm text-[var(--color-ink-900)]">WashLink&apos;s note: {account.verificationNote}</p> : null}
               </div>
               <Button variant={isOnline ? 'secondary' : 'primary'} isLoading={isToggling} disabled={!isOnline && account.verificationStatus !== 'verified'} onClick={(): void => void toggleOnline()}>
                 {isOnline ? 'Go offline' : 'Go online'}
@@ -165,6 +168,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
             ) : null}
             {tab === 'setup' ? (
               <div className="space-y-5">
+                <WorkerDocumentsPanel verificationStatus={account.verificationStatus} />
                 <WorkerSetupPanel workerId={workerId} account={account} onSaved={refresh} />
                 <DeleteAccountSection />
               </div>

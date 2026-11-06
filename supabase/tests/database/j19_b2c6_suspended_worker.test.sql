@@ -61,7 +61,7 @@ update public.service_bookings set status = 'in_progress' where id = pg_temp.id(
 update public.service_bookings set scheduled_at = now() - interval '1 hour' where id = pg_temp.id('past');
 
 select test_helpers.act_as(pg_temp.id('admin'));
-select public.admin_review_independent_worker(pg_temp.id('wa'), 'suspended', 'Paused') is not null as suspended;
+select public.admin_review_independent_worker(pg_temp.id('wa'), 'suspended', 'Paused while we check this') is not null as suspended;
 
 select test_helpers.act_as(pg_temp.id('wa'));
 select is((select count(*)::int from public.my_assigned_service_bookings() a where a.booking_id = pg_temp.id('arrived')
@@ -95,7 +95,7 @@ select test_helpers.act_as_service();
 
 -- The other non-verified statuses.
 select test_helpers.act_as(pg_temp.id('admin'));
-select public.admin_review_independent_worker(pg_temp.id('wa'), 'rejected', null) is not null as rejected;
+select public.admin_review_independent_worker(pg_temp.id('wa'), 'rejected', 'Rejected while we check this') is not null as rejected;
 select test_helpers.act_as(pg_temp.id('wa'));
 select throws_ok($$ select public.advance_service_booking(pg_temp.id('arrived'), 'arrived') $$, '23514',
                  'WashLink has paused your account. Contact WashLink about this booking.', 'rejected_worker_cannot_advance');
@@ -106,6 +106,8 @@ select throws_ok($$ select public.advance_service_booking(pg_temp.id('arrived'),
                  'WashLink has paused your account. Contact WashLink about this booking.', 'pending_worker_cannot_advance');
 
 -- Verified again, online again, and the washer's earlier jobs are not offered back (D-92).
+select test_helpers.act_as_service();
+select test_helpers.give_worker_approved_documents(pg_temp.id('wa'));
 select test_helpers.act_as(pg_temp.id('admin'));
 select public.admin_review_independent_worker(pg_temp.id('wa'), 'verified', null) is not null as verified;
 select test_helpers.act_as_service();

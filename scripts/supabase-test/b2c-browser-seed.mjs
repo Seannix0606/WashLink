@@ -9,6 +9,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { setWorkerDocumentUploads } from './smoke-worker-documents.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const LOCAL_TEST_PASSWORD = 'Local-B2C-Test-Pw1!'
@@ -32,8 +33,9 @@ const admin = createClient(values.API_URL, values.SERVICE_ROLE_KEY, options)
 async function ensureUser(email, role, fullName) {
   const created = await admin.auth.admin.createUser({ email, password: LOCAL_TEST_PASSWORD, email_confirm: true, user_metadata: { role: role === 'super_admin' ? 'customer' : role, full_name: fullName } })
   if (created.error && !/already/i.test(created.error.message)) throw created.error
-  const profile = await admin.from('profiles').select('id').eq('email', email).maybeSingle()
-  const id = created.data.user?.id ?? profile.data?.id
+  // profiles has no email column, so an account from an earlier run is found through the auth service.
+  const existing = created.data.user ? null : (await admin.auth.admin.listUsers({ perPage: 1000 })).data?.users.find((user) => user.email === email)
+  const id = created.data.user?.id ?? existing?.id
   if (!id) throw new Error(`no id for ${email}`)
   if (role === 'super_admin') {
     const promoted = await admin.from('profiles').update({ role }).eq('id', id)
@@ -67,4 +69,5 @@ for (const addon of catalog.data.addons) {
 }
 const opened = await adminUser.rpc('admin_update_platform_rules', { p_bookings_open: true, p_commission_bps: 1000, p_request_ttl_seconds: 300, p_search_window_minutes: 30, p_travel_buffer_minutes: 20 })
 if (opened.error) throw opened.error
-console.log('b2c-browser-seed: test accounts ready, prices final, bookings open (local stack only)')
+setWorkerDocumentUploads(true)
+console.log('b2c-browser-seed: test accounts ready, prices final, bookings open, document uploads on (local stack only)')

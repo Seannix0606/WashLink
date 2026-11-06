@@ -1,10 +1,10 @@
 -- W1..W16 migration replay: objects from each committed migration exist after
 -- baseline + 97 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12, 4 W13, 1 W15, 2 W16)
 -- replayed in order, with the owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W14 AC2; W13 AC2;
--- W15 AC2; W16 AC2; B2C adds 11, for 110 staged migrations in total).
+-- W15 AC2; W16 AC2; B2C adds 14, for 113 staged migrations in total).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(29);
+select plan(33);
 
 -- 2026_04_17
 select has_table('public', 'shops', 'replay_shops_created');
@@ -87,9 +87,16 @@ select results_eq(
             ('20261030000007'), ('20261030000008'), ('20261030000009'), ('20261103000001'),
             ('20261104000001'), ('20261104000002'), ('20261106000001'), ('20261106000002'),
             ('20261106000003'), ('20261106000004'), ('20261106000005'), ('20261106000006'),
-            ('20261106000007'), ('20261106000008'), ('20261106000009'), ('20261106000010'), ('20261106000011') $$,
+            ('20261106000007'), ('20261106000008'), ('20261106000009'), ('20261106000010'), ('20261106000011'),
+            ('20261106000012'), ('20261106000013'), ('20261106000014') $$,
   'replay_schema_migrations_has_baseline_w2_to_w14_w12_and_w13'
 );
+
+-- B2C-7 objects
+select has_table('public', 'independent_worker_document_types', 'replay_b2c7_document_types_table');
+select has_table('public', 'independent_worker_documents', 'replay_b2c7_documents_table');
+select has_table('public', 'independent_worker_document_file_queue', 'replay_b2c7_file_queue_table');
+select is((select count(*)::int from storage.buckets where id = 'worker-verification-documents' and not public), 1, 'replay_b2c7_private_bucket');
 
 -- The local-test owner booking policies come from the staged MIGRATION 20260417000002, not
 -- the seed, so W2c (20261024000003) can replace them with bookings_*_shop_owner.

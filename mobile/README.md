@@ -24,7 +24,7 @@ To check screens in a browser against the local test stack, run this from the re
 node scripts/supabase-test/b2c-mobile-preview.mjs
 ```
 
-The browser preview replaces maps and the keychain with stand-ins, so it can't verify either.
+The browser preview replaces maps and the keychain with stand-ins, so it can't verify either. Verification photos use the picker's own web file input there, which says nothing about a phone's camera or library.
 
 ## Check
 
@@ -73,4 +73,5 @@ Set these in EAS environment variables, not in source control:
 
 - Replace the default icon and splash with real logo files. None exist in the repository yet.
 - Confirm the bundle ID `com.washlink.app` is the one you want. It is hard to change after release.
-- Test on real Android and iPhone devices.
+- Test on real Android and iPhone devices, including verification photos: camera, library, permission prompts and HEIC photos on an iPhone. None of this has run on a device.
+- `expo-image-picker` and its permission strings need a new native build. They can't ship over the air.

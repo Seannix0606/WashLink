@@ -19,6 +19,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { giveWorkerApprovedDocuments, setWorkerDocumentUploads } from './smoke-worker-documents.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -121,7 +122,7 @@ async function signUp(label, role) {
 const BASE = { latitude: 14.5547, longitude: 121.0244 }
 const CUSTOMER_ADDRESS = '12 Ayala Avenue SMOKEADDRESS, Makati City'
 
-async function readyWorker(label, adminApi, serviceIds) {
+async function readyWorker(label, adminPerson, serviceIds) {
   const worker = await signUp(label, 'worker')
   await worker.api.saveWorkerProfile({ bio: 'Smoke washer', skills: ['Exterior'], ...BASE, radiusKm: 25 })
   for (let weekday = 0; weekday < 7; weekday += 1) {
@@ -132,7 +133,8 @@ async function readyWorker(label, adminApi, serviceIds) {
   }
   const early = await refused(() => worker.api.setOnline(true))
   check(`${label}_cannot_go_online_before_verification`, early !== null)
-  await adminApi.adminReviewWorker(worker.id, 'verified', '')
+  await giveWorkerApprovedDocuments(worker.client, adminPerson.client)
+  await adminPerson.api.adminReviewWorker(worker.id, 'verified', '')
   await worker.api.setOnline(true)
   return worker
 }
@@ -166,6 +168,7 @@ const BASE_LOCKED = 'Finish or decline your open requests before changing your b
 const RULES = { commissionBps: 1000, requestTtlSeconds: 300, searchWindowMinutes: 30, travelBufferMinutes: 20 }
 
 async function main() {
+  setWorkerDocumentUploads(true)
   const anonApi = shared.createB2cApi(newClient(anonKey))
   check('anon_reads_public_status', (await anonApi.bookingsAreOpen()) === false)
   const publicServices = await anonApi.listServices()
@@ -206,8 +209,8 @@ async function main() {
 
   // Workers.
   const serviceIds = services.map((candidate) => candidate.id)
-  const workerA = await readyWorker('workera', superAdmin.api, serviceIds)
-  const workerB = await readyWorker('workerb', superAdmin.api, serviceIds)
+  const workerA = await readyWorker('workera', superAdmin, serviceIds)
+  const workerB = await readyWorker('workerb', superAdmin, serviceIds)
   const account = await workerA.api.workerAccount(workerA.id)
   check('worker_account_reads_back', account?.verificationStatus === 'verified' && account.isOnline === true)
   check('worker_hours_read_back', (await workerA.api.workerHours()).length === 7)
@@ -296,8 +299,8 @@ async function main() {
   await superAdmin.api.adminSaveService(priceInput(50000))
 
   // Two more washers for the B2C-6 cases; every booking here belongs to the other customer and is ended before the deletion flow.
-  const workerC = await readyWorker('workerc', superAdmin.api, serviceIds)
-  const workerD = await readyWorker('workerd', superAdmin.api, serviceIds)
+  const workerC = await readyWorker('workerc', superAdmin, serviceIds)
+  const workerD = await readyWorker('workerd', superAdmin, serviceIds)
   const requestFor = async (worker, bookingId) => (await worker.api.dispatchRequests()).find((request) => request.bookingId === bookingId)
   const statusFor = async (bookingId) => (await otherCustomer.api.myBookings()).find((item) => item.id === bookingId)?.status
 
@@ -323,13 +326,13 @@ async function main() {
   await workerC.api.advanceBooking(startedJob.id, 'worker_on_the_way')
   const openJob = await otherCustomer.api.createBooking(immediateInput(service, shared.createBookingSubmissionKey(`open-${runId}`)))
   await workerD.api.acceptRequest((await requestFor(workerD, openJob.id)).id)
-  await superAdmin.api.adminReviewWorker(workerD.id, 'suspended', '')
+  await superAdmin.api.adminReviewWorker(workerD.id, 'suspended', 'Suspended by this smoke test')
   const nextRequest = await requestFor(workerA, openJob.id)
   const nextAccept = nextRequest ? await refused(() => workerA.api.acceptRequest(nextRequest.id)) : new Error('no offer reached the next washer')
   check('suspended_worker_booking_reaches_next_washer', nextAccept === null && (await statusFor(openJob.id)) === 'accepted', nextAccept?.message)
   await otherCustomer.api.cancelBooking(openJob.id)
 
-  await superAdmin.api.adminReviewWorker(workerC.id, 'suspended', '')
+  await superAdmin.api.adminReviewWorker(workerC.id, 'suspended', 'Suspended by this smoke test')
   const pausedView = (await workerC.client.rpc('my_assigned_service_bookings')).data?.find((row) => row.booking_id === startedJob.id)
   const pausedAdvance = await refused(() => workerC.api.advanceBooking(startedJob.id, 'arrived'))
   check('suspended_worker_loses_address_and_advance', pausedView !== undefined && pausedView.address === null && pausedView.customer_phone === null
@@ -405,5 +408,6 @@ for (const id of [...createdUserIds]) {
   const { error } = await admin.auth.admin.deleteUser(id)
   check('delete_synthetic_user', !error, error?.message)
 }
+setWorkerDocumentUploads(false)
 console.log(`b2c-api-smoke: ${passed} passed, ${failed} failed`)
 process.exit(failed === 0 && crashed === null ? 0 : 1)

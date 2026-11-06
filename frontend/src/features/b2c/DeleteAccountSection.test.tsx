@@ -66,6 +66,14 @@ describe('delete account', () => {
     expect(mocks.signOut).not.toHaveBeenCalled()
   })
 
+  it('says verification photos are queued, and never that they are deleted or removed', () => {
+    render(<DeleteAccountSection />)
+    const copy = screen.getByText(/queued for permanent removal/)
+    expect(copy).toHaveTextContent("This doesn't happen instantly")
+    expect(copy).toHaveTextContent('until WashLink runs its removal job')
+    expect(document.body.textContent).not.toMatch(/(photos?|files?|documents?)[^.]*\b(are|is|were|was|have been|has been|will be) (deleted|removed|gone)\b/i)
+  })
+
   it('says up front that shop history stops deletion here, and that only WashLink can close the account', () => {
     render(<DeleteAccountSection />)
     expect(screen.getByText(/shop booking history or shop workforce records/)).toHaveTextContent('Only WashLink can close these accounts.')

@@ -32,6 +32,8 @@ Checked by automated tests and, where noted, by hand in a browser against the lo
 | Screens written but not clicked through | As-soon-as-possible booking, search again after no washer, release booking, report a problem, admin price editing and booking case view, mobile sign-up and password reset |
 | Payment | Cash only. Amounts are "expected"; collection isn't confirmed |
 | Address search and maps | Use public services with usage limits. Not suitable for production traffic |
+| Washer documents on the web | Upload, review, revoke and the verification gate pass database tests and the real Storage smoke, and were driven in a browser on the local stack with synthetic images (`loop/workforce/increments/B2C-7/REVIEW.md`). The browser run was driven by script by the agent building this, and wasn't repeated independently. Nothing has run on hosted Supabase |
+| Washer documents on mobile | Logic tests and type-check, plus the browser preview: both document types, the rejection reason, and an upload through the picker's web file input. The camera, photo library, permissions and upload from a real phone have never run |
 | Cross-platform flow | Web and mobile screens were each driven against one shared backend, but not on devices at the same time. Each role was signed in turn in one browser tab. Web and preview weren't run side by side |
 
 ### Unverified
@@ -42,11 +44,16 @@ Nothing below has ever run. Don't rely on any of it yet.
 - Native maps, device location, and keychain or keystore storage on a phone
 - Push notifications: token registration on a device, `send-service-push`, the webhook, and opening a screen from a notification
 - Live updates inside the mobile app. It uses the same code path as web, but this wasn't observed
+- Washer document capture on a phone: camera and library, permission prompts, `fetch(file://)`, whether an iPhone returns JPEG rather than HEIC, and memory on low-end phones. Reading the picker's source shows Android returns `file://`, but that wasn't observed. If Android closes the app while the camera is open, the photo is lost and the washer must retake it. This needs a new native build
+- The document removal job `purge-worker-documents`: its Deno wrapper, deployment and scheduling. Until it's scheduled, queued files stay in storage
+- Storage behaviour on any hosted project. Local is v1.88.0
 - Deploying to Render or Docker, and applying migrations to production
 
 ### Not built
 
-- Online payment, phone number verification, and washer document upload
+- Online payment and phone number verification
+- Third-party ID verification. Approving a washer's document means an admin opened the files and chose Approve, which doesn't prove identity
+- Document expiry and malware scanning
 - Worker GPS tracking, and logo and store assets
 
 ## 2. Architecture changes
@@ -59,8 +66,10 @@ See `ARCHITECTURE.md`. Web and Expo share `packages/shared`, and both talk to on
 | --- | --- |
 | `packages/shared/` | New shared package |
 | `supabase/migrations/2026_11_06_b2c{a..k}_*.sql` | 11 new migrations (`g` to `k` are the B2C-6 hardening) |
+| `supabase/migrations/2026_11_06_b2c{l..n}_*.sql` | 3 new migrations for washer verification documents (B2C-7) |
 | `supabase/functions/send-service-push/` | Push sender, never run |
-| `supabase/tests/database/j19_*` | New tests. Five earlier roll-up tests had their expected counts extended; no checks were removed |
+| `supabase/functions/purge-worker-documents/` | Document removal job. Its logic has run locally; the function has never been deployed or run |
+| `supabase/tests/database/j19_*` | New tests. Earlier roll-up tests had their expected counts extended, and `j19_b2c6_suspended_worker` changed its reasons and fixtures for the new rules; no checks were removed |
 | `frontend/src/features/b2c/` | Landing, customer, washer and admin screens |
 | `frontend/` existing files | `App.tsx`, role picker, admin dashboard and tabs, sign-in copy, map labels, build config |
 | `mobile/` | New Expo app |
@@ -77,8 +86,8 @@ One existing B2B test (`WorkerContractDraftEditor.j9`) timed out at 5 seconds wh
 
 - Dark landing page: hero, how it works, locations, live services and prices, washer sign-up and app section. The hero is a CSS scene until real photos exist.
 - Customer: 5-step booking, map pin with search and device location, saved addresses and vehicles, live tracking, cancel, search again, rating, account deletion.
-- Washer: profile, service area, hours, services, online toggle, requests with countdown, job steps, directions, earnings, reviews, account deletion.
-- Admin: open or close bookings, prices, commission, washer verification and suspension, booking monitor, audited case view.
+- Washer: profile, service area, hours, services, verification photo upload with status and reasons, online toggle, requests with countdown, job steps, directions, earnings, reviews, account deletion.
+- Admin: open or close bookings, prices, commission, audited document review, washer verification and suspension with reasons, booking monitor, audited case view.
 
 ## 6. Mobile features
 
@@ -86,10 +95,11 @@ One existing B2B test (`WorkerContractDraftEditor.j9`) timed out at 5 seconds wh
 - Customer and washer tabs that follow the role stored in the database. Admin and shop accounts are sent to the website.
 - Native booking steps, `react-native-maps`, device location, and a secure session.
 - Push registration, an offline banner, pull to refresh, and account deletion.
+- Washer verification photos by camera or library, with status and reasons. Admin review is on the website only.
 
 ## 7. Migrations
 
-Six additive migrations, then five hardening migrations that also change existing rows (see `DEPLOYMENT.md`). The first six: catalog and accounts, bookings and dispatch, booking engine, washer actions, admin operations, account deletion. They're applied only to the local stack. Nothing is deleted or changed in existing tables, apart from new notification categories being registered.
+Six additive migrations, then five hardening migrations that also change existing rows, then three for washer documents, one of which moves washers verified without approved documents to pending (see `DEPLOYMENT.md`). The first six: catalog and accounts, bookings and dispatch, booking engine, washer actions, admin operations, account deletion. They're applied only to the local stack. Those first six delete and change nothing in existing tables, apart from new notification categories being registered. The later migrations do change existing rows, and some of that can't be undone.
 
 ## 8. Security improvements
 
@@ -112,13 +122,13 @@ Latest run on this code:
 
 | Check | Result |
 | --- | --- |
-| Database tests (pgTAP) | 123 files, 3,580 tests, pass |
-| API smokes | 16 smokes, pass (B2C: 72 checks) |
-| Web unit tests | 157 files, 398 tests, pass |
+| Database tests (pgTAP) | 129 files, 3,782 tests, pass |
+| API smokes | 17 smokes, pass (B2C: 72 checks; B2C-7 documents against real local Storage: 75 checks) |
+| Web unit tests | 162 files, 508 tests, pass |
 | Web lint and type-check | Clean |
 | Web production build | Pass |
 | Mobile type-check | Clean |
-| Mobile unit tests | 11 pass. This is thin coverage: logic only, no screens |
+| Mobile unit tests | 33 pass. This is thin coverage: logic only, no screens |
 | Expo Doctor | 20 of 20 |
 
 ## 10. Android build status
@@ -150,6 +160,7 @@ These need you:
 3. An Expo account and real devices, to test builds and push.
 4. Logo files and real photos. The repository only has the CSS brand mark.
 5. Legal review of what's kept after account deletion. See `OPERATIONS.md`.
+6. Before any real washer uploads: deploy and schedule the document removal job, and complete legal review of B2C7-L1 to B2C7-L17, and only then turn uploads on (D-123). See `OPERATIONS.md` (Before collecting real IDs).
 
 Parked: W17 on `feature/workforce` (`48f7fb0`) is unverified and W18 hasn't started. B-1 and B-2 in the worker profile editor stay open; B2C washer screens don't show that editor.
 

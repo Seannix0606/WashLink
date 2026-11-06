@@ -7,7 +7,7 @@ Bookings start closed, with draft prices and 0% commission. The database refuses
 1. Run the B2C migrations on the production project. This is a person's decision: nothing in this repository applies them automatically.
 2. Sign in as a super admin and open **Bookings and washers**.
 3. Set the real price for every service and add-on, then set the commission.
-4. Have at least one washer sign up, complete their profile, and verify them.
+4. Have at least one washer sign up, complete their profile and upload their documents. Review the documents, then verify the washer. See **Reviewing washer documents**. Read **Before collecting real IDs** first.
 5. Choose **Open bookings**.
 
 ## How matching works
@@ -51,7 +51,44 @@ An admin reason needs at least 10 characters. It's saved in the booking history,
 
 An overdue cancel can happen after a real wash, if the washer never marked it complete. The app doesn't record cash, and a customer who cancels may not pay. Commission and earnings figures leave that job out, and reason text is cleared if the customer later deletes their account. This clock starts from the scheduled time rather than arrival, so a late job can be cancelled while still under way. See `LEGAL_REVIEW_REGISTER.md`, B2C6-L7.
 
+## Before collecting real IDs
+
+**Runbook gate. Real government IDs must not be collected until both of these are done.** Uploads are off in the database until a person turns them on (D-123), and only this runbook decides when that happens. While they are off, no washer can upload, so none can be verified, and bookings can't be served. Until both are done, test only with synthetic images on a local stack.
+
+1. **The removal job is deployed and scheduled.** The job `purge-worker-documents` has not been deployed or scheduled anywhere. See `DEPLOYMENT.md`, section 7. Until it runs, every queued file stays in storage, including files of people who deleted their account.
+2. **Legal review is done.** Items B2C7-L1 to B2C7-L17 in `LEGAL_REVIEW_REGISTER.md` are all open. They include whether to collect these documents at all, what washers must be told, and how long files are kept.
+
+Then a person runs this once, by hand: `update public.platform_settings set worker_document_uploads_enabled = true;`. No screen or RPC can change it. Run it with `false` to stop new uploads again; files already there are unaffected.
+
+The documents are a product default, not a statement of what any law requires. Approving them means an admin opened the files and chose Approve. It doesn't prove anyone's identity, so don't describe it that way.
+
+## Reviewing washer documents
+
+Washers upload a government ID and a selfie, as JPEG or PNG up to 10 MiB, on the website or in the app. The list of types is a database table changed by SQL. There is no admin screen for it. A required type added by SQL with no row for a washer isn't listed on the admin screen; **Verify** stays available and the database refuses it, so update the list in `packages/shared/src/workerDocuments.ts` if the types change.
+
+In **Bookings and washers**, under **Washers**:
+
+1. The summary shows how many documents are waiting for review, and how many files are waiting for removal. That second count includes items the job hasn't reached yet.
+2. Each washer who isn't verified shows the documents stopping verification, and why: not uploaded, under review or rejected.
+3. Choose **Documents**, then **Open** on a document. The image appears on the page. Each opening goes into the audit log, and opens a 60-second window for that admin alone. Do this only on a device WashLink controls. The app asks browsers not to store the image, but this wasn't observed in a real browser, and a custom client could upload without that request.
+4. If the image doesn't display, the file may not be a real photo. Reject it. The server can't inspect file contents.
+5. **Approve** is available only while the image is showing on your screen, so a file that failed to load can't be approved here. The database's own rule is looser: it only needs you to have opened that document at some point, so a custom client could approve without viewing it. Neither rule records that the file was examined. A file changed after upload can't be approved.
+6. **Reject** and **Revoke** need a reason of 10 to 500 characters. **The washer reads this reason.** The notification they get doesn't include it.
+7. **Verify** is a separate action. It's available once every required document is approved. Approving documents never verifies anyone, and the database refuses to verify without them.
+
+Things to know:
+
+- **Revoking** a required document from a verified washer, when no other approved copy remains, moves them to pending at once. Their open requests close and unstarted jobs return to search, as in **Suspending a washer**.
+- **Replacing** an approved document changes nothing until the new one is approved. If the new one is rejected, the old one still counts.
+- A washer can start at most 10 uploads in 24 hours. Documents don't expire: check the dates yourself, and revoke if needed.
+- Any super admin can open any document, up to 60 an hour. The file is downloaded into the page. Local probes on Storage v1.88.0 show an admin's request for a link is refused, but hosted Storage is unverified. A stolen admin session could still take up to 60 files an hour until it ends. See B2C7-L5.
+- No admin can open or review their own documents, or review their own washer account.
+- The count of files waiting for removal includes expired uploads and stray files the job hasn't reached yet, so it can be higher than the number of real files.
+- A washer can't view a file after uploading it. The file is never shown to customers.
+
 ## Suspending a washer
+
+Suspending or rejecting a washer needs a reason of 10 to 500 characters, which the washer sees. A suspended washer can't upload documents. **Move to pending** lets them upload again. That button also appears for a rejected washer. Rejecting a washer's account status has no button yet.
 
 Suspending or rejecting a washer, or moving them back to pending, takes effect immediately:
 
@@ -91,7 +128,8 @@ The database stores device tokens through `register_device_push_token` and queue
 
 Customers and washers can delete their own account on the website and in the app, after re-entering their password. The server checks for a password sign-in from the last 5 minutes. It's refused while they have a current booking.
 
-- **Removed:** sign-in, profile, saved addresses and vehicles, device tokens, notifications and washer profile.
+- **Removed:** sign-in, profile, saved addresses and vehicles, device tokens, notifications, washer profile and washer document records.
+- **Queued, not removed:** uploaded verification files. Account deletion queues files and does not remove them. Removal happens only when the job `purge-worker-documents` runs, and that job has not been deployed or scheduled anywhere. Until it is, the files stay in storage, and the admin console shows the count and the oldest date. After deletion no client session can read them through the policies, because an admin's read needs a document row that no longer exists and, in local probes on Storage v1.88.0, a request for a link is refused. Hosted Storage is unverified. The service role can still read them, and a copy already open in an admin's page stays until that view closes. Replaced and abandoned uploads join the same queue. Scheduling the job is a launch requirement before any real washer uploads. No retention period is stated, because none has been decided. See B2C7-L3 and B2C7-L4.
 - **Kept, without the person's name or contact details:** past bookings with price, status, dates and vehicle category, and review ratings. On a customer's own bookings, location, vehicle make, model and year, notes and review text are cleared. Deleting a washer doesn't change the customer's side: the customer's review text stays, and it may name the washer.
 - **Kept with the internal account ID:** the append-only audit log keeps the person's internal ID beside booking IDs, and adds a record of the deletion. So these records are not anonymous.
 - **Refused in the app:** admins, shop owners and washers with shop workforce records, whose contract and training records have retention rules, and anyone with a shop booking (`public.bookings`) in any status. These people are told "Only WashLink can close it", and the delete screen explains the shop records reason. No contact channel or procedure for this exists yet, so one is a launch requirement.
