@@ -185,11 +185,14 @@ select is((select count(*)::int from public.workforce_audit_events
              and action = 'job_opening.updated'),
           1, 'j2_draft_edits_write_no_audit_event');
 
+-- The amount marker is digits only, so a random UUID in the payload (shop_id) can contain it by
+-- chance: UUIDs are removed before that one search. The word markers cannot occur in a UUID.
 select is((select count(*)::int from public.workforce_audit_events
            where subject_type = 'job_opening'
              and (payload::text ilike '%zebra%' or payload::text ilike '%quokka%' or payload::text ilike '%wombat%'
-                  or payload::text ilike '%narwhal%' or payload::text like '%4321%' or payload::text ilike '%lunch%'
-                  or payload::text ilike '%lifecycle%')),
+                  or payload::text ilike '%narwhal%'
+                  or regexp_replace(payload::text, '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', '', 'g') like '%4321%'
+                  or payload::text ilike '%lunch%' or payload::text ilike '%lifecycle%')),
           0, 'j2_audit_payload_has_no_opening_content');
 select is((select count(*)::int from public.workforce_audit_events
            where subject_type = 'job_opening' and subject_id = current_setting('fx.jx')::uuid),
