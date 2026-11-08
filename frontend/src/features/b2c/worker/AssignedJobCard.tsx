@@ -18,17 +18,36 @@ import { Badge, Button, Card, Input } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { useCurrentTime } from '../useCurrentTime'
 
+type NoteMode = 'problem' | 'release' | 'cancel'
+const noteModeLabel: Readonly<Record<NoteMode, string>> = {
+  problem: 'What happened?',
+  release: 'Why can\'t you do this booking?',
+  cancel: 'Reason for cancelling',
+}
+const noteModeSuccess: Readonly<Record<NoteMode, string>> = {
+  problem: 'Problem reported',
+  release: 'Booking handed back',
+  cancel: 'Booking cancelled',
+}
+const noteActions: Readonly<Record<NoteMode, (id: string, note: string) => Promise<void>>> = {
+  problem: (id, note) => getB2cApi().reportProblem(id, note),
+  release: (id, note) => getB2cApi().releaseBooking(id, note),
+  cancel: (id, note) => getB2cApi().operatorCancelBooking(id, note),
+}
+
 interface AssignedJobCardProps {
   readonly job: AssignedBooking
   /** The server refuses every step while the account is paused, so the step is not offered as available. */
   readonly isPaused?: boolean
+  /** Only a WashLink operator account may cancel; the database checks this again. Other washers hand a job back. */
+  readonly canCancel?: boolean
   readonly onChanged: () => Promise<void>
 }
 
-export function AssignedJobCard({ job, isPaused = false, onChanged }: AssignedJobCardProps): ReactElement {
+export function AssignedJobCard({ job, isPaused = false, canCancel = false, onChanged }: AssignedJobCardProps): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [note, setNote] = useState('')
-  const [noteMode, setNoteMode] = useState<'problem' | 'release' | null>(null)
+  const [noteMode, setNoteMode] = useState<NoteMode | null>(null)
   const canRelease = job.status === 'accepted' || job.status === 'worker_on_the_way'
   // The server has the last word; a refusal still reaches the washer through act().
   const canAdvance = canWorkerAdvanceNow(job.scheduledAt, useCurrentTime(), job.status)
@@ -87,16 +106,17 @@ export function AssignedJobCard({ job, isPaused = false, onChanged }: AssignedJo
       {noteMode === null ? (
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="ghost" onClick={(): void => { setNoteMode('problem') }}>Report a problem</Button>
-          {canRelease ? <Button size="sm" variant="ghost" onClick={(): void => { setNoteMode('release') }}>I can&apos;t do this booking</Button> : null}
+          {canRelease && !canCancel ? <Button size="sm" variant="ghost" onClick={(): void => { setNoteMode('release') }}>I can&apos;t do this booking</Button> : null}
+          {canCancel && !isPaused ? <Button size="sm" variant="ghost" onClick={(): void => { setNoteMode('cancel') }}>Cancel booking</Button> : null}
         </div>
       ) : (
         <div className="space-y-2">
-          <Input label={noteMode === 'problem' ? 'What happened?' : 'Why can\'t you do this booking?'} helperText="10 to 500 characters." value={note} maxLength={500} onChange={(event): void => { setNote(event.target.value) }} />
+          <Input label={noteModeLabel[noteMode]} helperText={noteMode === 'cancel' ? '10 to 500 characters. The customer is told the booking was cancelled.' : '10 to 500 characters.'} value={note} maxLength={500} onChange={(event): void => { setNote(event.target.value) }} />
           <div className="flex gap-2">
-            <Button size="sm" isLoading={isBusy} onClick={(): void => void act(
-              () => (noteMode === 'problem' ? getB2cApi().reportProblem(job.id, note) : getB2cApi().releaseBooking(job.id, note)),
-              noteMode === 'problem' ? 'Problem reported' : 'Booking handed back',
-            )}>Send</Button>
+            <Button size="sm" variant={noteMode === 'cancel' ? 'danger' : 'primary'} isLoading={isBusy} onClick={(): void => void act(
+              () => noteActions[noteMode](job.id, note),
+              noteModeSuccess[noteMode],
+            )}>{noteMode === 'cancel' ? 'Cancel booking' : 'Send'}</Button>
             <Button size="sm" variant="ghost" onClick={(): void => { setNoteMode(null) }}>Back</Button>
           </div>
         </div>

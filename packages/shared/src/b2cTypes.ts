@@ -117,6 +117,8 @@ export interface WorkerAccount {
   readonly baseLongitude: number | null
   readonly serviceRadiusKm: number
   readonly isOnline: boolean
+  /** A washer account WashLink runs itself. It is verified without documents and may cancel its own bookings. */
+  readonly isPlatformOperator: boolean
 }
 
 export interface WorkerSummary {

@@ -14,8 +14,8 @@ import { IndependentWorkerPage } from './worker/IndependentWorkerPage'
 import type { WizardDraft } from './customer/wizard/BookingWizard'
 
 const api = vi.hoisted(() => ({
-  acceptRequest: vi.fn(), declineRequest: vi.fn(), advanceBooking: vi.fn(), cancelBooking: vi.fn(), reviewBooking: vi.fn(), quote: vi.fn(),
-  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(),
+  acceptRequest: vi.fn(), declineRequest: vi.fn(), advanceBooking: vi.fn(), operatorCancelBooking: vi.fn(), releaseBooking: vi.fn(), cancelBooking: vi.fn(), reviewBooking: vi.fn(), quote: vi.fn(),
+  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(), adminPlatformOperatorIds: vi.fn(),
   workerAccount: vi.fn(), dispatchRequests: vi.fn(), assignedBookings: vi.fn(), workerSummary: vi.fn(), workerReviews: vi.fn(),
 }))
 vi.mock('./b2cApiClient', () => ({ getB2cApi: (): unknown => api, errorMessage: (error: Error): string => error.message }))
@@ -127,10 +127,31 @@ describe('worker job', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Start travelling' }))
     await waitFor(() => { expect(toastError).toHaveBeenCalledWith(refusal) })
   })
+
+  it('offers an ordinary washer no cancel, only handing the job back', () => {
+    render(<AssignedJobCard job={job} onChanged={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: 'Cancel booking' })).toBeNull()
+    expect(screen.getByRole('button', { name: /can.t do this booking/ })).toBeInTheDocument()
+  })
+
+  it('lets the operator cancel a started job with a reason', async () => {
+    api.operatorCancelBooking.mockResolvedValue(undefined)
+    render(<AssignedJobCard job={{ ...job, status: 'in_progress' }} canCancel onChanged={vi.fn().mockResolvedValue(undefined)} />)
+    expect(screen.queryByRole('button', { name: /can.t do this booking/ })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel booking' }))
+    await userEvent.type(screen.getByLabelText(/Reason for cancelling/), 'Customer was not at the address')
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel booking' }))
+    await waitFor(() => { expect(api.operatorCancelBooking).toHaveBeenCalledWith('b1', 'Customer was not at the address') })
+  })
+
+  it('does not offer the operator cancel while the account is paused', () => {
+    render(<AssignedJobCard job={job} canCancel isPaused onChanged={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: 'Cancel booking' })).toBeNull()
+  })
 })
 
 describe('worker home', () => {
-  const account = { verificationStatus: 'suspended', verificationNote: null, bio: '', skills: [], baseLatitude: null, baseLongitude: null, serviceRadiusKm: 10, isOnline: false }
+  const account = { verificationStatus: 'suspended', verificationNote: null, bio: '', skills: [], baseLatitude: null, baseLongitude: null, serviceRadiusKm: 10, isOnline: false, isPlatformOperator: false }
 
   beforeEach(() => {
     api.dispatchRequests.mockResolvedValue([])
@@ -266,6 +287,7 @@ describe('admin panel', () => {
     api.adminBookings.mockResolvedValue([])
     api.adminWorkerDocuments.mockResolvedValue([])
     api.adminWorkerDocumentOverview.mockResolvedValue({ documentsToReview: 3, filesWaitingForRemoval: 2, oldestFileWaitingSince: '2026-11-01T01:00:00Z' })
+    api.adminPlatformOperatorIds.mockResolvedValue([])
   })
 
   it('warns about draft prices and does not call cash received', async () => {
@@ -273,6 +295,19 @@ describe('admin panel', () => {
     expect(await screen.findByText(/2 services still have draft prices/)).toBeInTheDocument()
     expect(screen.getByText('Expected cash')).toBeInTheDocument()
     expect(screen.queryByText(/paid/i)).toBeNull()
+  })
+
+  it('marks a WashLink operator account', async () => {
+    api.adminPlatformOperatorIds.mockResolvedValue(['w1'])
+    render(<B2cOperationsPanel />)
+    expect(await screen.findByText('WashLink operator')).toBeInTheDocument()
+  })
+
+  it('still shows washers when operator mode is not in the database yet', async () => {
+    api.adminPlatformOperatorIds.mockRejectedValue(new Error('function not found'))
+    render(<B2cOperationsPanel />)
+    expect(await screen.findByText('Wes')).toBeInTheDocument()
+    expect(screen.queryByText('WashLink operator')).toBeNull()
   })
 
   it('asks before suspending a washer', async () => {

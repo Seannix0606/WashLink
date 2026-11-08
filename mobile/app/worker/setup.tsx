@@ -42,6 +42,7 @@ export default function WorkerSetup(): ReactElement {
   const [notice, setNotice] = useState<string | null>(null)
   // Undefined until the account has loaded, so the section can't claim that no profile exists.
   const [accountStatus, setAccountStatus] = useState<WorkerVerificationStatus | null | undefined>(undefined)
+  const [isPlatformOperator, setIsPlatformOperator] = useState(false)
 
   useEffect(() => {
     // The session loads after the first render, and an empty id is not a washer with no profile.
@@ -52,6 +53,7 @@ export default function WorkerSetup(): ReactElement {
       setServices(await api.listServices())
       const account = await api.workerAccount(workerId)
       setAccountStatus(account?.verificationStatus ?? null)
+      setIsPlatformOperator(account?.isPlatformOperator === true)
       if (account === null) {
         return
       }
@@ -121,7 +123,9 @@ export default function WorkerSetup(): ReactElement {
   return (
     <Screen>
       <Title>Profile and hours</Title>
-      {accountStatus !== undefined ? <WorkerDocumentsSection verificationStatus={accountStatus} /> : null}
+      {isPlatformOperator ? (
+        <Body>This is a WashLink operator account, so it needs no verification documents. You can accept, run and cancel bookings.</Body>
+      ) : accountStatus !== undefined ? <WorkerDocumentsSection verificationStatus={accountStatus} /> : null}
       <Field label="Short bio" value={bio} maxLength={500} onChangeText={setBio} />
       <Field label="Skills and experience" helper="Separate with commas." value={skills} onChangeText={setSkills} />
       <Heading>Service area</Heading>

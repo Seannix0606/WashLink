@@ -31,7 +31,7 @@ function toWorkerAccount(r: Row): WorkerAccount {
     verificationStatus: str(r.verification_status) as WorkerAccount['verificationStatus'],
     verificationNote: nullableStr(r.verification_note), bio: str(r.bio), skills: strs(r.skills),
     baseLatitude: nullableNum(r.base_latitude), baseLongitude: nullableNum(r.base_longitude),
-    serviceRadiusKm: num(r.service_radius_km), isOnline: r.is_online === true,
+    serviceRadiusKm: num(r.service_radius_km), isOnline: r.is_online === true, isPlatformOperator: r.is_platform_operator === true,
   }
 }
 
@@ -190,6 +190,10 @@ export function createB2cApi(client: B2cSupabaseClient) {
     releaseBooking: async (id: string, reason: string): Promise<void> => {
       await run(client.rpc('release_service_booking', { p_booking: id, p_reason: reason }))
     },
+    /** Only an operator washer can cancel. Every other washer hands the job back with releaseBooking. */
+    operatorCancelBooking: async (id: string, reason: string): Promise<void> => {
+      await run(client.rpc('operator_cancel_service_booking', { p_booking: id, p_reason: reason }))
+    },
     reportProblem: async (id: string, report: string): Promise<void> => {
       await run(client.rpc('report_service_booking_problem', { p_booking: id, p_report: report }))
     },
@@ -231,6 +235,13 @@ export function createB2cApi(client: B2cSupabaseClient) {
       }))
     },
     adminWorkers: async (): Promise<readonly Row[]> => rows(client.rpc('admin_independent_workers')),
+    async adminPlatformOperatorIds(): Promise<readonly string[]> {
+      const result = await run(client.rpc('admin_platform_operator_ids'))
+      // PostgREST returns a set of scalars as plain values; older versions wrap each one in an object.
+      return Array.isArray(result)
+        ? result.map((value: unknown) => (typeof value === 'object' && value !== null ? str((value as Row).admin_platform_operator_ids) : str(value)))
+        : []
+    },
     adminReviewWorker: async (workerId: string, status: string, note: string): Promise<void> => {
       await run(client.rpc('admin_review_independent_worker', { p_worker: workerId, p_status: status, p_note: note }))
     },

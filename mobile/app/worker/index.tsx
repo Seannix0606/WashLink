@@ -73,10 +73,19 @@ function RequestCard({ request, onChanged }: { readonly request: DispatchRequest
   )
 }
 
-function JobCard({ job, isPaused, onChanged }: { readonly job: AssignedBooking; readonly isPaused: boolean; readonly onChanged: () => Promise<void> }): ReactElement {
+type NoteMode = 'problem' | 'release' | 'cancel'
+const noteLabel: Readonly<Record<NoteMode, string>> = { problem: 'What happened?', release: "Why can't you do this booking?", cancel: 'Reason for cancelling' }
+const noteActions: Readonly<Record<NoteMode, (id: string, note: string) => Promise<void>>> = {
+  problem: (id, note) => api.reportProblem(id, note),
+  release: (id, note) => api.releaseBooking(id, note),
+  cancel: (id, note) => api.operatorCancelBooking(id, note),
+}
+
+/** canCancel: only a WashLink operator account may cancel, and the database checks it again. Other washers hand a job back. */
+function JobCard({ job, isPaused, canCancel, onChanged }: { readonly job: AssignedBooking; readonly isPaused: boolean; readonly canCancel: boolean; readonly onChanged: () => Promise<void> }): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [noteMode, setNoteMode] = useState<'problem' | 'release' | null>(null)
+  const [noteMode, setNoteMode] = useState<NoteMode | null>(null)
   const [note, setNote] = useState('')
   const action = nextWorkerActionLabel[job.status]
   const canRelease = job.status === 'accepted' || job.status === 'worker_on_the_way'
@@ -120,13 +129,14 @@ function JobCard({ job, isPaused, onChanged }: { readonly job: AssignedBooking; 
       {noteMode === null ? (
         <Row>
           <Button label="Report a problem" variant="ghost" onPress={(): void => { setNoteMode('problem') }} />
-          {canRelease ? <Button label="I can't do this booking" variant="ghost" onPress={(): void => { setNoteMode('release') }} /> : null}
+          {canRelease && !canCancel ? <Button label="I can't do this booking" variant="ghost" onPress={(): void => { setNoteMode('release') }} /> : null}
+          {canCancel && !isPaused ? <Button label="Cancel booking" variant="ghost" onPress={(): void => { setNoteMode('cancel') }} /> : null}
         </Row>
       ) : (
         <>
-          <Field label={noteMode === 'problem' ? 'What happened?' : "Why can't you do this booking?"} helper="10 to 500 characters." value={note} maxLength={500} multiline onChangeText={setNote} />
+          <Field label={noteLabel[noteMode]} helper={noteMode === 'cancel' ? '10 to 500 characters. The customer is told the booking was cancelled.' : '10 to 500 characters.'} value={note} maxLength={500} multiline onChangeText={setNote} />
           <Row>
-            <Button label="Send" isLoading={isBusy} onPress={(): void => void act(() => (noteMode === 'problem' ? api.reportProblem(job.id, note) : api.releaseBooking(job.id, note)))} />
+            <Button label={noteMode === 'cancel' ? 'Cancel booking' : 'Send'} variant={noteMode === 'cancel' ? 'danger' : 'primary'} isLoading={isBusy} onPress={(): void => void act(() => noteActions[noteMode](job.id, note))} />
             <Button label="Back" variant="ghost" onPress={(): void => { setNoteMode(null) }} />
           </Row>
         </>
@@ -185,7 +195,7 @@ export default function WorkerHome(): ReactElement {
       {requests.map((request) => <RequestCard key={request.id} request={request} onChanged={refresh} />)}
       <Heading>Your bookings</Heading>
       {activeJobs.length === 0 ? <Body muted>No accepted bookings.</Body> : null}
-      {activeJobs.map((job) => <JobCard key={job.id} job={job} isPaused={pausedNotice !== null} onChanged={refresh} />)}
+      {activeJobs.map((job) => <JobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account?.isPlatformOperator === true} onChanged={refresh} />)}
     </Screen>
   )
 }

@@ -59,6 +59,7 @@ services:
       VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
       VITE_FEATURE_B2B: ${VITE_FEATURE_B2B:-false}
       VITE_FEATURE_B2C: ${VITE_FEATURE_B2C:-true}
+      VITE_FEATURE_WASHER_SIGNUP: ${VITE_FEATURE_WASHER_SIGNUP:-false}
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./frontend:/app/frontend

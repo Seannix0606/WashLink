@@ -13,13 +13,15 @@ const text = (value: unknown): string => (typeof value === 'string' ? value : ty
 
 interface WasherVerificationCardProps {
   readonly worker: Row
+  /** A washer account WashLink runs itself: verified without documents (make_platform_operator). */
+  readonly isPlatformOperator?: boolean
   /** Runs a status change and reports it, as the rest of the panel does. */
   readonly runAction: (action: () => Promise<void>, success: string) => Promise<void>
   readonly onChanged: () => Promise<void>
 }
 
 /** The blockers shown are a guide. The database refuses to verify until every required document is approved, whatever this shows. */
-export function WasherVerificationCard({ worker, runAction, onChanged }: WasherVerificationCardProps): ReactElement {
+export function WasherVerificationCard({ worker, isPlatformOperator = false, runAction, onChanged }: WasherVerificationCardProps): ReactElement {
   const workerId = text(worker.profile_id)
   const status = text(worker.verification_status)
   const [documents, setDocuments] = useState<readonly AdminWorkerDocument[] | null>(null)
@@ -52,7 +54,7 @@ export function WasherVerificationCard({ worker, runAction, onChanged }: WasherV
     <Card className="space-y-3 p-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm">
-          <p className="font-medium text-[var(--color-ink-900)]">{text(worker.full_name) || 'Name not set'} <Badge tone={status === 'verified' ? 'success' : 'warning'}>{status}</Badge></p>
+          <p className="font-medium text-[var(--color-ink-900)]">{text(worker.full_name) || 'Name not set'} <Badge tone={status === 'verified' ? 'success' : 'warning'}>{status}</Badge>{isPlatformOperator ? <> <Badge tone="info">WashLink operator</Badge></> : null}</p>
           <p className="text-[var(--color-ink-700)]">{[text(worker.phone_number), worker.has_service_area === true ? `${text(worker.service_radius_km)} km area` : 'No service area', `${text(worker.completed_count)} completed`].filter(Boolean).join(' · ')}</p>
         </div>
         <div className="flex flex-wrap gap-2">

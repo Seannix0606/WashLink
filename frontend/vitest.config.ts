@@ -21,6 +21,8 @@ export default mergeConfig(
         // Existing owner and workforce tests run with B2B on; the B2C default has its own tests.
         VITE_FEATURE_B2B: 'true',
         VITE_FEATURE_B2C: 'false',
+        // The existing sign-up tests cover the worker role; washer sign-up closed has its own tests.
+        VITE_FEATURE_WASHER_SIGNUP: 'true',
       },
     },
   }),

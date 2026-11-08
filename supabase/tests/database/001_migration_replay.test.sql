@@ -1,7 +1,7 @@
 -- W1..W16 migration replay: objects from each committed migration exist after
 -- baseline + 97 migrations (5 pre-W2, 6 W2, 5 W3, 4 W4, 5 W5, 9 W6, 8 W7, 8 W8, 10 W9, 7 W10, 9 W11, 9 W14, 5 W12, 4 W13, 1 W15, 2 W16)
 -- replayed in order, with the owner-policies baseline (20260417000002) applied right after 2026_04_17 (W1..W14 AC2; W13 AC2;
--- W15 AC2; W16 AC2; B2C adds 14, for 113 staged migrations in total).
+-- W15 AC2; W16 AC2; B2C adds 14 and OP-1 adds 1, for 114 staged migrations in total).
 begin;
 create extension if not exists pgtap with schema extensions;
 select plan(33);
@@ -88,7 +88,8 @@ select results_eq(
             ('20261104000001'), ('20261104000002'), ('20261106000001'), ('20261106000002'),
             ('20261106000003'), ('20261106000004'), ('20261106000005'), ('20261106000006'),
             ('20261106000007'), ('20261106000008'), ('20261106000009'), ('20261106000010'), ('20261106000011'),
-            ('20261106000012'), ('20261106000013'), ('20261106000014') $$,
+            ('20261106000012'), ('20261106000013'), ('20261106000014'),
+            ('20261108000001') $$,
   'replay_schema_migrations_has_baseline_w2_to_w14_w12_and_w13'
 );
 

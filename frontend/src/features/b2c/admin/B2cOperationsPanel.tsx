@@ -24,6 +24,7 @@ export function B2cOperationsPanel(): ReactElement {
   const [summary, setSummary] = useState<Row | null>(null)
   const [catalog, setCatalog] = useState<Row | null>(null)
   const [workers, setWorkers] = useState<readonly Row[]>([])
+  const [operatorIds, setOperatorIds] = useState<ReadonlySet<string>>(new Set())
   const [bookings, setBookings] = useState<readonly Row[]>([])
   const [filter, setFilter] = useState('')
   const [caseData, setCaseData] = useState<Row | null>(null)
@@ -33,9 +34,12 @@ export function B2cOperationsPanel(): ReactElement {
   const refresh = useCallback(async (): Promise<void> => {
     try {
       const api = getB2cApi()
-      const [nextSummary, nextCatalog, nextWorkers, nextBookings, nextOverview] = await Promise.all([
+      const [nextSummary, nextCatalog, nextWorkers, nextBookings, nextOverview, nextOperatorIds] = await Promise.all([
         api.adminSummary(), api.adminCatalog(), api.adminWorkers(), api.adminBookings(filter === '' ? null : filter), api.adminWorkerDocumentOverview(),
+        // Marking operators is informational, so a database without operator mode yet still shows the panel.
+        api.adminPlatformOperatorIds().catch((): readonly string[] => []),
       ])
+      setOperatorIds(new Set(nextOperatorIds))
       setSummary(nextSummary)
       setCatalog(nextCatalog)
       setWorkers(nextWorkers)
@@ -132,7 +136,7 @@ export function B2cOperationsPanel(): ReactElement {
           </div>
         ) : null}
         {workers.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No washers have signed up yet.</p> : null}
-        {workers.map((worker) => <WasherVerificationCard key={text(worker.profile_id)} worker={worker} runAction={run} onChanged={refresh} />)}
+        {workers.map((worker) => <WasherVerificationCard key={text(worker.profile_id)} worker={worker} isPlatformOperator={operatorIds.has(text(worker.profile_id))} runAction={run} onChanged={refresh} />)}
       </section>
 
       <section aria-labelledby="bookings-title" className="space-y-3">

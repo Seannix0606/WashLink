@@ -3,7 +3,7 @@ import { featureFlags } from '../../application/featureFlags'
 import { Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react'
 import type { SignUpRole } from '../../domain/models/AuthenticatedUser'
 import { Button, Card, IconButton, Input } from '../../presentation/design/ui'
-import { RolePickerGrid } from './RolePickerGrid'
+import { isRolePickerShown, RolePickerGrid } from './RolePickerGrid'
 import { SignUpFeedbackNotice, type SignUpFeedback } from './SignUpFeedbackNotice'
 
 interface SignInFormProps {
@@ -180,14 +180,18 @@ export function SignUpForm({
           Create your account
         </h1>
         <p className="text-sm text-[var(--color-ink-500)]">
-          Book a wash, list your car wash shop, or find car wash work.
+          {isRolePickerShown
+            ? 'Book a wash, list your car wash shop, or find car wash work.'
+            : 'Book a professional car wash near you.'}
         </p>
       </header>
 
-      <RolePickerGrid
-        selectedRole={selectedRole}
-        onRoleSelected={onSelectedRoleChanged}
-      />
+      {isRolePickerShown ? (
+        <RolePickerGrid
+          selectedRole={selectedRole}
+          onRoleSelected={onSelectedRoleChanged}
+        />
+      ) : null}
 
       {signUpFeedback !== null ? (
         <SignUpFeedbackNotice

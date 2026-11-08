@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { B2cOperationsPanel } from './B2cOperationsPanel'
 
 const api = vi.hoisted(() => ({
-  adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(),
+  adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(), adminPlatformOperatorIds: vi.fn(),
 }))
 vi.mock('../b2cApiClient', () => ({ getB2cApi: (): unknown => api, errorMessage: (error: Error): string => error.message }))
 
@@ -17,6 +17,7 @@ beforeEach(() => {
   api.adminBookings.mockResolvedValue([])
   api.adminWorkerDocuments.mockResolvedValue([])
   api.adminWorkerDocumentOverview.mockResolvedValue({ documentsToReview: 3, filesWaitingForRemoval: 2, oldestFileWaitingSince: '2026-11-01T01:00:00Z' })
+  api.adminPlatformOperatorIds.mockResolvedValue([])
 })
 
 describe('washers in the admin panel', () => {

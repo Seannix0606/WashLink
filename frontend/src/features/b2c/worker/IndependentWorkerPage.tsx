@@ -133,7 +133,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
                 <section aria-labelledby="jobs-title" className="space-y-3">
                   <h2 id="jobs-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Your bookings</h2>
                   {activeJobs.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No accepted bookings.</p> : null}
-                  {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} onChanged={refresh} />)}
+                  {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} />)}
                 </section>
               </div>
             ) : null}
@@ -168,7 +168,14 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
             ) : null}
             {tab === 'setup' ? (
               <div className="space-y-5">
-                <WorkerDocumentsPanel verificationStatus={account.verificationStatus} />
+                {account.isPlatformOperator ? (
+                  <Card className="p-4 text-sm text-[var(--color-ink-700)]">
+                    <h2 className="font-semibold text-[var(--color-ink-900)]">WashLink operator account</h2>
+                    <p className="mt-1">This account is run by WashLink, so it needs no verification documents. You can accept, run and cancel bookings.</p>
+                  </Card>
+                ) : (
+                  <WorkerDocumentsPanel verificationStatus={account.verificationStatus} />
+                )}
                 <WorkerSetupPanel workerId={workerId} account={account} onSaved={refresh} />
                 <DeleteAccountSection />
               </div>

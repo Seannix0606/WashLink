@@ -32,16 +32,19 @@ const rolePickerOptions: readonly RolePickerOption[] = [
   },
 ]
 
-// Owner sign-up is a B2B feature. Hiding it is a release choice, not authorization.
-const visibleRolePickerOptions = featureFlags.isB2bEnabled
-  ? rolePickerOptions
-  : rolePickerOptions
-      .filter((rolePickerOption) => rolePickerOption.value !== 'owner')
-      .map((rolePickerOption) =>
-        rolePickerOption.value === 'worker'
-          ? { ...rolePickerOption, description: 'Accept bookings as an independent washer.' }
-          : rolePickerOption,
-      )
+// Owner sign-up is a B2B feature, and washer sign-up is closed while WashLink operates the washes itself.
+// Hiding either is a release choice, not authorization: the database turns a closed washer sign-up into a customer.
+const visibleRolePickerOptions = rolePickerOptions
+  .filter((rolePickerOption) => rolePickerOption.value !== 'owner' || featureFlags.isB2bEnabled)
+  .filter((rolePickerOption) => rolePickerOption.value !== 'worker' || featureFlags.isWasherSignUpEnabled)
+  .map((rolePickerOption) =>
+    rolePickerOption.value === 'worker' && !featureFlags.isB2bEnabled
+      ? { ...rolePickerOption, description: 'Accept bookings as an independent washer.' }
+      : rolePickerOption,
+  )
+
+/** With one account type left there is nothing to choose, so the picker is not shown. */
+export const isRolePickerShown = visibleRolePickerOptions.length > 1
 
 interface RolePickerGridProps {
   readonly selectedRole: SignUpRole
