@@ -1,18 +1,66 @@
+# Web app only, on Render's free static hosting. Supabase hosts the database and auth. See docs/b2c/RENDER.md.
 services:
-  - type: static_site
-    name: washlink-frontend
-    env: static
+  - type: web
+    # The name sets the free address: https://washlink.onrender.com (Render adds a suffix if it is taken).
+    name: washlink
+    runtime: static
     branch: main
-    buildCommand: cd frontend && npm install && npm run build
-    publishPath: frontend/dist
-    plan: free
-
-  - type: web_service
-    name: washlink-backend
-    env: python
-    branch: main
-    root: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    plan: free
-    pythonVersion: 3.12
+    # Deploys every push to main. Switch to checksPass once CI runs on GitHub.
+    autoDeployTrigger: commit
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # Set these two in the Render dashboard when it asks. The anon key is public, but it isn't kept in the repo.
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_FEATURE_B2B
+        value: "false"
+      - key: VITE_FEATURE_B2C
+        value: "true"
+      # Washer sign-up stays closed while WashLink operates the washes itself (docs/b2c/OPERATOR_MODE.md).
+      - key: VITE_FEATURE_WASHER_SIGNUP
+        value: "false"
+    # Any path that isn't a file gets the app, so a link to a page inside it never shows "not found".
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # Supabase on a custom domain, or a new map or address provider, must be added here.
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      # OpenStreetMap tiles require a Referer, so no-referrer would break the map.
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: "geolocation=(self), camera=(), microphone=(), payment=(), usb=()"
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000
+      # The service worker and app page must never be cached, so a new release reaches installed apps straight away.
+      # Built files under /assets have content hashes in their names, so they can be cached for good.
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+      - path: /
+        name: Cache-Control
+        value: no-cache
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
