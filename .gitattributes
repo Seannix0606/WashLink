@@ -1,0 +1,3 @@
+# SQL is always LF. Migration preflights pin md5(prosrc) of function bodies, and a CRLF
+# checkout (core.autocrlf=true on Windows) changes that hash and aborts db reset.
+*.sql text eol=lf
