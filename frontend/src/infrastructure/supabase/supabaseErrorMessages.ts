@@ -1,0 +1,259 @@
+/**
+ * Turns Supabase / Postgres errors into text that is safe to show to people.
+ * Raw SQL or PostgREST messages are never passed through; only the messages the
+ * W2 database guards raise on purpose (already written for end users) are.
+ */
+import { moderationDatabaseMessages } from './supabaseModerationErrorMessages'
+import { oversightDatabaseMessages } from './supabaseOversightErrorMessages'
+import { ownerRelationshipDatabaseMessages } from './supabaseOwnerRelationshipErrorMessages'
+import { workerContractDatabaseMessagePatterns, workerContractDatabaseMessages } from './supabaseWorkerContractErrorMessages'
+
+interface SupabaseErrorLike {
+  readonly code?: string | null
+  readonly message?: string | null
+}
+
+const userFacingDatabaseMessages: ReadonlySet<string> = new Set([
+  'Shop not found.',
+  'This shop cannot be submitted in its current status.',
+  'Only owner accounts can register a shop.',
+  'Only owner accounts can issue roster link codes.',
+  'Roster worker not found.',
+  'This roster worker is already linked to an account.',
+  'Only worker accounts can link to a shop roster.',
+  'Roster entry not found.',
+  'Workers are linked only when the worker accepts a link code.',
+  'This booking field cannot be changed.',
+  'This booking status change is not allowed.',
+  'Only a worker from your own roster can be assigned to this booking.',
+  'Only a completed, unrated booking can be rated by its customer.',
+  'New bookings start as pending, unassigned and unrated.',
+  'Your role and verification fields cannot be changed from the app.',
+  'Sign in to manage notifications.',
+  'Mark at most 200 notifications at a time.',
+  // W4 job openings (guard trigger and transition_job_opening).
+  'Only owner accounts can create job openings.',
+  'You can create job openings only for your own shop.',
+  'Job openings start as drafts.',
+  'A shop can have at most 50 job openings that are not archived.',
+  'Job opening not found.',
+  'This job opening field cannot be changed.',
+  'This job opening status change is not allowed.',
+  'Closed or archived job openings cannot be edited.',
+  'Complete the required job opening fields before publishing.',
+  'The application deadline has passed.',
+  'Only draft job openings can be deleted.',
+  'Only a verified shop can publish job openings.',
+  'This job opening changed. Refresh and try again.',
+  // W5 job applications and marketplace search (guard trigger, RPCs, search input checks).
+  'Only worker accounts can apply to job openings.',
+  'Create your worker profile before applying.',
+  'This job opening is paused and is not accepting applications.',
+  'This job opening is closed.',
+  'This shop cannot receive applications until its verification is reviewed.',
+  'The application deadline for this opening has passed.',
+  'You cannot apply to this job opening again.',
+  'You have reached the limit of 50 open applications.',
+  'This job opening is not accepting more applications.',
+  'Review the training and work notice before applying.',
+  'The cover note must be 1000 characters or fewer.',
+  'You have already applied to this job opening.',
+  'Job application not found.',
+  'This application changed. Refresh and try again.',
+  'This application status change is not allowed.',
+  'Only a verified shop can accept applications.',
+  'The application snapshot cannot be changed.',
+  'Only draft applications can be deleted.',
+  'Job applications change only through the application actions.',
+  'This application field cannot be changed.',
+  'A submitted application cannot be edited.',
+  'Search filters must be 80 characters or fewer.',
+  'Choose a pay period to filter by pay amount.',
+  'The minimum pay amount cannot be negative.',
+  'Results are limited to 1-50 per page and an offset of 0-1000.',
+  // W6 training (program, session, trainer, enrollment and evidence RPCs; C7 booking gate).
+  'A correction must change the attendance or the note.',
+  'A pass needs every checklist item met.',
+  'A session is already scheduled on this date.',
+  'A shop can have at most 50 training programs that are not archived.',
+  'A trainer of this program cannot be enrolled in it.',
+  'A training program can have at most 30 scheduled sessions.',
+  'A worker enrolled in this program cannot be its trainer.',
+  'Add objectives, terms and at least one checklist item before opening.',
+  'An assessment can be recorded only for an accepted enrollment.',
+  'An assessment is already recorded. Record a correction instead.',
+  'An open training program cannot be edited.',
+  'Attendance can be recorded only for an accepted enrollment.',
+  'Attendance for this day is already recorded. Record a correction instead.',
+  'Attendance was recorded for this session; it cannot be cancelled.',
+  'Choose a scheduled session of this program.',
+  'Choose a session date from today up to one year ahead.',
+  'Choose a worker linked to your roster.',
+  'Confirm the free-training statement before opening.',
+  'Each checklist item must be 3 to 200 characters.',
+  'Give a correction reason of 10 to 300 characters.',
+  'Give a reason for the fail of 10 to 300 characters.',
+  'Give a reason of 10 to 300 characters.',
+  'Invitations can be sent only while the program is open.',
+  'Invite only an applicant you accepted for this shop.',
+  'Mark every checklist item as met or not met.',
+  'Only a verified shop can invite workers to training.',
+  'Only a verified shop can open training programs.',
+  'Only draft training programs can be deleted.',
+  'Only the shop owner or a designated trainer can record training.',
+  'Records can be corrected only for an accepted enrollment.',
+  'Review the free-training notice before enrolling.',
+  'Sessions can be added only while the program is a draft or open.',
+  'Sessions can be deleted only while the program is a draft. Cancel it instead.',
+  'The worker has not attended the required training days yet.',
+  'This program does not have enough upcoming training days.',
+  'This record was already corrected.',
+  'This session cannot be cancelled.',
+  'This session has not happened yet.',
+  'This session was before the worker enrolled.',
+  'This trainer role was already revoked.',
+  'This training enrollment change is not allowed.',
+  'This training program changed. Refresh and try again.',
+  'This training program changed. Review it again.',
+  'This training program is full.',
+  'This training program is not open.',
+  'This training program status change is not allowed.',
+  'This worker already has a live enrollment in this program.',
+  'This worker has reached the limit of 10 live trainings.',
+  'This worker is already a trainer for this program.',
+  'Trainers cannot be changed on an archived program.',
+  'Training enrollment not found.',
+  'Training is still in progress in this program.',
+  'Training program not found.',
+  'Training records cannot be deleted. Record a correction instead.',
+  'Training records cannot be edited. Record a correction instead.',
+  'You can create training programs only for your own shop.',
+  'This worker is in required training with your shop and cannot be assigned to customer bookings until the training ends.',
+  'You are in required training with this shop and cannot start customer bookings until the training ends.',
+  // W7 certifications (issue / renew / status / review RPCs, reads, D-20 apply gate).
+  'Only the shop owner can issue certifications.',
+  'Certification not found.',
+  'Review request not found.',
+  'This certification status change is not allowed.',
+  'Only a verified shop can issue certifications.',
+  'Only a verified shop can reinstate certifications.',
+  'Confirm the certification statement before issuing.',
+  'This training is not completed. A certification needs at least 3 attended training days and a passed assessment.',
+  'Validity must be 1 to 36 months.',
+  'This certification cannot be renewed.',
+  'Re-assessment opens 60 days before expiry and closes 90 days after it.',
+  'Record a passed re-assessment first.',
+  'The training record no longer shows completion.',
+  'Give a reason of 20 to 500 characters.',
+  'Only a suspended or revoked certification can be reviewed.',
+  'The review period for this decision has ended.',
+  'A certification can be reviewed at most 3 times.',
+  'Write a statement of 20 to 1000 characters.',
+  'This review request is no longer open.',
+  'This certification is no longer suspended or revoked.',
+  'This opening needs a current shop-issued certification recorded on WashLink.',
+  'A certification was already issued for this training.',
+  'This worker already holds a current certification from this program.',
+  'A review request is already open for this certification.',
+  'The training record changed. Review it again.',
+  'This certification changed. Refresh and try again.',
+  'Choose passed or failed.',
+  'Choose reinstate or uphold.',
+  // W7 review polish: worker_profiles_guard_certified_delete (23503).
+  'A worker profile with certifications cannot be deleted. Delete the account instead.',
+  // W8 contract templates (w8c guards, w8d validator, w8f RPCs).
+  'Only shop owners can create contract templates.',
+  'Contract template not found.',
+  'Only WashLink administrators can change the standard template.',
+  'Contract templates are changed only through WashLink.',
+  'Contract template versions cannot be edited.',
+  'Contract template reference data changes only through migrations.',
+  'The standard contract template cannot be deleted.',
+  'Template names must be 3 to 120 characters.',
+  'You can keep up to 25 active templates. Archive one first.',
+  'Archived templates cannot be changed. Restore it first.',
+  'Use the current standard template version.',
+  'This clause is a WashLink safeguard and cannot be changed.',
+  'Editable clauses cannot be empty.',
+  'A clause can hold up to 4000 characters.',
+  'Shop-specific terms are not allowed in this section.',
+  'Shop-specific terms come after the standard clauses of their section.',
+  'A version can have up to 40 shop-specific terms.',
+  'Give each shop-specific term a heading of 3 to 160 characters.',
+  'Write each shop-specific term in 10 to 4000 characters.',
+  'A template can keep up to 200 versions. Start a new template from this version.',
+  'Nothing changed since the last version.',
+  'Shop text cannot be labelled as a WashLink safeguard.',
+  'A contract template can hold up to 120000 characters.',
+  'The template already has this status.',
+  'Section 4 must keep the relationship-type placeholder in a WashLink safeguard clause.',
+  'The standard template cannot contain digits or amounts.',
+  'The standard template has only WashLink safeguard and editable clauses.',
+  'The standard template has only its own WashLink safeguard and editable clauses.',
+  'This template changed. Reload it and try again.',
+  'Unknown clause.',
+  'Editable clause bodies must be text.',
+  'Shop-specific terms must be a list of section, heading and text.',
+  'Unknown template status.',
+  'Give the standard template as a list of 1 to 120 clauses.',
+  'Each clause needs a section, key, kind, heading and text.',
+  // W8 review polish (w8c invisible-character CHECKs, w8d validator, w8g render).
+  'Remove invisible characters (such as zero-width spaces) from the text.',
+  'The relationship type and the party names can appear only in WashLink safeguard clauses.',
+  'Each clause of the standard template must appear exactly once.',
+  'Section 4 can hold only WashLink safeguard clauses.',
+  'The standard template cannot say it is reviewed, approved, valid, binding, signed or compliant.',
+  'Placeholder values cannot contain {{ or }}.',
+  // W9 worker contracts (merged from supabaseWorkerContractErrorMessages.ts).
+  ...workerContractDatabaseMessages,
+  // W10 owner relationships and workforce policies (merged from supabaseOwnerRelationshipErrorMessages.ts).
+  ...ownerRelationshipDatabaseMessages,
+  // W11 WashLink reviews and reported contract problems (merged from supabaseOversightErrorMessages.ts).
+  ...oversightDatabaseMessages,
+  // W14 job opening moderation, oversight reads and lookups (merged from supabaseModerationErrorMessages.ts).
+  ...moderationDatabaseMessages,
+])
+
+/** Guard messages that carry a number (for example the program's required training days). */
+const userFacingDatabaseMessagePatterns: readonly RegExp[] = [
+  /^Schedule at least \d{1,2} upcoming supervised training days \(and no past sessions\) before opening\.$/,
+  /^Each (skill|checklist item) must be \d{1,3} characters or fewer\.$/,
+  // W8: the placeholder text is capped at 40 characters by the database.
+  /^Unknown placeholder \{\{[^{}\n]{0,40}\}\}\.$/,
+  /^Every contract section needs at least one clause \(missing: [\d, ]{1,60}\)\.$/,
+  /^The standard template must keep these WashLink safeguard clauses locked: [a-z_, ]{3,600}\.$/,
+  /^These WashLink safeguard clauses must stay in their own sections: [a-z_, ]{3,600}\.$/,
+  // W16 (w16b, D-87): raised at commit; ends with the changed locked clause keys.
+  /^WashLink safeguard text in the standard template can change only through a human-run migration: [a-z0-9_, ]{3,600}\.$/,
+  ...workerContractDatabaseMessagePatterns,
+]
+
+const userFacingMessageByErrorCode: ReadonlyMap<string, string> = new Map([
+  ['23514', 'Some details are outside the allowed limits. Check them and try again.'],
+  ['23505', 'This record already exists.'],
+  ['23503', 'A related record could not be found. Refresh and try again.'],
+  ['42501', 'Your account is not allowed to do this.'],
+  ['PGRST116', 'The record could not be found. Refresh and try again.'],
+])
+
+export function toUserFacingErrorMessage(
+  supabaseError: SupabaseErrorLike,
+  fallbackMessage: string,
+): string {
+  const databaseMessage = supabaseError.message?.trim() ?? ''
+  if (
+    userFacingDatabaseMessages.has(databaseMessage) ||
+    userFacingDatabaseMessagePatterns.some((messagePattern) => messagePattern.test(databaseMessage))
+  ) {
+    return databaseMessage
+  }
+  const errorCode = supabaseError.code ?? ''
+  return userFacingMessageByErrorCode.get(errorCode) ?? fallbackMessage
+}
+
+export function toUserFacingError(
+  supabaseError: SupabaseErrorLike,
+  fallbackMessage: string,
+): Error {
+  return new Error(toUserFacingErrorMessage(supabaseError, fallbackMessage))
+}

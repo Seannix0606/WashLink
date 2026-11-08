@@ -1,4 +1,5 @@
 import { Fragment, createElement, lazy, Suspense, type ReactElement } from 'react'
+import { featureFlags } from './application/featureFlags'
 import { isSupabaseConfigured } from './infrastructure/supabase/supabaseClient'
 import {
   AuthenticatedUserProvider,
@@ -13,8 +14,8 @@ const CustomerBookingPage = lazy(async () => ({
 const OwnerDashboardPage = lazy(async () => ({
   default: (await import('./presentation/pages/OwnerDashboardPage')).OwnerDashboardPage,
 }))
-const WorkerJobsPage = lazy(async () => ({
-  default: (await import('./presentation/pages/WorkerJobsPage')).WorkerJobsPage,
+const WorkerWorkspaceGate = lazy(async () => ({
+  default: (await import('./presentation/pages/WorkerWorkspacePage')).WorkerWorkspaceGate,
 }))
 const AuthLandingPage = lazy(async () => ({
   default: (await import('./presentation/pages/AuthLandingPage')).AuthLandingPage,
@@ -24,6 +25,20 @@ const ResetPasswordPage = lazy(async () => ({
 }))
 const SuperAdminDashboardPage = lazy(async () => ({
   default: (await import('./presentation/pages/SuperAdminDashboardPage')).SuperAdminDashboardPage,
+}))
+
+const PublicEntryPage = lazy(async () => {
+  await import('./features/b2c/landing/landing.css')
+  return { default: (await import('./features/b2c/landing/PublicEntryPage')).PublicEntryPage }
+})
+const CustomerHomePage = lazy(async () => ({
+  default: (await import('./features/b2c/customer/CustomerHomePage')).CustomerHomePage,
+}))
+const IndependentWorkerPage = lazy(async () => ({
+  default: (await import('./features/b2c/worker/IndependentWorkerPage')).IndependentWorkerPage,
+}))
+const OwnerAccountPausedScreen = lazy(async () => ({
+  default: (await import('./features/auth/OwnerAccountPausedScreen')).OwnerAccountPausedScreen,
 }))
 
 function SupabaseEnvMissingScreen(): ReactElement {
@@ -92,7 +107,7 @@ function AppContent(): ReactElement {
     return createElement(
       Suspense,
       { fallback: createElement(PageLoadingFallback) },
-      createElement(AuthLandingPage),
+      createElement(featureFlags.isB2cEnabled ? PublicEntryPage : AuthLandingPage),
     )
   }
 
@@ -106,6 +121,14 @@ function AppContent(): ReactElement {
     )
   }
 
+  if (authenticatedUser.role === 'owner' && !featureFlags.isB2bEnabled) {
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(OwnerAccountPausedScreen),
+    )
+  }
+
   if (authenticatedUser.role === 'owner') {
     return createElement(
       Suspense,
@@ -116,13 +139,29 @@ function AppContent(): ReactElement {
     )
   }
 
+  if (authenticatedUser.role === 'worker' && featureFlags.isB2cEnabled) {
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(IndependentWorkerPage, { workerId: authenticatedUser.userIdentifier }),
+    )
+  }
+
   if (authenticatedUser.role === 'worker') {
     return createElement(
       Suspense,
       { fallback: createElement(PageLoadingFallback) },
-      createElement(WorkerJobsPage, {
+      createElement(WorkerWorkspaceGate, {
         workerUserIdentifier: authenticatedUser.userIdentifier,
       }),
+    )
+  }
+
+  if (featureFlags.isB2cEnabled) {
+    return createElement(
+      Suspense,
+      { fallback: createElement(PageLoadingFallback) },
+      createElement(CustomerHomePage, { customerId: authenticatedUser.userIdentifier }),
     )
   }
 

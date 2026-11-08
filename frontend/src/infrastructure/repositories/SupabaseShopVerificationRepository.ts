@@ -1,8 +1,4 @@
 import type { Shop } from '../../domain/models/Shop'
-import {
-  mapSupabaseShopPricingRows,
-  type SupabaseShopPricingRow,
-} from '../supabase/supabaseShopPricing'
 import type {
   ShopVerificationDocument,
   ShopVerificationDocumentType,
@@ -13,45 +9,18 @@ import type {
   UploadShopVerificationDocumentInput,
 } from '../../domain/repositories/ShopVerificationRepository'
 import { getSupabaseClient } from '../supabase/supabaseClient'
+import { toUserFacingError } from '../supabase/supabaseErrorMessages'
+import {
+  mapDocumentRowToDomain,
+  mapShopRowToDomain,
+  shopSelectColumnsForVerification,
+  shopVerificationDocumentSelectColumns,
+  type SupabaseShopRowForVerification,
+  type SupabaseShopVerificationDocumentRow,
+} from '../supabase/supabaseShopVerificationRows'
 
 const shopVerificationDocumentsStorageBucketName =
   'shop-verification-documents'
-
-const shopVerificationDocumentSelectColumns =
-  'id, shop_id, document_type, storage_path, file_name, file_size_bytes, content_type, uploaded_by, uploaded_at'
-
-const shopSelectColumnsForVerification =
-  'id, owner_id, name, address, phone_number, latitude, longitude, is_active, created_at, verification_status, verification_notes, verification_submitted_at, verification_reviewed_at, verification_reviewed_by, shop_pricing!shop_pricing_shop_id_fkey(vehicle_type, service_type, price)'
-
-interface SupabaseShopVerificationDocumentRow {
-  id: string
-  shop_id: string
-  document_type: ShopVerificationDocumentType
-  storage_path: string
-  file_name: string | null
-  file_size_bytes: number | null
-  content_type: string | null
-  uploaded_by: string | null
-  uploaded_at: string
-}
-
-interface SupabaseShopRowForVerification {
-  id: string
-  owner_id: string
-  name: string
-  address: string
-  phone_number: string | null
-  latitude: number | null
-  longitude: number | null
-  is_active: boolean
-  created_at: string
-  verification_status: string
-  verification_notes: string | null
-  verification_submitted_at: string | null
-  verification_reviewed_at: string | null
-  verification_reviewed_by: string | null
-  shop_pricing: SupabaseShopPricingRow[]
-}
 
 export class SupabaseShopVerificationRepository
   implements ShopVerificationRepository
@@ -65,9 +34,7 @@ export class SupabaseShopVerificationRepository
       .eq('shop_id', shopIdentifier)
 
     if (error) {
-      throw new Error(
-        `Failed to load verification documents: ${error.message}`,
-      )
+      throw toUserFacingError(error, 'Could not load verification documents. Please try again.')
     }
 
     const documentRows: SupabaseShopVerificationDocumentRow[] = data
@@ -84,9 +51,7 @@ export class SupabaseShopVerificationRepository
     } = await supabaseClient.auth.getUser()
 
     if (signedInUserError) {
-      throw new Error(
-        `Could not verify the signed-in account before uploading: ${signedInUserError.message}`,
-      )
+      throw toUserFacingError(signedInUserError, 'Could not confirm your account before uploading. Sign in again and retry.')
     }
     if (!signedInUser) {
       throw new Error('Sign in again before uploading shop documents.')
@@ -99,9 +64,7 @@ export class SupabaseShopVerificationRepository
       .single()
 
     if (shopOwnerError) {
-      throw new Error(
-        `Could not verify ownership of this shop before uploading: ${shopOwnerError.message}`,
-      )
+      throw toUserFacingError(shopOwnerError, 'Could not confirm you own this shop before uploading. Please try again.')
     }
     if (shopOwnerRow.owner_id !== signedInUser.id) {
       throw new Error(
@@ -130,7 +93,7 @@ export class SupabaseShopVerificationRepository
       })
 
     if (uploadError) {
-      throw new Error(`Failed to upload document: ${uploadError.message}`)
+      throw toUserFacingError(uploadError, 'Could not upload the document. Please try again.')
     }
 
     const { data: upsertedRow, error: upsertError } = await supabaseClient
@@ -152,9 +115,7 @@ export class SupabaseShopVerificationRepository
       .single()
 
     if (upsertError) {
-      throw new Error(
-        `Failed to save document metadata: ${upsertError.message}`,
-      )
+      throw toUserFacingError(upsertError, 'Could not save the document details. Please try again.')
     }
 
     if (
@@ -181,7 +142,7 @@ export class SupabaseShopVerificationRepository
       .single()
 
     if (fetchError) {
-      throw new Error(`Failed to locate document: ${fetchError.message}`)
+      throw toUserFacingError(fetchError, 'Could not find this document. Refresh and try again.')
     }
 
     const storagePathToRemove: string | null =
@@ -194,7 +155,7 @@ export class SupabaseShopVerificationRepository
       .eq('id', documentIdentifier)
 
     if (deleteError) {
-      throw new Error(`Failed to delete document: ${deleteError.message}`)
+      throw toUserFacingError(deleteError, 'Could not delete the document. Please try again.')
     }
 
     if (storagePathToRemove !== null) {
@@ -213,7 +174,7 @@ export class SupabaseShopVerificationRepository
       .createSignedUrl(storagePath, signedUrlTtlSeconds)
 
     if (error) {
-      throw new Error(`Failed to generate document link: ${error.message}`)
+      throw toUserFacingError(error, 'Could not open this document. Please try again.')
     }
     if (!data.signedUrl) {
       throw new Error('Document link could not be generated.')
@@ -221,26 +182,16 @@ export class SupabaseShopVerificationRepository
     return data.signedUrl
   }
 
-  public async submitShopForVerification(
-    shopIdentifier: string,
-    ownerIdentifier: string,
-  ): Promise<Shop> {
+  // F5: submission goes through the submit_shop_for_verification RPC, which derives the
+  // owner from the session and allows pending -> pending and changes_requested -> pending.
+  public async submitShopForVerification(shopIdentifier: string): Promise<Shop> {
     const { data, error } = await getSupabaseClient()
-      .from('shops')
-      .update({
-        verification_status: 'pending',
-        verification_submitted_at: new Date().toISOString(),
-      })
-      .eq('id', shopIdentifier)
-      .eq('owner_id', ownerIdentifier)
-      .in('verification_status', ['pending', 'changes_requested'])
+      .rpc('submit_shop_for_verification', { p_shop_id: shopIdentifier })
       .select(shopSelectColumnsForVerification)
       .single()
 
     if (error) {
-      throw new Error(
-        `Failed to submit shop for verification: ${error.message}`,
-      )
+      throw toUserFacingError(error, 'Could not submit the shop for review.')
     }
     return mapShopRowToDomain(data as SupabaseShopRowForVerification)
   }
@@ -285,15 +236,14 @@ export class SupabaseShopVerificationRepository
       .update({
         verification_status: nextVerificationStatus,
         verification_notes: decisionInput.decisionNotes,
-        verification_reviewed_at: new Date().toISOString(),
-        verification_reviewed_by: decisionInput.reviewerIdentifier,
+        // verification_reviewed_by / verification_reviewed_at are set by the server.
       })
       .eq('id', decisionInput.shopIdentifier)
       .select(shopSelectColumnsForVerification)
       .single()
 
     if (error) {
-      throw new Error(`Failed to update verification status: ${error.message}`)
+      throw toUserFacingError(error, 'Could not save the review decision. Please try again.')
     }
     return mapShopRowToDomain(data as SupabaseShopRowForVerification)
   }
@@ -333,53 +283,4 @@ function buildDocumentStoragePath(options: {
 }): string {
   const uniqueFileSuffix = crypto.randomUUID()
   return `${options.shopIdentifier}/${options.documentType}-${uniqueFileSuffix}.${options.fileExtension}`
-}
-
-function mapDocumentRowToDomain(
-  documentRow: SupabaseShopVerificationDocumentRow,
-): ShopVerificationDocument {
-  return {
-    id: documentRow.id,
-    shopIdentifier: documentRow.shop_id,
-    documentType: documentRow.document_type,
-    storagePath: documentRow.storage_path,
-    fileName: documentRow.file_name,
-    fileSizeBytes: documentRow.file_size_bytes,
-    contentType: documentRow.content_type,
-    uploadedByIdentifier: documentRow.uploaded_by,
-    uploadedAt: documentRow.uploaded_at,
-  }
-}
-
-function mapShopRowToDomain(shopRow: SupabaseShopRowForVerification): Shop {
-  const verificationStatusCandidate = shopRow.verification_status
-  const allowedVerificationStatuses = new Set<Shop['verificationStatus']>([
-    'pending',
-    'changes_requested',
-    'approved',
-    'rejected',
-  ])
-  const verificationStatus = allowedVerificationStatuses.has(
-    verificationStatusCandidate as Shop['verificationStatus'],
-  )
-    ? (verificationStatusCandidate as Shop['verificationStatus'])
-    : 'pending'
-
-  return {
-    id: shopRow.id,
-    ownerIdentifier: shopRow.owner_id,
-    name: shopRow.name,
-    address: shopRow.address,
-    phoneNumber: shopRow.phone_number,
-    latitude: typeof shopRow.latitude === 'number' ? shopRow.latitude : null,
-    longitude: typeof shopRow.longitude === 'number' ? shopRow.longitude : null,
-    isActive: shopRow.is_active,
-    createdAt: shopRow.created_at,
-    verificationStatus,
-    verificationNotes: shopRow.verification_notes,
-    verificationSubmittedAt: shopRow.verification_submitted_at,
-    verificationReviewedAt: shopRow.verification_reviewed_at,
-    verificationReviewedBy: shopRow.verification_reviewed_by,
-    servicePricing: mapSupabaseShopPricingRows(shopRow.shop_pricing),
-  }
 }

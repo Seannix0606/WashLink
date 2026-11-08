@@ -1,5 +1,9 @@
 import type { ReactElement, ReactNode } from 'react'
+import { useMemo } from 'react'
 import { BrandMark } from '../design/ui'
+import { useAuthenticatedUser } from '../auth/AuthenticatedUserContext'
+import { createNotificationDependencies } from '../dependencyInjection/createNotificationDependencies'
+import { NotificationCenter } from './notifications/NotificationCenter'
 import { UserAccountMenu } from './UserAccountMenu'
 import { joinClassNames } from '../design/classNames'
 
@@ -14,6 +18,10 @@ export function AuthenticatedTopBar({
   trailingSlot,
   className,
 }: AuthenticatedTopBarProps): ReactElement {
+  const { authenticatedUser } = useAuthenticatedUser()
+  const { notificationService } = useMemo(() => createNotificationDependencies(), [])
+  const recipientIdentifier = authenticatedUser?.userIdentifier ?? null
+
   return (
     <div
       className={joinClassNames(
@@ -29,6 +37,12 @@ export function AuthenticatedTopBar({
       )}
       <div className="flex items-center gap-2">
         {trailingSlot}
+        {/* Keyed by account: signing out or switching accounts unmounts it (polling stops). */}
+        <NotificationCenter
+          key={recipientIdentifier ?? 'signed-out'}
+          notificationService={notificationService}
+          recipientIdentifier={recipientIdentifier}
+        />
         <UserAccountMenu />
       </div>
     </div>

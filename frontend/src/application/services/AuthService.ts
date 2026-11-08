@@ -5,17 +5,22 @@ import type {
   ChangePasswordInput,
   SendPasswordResetEmailInput,
   SignUpInput,
+  SignUpOutcome,
 } from '../../domain/repositories/AuthRepository'
 
 export class AuthService {
   public constructor(private readonly authRepository: AuthRepository) {}
 
-  public async signUpCustomer(signUpInput: SignUpInput): Promise<void> {
-    await this.authRepository.signUp(signUpInput, 'customer')
+  public async signUpCustomer(signUpInput: SignUpInput): Promise<SignUpOutcome> {
+    return this.authRepository.signUp(signUpInput, 'customer')
   }
 
-  public async signUpOwner(signUpInput: SignUpInput): Promise<void> {
-    await this.authRepository.signUp(signUpInput, 'owner')
+  public async signUpOwner(signUpInput: SignUpInput): Promise<SignUpOutcome> {
+    return this.authRepository.signUp(signUpInput, 'owner')
+  }
+
+  public async signUpWorker(signUpInput: SignUpInput): Promise<SignUpOutcome> {
+    return this.authRepository.signUp(signUpInput, 'worker')
   }
 
   public async signIn(emailAddress: string, password: string): Promise<void> {

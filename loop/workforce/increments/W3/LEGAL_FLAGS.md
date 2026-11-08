@@ -1,0 +1,19 @@
+# W3 - Legal-review flags (raised by REVIEW, 2026-10-24)
+
+These items are for review by a qualified Philippine labor-law / data-privacy professional. The
+reviewer does not state that anything is or is not legally compliant. Carry into
+`docs/workforce/LEGAL_REVIEW_REGISTER.md` (W13). Proposed in W3 PLAN section 10; extends W2-L4.
+
+| ID | Source | Item for legal review |
+|---|---|---|
+| W3-L1 | `supabase/migrations/2026_10_24_w3b_workforce_audit_events.sql:60-79, 126-145`; `docs/workforce/AUDIT_AND_NOTIFICATIONS.md:39-51, 130-131` | Retention of audit rows under the Data Privacy Act (RA 10173): rows keep pseudonymous user ids (actor_id, subject_profile_id, payload owner_id / reviewed_by) and role snapshots after the account is deleted (no FK by design, R-4). No retention period is defined or claimed; the purge path is a manual trusted-SQL procedure. Review: lawful basis and period for keeping this history after account deletion, how it is disclosed in the privacy notice, how data-subject access / erasure requests are handled against an append-only table, and whether an export must precede any purge. Notifications cascade-delete with the recipient's profile; review whether that is acceptable. |
+| W3-L2 | `supabase/migrations/2026_10_24_w3c_notifications.sql:15-77`; `2026_10_24_w3d_audit_and_notification_producers.sql:72-85, 153-202` | Notification content and channels. W3 is in-app only; texts carry a shop name or owner-typed roster name plus a status, filtered for `@` and 7+ digit runs (heuristic). Review before W12 adds email/SMS/push: consent per channel, minimum content, and that contract text, pay terms and contact data never go out over external channels (spec I). Also review the worker-facing text "A shop removed the link between your account and its roster." which is also sent when the roster row is deleted because the owner account was deleted (the shop did not act). |
+| W3-L3 | `2026_10_24_w3b_workforce_audit_events.sql:13, 94-95`; `docs/workforce/AUDIT_AND_NOTIFICATIONS.md:125-127` | The audit trail is an internal operational log, not a tamper-proof, hash-chained or certified record; a DB superuser / table owner can disable triggers or drop the table. It must never be presented to workers, owners or authorities as legal evidence or as an e-signature record. Review what record-keeping standard (if any) applies to later training attendance, assessment, certification approval and contract acceptance evidence (W6-W10) and whether stronger integrity measures are needed there. |
+| W3-L4 | `2026_10_24_w3d_audit_and_notification_producers.sql:283-305`; W2-L4 | Loss of shop verification: W3 records the append-only verification history (R-4 part 1) but does not snapshot status/approver/time into certifications or contracts, and does not notify workers when a shop loses verification. Review in W7/W10: whether affected workers must be told, what the shop may still display, and that issued certifications / accepted contract versions are not voided by a later status change. |
+| W3-L5 | `2026_10_24_w3d_audit_and_notification_producers.sql:64-71`; W2-L3 | The `shop.verification_decided` payload copies `reviewed_by` from the client-supplied `shops.verification_reviewed_by` (W2-L3), while the review-log view uses the server-derived `actor_id`. The two can differ. Review which value is the authoritative approver record before it is used as approval evidence for certifications (W7). |
+
+Review polish notes (2026-10-24, factual status only, no compliance claim): W3-L2 - the worker text
+for a cascade from owner account deletion is now "A roster link ended because the shop's account
+was closed." W3-L5 - the payload `reviewed_by` comes from `shops.verification_reviewed_by`, which
+W2b stamps server-side (client input ignored), so it equals `actor_id` for super_admin decisions;
+it can differ only for a trusted-session decision. The authoritative-record question stays open.

@@ -47,3 +47,7 @@ export function describeShopVerificationStatus(
 ): ShopVerificationStatusDisplay {
   return shopVerificationStatusDisplayByStatus[verificationStatus]
 }
+
+/** S6: editing name or address of an approved shop sends it back to pending review. */
+export const approvedShopIdentityChangeWarning =
+  'Changing the name or address of this verified shop sends it back for verification.'

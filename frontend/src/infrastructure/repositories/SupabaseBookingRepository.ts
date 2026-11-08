@@ -2,6 +2,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { Booking, BookingStatus, CreateBookingInput } from '../../domain/models/Booking'
 import type { BookingRepository } from '../../domain/repositories/BookingRepository'
 import { getSupabaseClient } from '../supabase/supabaseClient'
+import { toUserFacingError } from '../supabase/supabaseErrorMessages'
 import {
   mapSupabaseBookingRowToBooking,
   supabaseBookingSelectColumns,
@@ -30,7 +31,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .order('time', { ascending: false })
 
     if (error) {
-      throw new Error(`Failed to fetch bookings: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load bookings. Please try again.')
     }
 
     const bookingRows: SupabaseBookingRow[] = data
@@ -46,7 +47,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .order('time', { ascending: true })
 
     if (error) {
-      throw new Error(`Failed to fetch bookings for worker: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load your bookings. Please try again.')
     }
 
     const bookingRows: SupabaseBookingRow[] = data
@@ -63,7 +64,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .order('created_at', { ascending: false })
 
     if (error) {
-      throw new Error(`Failed to fetch bookings for customer: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load your bookings. Please try again.')
     }
 
     const bookingRows: SupabaseBookingRow[] = data
@@ -88,7 +89,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .single()
 
     if (error) {
-      throw new Error(`Failed to create booking: ${error.message}`)
+      throw toUserFacingError(error, 'Could not create the booking. Please try again.')
     }
 
     const bookingRow: SupabaseBookingRow = data
@@ -107,7 +108,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .single()
 
     if (error) {
-      throw new Error(`Failed to update booking status: ${error.message}`)
+      throw toUserFacingError(error, 'Could not update the booking status. Please try again.')
     }
 
     const bookingRow: SupabaseBookingRow = data
@@ -128,7 +129,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .single()
 
     if (error) {
-      throw new Error(`Failed to cancel booking: ${error.message}`)
+      throw toUserFacingError(error, 'Could not cancel the booking. Please try again.')
     }
 
     const bookingRow: SupabaseBookingRow = data
@@ -160,7 +161,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .single()
 
     if (error) {
-      throw new Error(`Failed to submit rating: ${error.message}`)
+      throw toUserFacingError(error, 'Could not submit your rating. Please try again.')
     }
 
     const bookingRow: SupabaseBookingRow = data
@@ -181,9 +182,7 @@ export class SupabaseBookingRepository implements BookingRepository {
       .single()
 
     if (error) {
-      throw new Error(
-        `Failed to update booking status for assigned worker: ${error.message}`,
-      )
+      throw toUserFacingError(error, 'Could not update the booking status. Please try again.')
     }
 
     const bookingRow: SupabaseBookingRow = data

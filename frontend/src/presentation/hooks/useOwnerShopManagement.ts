@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import type { ShopService } from '../../application/services/ShopService'
 import type { CreateShopInput, Shop } from '../../domain/models/Shop'
 import { runServiceActionWithToast } from '../utilities/runServiceActionWithToast'
+import { shopRemovalConfirmationText } from '../utilities/shopRemovalCopy'
 
 interface UseOwnerShopManagementOptions {
   readonly ownerIdentifier: string
@@ -84,9 +85,7 @@ export function useOwnerShopManagement({
       const shouldDelete =
         typeof window === 'undefined'
           ? true
-          : window.confirm(
-              `Remove ${shop.name}? Customers will no longer be able to book this shop.`,
-            )
+          : window.confirm(shopRemovalConfirmationText(shop.name))
       if (!shouldDelete) {
         return
       }

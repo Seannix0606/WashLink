@@ -3,9 +3,8 @@ services:
     name: washlink-frontend
     env: static
     branch: main
-    root: frontend
-    buildCommand: npm install && npm run build
-    publishPath: dist
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: frontend/dist
     plan: free
 
   - type: web_service

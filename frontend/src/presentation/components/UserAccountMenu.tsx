@@ -1,12 +1,20 @@
 import type { ReactElement } from 'react'
-import { useEffect, useRef, useState } from 'react'
-import { KeyRound, LogOut, UserCog } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { History, KeyRound, LogOut, UserCog } from 'lucide-react'
 import { useAuthenticatedUser } from '../auth/AuthenticatedUserContext'
 import { Avatar } from '../design/ui'
 import { joinClassNames } from '../design/classNames'
 import { ChangePasswordModal } from './profile/ChangePasswordModal'
 import { ProfileEditorModal } from './profile/ProfileEditorModal'
 import type { ApplicationUserRole } from '../../domain/models/AuthenticatedUser'
+import { createModerationDependencies } from '../dependencyInjection/createModerationDependencies'
+import { activityMenuLabel } from '../utilities/workforceActivityCopy'
+
+// W14: "Your activity" loads only when the person opens it.
+const WorkforceActivityDrawer = lazy(async () => {
+  const activityModule = await import('./account/WorkforceActivityDrawer')
+  return { default: activityModule.WorkforceActivityDrawer }
+})
 
 const roleDisplayLabelByRoleKey: Record<ApplicationUserRole, string> = {
   customer: 'Customer',
@@ -22,6 +30,8 @@ export function UserAccountMenu(): ReactElement | null {
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState<boolean>(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] =
     useState<boolean>(false)
+  const [isActivityOpen, setIsActivityOpen] = useState<boolean>(false)
+  const { workforceActivityService } = useMemo(() => createModerationDependencies(), [])
   const menuContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -121,6 +131,18 @@ export function UserAccountMenu(): ReactElement | null {
           <button
             type="button"
             role="menuitem"
+            onClick={(): void => {
+              setIsMenuOpen(false)
+              setIsActivityOpen(true)
+            }}
+            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-[var(--color-ink-900)] transition-colors hover:bg-[var(--color-surface-muted)]"
+          >
+            <History className="h-4 w-4 text-[var(--color-ink-500)]" />
+            {activityMenuLabel}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
             onClick={handleChangePasswordClicked}
             className="flex w-full items-center gap-2 border-b border-[var(--color-ink-200)] px-4 py-3 text-left text-sm font-medium text-[var(--color-ink-900)] transition-colors hover:bg-[var(--color-surface-muted)]"
           >
@@ -149,6 +171,19 @@ export function UserAccountMenu(): ReactElement | null {
         }}
         authenticatedUser={authenticatedUser}
       />
+
+      {isActivityOpen ? (
+        <Suspense fallback={null}>
+          <WorkforceActivityDrawer
+            isOpen={isActivityOpen}
+            workforceActivityService={workforceActivityService}
+            viewerRole={authenticatedUser.role}
+            onClose={(): void => {
+              setIsActivityOpen(false)
+            }}
+          />
+        </Suspense>
+      ) : null}
 
       {isChangePasswordOpen ? (
         <ChangePasswordModal

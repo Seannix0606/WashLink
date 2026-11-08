@@ -1,0 +1,12 @@
+# W8 - LEGAL_FLAGS (REVIEW step, new items)
+
+All items OPEN, for review by a qualified Philippine labor-law professional. The reviewer is not a lawyer and
+makes no compliance statement. W8-L1..L9 are already in `docs/workforce/LEGAL_REVIEW_REGISTER.md`; the items
+below are new and should be added to the register by RECORD.
+
+| ID | Status | Item for review | Source |
+|---|---|---|---|
+| W8-L10 | OPEN | Three locked clauses are not core (`parties_named`, `safety_terms_need_review`, `customer_data_minimum`): a super_admin can drop them or make them editable in a later platform version through `publish_platform_contract_template_version`, with no migration. Whether these must be mandatory safeguards. | w8d `contract_template_core_safeguard_keys()` (lines 40-46); w8e lines 27, 61, 65 |
+| W8-L11 | OPEN | No locked clause says lawful compensation or reimbursement for the required training is allowed (spec D). "Free to the worker" plus "not productive work" could be read as making training unpaid; the decision is left to the shop's editable `training_details`. How compensation for training should be described (W0-L2, D-7). | w8e `required_training_free_and_supervised`, `training_details` |
+| W8-L12 | OPEN | Editable text can contradict locked clauses: section 4 `classification_reasons` can name a relationship type (e.g. "independent contractor") that differs from the per-contract choice; `dispute_resolution` and `termination_and_notice` can impose forums, notice penalties or exit restrictions; `training_details` can add training costs or clawbacks. `safeguards_prevail` covers only shop terms and attachments, not edited bodies of editable clauses. Whether that precedence wording should cover every owner-written text. | w8e lines 37, 73, 75, 55 |
+| W8-L13 | OPEN | W9 problem-term flagging scope (proposal, for review): training fees, training-cost reimbursement or clawback, deposits, cash bonds, uniform / equipment / damage / shortage deductions, fines or penalties, waivers, quitclaims or releases, exclusivity or non-compete clauses limiting work for other shops, liquidated damages or forfeited pay on leaving, unpaid trial shifts or customer work during training, contractor labels in free text, forum / arbitration clauses, claims that a certificate is government-recognized, and claims that a contract is signed, binding, valid or compliant. What list is adequate is a legal question. | W9 (owner editable and shop-specific text) |

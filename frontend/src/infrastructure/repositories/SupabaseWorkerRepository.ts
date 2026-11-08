@@ -3,6 +3,7 @@ import type { Booking } from '../../domain/models/Booking'
 import type { CreateWorkerInput, Worker } from '../../domain/models/Worker'
 import type { WorkerRepository } from '../../domain/repositories/WorkerRepository'
 import { getSupabaseClient } from '../supabase/supabaseClient'
+import { toUserFacingError, toUserFacingErrorMessage } from '../supabase/supabaseErrorMessages'
 import {
   mapSupabaseBookingRowToBooking,
   supabaseBookingSelectColumns,
@@ -14,17 +15,21 @@ interface SupabaseWorkerRow {
   name: string
   phone_number: string
   is_available: boolean
+  user_id: string | null
 }
+
+// user_id is selected only to derive isLinkedToAccount; it never leaves this repository.
+const workerSelectColumns = 'id, name, phone_number, is_available, user_id'
 
 export class SupabaseWorkerRepository implements WorkerRepository {
   public async fetchWorkersByOwner(ownerIdentifier: string): Promise<Worker[]> {
     const { data, error } = await getSupabaseClient()
       .from('workers')
-      .select('id, name, phone_number, is_available')
+      .select(workerSelectColumns)
       .eq('owner_id', ownerIdentifier)
 
     if (error) {
-      throw new Error(`Failed to fetch workers for owner: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load your workers. Please try again.')
     }
 
     const workerRows: SupabaseWorkerRow[] = data
@@ -34,27 +39,12 @@ export class SupabaseWorkerRepository implements WorkerRepository {
   public async fetchWorkerByIdentifier(workerIdentifier: string): Promise<Worker> {
     const { data, error } = await getSupabaseClient()
       .from('workers')
-      .select('id, name, phone_number, is_available')
+      .select(workerSelectColumns)
       .eq('id', workerIdentifier)
       .single()
 
     if (error) {
-      throw new Error(`Failed to fetch worker profile: ${error.message}`)
-    }
-
-    const workerRow: SupabaseWorkerRow = data
-    return this.mapWorkerRowToWorker(workerRow)
-  }
-
-  public async fetchWorkerByUserIdentifier(workerUserIdentifier: string): Promise<Worker> {
-    const { data, error } = await getSupabaseClient()
-      .from('workers')
-      .select('id, name, phone_number, is_available')
-      .eq('user_id', workerUserIdentifier)
-      .single()
-
-    if (error) {
-      throw new Error(`Failed to fetch worker profile by user identifier: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load the worker profile. Please try again.')
     }
 
     const workerRow: SupabaseWorkerRow = data
@@ -73,11 +63,11 @@ export class SupabaseWorkerRepository implements WorkerRepository {
         phone_number: createWorkerInput.phoneNumber,
         is_available: true,
       })
-      .select('id, name, phone_number, is_available')
+      .select(workerSelectColumns)
       .single()
 
     if (error) {
-      throw new Error(`Failed to create worker: ${error.message}`)
+      throw new Error(toUserFacingErrorMessage(error, 'Could not add this worker.'))
     }
 
     const workerRow: SupabaseWorkerRow = data
@@ -91,7 +81,7 @@ export class SupabaseWorkerRepository implements WorkerRepository {
       .eq('id', workerIdentifier)
 
     if (error) {
-      throw new Error(`Failed to delete worker: ${error.message}`)
+      throw toUserFacingError(error, 'Could not remove this worker. Please try again.')
     }
   }
 
@@ -103,11 +93,11 @@ export class SupabaseWorkerRepository implements WorkerRepository {
       .from('workers')
       .update({ is_available: isAvailableForNewJobs })
       .eq('id', workerIdentifier)
-      .select('id, name, phone_number, is_available')
+      .select(workerSelectColumns)
       .single()
 
     if (error) {
-      throw new Error(`Failed to update worker availability: ${error.message}`)
+      throw toUserFacingError(error, 'Could not update your availability. Please try again.')
     }
 
     const workerRow: SupabaseWorkerRow = data
@@ -126,7 +116,9 @@ export class SupabaseWorkerRepository implements WorkerRepository {
       .single()
 
     if (error) {
-      throw new Error(`Failed to assign worker to booking: ${error.message}`)
+      throw new Error(
+        toUserFacingErrorMessage(error, 'Could not assign this worker to the booking.'),
+      )
     }
 
     const bookingRow: SupabaseBookingRow = data
@@ -168,6 +160,8 @@ export class SupabaseWorkerRepository implements WorkerRepository {
       workerName: workerRow.name,
       workerPhoneNumber: workerRow.phone_number,
       isAvailable: workerRow.is_available,
+      isLinkedToAccount:
+        typeof workerRow.user_id === 'string' && workerRow.user_id.length > 0,
     }
   }
 }

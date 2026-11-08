@@ -12,8 +12,20 @@ interface OwnerDashboardPageProps {
 export function OwnerDashboardPage({
   ownerIdentifier,
 }: OwnerDashboardPageProps): ReactElement {
-  const { bookingService, workerService, shopService, shopVerificationService } =
-    useMemo(
+  const {
+    bookingService,
+    workerService,
+    shopService,
+    shopVerificationService,
+    rosterLinkService,
+    jobOpeningService,
+    applicantPipelineService,
+    trainingDependencies,
+    certificationDependencies,
+    contractTemplateDependencies,
+    workerContractDependencies,
+    oversightDependencies,
+  } = useMemo(
       () => createDashboardDependencies(ownerIdentifier),
       [ownerIdentifier],
     )
@@ -35,6 +47,14 @@ export function OwnerDashboardPage({
       workerService={workerService}
       shopService={shopService}
       shopVerificationService={shopVerificationService}
+      rosterLinkService={rosterLinkService}
+      jobOpeningService={jobOpeningService}
+      applicantPipelineService={applicantPipelineService}
+      trainingDependencies={trainingDependencies}
+      certificationDependencies={certificationDependencies}
+      contractTemplateDependencies={contractTemplateDependencies}
+      workerContractDependencies={workerContractDependencies}
+      oversightDependencies={oversightDependencies}
       ownerShopList={ownerShopList}
       onOwnerShopListChanged={setOwnerShopList}
     />

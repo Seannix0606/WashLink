@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
 import { Plus, UserCircle2, Users } from 'lucide-react'
+import type { RosterLinkService } from '../../../application/services/RosterLinkService'
 import type { WorkerService } from '../../../application/services/WorkerService'
 import type { Worker } from '../../../domain/models/Worker'
 import { Button, Card, EmptyState } from '../../design/ui'
@@ -11,6 +12,7 @@ import { OwnerWorkerListItem } from './OwnerWorkerListItem'
 interface OwnerWorkersPanelProps {
   readonly ownerIdentifier: string
   readonly workerService: WorkerService
+  readonly rosterLinkService: RosterLinkService
   readonly workers: readonly Worker[]
   readonly onWorkersChanged: (nextWorkers: Worker[]) => void
 }
@@ -18,6 +20,7 @@ interface OwnerWorkersPanelProps {
 export function OwnerWorkersPanel({
   ownerIdentifier,
   workerService,
+  rosterLinkService,
   workers,
   onWorkersChanged,
 }: OwnerWorkersPanelProps): ReactElement {
@@ -44,7 +47,7 @@ export function OwnerWorkersPanel({
             My team
           </h2>
           <p className="mt-0.5 text-xs text-[var(--color-ink-500)]">
-            Workers assignable to your bookings.
+            Workers assignable to your bookings. A worker links their own account with a one-time code.
           </p>
         </div>
         {!isAddingWorker ? (
@@ -90,6 +93,7 @@ export function OwnerWorkersPanel({
             <OwnerWorkerListItem
               key={worker.workerIdentifier}
               worker={worker}
+              rosterLinkService={rosterLinkService}
               isDeleting={
                 deletingWorkerIdentifier === worker.workerIdentifier
               }

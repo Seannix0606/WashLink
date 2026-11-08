@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { MapPin, Phone, PowerOff, Settings2, Trash2 } from 'lucide-react'
 import type { Shop } from '../../../domain/models/Shop'
 import { Badge, Button } from '../../design/ui'
+import { approvedShopIdentityChangeWarning } from '../../utilities/shopVerificationDisplay'
 
 interface OwnerShopListItemProps {
   readonly shop: Shop
@@ -43,6 +44,11 @@ export function OwnerShopListItem({
             </span>
           ) : null}
         </div>
+        {shop.verificationStatus === 'approved' ? (
+          <p className="mt-1 text-xs text-[var(--color-ink-500)]">
+            {approvedShopIdentityChangeWarning}
+          </p>
+        ) : null}
       </div>
       <div className="flex items-center gap-2">
         <Button

@@ -20,6 +20,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
 ): ReactElement {
   const hasErrorText = typeof errorText === 'string' && errorText.length > 0
   const controlId = id ?? selectHtmlAttributes.name
+  const hasDescriptionText = hasErrorText || (typeof helperText === 'string' && helperText.length > 0)
+  const descriptionId =
+    hasDescriptionText && controlId !== undefined ? `${controlId}-description` : undefined
 
   return (
     <label className="block space-y-1.5" htmlFor={controlId}>
@@ -36,6 +39,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         id={controlId}
         ref={forwardedRef}
         required={required}
+        aria-invalid={hasErrorText || undefined}
+        aria-describedby={descriptionId}
         className={joinClassNames(
           'h-11 w-full rounded-[var(--radius-control)] border bg-white px-3 text-sm text-[var(--color-ink-900)] outline-none',
           'transition-colors focus:border-[var(--color-brand-600)]',
@@ -54,9 +59,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       </select>
 
       {hasErrorText ? (
-        <p className="text-xs text-[var(--color-danger-500)]">{errorText}</p>
+        <p id={descriptionId} className="text-xs text-[var(--color-danger-500)]">
+          {errorText}
+        </p>
       ) : helperText ? (
-        <p className="text-xs text-[var(--color-ink-500)]">{helperText}</p>
+        <p id={descriptionId} className="text-xs text-[var(--color-ink-500)]">
+          {helperText}
+        </p>
       ) : null}
     </label>
   )

@@ -1,17 +1,37 @@
+import { ApplicantPipelineService } from '../../application/services/ApplicantPipelineService'
 import { BookingService } from '../../application/services/BookingService'
+import { JobOpeningService } from '../../application/services/JobOpeningService'
+import { RosterLinkService } from '../../application/services/RosterLinkService'
 import { ShopService } from '../../application/services/ShopService'
 import { ShopVerificationService } from '../../application/services/ShopVerificationService'
 import { WorkerService } from '../../application/services/WorkerService'
+import { SupabaseApplicantPipelineRepository } from '../../infrastructure/repositories/SupabaseApplicantPipelineRepository'
 import { SupabaseBookingRepository } from '../../infrastructure/repositories/SupabaseBookingRepository'
+import { SupabaseJobOpeningRepository } from '../../infrastructure/repositories/SupabaseJobOpeningRepository'
+import { SupabaseRosterLinkRepository } from '../../infrastructure/repositories/SupabaseRosterLinkRepository'
 import { SupabaseShopRepository } from '../../infrastructure/repositories/SupabaseShopRepository'
 import { SupabaseShopVerificationRepository } from '../../infrastructure/repositories/SupabaseShopVerificationRepository'
 import { SupabaseWorkerRepository } from '../../infrastructure/repositories/SupabaseWorkerRepository'
+import { createCertificationDependencies, type CertificationDependencies } from './createCertificationDependencies'
+import { createContractTemplateDependencies, type ContractTemplateDependencies } from './createContractTemplateDependencies'
+import { createOversightDependencies, type OversightDependencies } from './createOversightDependencies'
+import { createTrainingDependencies, type TrainingDependencies } from './createTrainingDependencies'
+import { createWorkerContractDependencies, type WorkerContractDependencies } from './createWorkerContractDependencies'
 
 interface DashboardDependencies {
   bookingService: BookingService
   workerService: WorkerService
   shopService: ShopService
   shopVerificationService: ShopVerificationService
+  rosterLinkService: RosterLinkService
+  jobOpeningService: JobOpeningService
+  applicantPipelineService: ApplicantPipelineService
+  trainingDependencies: TrainingDependencies
+  certificationDependencies: CertificationDependencies
+  contractTemplateDependencies: ContractTemplateDependencies
+  workerContractDependencies: WorkerContractDependencies
+  /** W11: next actions, workforce counts, WashLink reviews and reported contract problems. */
+  oversightDependencies: OversightDependencies
   ownerIdentifier: string
 }
 
@@ -32,12 +52,29 @@ export function createDashboardDependencies(
   const shopVerificationService = new ShopVerificationService(
     supabaseShopVerificationRepository,
   )
+  const rosterLinkService = new RosterLinkService(
+    new SupabaseRosterLinkRepository(),
+  )
+  const jobOpeningService = new JobOpeningService(
+    new SupabaseJobOpeningRepository(),
+  )
+  const applicantPipelineService = new ApplicantPipelineService(
+    new SupabaseApplicantPipelineRepository(),
+  )
 
   return {
     bookingService,
     workerService,
     shopService,
     shopVerificationService,
+    rosterLinkService,
+    jobOpeningService,
+    applicantPipelineService,
+    trainingDependencies: createTrainingDependencies(),
+    certificationDependencies: createCertificationDependencies(),
+    contractTemplateDependencies: createContractTemplateDependencies(),
+    workerContractDependencies: createWorkerContractDependencies(),
+    oversightDependencies: createOversightDependencies(),
     ownerIdentifier,
   }
 }

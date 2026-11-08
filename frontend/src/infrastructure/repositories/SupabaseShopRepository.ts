@@ -11,6 +11,7 @@ import {
 } from '../supabase/supabaseShopPricing'
 import type { ShopRepository } from '../../domain/repositories/ShopRepository'
 import { getSupabaseClient } from '../supabase/supabaseClient'
+import { toUserFacingError } from '../supabase/supabaseErrorMessages'
 
 interface SupabaseShopRow {
   id: string
@@ -54,7 +55,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .order('name', { ascending: true })
 
     if (error) {
-      throw new Error(`Failed to list active shops: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load shops. Please try again.')
     }
 
     const shopRows: SupabaseShopRow[] = data
@@ -73,7 +74,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .order('created_at', { ascending: true })
 
     if (error) {
-      throw new Error(`Failed to list shops for review: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load shops for review. Please try again.')
     }
 
     const shopRows: SupabaseShopRow[] = data
@@ -87,7 +88,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .order('created_at', { ascending: false })
 
     if (error) {
-      throw new Error(`Failed to list shops: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load shops. Please try again.')
     }
 
     const shopRows: SupabaseShopRow[] = data
@@ -107,7 +108,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .in('id', shopIdentifiers as string[])
 
     if (error) {
-      throw new Error(`Failed to fetch shops by identifiers: ${error.message}`)
+      throw toUserFacingError(error, 'Could not load shop details. Please try again.')
     }
 
     const shopRows: SupabaseShopRow[] = data
@@ -124,9 +125,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .order('created_at', { ascending: false })
 
     if (error) {
-      throw new Error(
-        `Failed to list shops for owner: ${error.message}`,
-      )
+      throw toUserFacingError(error, 'Could not load your shops. Please try again.')
     }
 
     const shopRows: SupabaseShopRow[] = data
@@ -151,7 +150,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .single()
 
     if (error) {
-      throw new Error(`Failed to create shop: ${error.message}`)
+      throw toUserFacingError(error, 'Could not create the shop. Please try again.')
     }
 
     return mapSupabaseShopRowToShop(data as SupabaseShopRow)
@@ -189,7 +188,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .single()
 
     if (error) {
-      throw new Error(`Failed to update shop: ${error.message}`)
+      throw toUserFacingError(error, 'Could not update the shop. Please try again.')
     }
 
     return mapSupabaseShopRowToShop(data as SupabaseShopRow)
@@ -213,7 +212,7 @@ export class SupabaseShopRepository implements ShopRepository {
       })
 
     if (savePricingError) {
-      throw new Error(`Failed to save shop pricing: ${savePricingError.message}`)
+      throw toUserFacingError(savePricingError, 'Could not save shop pricing. Please try again.')
     }
 
     const { data, error: fetchShopError } = await getSupabaseClient()
@@ -223,9 +222,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .single()
 
     if (fetchShopError) {
-      throw new Error(
-        `Pricing was saved, but the shop could not be refreshed: ${fetchShopError.message}`,
-      )
+      throw toUserFacingError(fetchShopError, 'Pricing was saved, but the shop could not be refreshed. Reload the page.')
     }
 
     return mapSupabaseShopRowToShop(data as SupabaseShopRow)
@@ -238,7 +235,7 @@ export class SupabaseShopRepository implements ShopRepository {
       .eq('id', shopIdentifier)
 
     if (error) {
-      throw new Error(`Failed to delete shop: ${error.message}`)
+      throw toUserFacingError(error, 'Could not delete the shop. Please try again.')
     }
   }
 }

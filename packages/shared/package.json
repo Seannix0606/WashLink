@@ -1,0 +1,8 @@
+{
+  "name": "@washlink/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Platform-neutral WashLink rules shared by the web and mobile apps. No DOM, no React, no runtime dependencies.",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

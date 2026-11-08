@@ -40,3 +40,15 @@ export async function reverseGeocodeApi(
     longitude: Number(parsedResponse.lon),
   }
 }
+
+/** Forward search for the booking map. Provider usage limits apply: docs/b2c/OPERATIONS.md. */
+export async function searchAddressApi(query: string): Promise<ReverseGeocodeApiResult | null> {
+  const requestUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ph&q=${encodeURIComponent(query)}`
+  const response = await fetchJson<unknown>(requestUrl)
+  const first = Array.isArray(response) ? (response[0] as unknown) : undefined
+  if (first === undefined) {
+    return null
+  }
+  const parsed = ReverseGeocodeResponseSchema.parse(first)
+  return { displayAddress: parsed.display_name, latitude: Number(parsed.lat), longitude: Number(parsed.lon) }
+}
