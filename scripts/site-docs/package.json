@@ -1,0 +1,12 @@
+{
+  "name": "washlink-site-docs",
+  "private": true,
+  "description": "Screenshot tooling for docs/site. See docs/site/README.md.",
+  "type": "module",
+  "scripts": {
+    "capture": "node capture.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
