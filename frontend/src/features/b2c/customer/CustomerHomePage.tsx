@@ -1,9 +1,9 @@
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { CarFront } from 'lucide-react'
-import { isActiveServiceBooking, type CustomerBooking } from '@washlink/shared'
+import { isActiveServiceBooking, serviceBookingStatusGroup, type CustomerBooking, type ServiceBookingStatusGroup } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
-import { Button, EmptyState, Skeleton, Tabs } from '../../../presentation/design/ui'
+import { Button, EmptyState, Section, Skeleton, Tabs } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { DeleteAccountSection } from '../DeleteAccountSection'
@@ -22,6 +22,26 @@ const tabItems = [
 
 interface CustomerHomePageProps {
   readonly customerId: string
+}
+
+interface BookingGroup {
+  readonly title: string
+  readonly description: string
+  readonly items: readonly CustomerBooking[]
+}
+
+const byTimeAscending = (first: CustomerBooking, second: CustomerBooking): number => Date.parse(first.scheduledAt) - Date.parse(second.scheduledAt)
+
+/** Bookings split by what they need from the customer, so each kind reads as its own block. Empty groups are left out. */
+function bookingGroups(bookings: readonly CustomerBooking[]): readonly BookingGroup[] {
+  const inGroup = (groups: readonly ServiceBookingStatusGroup[]): CustomerBooking[] =>
+    bookings.filter((booking) => groups.includes(serviceBookingStatusGroup[booking.status]))
+  return [
+    { title: 'Needs action', description: 'No washer accepted these in time.', items: inGroup(['action']).sort(byTimeAscending) },
+    { title: 'In progress', description: 'Your washer is on the way or washing.', items: inGroup(['moving', 'washing']).sort(byTimeAscending) },
+    { title: 'Upcoming', description: 'Booked and waiting for the day.', items: inGroup(['waiting', 'confirmed']).sort(byTimeAscending) },
+    { title: 'Past', description: 'Completed, cancelled and expired.', items: inGroup(['done', 'stopped']).sort((first, second) => byTimeAscending(second, first)) },
+  ].filter((group) => group.items.length > 0)
 }
 
 export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactElement {
@@ -115,13 +135,22 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
                 Book a car wash
               </Button>
             </section>
-            <section aria-labelledby="active-title" className="space-y-3">
-              <h2 id="active-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Current bookings</h2>
+            <Section title="Current bookings" count={bookings === null ? undefined : active.length}>
               {list(active, 'No current bookings')}
-            </section>
+            </Section>
           </>
         ) : null}
-        {tab === 'bookings' ? list(bookings ?? [], 'No bookings yet') : null}
+        {tab === 'bookings' ? (
+          bookings === null || bookings.length === 0 ? list(bookings ?? [], 'No bookings yet') : (
+            <div className="space-y-5">
+              {bookingGroups(bookings).map((group) => (
+                <Section key={group.title} title={group.title} count={group.items.length} description={group.description}>
+                  {list(group.items, '')}
+                </Section>
+              ))}
+            </div>
+          )
+        ) : null}
         {tab === 'saved' ? <SavedDetailsPanel customerId={customerId} /> : null}
         {tab === 'account' ? <DeleteAccountSection /> : null}
       </main>

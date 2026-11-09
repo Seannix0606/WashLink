@@ -9,7 +9,7 @@ import {
   type SavedVehicle,
   type VehicleCategory,
 } from '@washlink/shared'
-import { Button, Card, EmptyState, IconButton, Input, Select, Skeleton } from '../../../presentation/design/ui'
+import { Button, Card, EmptyState, IconButton, Input, Section, Select, Skeleton } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { vehicleCategoryOptions } from './vehicleCategoryOptions'
 
@@ -68,9 +68,8 @@ export function SavedDetailsPanel({ customerId }: SavedDetailsPanelProps): React
   }
 
   return (
-    <div className="space-y-6">
-      <section aria-labelledby="vehicles-title" className="space-y-3">
-        <h2 id="vehicles-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Vehicles</h2>
+    <div className="space-y-5">
+      <Section title="Vehicles" count={vehicles?.length}>
         {vehicles === null ? <Skeleton heightClassName="h-16" /> : null}
         {vehicles?.length === 0 ? <EmptyState title="No saved vehicles" description="Add one below to book faster." /> : null}
         {vehicles?.map((vehicle) => (
@@ -80,16 +79,17 @@ export function SavedDetailsPanel({ customerId }: SavedDetailsPanelProps): React
               onClick={(): void => void remove(() => getB2cApi().deleteVehicle(vehicle.id))} />
           </Card>
         ))}
-        <form onSubmit={(event): void => void addVehicle(event)} noValidate className="grid gap-3 sm:grid-cols-3">
+        <form onSubmit={(event): void => void addVehicle(event)} noValidate aria-label="Add a vehicle"
+          className="grid gap-3 rounded-[var(--radius-control)] border border-dashed border-[var(--color-card-border)] bg-[var(--color-card)] p-3 sm:grid-cols-3">
+          <p className="text-sm font-semibold text-[var(--color-ink-900)] sm:col-span-3">Add a vehicle</p>
           <Select label="Type" options={vehicleCategoryOptions} value={category} onChange={(event): void => { setCategory(event.target.value as VehicleCategory) }} />
           <Input label="Make" value={make} onChange={(event): void => { setMake(event.target.value) }} />
           <Input label="Model" value={model} onChange={(event): void => { setModel(event.target.value) }} />
           {formError !== null ? <p role="alert" className="text-sm text-[var(--color-danger-600)] sm:col-span-3">{formError}</p> : null}
           <div className="sm:col-span-3"><Button type="submit" variant="secondary">Add vehicle</Button></div>
         </form>
-      </section>
-      <section aria-labelledby="addresses-title" className="space-y-3">
-        <h2 id="addresses-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Addresses</h2>
+      </Section>
+      <Section title="Addresses" count={addresses?.length} description="Saved from the booking map with Save this address.">
         {addresses === null ? <Skeleton heightClassName="h-16" /> : null}
         {addresses?.length === 0 ? <EmptyState title="No saved addresses" description="Choose Save this address when you pin a location during booking." /> : null}
         {addresses?.map((address) => (
@@ -99,7 +99,7 @@ export function SavedDetailsPanel({ customerId }: SavedDetailsPanelProps): React
               onClick={(): void => void remove(() => getB2cApi().deleteAddress(address.id))} />
           </Card>
         ))}
-      </section>
+      </Section>
     </div>
   )
 }

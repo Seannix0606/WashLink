@@ -2,14 +2,16 @@ import type { ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { WorkerDocumentOverview } from '@washlink/shared'
-import { formatManilaDateTime, formatPesos } from '@washlink/shared'
-import { Badge, Button, Card, Input, Select, Skeleton } from '../../../presentation/design/ui'
+import { formatManilaDateTime, formatPesos, serviceBookingStatuses, type ServiceBookingStatus } from '@washlink/shared'
+import { Badge, Button, Card, Input, Section, Select, Skeleton, StatusPill, statusEdgeStyle } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { AdminCancelBookingControl } from './AdminCancelBookingControl'
 import { addonKey } from './addonKey'
 import { WasherVerificationCard } from './WasherVerificationCard'
 
 type Row = Record<string, unknown>
+const asStatus = (value: unknown): ServiceBookingStatus | null =>
+  serviceBookingStatuses.find((status) => status === value) ?? null
 const text = (value: unknown): string => (typeof value === 'string' ? value : typeof value === 'number' || typeof value === 'boolean' ? String(value) : '')
 const num = (value: unknown): number => Number(value ?? 0)
 const pesos = (cents: unknown): string => formatPesos(num(cents))
@@ -111,8 +113,7 @@ export function B2cOperationsPanel(): ReactElement {
       </dl>
       <p className="text-xs text-[var(--color-ink-500)]">Money figures are expected cash totals from completed bookings. WashLink does not yet confirm cash collection.</p>
 
-      <section aria-labelledby="prices-title" className="space-y-3">
-        <h2 id="prices-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Services and prices</h2>
+      <Section title="Services and prices" description="Draft prices can't be booked. Hidden items stay saved but customers don't see them.">
         <CommissionForm bps={num(settings.commission_bps)} onSave={(bps): void => void run(() => saveRules({ commissionBps: bps }), 'Commission saved')} />
         {services.map((service) => (
           <PriceRow key={text(service.id)} name={text(service.name)} cents={num(service.base_price_cents)} isDraft={service.price_is_draft === true} isActive={service.is_active === true}
@@ -133,10 +134,9 @@ export function B2cOperationsPanel(): ReactElement {
             p_id: null, p_key: addonKey(addon.name), p_name: addon.name, p_description: addon.description, p_price_cents: addon.priceCents,
             p_duration_minutes: addon.minutes, p_is_active: true, p_price_is_draft: false, p_sort_order: addon.sortOrder,
           }), 'Add-on added')} />
-      </section>
+      </Section>
 
-      <section aria-labelledby="workers-title" className="space-y-3">
-        <h2 id="workers-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Washers</h2>
+      <Section title="Washers" count={workers.length}>
         {overview !== null ? (
           <div className="space-y-1 text-sm text-[var(--color-ink-700)]">
             <p>Documents to review: <span className="font-semibold tabular-nums">{overview.documentsToReview}</span></p>
@@ -146,22 +146,27 @@ export function B2cOperationsPanel(): ReactElement {
         ) : null}
         {workers.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No washers have signed up yet.</p> : null}
         {workers.map((worker) => <WasherVerificationCard key={text(worker.profile_id)} worker={worker} isPlatformOperator={operatorIds.has(text(worker.profile_id))} runAction={run} onChanged={refresh} />)}
-      </section>
+      </Section>
 
-      <section aria-labelledby="bookings-title" className="space-y-3">
-        <h2 id="bookings-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Bookings</h2>
+      <Section title="Bookings" count={bookings.length}>
         <Select label="Show" options={statusFilter} value={filter} onChange={(event): void => { setFilter(event.target.value) }} />
         {bookings.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No bookings to show.</p> : null}
-        {bookings.map((booking) => (
-          <Card key={text(booking.booking_id)} className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm">
-            <div>
-              <p className="font-medium text-[var(--color-ink-900)]">{text(booking.reference)} · {text(booking.service_name)} · {pesos(booking.customer_total_cents)}</p>
-              <p className="text-[var(--color-ink-700)]">{text(booking.status).replaceAll('_', ' ')} · {text(booking.customer_name)} · washer: {text(booking.worker_name) || 'none'} · {text(booking.open_offers)} open requests</p>
+        {bookings.map((booking) => {
+          const status = asStatus(booking.status)
+          return (
+          <Card key={text(booking.booking_id)} className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm" style={status === null ? undefined : statusEdgeStyle(status)}>
+            <div className="space-y-1">
+              <p className="flex flex-wrap items-center gap-2 font-medium text-[var(--color-ink-900)]">
+                {text(booking.reference)} · {text(booking.service_name)} · {pesos(booking.customer_total_cents)}
+                {status === null ? <span className="text-[var(--color-ink-500)]">{text(booking.status)}</span> : <StatusPill status={status} />}
+              </p>
+              <p className="text-[var(--color-ink-700)]">{text(booking.customer_name)} · washer: {text(booking.worker_name) || 'none'} · {text(booking.open_offers)} open requests</p>
             </div>
             <Button size="sm" variant="secondary" onClick={(): void => { getB2cApi().adminBookingCase(text(booking.booking_id)).then(setCaseData).catch((caught: unknown) => { toast.error(errorMessage(caught)) }) }}>Open case</Button>
             {booking.status === 'arrived' || booking.status === 'in_progress' ? <AdminCancelBookingControl bookingId={text(booking.booking_id)} onCancelled={refresh} /> : null}
           </Card>
-        ))}
+          )
+        })}
         {caseData !== null ? (
           <Card className="space-y-2 p-4 text-sm">
             <h3 className="font-semibold text-[var(--color-ink-900)]">Booking history</h3>
@@ -175,7 +180,7 @@ export function B2cOperationsPanel(): ReactElement {
             <Button size="sm" variant="ghost" onClick={(): void => { setCaseData(null) }}>Close case</Button>
           </Card>
         ) : null}
-      </section>
+      </Section>
     </div>
   )
 }

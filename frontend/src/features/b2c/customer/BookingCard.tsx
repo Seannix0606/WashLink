@@ -8,10 +8,9 @@ import {
   customerOverdueCancelNotice,
   formatManilaDateTime,
   formatPesos,
-  serviceBookingStatusLabel,
   type CustomerBooking,
 } from '@washlink/shared'
-import { Badge, Button, Card } from '../../../presentation/design/ui'
+import { Button, Card, StatusPill, statusEdgeStyle } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { useCurrentTime } from '../useCurrentTime'
 
@@ -41,12 +40,10 @@ export function BookingCard({ booking, onChanged }: BookingCardProps): ReactElem
   }
 
   return (
-    <Card className="space-y-3 p-4">
+    <Card className="space-y-3 p-4" style={statusEdgeStyle(booking.status)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold text-[var(--color-ink-900)]">{booking.serviceName}</h3>
-        <Badge tone={booking.status === 'completed' ? 'success' : booking.status === 'no_worker_available' ? 'warning' : 'info'}>
-          {serviceBookingStatusLabel[booking.status]}
-        </Badge>
+        <StatusPill status={booking.status} />
       </div>
       <dl className="grid gap-1 text-sm text-[var(--color-ink-700)]">
         <div>{booking.isImmediate ? 'As soon as possible' : formatManilaDateTime(booking.scheduledAt)}</div>

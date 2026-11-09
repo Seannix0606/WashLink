@@ -11,12 +11,13 @@ import { StepReview } from './customer/wizard/StepReview'
 import { StepService } from './customer/wizard/StepService'
 import { B2cOperationsPanel } from './admin/B2cOperationsPanel'
 import { IndependentWorkerPage } from './worker/IndependentWorkerPage'
+import { CustomerHomePage } from './customer/CustomerHomePage'
 import type { WizardDraft } from './customer/wizard/BookingWizard'
 
 const api = vi.hoisted(() => ({
   acceptRequest: vi.fn(), declineRequest: vi.fn(), advanceBooking: vi.fn(), operatorCancelBooking: vi.fn(), releaseBooking: vi.fn(), cancelBooking: vi.fn(), reviewBooking: vi.fn(), quote: vi.fn(),
   createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(), adminPlatformOperatorIds: vi.fn(), adminSaveAddon: vi.fn(), adminSaveService: vi.fn(),
-  workerAccount: vi.fn(), dispatchRequests: vi.fn(), assignedBookings: vi.fn(), workerSummary: vi.fn(), workerReviews: vi.fn(),
+  workerAccount: vi.fn(), myBookings: vi.fn(), dispatchRequests: vi.fn(), assignedBookings: vi.fn(), workerSummary: vi.fn(), workerReviews: vi.fn(),
 }))
 vi.mock('./b2cApiClient', () => ({ getB2cApi: (): unknown => api, errorMessage: (error: Error): string => error.message }))
 vi.mock('../../presentation/components/shared/LocationPickerMap', () => ({ LocationPickerMap: (): ReactElement => <div data-testid="map" /> }))
@@ -399,5 +400,31 @@ describe('admin panel', () => {
       expect(await screen.findByText('This booking can no longer be cancelled here.')).toBeInTheDocument()
       expect(screen.getByLabelText(/Reason for cancelling/)).toBeInTheDocument()
     })
+  })
+})
+
+describe('customer bookings grouped by what they need', () => {
+  const base = {
+    reference: 'WL-1', serviceName: 'Full Wash', addonNames: [], vehicleCategory: 'sedan', vehicleMake: 'Toyota', vehicleModel: 'Vios',
+    address: '12 Ayala Avenue', isImmediate: false, durationMinutes: 75, customerTotalCents: 45000, paymentMethod: 'cash', paymentStatus: 'unpaid',
+    workerName: '', workerPhone: null, hasReview: false,
+  }
+  const booking = (id: string, status: string, scheduledAt: string): CustomerBooking => ({ ...base, id, status, scheduledAt } as unknown as CustomerBooking)
+
+  it('shows Needs action, In progress, Upcoming and Past as separate sections, and leaves out empty ones', async () => {
+    api.myBookings.mockResolvedValue([
+      booking('b1', 'no_worker_available', '2026-11-17T01:00:00Z'),
+      booking('b2', 'in_progress', '2026-11-13T01:00:00Z'),
+      booking('b3', 'accepted', '2026-11-16T01:00:00Z'),
+      booking('b4', 'searching_for_worker', '2026-11-15T01:00:00Z'),
+      booking('b5', 'completed', '2026-11-08T01:00:00Z'),
+    ])
+    render(<CustomerHomePage customerId="c1" />)
+    await userEvent.click(screen.getByRole('tab', { name: 'Bookings' }))
+    const headings = await screen.findAllByRole('heading', { level: 2 })
+    expect(headings.map((heading) => heading.textContent)).toEqual(['Needs action1', 'In progress1', 'Upcoming2', 'Past1'])
+    const upcoming = screen.getByRole('region', { name: /Upcoming/ })
+    const upcomingText = upcoming.textContent
+    expect(upcomingText.indexOf('Finding a washer')).toBeLessThan(upcomingText.indexOf('Washer confirmed'))
   })
 })

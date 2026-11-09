@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import type { AssignedBooking, B2cApi, DispatchRequest, WorkerAccount, WorkerSummary } from '@washlink/shared'
 import { formatPesos, terminalServiceBookingStatuses, workerPausedNotice } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
-import { Badge, Button, Card, Skeleton, Tabs } from '../../../presentation/design/ui'
+import { Button, Card, Section, Skeleton, StatusPill, Tabs, statusEdgeStyle } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { DeleteAccountSection } from '../DeleteAccountSection'
@@ -93,7 +93,9 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
     }
   }
 
+  // Soonest first, so the next job is on top (the server sends newest first).
   const activeJobs = jobs.filter((job) => !terminalServiceBookingStatuses.includes(job.status))
+    .sort((first, second) => Date.parse(first.scheduledAt) - Date.parse(second.scheduledAt))
   const pastJobs = jobs.filter((job) => terminalServiceBookingStatuses.includes(job.status))
   const pausedNotice = account ? workerPausedNotice(account.verificationStatus, activeJobs.length) : null
 
@@ -125,16 +127,14 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
             <Tabs accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />
             {tab === 'work' ? (
               <div className="space-y-5">
-                <section aria-labelledby="requests-title" className="space-y-3">
-                  <h2 id="requests-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Booking requests</h2>
+                <Section title="Booking requests" count={requests.length} description="New bookings waiting for you to accept or decline.">
                   {requests.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No requests right now.</p> : null}
                   {requests.map((request) => <RequestCard key={request.id} request={request} onChanged={refresh} />)}
-                </section>
-                <section aria-labelledby="jobs-title" className="space-y-3">
-                  <h2 id="jobs-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Your bookings</h2>
+                </Section>
+                <Section title="Your bookings" count={activeJobs.length} description="Accepted jobs, soonest first.">
                   {activeJobs.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No accepted bookings.</p> : null}
                   {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} />)}
-                </section>
+                </Section>
               </div>
             ) : null}
             {tab === 'history' ? (
@@ -144,26 +144,27 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
                   <Card className="p-4"><p className="text-xs text-[var(--color-ink-500)]">Completed</p><p className="text-xl font-semibold tabular-nums">{summary?.completedCount ?? 0}</p></Card>
                   <Card className="p-4"><p className="text-xs text-[var(--color-ink-500)]">Rating</p><p className="text-xl font-semibold tabular-nums">{summary?.averageRating ?? 'None yet'}</p></Card>
                 </div>
-                <ul className="space-y-2">
-                  {pastJobs.map((job) => (
-                    <li key={job.id}>
-                      <Card className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-                        <span>{job.serviceName} · {job.reference}</span>
-                        <span className="flex items-center gap-2 tabular-nums">{formatPesos(job.workerEarningsCents)}<Badge tone={job.status === 'completed' ? 'success' : 'neutral'}>{job.status === 'completed' ? 'Completed' : 'Cancelled'}</Badge></span>
-                      </Card>
-                    </li>
-                  ))}
-                  {pastJobs.length === 0 ? <li className="text-sm text-[var(--color-ink-700)]">No past bookings yet.</li> : null}
-                </ul>
-                <section aria-labelledby="reviews-title" className="space-y-2">
-                  <h2 id="reviews-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Reviews</h2>
+                <Section title="Past bookings" count={pastJobs.length}>
+                  <ul className="space-y-2">
+                    {pastJobs.map((job) => (
+                      <li key={job.id}>
+                        <Card className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm" style={statusEdgeStyle(job.status)}>
+                          <span>{job.serviceName} · {job.reference}</span>
+                          <span className="flex items-center gap-2 tabular-nums">{formatPesos(job.workerEarningsCents)}<StatusPill status={job.status} /></span>
+                        </Card>
+                      </li>
+                    ))}
+                    {pastJobs.length === 0 ? <li className="text-sm text-[var(--color-ink-700)]">No past bookings yet.</li> : null}
+                  </ul>
+                </Section>
+                <Section title="Reviews" count={reviews.length}>
                   {reviews.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No reviews yet.</p> : null}
                   {reviews.map((review) => (
                     <Card key={review.createdAt} className="p-3 text-sm text-[var(--color-ink-900)]">
                       <span className="font-medium tabular-nums">{review.rating} out of 5</span>{review.comment !== '' ? `: ${review.comment}` : ''}
                     </Card>
                   ))}
-                </section>
+                </Section>
               </div>
             ) : null}
             {tab === 'setup' ? (

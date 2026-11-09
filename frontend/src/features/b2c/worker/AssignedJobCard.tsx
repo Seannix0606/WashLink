@@ -9,12 +9,11 @@ import {
   formatPesos,
   nextWorkerActionLabel,
   nextWorkerStatus,
-  serviceBookingStatusLabel,
   vehicleCategoryLabel,
   workerEarlyStepNotice,
   type AssignedBooking,
 } from '@washlink/shared'
-import { Badge, Button, Card, Input } from '../../../presentation/design/ui'
+import { Button, Card, Input, StatusPill, statusEdgeStyle } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { useCurrentTime } from '../useCurrentTime'
 
@@ -69,10 +68,10 @@ export function AssignedJobCard({ job, isPaused = false, canCancel = false, onCh
 
   const actionLabel = nextWorkerActionLabel[job.status]
   return (
-    <Card className="space-y-3 p-4">
+    <Card className="space-y-3 p-4" style={statusEdgeStyle(job.status)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold text-[var(--color-ink-900)]">{job.serviceName}</h3>
-        <Badge tone="info">{serviceBookingStatusLabel[job.status]}</Badge>
+        <StatusPill status={job.status} />
       </div>
       <div className="space-y-1 text-sm text-[var(--color-ink-700)]">
         <p>{formatManilaDateTime(job.scheduledAt)} · about {job.durationMinutes} min</p>

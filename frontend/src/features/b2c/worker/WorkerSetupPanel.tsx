@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { CatalogService, WorkerAccount } from '@washlink/shared'
 import { LocationPickerMap, type PickedLocationValue } from '../../../presentation/components/shared/LocationPickerMap'
-import { Button, Card, Input, Select } from '../../../presentation/design/ui'
+import { Button, Input, Section, Select } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+/** Shown Monday first, like the calendar; the stored weekday numbers stay Sunday = 0. */
+const mondayFirst = [1, 2, 3, 4, 5, 6, 0]
 const hourOptions = Array.from({ length: 25 }, (_unused, hour) => ({ value: String(hour * 60), label: `${String(hour).padStart(2, '0')}:00` }))
 
 interface DayHours {
@@ -85,19 +87,15 @@ export function WorkerSetupPanel({ workerId, account, onSaved }: WorkerSetupPane
 
   return (
     <div className="space-y-5">
-      <Card className="space-y-3 p-4">
-        <h2 className="font-semibold text-[var(--color-ink-900)]">About you</h2>
+      <Section title="About you">
         <Input label="Short bio" value={bio} maxLength={500} onChange={(event): void => { setBio(event.target.value) }} />
         <Input label="Skills and experience" helperText="Separate with commas." value={skills} onChange={(event): void => { setSkills(event.target.value) }} />
-      </Card>
-      <Card className="space-y-3 p-4">
-        <h2 className="font-semibold text-[var(--color-ink-900)]">Service area</h2>
-        <p className="text-sm text-[var(--color-ink-700)]">Pin where you usually start from. Customers never see this.</p>
+      </Section>
+      <Section title="Service area" description="Pin where you usually start from. Customers never see this.">
         <LocationPickerMap pickedLocation={base} onPickedLocationChanged={setBase} heightClassName="h-60" overlayTitle="Choose your starting point" />
         <Input label="How far will you travel (km)?" inputMode="numeric" value={radius} onChange={(event): void => { setRadius(event.target.value) }} />
-      </Card>
-      <Card className="space-y-2 p-4">
-        <h2 className="font-semibold text-[var(--color-ink-900)]">Services you offer</h2>
+      </Section>
+      <Section title="Services you offer">
         {services.map((service) => (
           <label key={service.id} className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[var(--color-ink-900)]">
             <input type="checkbox" className="h-5 w-5 accent-[var(--color-brand-700)]" checked={offered.includes(service.id)}
@@ -105,14 +103,14 @@ export function WorkerSetupPanel({ workerId, account, onSaved }: WorkerSetupPane
             {service.name}
           </label>
         ))}
-      </Card>
-      <Card className="space-y-3 p-4">
-        <h2 className="font-semibold text-[var(--color-ink-900)]">Working hours</h2>
-        {hours.map((day, weekday) => {
+      </Section>
+      <Section title="Working hours" description="Customers can only book times inside these hours.">
+        {mondayFirst.map((weekday) => {
+          const day = hours[weekday]
           const change = (patch: Partial<DayHours>): void => { setHours(hours.map((item, index) => (index === weekday ? { ...item, ...patch } : item))) }
           return (
-            <div key={weekdayNames[weekday]} className="grid grid-cols-[1fr_auto] items-end gap-2 sm:grid-cols-[10rem_1fr_1fr]">
-              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[var(--color-ink-900)]">
+            <div key={weekdayNames[weekday]} className="grid grid-cols-2 items-end gap-2 border-b border-[var(--color-card-border)] pb-3 last:border-b-0 last:pb-0 sm:grid-cols-[10rem_1fr_1fr]">
+              <label className="col-span-2 flex min-h-11 sm:col-span-1 cursor-pointer items-center gap-3 text-sm text-[var(--color-ink-900)]">
                 <input type="checkbox" className="h-5 w-5 accent-[var(--color-brand-700)]" checked={day.isWorking} onChange={(event): void => { change({ isWorking: event.target.checked }) }} />
                 {weekdayNames[weekday]}
               </label>
@@ -125,7 +123,7 @@ export function WorkerSetupPanel({ workerId, account, onSaved }: WorkerSetupPane
             </div>
           )
         })}
-      </Card>
+      </Section>
       {error !== null ? <p role="alert" className="text-sm text-[var(--color-danger-600)]">{error}</p> : null}
       <Button isLoading={isSaving} onClick={(): void => void save()}>Save profile</Button>
     </div>

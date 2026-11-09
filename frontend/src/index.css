@@ -63,6 +63,29 @@
   --color-on-primary-soft: #ccfbf1;
   --color-on-primary-accent: #99f6e4;
 
+  /* Booking status groups (packages/shared/src/bookingStatus.ts). bg = pill fill, fg = pill text, line = dot and card edge. */
+  --status-waiting-bg: #fffbeb;
+  --status-waiting-fg: #92400e;
+  --status-waiting-line: #d97706;
+  --status-action-bg: #fef2f2;
+  --status-action-fg: #b91c1c;
+  --status-action-line: #dc2626;
+  --status-confirmed-bg: #eff6ff;
+  --status-confirmed-fg: #1d4ed8;
+  --status-confirmed-line: #2563eb;
+  --status-moving-bg: #f5f3ff;
+  --status-moving-fg: #6d28d9;
+  --status-moving-line: #7c3aed;
+  --status-washing-bg: #f0fdfa;
+  --status-washing-fg: #0f766e;
+  --status-washing-line: #0d9488;
+  --status-done-bg: #f0fdf4;
+  --status-done-fg: #15803d;
+  --status-done-line: #16a34a;
+  --status-stopped-bg: #f1f5f9;
+  --status-stopped-fg: #475569;
+  --status-stopped-line: #64748b;
+
   --radius-control: 12px;
   --radius-surface: 16px;
   --radius-pill: 9999px;
@@ -128,6 +151,28 @@
 
   --color-card: #121d20;
   --color-card-border: #2a3b41;
+
+  --status-waiting-bg: #2e2108;
+  --status-waiting-fg: #fcd34d;
+  --status-waiting-line: #f59e0b;
+  --status-action-bg: #331414;
+  --status-action-fg: #fca5a5;
+  --status-action-line: #f87171;
+  --status-confirmed-bg: #0f2140;
+  --status-confirmed-fg: #93c5fd;
+  --status-confirmed-line: #60a5fa;
+  --status-moving-bg: #241a3d;
+  --status-moving-fg: #c4b5fd;
+  --status-moving-line: #a78bfa;
+  --status-washing-bg: #0c2a28;
+  --status-washing-fg: #5eead4;
+  --status-washing-line: #2dd4bf;
+  --status-done-bg: #0d2b1c;
+  --status-done-fg: #86efac;
+  --status-done-line: #4ade80;
+  --status-stopped-bg: #1a282c;
+  --status-stopped-fg: #b6c4c9;
+  --status-stopped-line: #8296a0;
 
   --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 1px 3px 0 rgb(0 0 0 / 0.3);
   --shadow-card-hover: 0 4px 10px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);

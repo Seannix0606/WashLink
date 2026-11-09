@@ -64,6 +64,37 @@ export const serviceBookingStatusLabel: Readonly<Record<ServiceBookingStatus, st
   no_worker_available: 'No washer available',
 }
 
+/**
+ * Every status belongs to one group, and each group has one color on every screen (web tokens `--status-<group>-*`).
+ * Color is never the only signal: the status label is always shown with it.
+ */
+export const serviceBookingStatusGroups = ['waiting', 'action', 'confirmed', 'moving', 'washing', 'done', 'stopped'] as const
+export type ServiceBookingStatusGroup = (typeof serviceBookingStatusGroups)[number]
+
+export const serviceBookingStatusGroup: Readonly<Record<ServiceBookingStatus, ServiceBookingStatusGroup>> = {
+  pending: 'waiting',
+  searching_for_worker: 'waiting',
+  no_worker_available: 'action',
+  accepted: 'confirmed',
+  worker_on_the_way: 'moving',
+  arrived: 'moving',
+  in_progress: 'washing',
+  completed: 'done',
+  cancelled: 'stopped',
+  expired: 'stopped',
+}
+
+/** Short names for legends, for example under a calendar. */
+export const serviceBookingStatusGroupLabel: Readonly<Record<ServiceBookingStatusGroup, string>> = {
+  waiting: 'Finding a washer',
+  action: 'Needs action',
+  confirmed: 'Confirmed',
+  moving: 'On the way',
+  washing: 'Washing',
+  done: 'Completed',
+  stopped: 'Cancelled',
+}
+
 export const nextWorkerActionLabel: Readonly<Partial<Record<ServiceBookingStatus, string>>> = {
   accepted: 'Start travelling',
   worker_on_the_way: 'Mark arrived',
