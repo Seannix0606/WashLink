@@ -12,6 +12,12 @@ export const vehicleCategories = [
 
 export type VehicleCategory = (typeof vehicleCategories)[number]
 
+/**
+ * The vehicle types customers can pick. WashLink doesn't wash motorcycles, so that type is left out here. The database still
+ * accepts it, so reopening motorcycle washes only needs it back in this list and an active motorcycle service.
+ */
+export const customerVehicleCategories: readonly VehicleCategory[] = vehicleCategories.filter((category) => category !== 'motorcycle')
+
 export const vehicleCategoryLabel: Readonly<Record<VehicleCategory, string>> = {
   motorcycle: 'Motorcycle',
   sedan: 'Sedan',

@@ -1,3 +1,3 @@
-import { vehicleCategories, vehicleCategoryLabel } from '@washlink/shared'
+import { customerVehicleCategories, vehicleCategoryLabel } from '@washlink/shared'
 
-export const vehicleCategoryOptions = vehicleCategories.map((value) => ({ value, label: vehicleCategoryLabel[value] }))
+export const vehicleCategoryOptions = customerVehicleCategories.map((value) => ({ value, label: vehicleCategoryLabel[value] }))

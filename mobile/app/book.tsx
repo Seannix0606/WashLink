@@ -11,7 +11,7 @@ import {
   formatManilaTime,
   formatPesos,
   upcomingManilaDates,
-  vehicleCategories,
+  customerVehicleCategories,
   vehicleCategoryLabel,
   type BookingDraft,
   type BookingQuote,
@@ -198,7 +198,7 @@ function StepVehicle({ draft, update, services, customerId }: StepProps): ReactE
         ))}
       </Row>
       <Row>
-        {vehicleCategories.map((category) => (
+        {customerVehicleCategories.map((category) => (
           <Choice key={category} label={vehicleCategoryLabel[category]} isSelected={draft.vehicleCategory === category} isDisabled={service !== undefined && !service.supportedVehicles.includes(category)}
             onPress={(): void => { update({ vehicleCategory: category }) }} />
         ))}

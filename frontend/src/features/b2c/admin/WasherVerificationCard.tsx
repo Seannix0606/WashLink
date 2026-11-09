@@ -16,7 +16,7 @@ interface WasherVerificationCardProps {
   /** A washer account WashLink runs itself: verified without documents (make_platform_operator). */
   readonly isPlatformOperator?: boolean
   /** Runs a status change and reports it, as the rest of the panel does. */
-  readonly runAction: (action: () => Promise<void>, success: string) => Promise<void>
+  readonly runAction: (action: () => Promise<void>, success: string) => Promise<unknown>
   readonly onChanged: () => Promise<void>
 }
 

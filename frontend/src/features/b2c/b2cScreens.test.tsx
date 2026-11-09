@@ -15,7 +15,7 @@ import type { WizardDraft } from './customer/wizard/BookingWizard'
 
 const api = vi.hoisted(() => ({
   acceptRequest: vi.fn(), declineRequest: vi.fn(), advanceBooking: vi.fn(), operatorCancelBooking: vi.fn(), releaseBooking: vi.fn(), cancelBooking: vi.fn(), reviewBooking: vi.fn(), quote: vi.fn(),
-  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(), adminPlatformOperatorIds: vi.fn(),
+  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(), adminPlatformOperatorIds: vi.fn(), adminSaveAddon: vi.fn(), adminSaveService: vi.fn(),
   workerAccount: vi.fn(), dispatchRequests: vi.fn(), assignedBookings: vi.fn(), workerSummary: vi.fn(), workerReviews: vi.fn(),
 }))
 vi.mock('./b2cApiClient', () => ({ getB2cApi: (): unknown => api, errorMessage: (error: Error): string => error.message }))
@@ -295,6 +295,36 @@ describe('admin panel', () => {
     expect(await screen.findByText(/2 services still have draft prices/)).toBeInTheDocument()
     expect(screen.getByText('Expected cash')).toBeInTheDocument()
     expect(screen.queryByText(/paid/i)).toBeNull()
+  })
+
+  describe('add-ons', () => {
+    const freshener = { id: 'a1', key: 'freshener_x', name: 'Car freshener', description: '', price_cents: 5000, duration_minutes: 0, is_active: true, price_is_draft: false, sort_order: 40 }
+
+    it('adds a new add-on with a valid key and keeps the form when saving fails', async () => {
+      api.adminSaveAddon.mockRejectedValueOnce(new Error('Try again')).mockResolvedValueOnce(undefined)
+      render(<B2cOperationsPanel />)
+      const add = await screen.findByRole('button', { name: 'Add add-on' })
+      expect(add).toBeDisabled()
+      await userEvent.type(screen.getByLabelText('Name'), 'Car freshener')
+      await userEvent.type(screen.getByLabelText('Add-on price (₱)'), '50')
+      await userEvent.click(add)
+      await waitFor(() => { expect(api.adminSaveAddon).toHaveBeenCalledTimes(1) })
+      expect(screen.getByLabelText('Name')).toHaveValue('Car freshener')
+      await userEvent.click(add)
+      await waitFor(() => { expect(api.adminSaveAddon).toHaveBeenCalledTimes(2) })
+      const args = api.adminSaveAddon.mock.calls[1]?.[0] as Record<string, unknown>
+      expect(args).toMatchObject({ p_id: null, p_name: 'Car freshener', p_price_cents: 5000, p_duration_minutes: 0, p_is_active: true, p_price_is_draft: false })
+      expect(String(args.p_key)).toMatch(/^car_freshener_[a-z0-9]{1,5}$/)
+      await waitFor(() => { expect(screen.getByLabelText('Name')).toHaveValue('') })
+    })
+
+    it('hides an add-on without changing its price', async () => {
+      api.adminCatalog.mockResolvedValue({ settings: { bookings_open: false, commission_bps: 0 }, services: [], addons: [freshener] })
+      api.adminSaveAddon.mockResolvedValue(undefined)
+      render(<B2cOperationsPanel />)
+      await userEvent.click(await screen.findByRole('button', { name: 'Hide Add-on: Car freshener' }))
+      await waitFor(() => { expect(api.adminSaveAddon).toHaveBeenCalledWith(expect.objectContaining({ p_id: 'a1', p_is_active: false, p_price_cents: 5000 })) })
+    })
   })
 
   it('marks a WashLink operator account', async () => {

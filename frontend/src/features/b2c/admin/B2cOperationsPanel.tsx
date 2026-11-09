@@ -6,6 +6,7 @@ import { formatManilaDateTime, formatPesos } from '@washlink/shared'
 import { Badge, Button, Card, Input, Select, Skeleton } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { AdminCancelBookingControl } from './AdminCancelBookingControl'
+import { addonKey } from './addonKey'
 import { WasherVerificationCard } from './WasherVerificationCard'
 
 type Row = Record<string, unknown>
@@ -56,13 +57,16 @@ export function B2cOperationsPanel(): ReactElement {
     return (): void => { window.clearTimeout(timer) }
   }, [refresh])
 
-  const run = async (action: () => Promise<void>, success: string): Promise<void> => {
+  /** Resolves true when the action succeeded, so a form can keep what was typed after a refusal. */
+  const run = async (action: () => Promise<void>, success: string): Promise<boolean> => {
     try {
       await action()
       toast.success(success)
       await refresh()
+      return true
     } catch (caught) {
       toast.error(errorMessage(caught))
+      return false
     }
   }
 
@@ -115,15 +119,20 @@ export function B2cOperationsPanel(): ReactElement {
             onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveService({
               p_id: service.id, p_key: service.key, p_category: service.category, p_name: service.name, p_description: service.description, p_image_url: service.image_url,
               p_requirements: service.requirements, p_base_price_cents: cents, p_duration_minutes: service.duration_minutes, p_is_active: isActive, p_price_is_draft: false, p_sort_order: service.sort_order,
-            }), 'Price saved')} />
+            }), isActive === (service.is_active === true) ? 'Price saved' : isActive ? 'Service shown to customers' : 'Service hidden from customers')} />
         ))}
         {addons.map((addon) => (
           <PriceRow key={text(addon.id)} name={`Add-on: ${text(addon.name)}`} cents={num(addon.price_cents)} isDraft={addon.price_is_draft === true} isActive={addon.is_active === true}
             onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveAddon({
               p_id: addon.id, p_key: addon.key, p_name: addon.name, p_description: addon.description, p_price_cents: cents, p_duration_minutes: addon.duration_minutes,
               p_is_active: isActive, p_price_is_draft: false, p_sort_order: addon.sort_order,
-            }), 'Price saved')} />
+            }), isActive === (addon.is_active === true) ? 'Price saved' : isActive ? 'Add-on shown to customers' : 'Add-on hidden from customers')} />
         ))}
+        <NewAddonForm nextSortOrder={Math.max(0, ...addons.map((addon) => num(addon.sort_order))) + 10}
+          onCreate={(addon): Promise<boolean> => run(() => getB2cApi().adminSaveAddon({
+            p_id: null, p_key: addonKey(addon.name), p_name: addon.name, p_description: addon.description, p_price_cents: addon.priceCents,
+            p_duration_minutes: addon.minutes, p_is_active: true, p_price_is_draft: false, p_sort_order: addon.sortOrder,
+          }), 'Add-on added')} />
       </section>
 
       <section aria-labelledby="workers-title" className="space-y-3">
@@ -181,6 +190,38 @@ function CommissionForm({ bps, onSave }: { readonly bps: number; readonly onSave
   )
 }
 
+interface NewAddon { readonly name: string; readonly description: string; readonly priceCents: number; readonly minutes: number; readonly sortOrder: number }
+
+function NewAddonForm({ nextSortOrder, onCreate }: { readonly nextSortOrder: number; readonly onCreate: (addon: NewAddon) => Promise<boolean> }): ReactElement {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [pesosValue, setPesosValue] = useState('')
+  const [minutesValue, setMinutesValue] = useState('0')
+  const price = Number(pesosValue)
+  const minutes = Number(minutesValue)
+  const isValid = name.trim().length >= 2 && pesosValue.trim() !== '' && Number.isFinite(price) && price >= 0
+    && Number.isInteger(minutes) && minutes >= 0 && minutes <= 240
+  return (
+    <Card className="space-y-3 p-3">
+      <h3 className="text-sm font-semibold text-[var(--color-ink-900)]">Add an add-on</h3>
+      <p className="text-xs text-[var(--color-ink-500)]">For example a car freshener. Customers can pick it with any service. Hide it when you run out.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input label="Name" value={name} maxLength={80} onChange={(event): void => { setName(event.target.value) }} />
+        <Input label="Add-on price (₱)" inputMode="decimal" value={pesosValue} onChange={(event): void => { setPesosValue(event.target.value) }} />
+        <Input label="Short description (optional)" value={description} maxLength={300} onChange={(event): void => { setDescription(event.target.value) }} />
+        <Input label="Extra minutes" helperText="How much longer the wash takes. 0 if none." inputMode="numeric" value={minutesValue} onChange={(event): void => { setMinutesValue(event.target.value) }} />
+      </div>
+      <Button size="sm" disabled={!isValid} onClick={(): void => {
+        void onCreate({ name: name.trim(), description: description.trim(), priceCents: Math.round(price * 100), minutes, sortOrder: nextSortOrder }).then((isSaved) => {
+          if (isSaved) {
+            setName(''); setDescription(''); setPesosValue(''); setMinutesValue('0')
+          }
+        })
+      }}>Add add-on</Button>
+    </Card>
+  )
+}
+
 function PriceRow({ name, cents, isDraft, isActive, onSave }: { readonly name: string; readonly cents: number; readonly isDraft: boolean; readonly isActive: boolean; readonly onSave: (cents: number, isActive: boolean) => void }): ReactElement {
   const [pesosValue, setPesosValue] = useState(String(cents / 100))
   return (
@@ -189,6 +230,8 @@ function PriceRow({ name, cents, isDraft, isActive, onSave }: { readonly name: s
       <div className="flex items-end gap-2">
         <Input label="Price (₱)" inputMode="decimal" value={pesosValue} onChange={(event): void => { setPesosValue(event.target.value) }} />
         <Button size="sm" onClick={(): void => { onSave(Math.round(Number(pesosValue) * 100), isActive) }}>{isDraft ? 'Set final price' : 'Save'}</Button>
+        {/* Hiding keeps the item and its price; customers just stop seeing it, for example when a product runs out. */}
+        <Button size="sm" variant="ghost" aria-label={`${isActive ? 'Hide' : 'Show'} ${name}`} onClick={(): void => { onSave(Math.round(Number(pesosValue) * 100), !isActive) }}>{isActive ? 'Hide' : 'Show'}</Button>
       </div>
     </Card>
   )
