@@ -130,7 +130,7 @@ function AuthBrandHeroPanel(): ReactElement {
             <Sparkles className="h-3.5 w-3.5" /> Shine in minutes
           </p>
           <h2 className="text-3xl font-bold leading-tight sm:text-4xl">
-            Your car wash, on demand.
+            Your car. Washed where it&nbsp;parks.
           </h2>
           <p className="text-sm leading-relaxed text-white/80">
             Book a detail in seconds, track it live, and let a washer bring the
