@@ -43,8 +43,8 @@ function ReadFilterButton({
         'h-9 min-w-[4.5rem] rounded-[var(--radius-control)] px-3 text-sm font-medium transition-colors',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-brand-600)]',
         isPressed
-          ? 'bg-[var(--color-brand-700)] text-white'
-          : 'bg-white text-[var(--color-ink-700)] hover:bg-[var(--color-ink-100)]',
+          ? 'bg-[var(--color-primary)] text-white'
+          : 'bg-[var(--color-card)] text-[var(--color-ink-700)] hover:bg-[var(--color-ink-100)]',
       )}
     >
       {label}
@@ -64,7 +64,7 @@ export function NotificationFilterBar({
       <div
         role="group"
         aria-label={readFilterGroupLabel}
-        className="inline-flex gap-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-1"
+        className="inline-flex gap-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-1"
       >
         <ReadFilterButton
           label={allReadStatesLabel}

@@ -32,7 +32,7 @@ export function StatCard({
   return (
     <div
       className={joinClassNames(
-        'rounded-[var(--radius-surface)] bg-white p-4 shadow-[var(--shadow-card)]',
+        'rounded-[var(--radius-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-card)]',
         className,
       )}
     >

@@ -16,7 +16,7 @@ export function LoadErrorNotice({
 }: LoadErrorNoticeProps): ReactElement {
   return (
     <Card elevation="flat" role="alert" className="flex items-start gap-3 bg-[var(--color-danger-50)]">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--color-danger-600)]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-card)] text-[var(--color-danger-600)]">
         <AlertTriangle className="h-5 w-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1 space-y-2">

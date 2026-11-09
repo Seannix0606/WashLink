@@ -110,7 +110,7 @@ export function WorkerProfileOnboardingFlow({
           aria-valuenow={currentStepIndex + 1}
         >
           <div
-            className="h-full rounded-full bg-[var(--color-brand-600)] transition-all"
+            className="h-full rounded-full bg-[var(--color-primary-soft)] transition-all"
             style={{ width: `${String(((currentStepIndex + 1) / stepCount) * 100)}%` }}
           />
         </div>

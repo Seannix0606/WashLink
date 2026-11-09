@@ -51,7 +51,7 @@ export function BookingSuccessPanel({
   return (
     <div className="space-y-5">
       <Card elevation="raised" className="overflow-hidden p-0">
-        <div className="flex flex-col items-center gap-3 bg-gradient-to-br from-[var(--color-brand-600)] to-[var(--color-brand-800)] px-6 py-8 text-center text-white">
+        <div className="flex flex-col items-center gap-3 bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-hover)] px-6 py-8 text-center text-white">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/15 shadow-[var(--shadow-card)] backdrop-blur-sm">
             <CheckCircle2 className="h-8 w-8" />
           </span>

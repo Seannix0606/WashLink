@@ -60,7 +60,7 @@ export function OwnerRosterLinkCodeButton({
         />
       </div>
       <div className="flex items-center gap-2">
-        <code className="select-all rounded bg-white px-2 py-1 font-mono text-base font-semibold tracking-widest text-[var(--color-ink-900)]">
+        <code className="select-all rounded bg-[var(--color-card)] px-2 py-1 font-mono text-base font-semibold tracking-widest text-[var(--color-ink-900)]">
           {issuedRosterLinkCode.linkCode}
         </code>
         <Button

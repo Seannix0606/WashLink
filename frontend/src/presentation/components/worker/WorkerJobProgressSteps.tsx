@@ -59,10 +59,10 @@ export function WorkerJobProgressSteps({
                   className={joinClassNames(
                     'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors',
                     isStepCompleted
-                      ? 'bg-[var(--color-brand-700)] text-white'
+                      ? 'bg-[var(--color-primary)] text-white'
                       : isStepCurrent
                         ? 'bg-[var(--color-brand-100)] text-[var(--color-brand-800)] ring-2 ring-[var(--color-brand-500)] ring-offset-2 ring-offset-[var(--color-surface-muted)]'
-                        : 'bg-white text-[var(--color-ink-400)] ring-1 ring-[var(--color-ink-200)]',
+                        : 'bg-[var(--color-card)] text-[var(--color-ink-400)] ring-1 ring-[var(--color-ink-200)]',
                   )}
                 >
                   {isStepCompleted ? (
@@ -90,7 +90,7 @@ export function WorkerJobProgressSteps({
                   className={joinClassNames(
                     'h-0.5 flex-1 rounded-full transition-colors',
                     isStepCompleted
-                      ? 'bg-[var(--color-brand-700)]'
+                      ? 'bg-[var(--color-primary)]'
                       : 'bg-[var(--color-ink-200)]',
                   )}
                 />

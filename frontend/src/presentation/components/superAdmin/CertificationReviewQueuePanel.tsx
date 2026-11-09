@@ -62,7 +62,7 @@ export function CertificationReviewQueuePanel({ platformReviewService }: Certifi
               onClick={(): void => {
                 setOpenReviewId(item.reviewId)
               }}
-              className="flex w-full items-start justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-3 text-left transition-colors hover:border-[var(--color-brand-400)]"
+              className="flex w-full items-start justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3 text-left transition-colors hover:border-[var(--color-brand-400)]"
             >
               <span className="min-w-0 space-y-0.5">
                 <span className="block text-sm font-semibold break-words text-[var(--color-ink-900)]">{item.certificationTitle}</span>

@@ -42,7 +42,7 @@ export function Modal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className={`relative w-full ${maxWidthClassName} rounded-[var(--radius-surface)] bg-white shadow-[var(--shadow-popover)]`}
+            className={`relative w-full ${maxWidthClassName} rounded-[var(--radius-surface)] bg-[var(--color-card)] shadow-[var(--shadow-popover)]`}
           >
             <header className="flex items-center justify-between gap-3 border-b border-[var(--color-ink-200)] px-5 py-4">
               <h2 className="text-base font-semibold text-[var(--color-ink-900)]">

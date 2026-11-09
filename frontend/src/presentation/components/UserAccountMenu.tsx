@@ -8,6 +8,7 @@ import { ChangePasswordModal } from './profile/ChangePasswordModal'
 import { ProfileEditorModal } from './profile/ProfileEditorModal'
 import type { ApplicationUserRole } from '../../domain/models/AuthenticatedUser'
 import { createModerationDependencies } from '../dependencyInjection/createModerationDependencies'
+import { ThemeSwitch } from '../theme/ThemeSwitch'
 import { activityMenuLabel } from '../utilities/workforceActivityCopy'
 
 // W14: "Your activity" loads only when the person opens it.
@@ -99,7 +100,7 @@ export function UserAccountMenu(): ReactElement | null {
         <div
           role="menu"
           className={joinClassNames(
-            'absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-white shadow-[var(--shadow-popover)]',
+            'absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] shadow-[var(--shadow-popover)]',
             'wl-animate-in',
           )}
         >
@@ -118,6 +119,10 @@ export function UserAccountMenu(): ReactElement | null {
             <p className="mt-2 inline-flex items-center rounded-full bg-[var(--color-brand-50)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-brand-800)]">
               {roleDisplayLabelByRoleKey[authenticatedUser.role]}
             </p>
+          </div>
+          <div role="group" aria-labelledby="account-menu-appearance" className="border-b border-[var(--color-ink-200)] px-4 py-3">
+            <p id="account-menu-appearance" className="mb-2 text-xs font-medium text-[var(--color-ink-500)]">Appearance</p>
+            <ThemeSwitch />
           </div>
           <button
             type="button"

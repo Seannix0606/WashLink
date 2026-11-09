@@ -18,7 +18,7 @@ const containerClassNameByTone: Record<BookingNotesBlockTone, string> = {
 
 const iconBubbleClassNameByTone: Record<BookingNotesBlockTone, string> = {
   neutral: 'bg-[var(--color-ink-500)] text-white',
-  highlight: 'bg-[var(--color-brand-700)] text-white',
+  highlight: 'bg-[var(--color-primary)] text-white',
 }
 
 export function BookingNotesBlock({

@@ -31,7 +31,7 @@ export function OwnerBookingRow({
         onSelectBooking(booking.id)
       }}
       className={joinClassNames(
-        'group flex w-full items-center gap-4 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-white p-4 text-left transition-shadow',
+        'group flex w-full items-center gap-4 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-4 text-left transition-shadow',
         'hover:border-transparent hover:shadow-[var(--shadow-card-hover)]',
       )}
     >

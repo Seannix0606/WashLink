@@ -5,8 +5,9 @@
 //   node scripts/site-docs/local-setup.mjs          (once, after the local stack is up)
 //   node scripts/site-docs/capture.mjs              (all screens)
 //   node scripts/site-docs/capture.mjs --only=customer-home,washer-work --skip-build
+//   node scripts/site-docs/capture.mjs --theme=dark      (the device prefers dark, so Auto shows the dark theme)
 //
-// Output: docs/site/screenshots/<screen>-<phone|desktop>.png
+// Output: docs/site/screenshots/<screen>-<phone|desktop>.png, or <screen>-<phone|desktop>-dark.png with --theme=dark
 
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -28,6 +29,7 @@ const viewports = { phone: { width: 390, height: 844 }, desktop: { width: 1280, 
 
 const args = Object.fromEntries(process.argv.slice(2).map((arg) => arg.replace(/^--/, '').split('=')).map(([key, value]) => [key, value ?? true]))
 const only = typeof args.only === 'string' ? new Set(args.only.split(',')) : null
+const theme = args.theme === 'dark' ? 'dark' : 'light'
 
 function buildLocal() {
   const { anonKey } = localKeys()
@@ -167,7 +169,7 @@ const browser = await chromium.launch()
 const failures = []
 for (const screen of wanted) {
   for (const [viewportName, viewport] of Object.entries(viewports)) {
-    const context = await browser.newContext({ viewport, deviceScaleFactor: 1, serviceWorkers: 'block', colorScheme: 'light', locale: 'en-PH', timezoneId: 'Asia/Manila' })
+    const context = await browser.newContext({ viewport, deviceScaleFactor: 1, serviceWorkers: 'block', colorScheme: theme, locale: 'en-PH', timezoneId: 'Asia/Manila' })
     if (screen.origin === 'local') await serveLocal(context)
     const page = await context.newPage()
     try {
@@ -181,9 +183,9 @@ for (const screen of wanted) {
       await settle(page)
       // Sign-in and save toasts would cover the top bar; they are momentary, not part of the screen.
       await page.addStyleTag({ content: '[data-sonner-toaster] { display: none !important; }' })
-      const file = path.join(outDir, `${screen.name}-${viewportName}.png`)
+      const file = path.join(outDir, `${screen.name}-${viewportName}${theme === 'dark' ? '-dark' : ''}.png`)
       await page.screenshot({ path: file, fullPage: screen.fullPage !== false })
-      console.log(`ok   ${screen.name}-${viewportName}`)
+      console.log(`ok   ${screen.name}-${viewportName}${theme === 'dark' ? '-dark' : ''}`)
     } catch (error) {
       failures.push(`${screen.name}-${viewportName}: ${error.message.split('\n')[0]}`)
       console.log(`FAIL ${screen.name}-${viewportName}: ${error.message.split('\n')[0]}`)

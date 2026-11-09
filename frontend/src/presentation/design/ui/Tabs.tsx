@@ -45,7 +45,7 @@ export function Tabs<TabValue extends string>({
             className={joinClassNames(
               'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-white text-[var(--color-ink-900)] shadow-[var(--shadow-card)]'
+                ? 'bg-[var(--color-card)] text-[var(--color-ink-900)] shadow-[var(--shadow-card)]'
                 : 'text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]',
             )}
           >

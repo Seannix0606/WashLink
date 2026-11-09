@@ -113,7 +113,7 @@ export function WorkerContractDraftEditor({ workerContractService, contract, act
             {editor.visibleDraftErrors.formError !== null ? (
               <p role="alert" className="text-sm text-[var(--color-danger-600)]">{editor.visibleDraftErrors.formError}</p>
             ) : null}
-            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-ink-200)] bg-white py-3 sm:flex-row sm:flex-wrap sm:justify-end">
+            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-ink-200)] bg-[var(--color-card)] py-3 sm:flex-row sm:flex-wrap sm:justify-end">
               <Button
                 variant="ghost"
                 leadingIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}

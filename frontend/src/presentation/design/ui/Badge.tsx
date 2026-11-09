@@ -20,7 +20,7 @@ const badgeClassNameByTone: Record<BadgeTone, string> = {
   success: 'bg-[var(--color-success-50)] text-[var(--color-success-600)]',
   warning: 'bg-[var(--color-warning-50)] text-[var(--color-warning-600)]',
   danger: 'bg-[var(--color-danger-50)] text-[var(--color-danger-600)]',
-  info: 'bg-sky-50 text-sky-700',
+  info: 'bg-[var(--color-info-50)] text-[var(--color-info-600)]',
 }
 
 export function Badge({

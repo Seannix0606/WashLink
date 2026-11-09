@@ -24,7 +24,7 @@ export function NotificationListItem({
       className={joinClassNames(
         'flex gap-3 rounded-[var(--radius-control)] border px-3 py-3',
         notification.isRead
-          ? 'border-[var(--color-ink-200)] bg-white'
+          ? 'border-[var(--color-ink-200)] bg-[var(--color-card)]'
           : 'border-[var(--color-brand-100)] bg-[var(--color-brand-50)]',
       )}
     >
@@ -32,7 +32,7 @@ export function NotificationListItem({
         aria-hidden="true"
         className={joinClassNames(
           'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-          notification.isRead ? 'bg-transparent' : 'bg-[var(--color-brand-700)]',
+          notification.isRead ? 'bg-transparent' : 'bg-[var(--color-primary)]',
         )}
       />
       <div className="min-w-0 flex-1">

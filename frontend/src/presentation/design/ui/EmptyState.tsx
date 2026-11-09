@@ -19,7 +19,7 @@ export function EmptyState({
   return (
     <div
       className={joinClassNames(
-        'flex flex-col items-center justify-center rounded-[var(--radius-surface)] border border-dashed border-[var(--color-ink-200)] bg-white px-6 py-10 text-center',
+        'flex flex-col items-center justify-center rounded-[var(--radius-surface)] border border-dashed border-[var(--color-ink-200)] bg-[var(--color-card)] px-6 py-10 text-center',
         className,
       )}
     >

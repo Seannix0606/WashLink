@@ -1,4 +1,4 @@
-import { Fragment, createElement, lazy, Suspense, type ReactElement } from 'react'
+import { createElement, lazy, Suspense, type ReactElement } from 'react'
 import { featureFlags } from './application/featureFlags'
 import { isSupabaseConfigured } from './infrastructure/supabase/supabaseClient'
 import {
@@ -7,6 +7,7 @@ import {
 } from './presentation/auth/AuthenticatedUserContext'
 import { ApplicationToaster } from './presentation/design/ui'
 import { ErrorBoundary } from './presentation/components/ErrorBoundary'
+import { ThemeProvider } from './presentation/theme/ThemeContext'
 
 const CustomerBookingPage = lazy(async () => ({
   default: (await import('./presentation/pages/CustomerBookingPage')).CustomerBookingPage,
@@ -177,7 +178,7 @@ function AppContent(): ReactElement {
 function App(): ReactElement {
   if (!isSupabaseConfigured) {
     return createElement(
-      Fragment,
+      ThemeProvider,
       null,
       createElement(SupabaseEnvMissingScreen),
       createElement(ApplicationToaster),
@@ -185,13 +186,17 @@ function App(): ReactElement {
   }
 
   return createElement(
-    ErrorBoundary,
+    ThemeProvider,
     null,
     createElement(
-      AuthenticatedUserProvider,
+      ErrorBoundary,
       null,
-      createElement(AppContent),
-      createElement(ApplicationToaster),
+      createElement(
+        AuthenticatedUserProvider,
+        null,
+        createElement(AppContent),
+        createElement(ApplicationToaster),
+      ),
     ),
   )
 }

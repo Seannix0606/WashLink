@@ -32,14 +32,14 @@ export function ShopPickerRow({
           ? 'cursor-not-allowed border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] opacity-60'
           : isSelected
           ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
-          : 'border-[var(--color-ink-200)] bg-white hover:border-[var(--color-brand-300)]',
+          : 'border-[var(--color-ink-200)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
       )}
     >
       <span
         className={joinClassNames(
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
           isSelected && !isDisabled
-            ? 'bg-[var(--color-brand-700)] text-white'
+            ? 'bg-[var(--color-primary)] text-white'
             : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]',
         )}
       >

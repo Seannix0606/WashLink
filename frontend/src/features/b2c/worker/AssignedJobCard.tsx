@@ -92,13 +92,13 @@ export function AssignedJobCard({ job, isPaused = false, canCancel = false, onCh
           </Button>
         ) : null}
         {job.latitude !== null && job.longitude !== null ? (
-          <a className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-300)] bg-white px-4 text-sm font-medium text-[var(--color-ink-900)]"
+          <a className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-300)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-ink-900)]"
             href={directionsUrl(job.latitude, job.longitude)} target="_blank" rel="noreferrer">
             <Navigation className="h-4 w-4" aria-hidden="true" />Navigate
           </a>
         ) : null}
         {job.customerPhone ? (
-          <a className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-300)] bg-white px-4 text-sm font-medium text-[var(--color-ink-900)]" href={`tel:${job.customerPhone}`}>
+          <a className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-300)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-ink-900)]" href={`tel:${job.customerPhone}`}>
             <Phone className="h-4 w-4" aria-hidden="true" />Call customer
           </a>
         ) : null}

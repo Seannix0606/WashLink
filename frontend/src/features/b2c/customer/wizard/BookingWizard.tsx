@@ -87,7 +87,7 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
         <ol className="mt-3 flex gap-1.5" aria-label={`Step ${String(step + 1)} of ${String(bookingStepTitles.length)}`}>
           {bookingStepTitles.map((title, index) => (
             <li key={title} aria-current={index === step ? 'step' : undefined} className="min-w-0 flex-1">
-              <span className={index <= step ? 'block h-1.5 rounded-full bg-[var(--color-brand-600)]' : 'block h-1.5 rounded-full bg-[var(--color-ink-200)]'} />
+              <span className={index <= step ? 'block h-1.5 rounded-full bg-[var(--color-primary-soft)]' : 'block h-1.5 rounded-full bg-[var(--color-ink-200)]'} />
               <span className={index === step ? 'mt-1 block truncate text-xs font-semibold text-[var(--color-ink-900)]' : 'mt-1 block truncate text-xs text-[var(--color-ink-500)]'}>{title}</span>
             </li>
           ))}

@@ -16,13 +16,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClassNameByVariantKey: Record<ButtonVisualVariant, string> = {
   primary:
-    'bg-[var(--color-brand-700)] text-white hover:bg-[var(--color-brand-800)] active:bg-[var(--color-brand-900)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]',
+    'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-strong)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]',
   secondary:
-    'bg-white text-[var(--color-ink-900)] border border-[var(--color-ink-200)] hover:bg-[var(--color-surface-muted)]',
+    'bg-[var(--color-card)] text-[var(--color-ink-900)] border border-[var(--color-ink-200)] hover:bg-[var(--color-surface-muted)]',
   ghost:
     'bg-transparent text-[var(--color-ink-700)] hover:bg-[var(--color-surface-muted)]',
   danger:
-    'bg-[var(--color-danger-500)] text-white hover:bg-[var(--color-danger-600)] shadow-[var(--shadow-card)]',
+    'bg-[var(--color-danger-solid)] text-white hover:bg-[var(--color-danger-solid-hover)] shadow-[var(--shadow-card)]',
 }
 
 const sizeClassNameBySizeKey: Record<ButtonSizeVariant, string> = {

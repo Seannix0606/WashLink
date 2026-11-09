@@ -1,9 +1,12 @@
 import type { ReactElement } from 'react'
 import { Toaster, toast } from 'sonner'
+import { useTheme } from '../../theme/ThemeContext'
 
 export function ApplicationToaster(): ReactElement {
+  const { resolvedTheme } = useTheme()
   return (
     <Toaster
+      theme={resolvedTheme}
       position="top-right"
       richColors
       closeButton

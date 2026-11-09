@@ -29,7 +29,7 @@ export function ShopSpecificTermForm({
   const termName = `Shop-specific term ${String(termNumber)}`
   if (isReadOnly) {
     return (
-      <article aria-label={termName} className="space-y-1 rounded-[var(--radius-control)] border border-sky-200 bg-sky-50/40 p-3">
+      <article aria-label={termName} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-info-200)] bg-[var(--color-info-50)]/40 p-3">
         <Badge tone="info">{shopSpecificTermLabel}</Badge>
         <h4 className="text-sm font-semibold break-words text-[var(--color-ink-900)]">{shopTerm.heading}</h4>
         <p className="text-sm whitespace-pre-line break-words text-[var(--color-ink-700)]">{shopTerm.body}</p>
@@ -38,7 +38,7 @@ export function ShopSpecificTermForm({
   }
   const fieldPrefix = `shop-term-${shopTerm.draftId}`
   return (
-    <fieldset aria-label={termName} className="space-y-2 rounded-[var(--radius-control)] border border-sky-200 bg-sky-50/40 p-3">
+    <fieldset aria-label={termName} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-info-200)] bg-[var(--color-info-50)]/40 p-3">
       <legend className="sr-only">{termName}</legend>
       <div className="flex items-center justify-between gap-2">
         <Badge tone="info">{shopSpecificTermLabel}</Badge>

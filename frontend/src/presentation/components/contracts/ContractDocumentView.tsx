@@ -60,7 +60,7 @@ export function ContractDocumentView({ contractDocument }: ContractDocumentViewP
         </p>
         <p className="text-xs text-[var(--color-ink-500)]">{storedTextNoteText}</p>
       </header>
-      <div className={`${printAreaClassName} rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-3`}>
+      <div className={`${printAreaClassName} rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3`}>
         <p className="mb-2 text-xs font-semibold text-[var(--color-warning-600)]">{acceptanceRecordLabel}</p>
         <pre
           aria-label="Stored contract text"

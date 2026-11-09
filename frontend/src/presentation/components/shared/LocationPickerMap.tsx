@@ -177,7 +177,7 @@ export function LocationPickerMap({
         })}
       </MapContainer>
       <div className="pointer-events-none absolute inset-x-3 top-3 z-[400] flex items-start justify-between gap-2">
-        <div className="rounded-2xl bg-white/95 px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur">
+        <div className="rounded-2xl bg-[var(--color-card)]/95 px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur">
           <p className="text-xs font-semibold text-[var(--color-ink-900)]">
             {overlayTitle}
           </p>
@@ -189,40 +189,40 @@ export function LocationPickerMap({
         </div>
         <div className="flex shrink-0 flex-col gap-1.5">
           {isShopPicker ? (
-            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
-              <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-brand-700)]" />
+            <div className="flex items-center gap-1.5 rounded-full bg-[var(--color-card)]/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
+              <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-primary)]" />
               Car wash
             </div>
           ) : null}
           {nearbyShops.some((shop) => selectedShopIdentifier === shop.id) ? (
-            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
-              <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-warning-600)]" />
+            <div className="flex items-center gap-1.5 rounded-full bg-[var(--color-card)]/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
+              <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-warning-solid)]" />
               Selected
             </div>
           ) : null}
           {nearbyShops.some((shop) => !shopHasCompletePricing(shop)) ? (
-            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
+            <div className="flex items-center gap-1.5 rounded-full bg-[var(--color-card)]/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
               <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-ink-500)]" />
               Rates not ready
             </div>
           ) : null}
           {pickedLocation ? (
-            <div className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
-              <span className="h-2.5 w-2.5 rounded-full border-2 border-[var(--color-brand-700)] bg-white" />
+            <div className="flex items-center gap-1.5 rounded-full bg-[var(--color-card)]/95 px-2.5 py-2 text-[10px] font-medium text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
+              <span className="h-2.5 w-2.5 rounded-full border-2 border-[var(--color-brand-700)] bg-[var(--color-card)]" />
               Your location
             </div>
           ) : null}
         </div>
       </div>
-      <div className="pointer-events-auto absolute bottom-2 left-2 z-[400] rounded-md bg-white/90 px-1.5 py-1 text-[9px] leading-none text-[var(--color-ink-500)] shadow-sm">
+      <div className="pointer-events-auto absolute bottom-2 left-2 z-[400] rounded-md bg-[var(--color-card)]/90 px-1.5 py-1 text-[9px] leading-none text-[var(--color-ink-500)] shadow-sm">
         &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>
       </div>
       {isShopPicker && isLoadingShops ? (
-        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[400] rounded-xl bg-white/95 px-3 py-2 text-center text-xs text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[400] rounded-xl bg-[var(--color-card)]/95 px-3 py-2 text-center text-xs text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
           Finding approved car washes…
         </div>
       ) : isShopPicker && nearbyShops.length === 0 ? (
-        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[400] rounded-xl bg-white/95 px-3 py-2 text-center text-xs text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[400] rounded-xl bg-[var(--color-card)]/95 px-3 py-2 text-center text-xs text-[var(--color-ink-700)] shadow-[var(--shadow-popover)] backdrop-blur">
           No car wash locations are mapped nearby yet. You can still choose one
           from the list below.
         </div>

@@ -32,13 +32,13 @@ export function WorkerAvailabilityPill({
       <span
         className={joinClassNames(
           'relative h-4 w-8 rounded-full transition-colors',
-          isAvailableForJobs ? 'bg-[var(--color-success-500)]' : 'bg-white/30',
+          isAvailableForJobs ? 'bg-[var(--color-success-solid)]' : 'bg-white/30',
         )}
         aria-hidden="true"
       >
         <span
           className={joinClassNames(
-            'absolute top-0.5 block h-3 w-3 rounded-full bg-white shadow transition-all',
+            'absolute top-0.5 block h-3 w-3 rounded-full bg-[var(--color-card)] shadow transition-all',
             isAvailableForJobs ? 'left-[calc(100%-0.875rem)]' : 'left-0.5',
           )}
         />

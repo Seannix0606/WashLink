@@ -17,7 +17,7 @@ export function AppShell({
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--color-surface-sunken)]">
       {topBar ? (
-        <div className="sticky top-0 z-30 border-b border-[var(--color-ink-200)] bg-white/90 backdrop-blur">
+        <div className="sticky top-0 z-30 border-b border-[var(--color-ink-200)] bg-[var(--color-card)]/90 backdrop-blur">
           {topBar}
         </div>
       ) : null}

@@ -38,9 +38,9 @@ export function BookingStepProgress<StepKey extends string>({
                   className={joinClassNames(
                     'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold transition-colors',
                     isCompleted
-                      ? 'bg-[var(--color-brand-700)] text-white'
+                      ? 'bg-[var(--color-primary)] text-white'
                       : isCurrent
-                        ? 'bg-[var(--color-brand-700)] text-white shadow-[var(--shadow-card)]'
+                        ? 'bg-[var(--color-primary)] text-white shadow-[var(--shadow-card)]'
                         : 'bg-[var(--color-ink-100)] text-[var(--color-ink-500)]',
                   )}
                   aria-current={isCurrent ? 'step' : undefined}
@@ -69,7 +69,7 @@ export function BookingStepProgress<StepKey extends string>({
                 className={joinClassNames(
                   'h-0.5 flex-1 rounded-full transition-colors',
                   isCompleted
-                    ? 'bg-[var(--color-brand-600)]'
+                    ? 'bg-[var(--color-primary-soft)]'
                     : 'bg-[var(--color-ink-200)]',
                 )}
               />

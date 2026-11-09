@@ -145,7 +145,7 @@ export function ContractTemplateEditor({
             </p>
           ) : null}
           {editor.isReadOnly ? null : (
-            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-ink-200)] bg-white py-3 sm:flex-row sm:justify-end">
+            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-ink-200)] bg-[var(--color-card)] py-3 sm:flex-row sm:justify-end">
               <Button variant="secondary" disabled={!editor.isDirty || editor.isSaving} onClick={editor.discardChanges}>
                 Discard changes
               </Button>

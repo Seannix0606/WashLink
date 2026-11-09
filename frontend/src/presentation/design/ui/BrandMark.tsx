@@ -29,7 +29,7 @@ export function BrandMark({
     <div className={joinClassNames('flex items-center gap-2', className)}>
       <span
         className={joinClassNames(
-          'inline-flex items-center justify-center rounded-[var(--radius-control)] bg-gradient-to-br from-[var(--color-brand-600)] to-[var(--color-brand-800)] text-white shadow-[var(--shadow-card)]',
+          'inline-flex items-center justify-center rounded-[var(--radius-control)] bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-hover)] text-white shadow-[var(--shadow-card)]',
           markSizeClassNameBySizeKey[size],
         )}
         aria-hidden="true"

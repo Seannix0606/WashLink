@@ -75,7 +75,7 @@ export function ShopVerificationDocumentSlot({
   const uploadActionLabel = hasExistingDocument ? 'Replace' : 'Upload'
 
   return (
-    <div className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-3">
+    <div className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-ink-900)]">

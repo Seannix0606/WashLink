@@ -9,7 +9,7 @@ import type { StepProps } from './BookingWizard'
 const choiceClass = (isSelected: boolean, isDisabled = false): string =>
   joinClassNames(
     'min-h-11 rounded-[var(--radius-control)] border px-3 text-sm font-medium transition-colors',
-    isSelected ? 'border-[var(--color-brand-700)] bg-[var(--color-brand-50)] text-[var(--color-brand-900)]' : 'border-[var(--color-ink-200)] bg-white text-[var(--color-ink-900)]',
+    isSelected ? 'border-[var(--color-brand-700)] bg-[var(--color-brand-50)] text-[var(--color-brand-900)]' : 'border-[var(--color-ink-200)] bg-[var(--color-card)] text-[var(--color-ink-900)]',
     isDisabled ? 'cursor-not-allowed text-[var(--color-ink-400)] line-through' : 'cursor-pointer',
   )
 

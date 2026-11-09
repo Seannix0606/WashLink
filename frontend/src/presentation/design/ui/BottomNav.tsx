@@ -25,7 +25,7 @@ export function BottomNav<NavItemValue extends string>({
     <nav
       aria-label="Primary"
       className={joinClassNames(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-ink-200)] bg-white/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur sm:hidden',
+        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-ink-200)] bg-[var(--color-card)]/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur sm:hidden',
         className,
       )}
     >
@@ -57,7 +57,7 @@ export function BottomNav<NavItemValue extends string>({
                 <span className="relative inline-flex" aria-hidden="true">
                   {navItem.icon}
                   {displayBadgeText !== null ? (
-                    <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-brand-700)] px-1 text-[10px] font-bold leading-none text-white shadow-sm">
+                    <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-bold leading-none text-white shadow-sm">
                       {displayBadgeText}
                     </span>
                   ) : null}

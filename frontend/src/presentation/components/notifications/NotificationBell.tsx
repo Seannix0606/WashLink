@@ -37,7 +37,7 @@ export function NotificationBell({
         <span
           aria-hidden="true"
           data-testid="notification-unread-badge"
-          className="pointer-events-none absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-[var(--color-danger-500)] px-1 text-[11px] font-semibold leading-5 text-white"
+          className="pointer-events-none absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-[var(--color-danger-solid)] px-1 text-[11px] font-semibold leading-5 text-white"
         >
           {displayedUnreadCount}
         </span>

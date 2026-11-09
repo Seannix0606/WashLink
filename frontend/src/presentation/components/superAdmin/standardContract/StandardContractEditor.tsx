@@ -89,7 +89,7 @@ export function StandardContractEditor({
           </section>
         ))}
       </div>
-      <div className="sticky bottom-0 flex flex-col gap-2 border-t border-[var(--color-ink-200)] bg-white py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="sticky bottom-0 flex flex-col gap-2 border-t border-[var(--color-ink-200)] bg-[var(--color-card)] py-3 sm:flex-row sm:items-center sm:justify-between">
         <p role="status" className="text-sm text-[var(--color-ink-700)]">
           {standardChangeCountText(changedClauseCount)}
           {draftProblem !== null ? <span className="block text-xs text-[var(--color-ink-500)]">{draftProblem}</span> : null}

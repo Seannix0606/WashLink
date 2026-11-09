@@ -65,7 +65,7 @@ export function JobOpeningListItem({
   const reasonIdPrefix = `job-opening-${jobOpening.id}`
 
   return (
-    <li className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-4">
+    <li className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h3 className="text-sm font-semibold break-words text-[var(--color-ink-900)]">

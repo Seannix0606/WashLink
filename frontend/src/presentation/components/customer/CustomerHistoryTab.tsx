@@ -57,7 +57,7 @@ export function CustomerHistoryTab({
         elevation="flat"
         className="flex items-start gap-3 border-[var(--color-danger-500)] bg-[var(--color-danger-50)] p-4"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-danger-500)] text-white">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-danger-solid)] text-white">
           <AlertTriangle className="h-4 w-4" />
         </span>
         <div className="min-w-0">

@@ -47,7 +47,7 @@ export function MyOpeningReportsList({ moderationService }: MyOpeningReportsList
   return (
     <ul aria-label={myReportsHeading} className="space-y-2">
       {reportsState.reports.map((report) => (
-        <li key={report.reportId} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white p-3 text-xs text-[var(--color-ink-700)]">
+        <li key={report.reportId} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3 text-xs text-[var(--color-ink-700)]">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-semibold break-words text-[var(--color-ink-900)]">
               {`${report.openingTitleSnapshot ?? 'Job opening'} · ${report.shopNameSnapshot ?? 'Shop name not recorded'}`}

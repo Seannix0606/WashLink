@@ -16,7 +16,7 @@ export function WorkerProfileCompletionBanner({
       className="flex flex-col gap-3 rounded-[var(--radius-surface)] border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] p-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--color-brand-700)]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-card)] text-[var(--color-brand-700)]">
           <UserRoundPlus className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>

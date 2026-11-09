@@ -29,7 +29,7 @@ export function OwnerShopSetupNotice({
       className="flex flex-col gap-4 rounded-[var(--radius-surface)] border border-[var(--color-warning-500)]/40 bg-[var(--color-warning-50)] p-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--color-warning-600)]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-card)] text-[var(--color-warning-600)]">
           <Store className="h-5 w-5" />
         </span>
         <div>

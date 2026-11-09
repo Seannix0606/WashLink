@@ -28,7 +28,7 @@ export function NextActionList({ accessibleLabel, items, emptyContent }: NextAct
           <button
             type="button"
             onClick={item.onSelect}
-            className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-white px-3 py-2.5 text-left text-sm text-[var(--color-ink-900)] transition-colors hover:border-[var(--color-brand-400)] hover:bg-[var(--color-surface-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-brand-600)]"
+            className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] px-3 py-2.5 text-left text-sm text-[var(--color-ink-900)] transition-colors hover:border-[var(--color-brand-400)] hover:bg-[var(--color-surface-muted)] focus-visible:outline-2 focus-visible:outline-[var(--color-brand-600)]"
           >
             <span className="flex min-w-0 items-center gap-2">
               <span

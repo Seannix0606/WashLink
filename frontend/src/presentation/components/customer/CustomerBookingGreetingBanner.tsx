@@ -14,7 +14,7 @@ export function CustomerBookingGreetingBanner({
   return (
     <Card
       elevation="flat"
-      className="relative overflow-hidden border-0 bg-gradient-to-br from-[var(--color-brand-700)] to-[var(--color-brand-900)] p-5 text-white"
+      className="relative overflow-hidden border-0 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-strong)] p-5 text-white"
     >
       <div className="relative flex items-center gap-4">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">

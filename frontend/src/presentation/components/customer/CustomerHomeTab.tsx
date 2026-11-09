@@ -44,7 +44,7 @@ export function CustomerHomeTab({
     <div className="space-y-5">
       <Card
         elevation="flat"
-        className="relative overflow-hidden border-0 bg-gradient-to-br from-[var(--color-brand-700)] to-[var(--color-brand-900)] p-6 text-white sm:p-8"
+        className="relative overflow-hidden border-0 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-strong)] p-6 text-white sm:p-8"
       >
         <div className="relative z-10 max-w-xl space-y-4">
           <div>

@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-@theme {
+@theme static {
   --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
 
   --color-brand-50: #f0fdfa;
@@ -39,6 +39,30 @@
   --color-danger-500: #dc2626;
   --color-danger-600: #b91c1c;
 
+  --color-info-50: #f0f9ff;
+  --color-info-200: #bae6fd;
+  --color-info-600: #0369a1;
+
+  /* Cards and their outline. Components use these instead of a fixed white. */
+  --color-card: #ffffff;
+  --color-card-border: #e2e8f0;
+
+  /*
+   * Solid fills that carry white text. They stay the same in both themes, so a teal or red button reads the same
+   * whether the page is light or dark. Use these, not the brand or danger scales, for button and hero backgrounds.
+   */
+  --color-primary: #0f766e;
+  --color-primary-hover: #115e59;
+  --color-primary-strong: #134e4a;
+  --color-primary-soft: #0d9488;
+  --color-danger-solid: #dc2626;
+  --color-danger-solid-hover: #b91c1c;
+  --color-success-solid: #16a34a;
+  --color-warning-solid: #b45309;
+  /* Light tints for text sitting on the primary fills above; also fixed in both themes. */
+  --color-on-primary-soft: #ccfbf1;
+  --color-on-primary-accent: #99f6e4;
+
   --radius-control: 12px;
   --radius-surface: 16px;
   --radius-pill: 9999px;
@@ -48,6 +72,66 @@
     0 2px 4px -2px rgb(15 23 42 / 0.06);
   --shadow-popover: 0 12px 24px -8px rgb(15 23 42 / 0.18),
     0 6px 12px -6px rgb(15 23 42 / 0.12);
+}
+
+:root {
+  color-scheme: light;
+}
+
+/*
+ * Dark theme. public/theme-init.js sets data-theme on <html> before the first paint (Light, Dark, or Auto from the
+ * device). The same variable names are redefined, so components follow without dark-specific classes. The ink scale
+ * is flipped: 900 stays "strongest text", 100 stays "faintest fill". Text pairs meet WCAG AA on --color-card.
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-brand-50: #0c2a28;
+  --color-brand-100: #113d39;
+  --color-brand-200: #1b5a54;
+  --color-brand-300: #237b74;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #2dd4bf;
+  --color-brand-600: #2dd4bf;
+  --color-brand-700: #5eead4;
+  --color-brand-800: #99f6e4;
+  --color-brand-900: #ccfbf1;
+  --color-brand-950: #f0fdfa;
+
+  --color-surface: #121d20;
+  --color-surface-muted: #0f191c;
+  --color-surface-sunken: #0a1315;
+
+  --color-ink-900: #e7eef0;
+  --color-ink-700: #c3cfd3;
+  --color-ink-500: #94a6ad;
+  --color-ink-400: #71858c;
+  --color-ink-300: #3e5158;
+  --color-ink-200: #2a3b41;
+  --color-ink-100: #1a282c;
+
+  --color-success-50: #0d2b1c;
+  --color-success-500: #34d399;
+  --color-success-600: #6ee7b7;
+
+  --color-warning-50: #2e2108;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #fcd34d;
+
+  --color-danger-50: #331414;
+  --color-danger-500: #f87171;
+  --color-danger-600: #fca5a5;
+
+  --color-info-50: #0b2638;
+  --color-info-200: #1e4a66;
+  --color-info-600: #7dd3fc;
+
+  --color-card: #121d20;
+  --color-card-border: #2a3b41;
+
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 1px 3px 0 rgb(0 0 0 / 0.3);
+  --shadow-card-hover: 0 4px 10px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-popover: 0 12px 28px -8px rgb(0 0 0 / 0.6), 0 6px 12px -6px rgb(0 0 0 / 0.5);
 }
 
 html,

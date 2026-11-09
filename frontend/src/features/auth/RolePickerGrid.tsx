@@ -76,14 +76,14 @@ export function RolePickerGrid({
                 'flex flex-col items-start gap-2 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all',
                 isSelected
                   ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
-                  : 'border-[var(--color-ink-200)] bg-white hover:border-[var(--color-brand-300)]',
+                  : 'border-[var(--color-ink-200)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
               )}
             >
               <span
                 className={joinClassNames(
                   'flex h-9 w-9 items-center justify-center rounded-full',
                   isSelected
-                    ? 'bg-[var(--color-brand-700)] text-white'
+                    ? 'bg-[var(--color-primary)] text-white'
                     : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]',
                 )}
               >

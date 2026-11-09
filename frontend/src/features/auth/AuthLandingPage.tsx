@@ -9,6 +9,7 @@ import { joinClassNames } from '../../presentation/design/classNames'
 import { SignInForm, SignUpForm } from './AuthLandingForms'
 import { useAuthLanding } from './useAuthLanding'
 import { ForgotPasswordModal } from '../../presentation/components/auth/ForgotPasswordModal'
+import { ThemeSwitch } from '../../presentation/theme/ThemeSwitch'
 
 export function AuthLandingPage(): ReactElement {
   const {
@@ -40,6 +41,9 @@ export function AuthLandingPage(): ReactElement {
         <AuthBrandHeroPanel />
         <section className="flex items-center justify-center px-5 py-8 sm:px-8 lg:px-10">
           <div className="w-full max-w-md">
+            <div className="mb-4 flex justify-end">
+              <ThemeSwitch />
+            </div>
             <div className="mb-6 lg:hidden">
               <BrandMark size="md" />
             </div>
@@ -110,7 +114,7 @@ export function AuthLandingPage(): ReactElement {
 
 function AuthBrandHeroPanel(): ReactElement {
   return (
-    <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[var(--color-brand-700)] via-[var(--color-brand-800)] to-[var(--color-brand-900)] lg:block">
+    <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-primary-hover)] to-[var(--color-primary-strong)] lg:block">
       <div className="absolute inset-0 opacity-30">
         <div className="absolute -left-16 top-8 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute bottom-10 right-0 h-80 w-80 rounded-full bg-[var(--color-brand-400)]/20 blur-3xl" />
@@ -121,12 +125,12 @@ function AuthBrandHeroPanel(): ReactElement {
             <Sparkles className="h-6 w-6" />
           </span>
           <span className="text-2xl font-extrabold tracking-tight">
-            Wash<span className="text-[var(--color-brand-200)]">Link</span>
+            Wash<span className="text-[var(--color-on-primary-accent)]">Link</span>
           </span>
         </div>
 
         <div className="max-w-md space-y-4">
-          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-[var(--color-brand-100)]">
+          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-[var(--color-on-primary-soft)]">
             <Sparkles className="h-3.5 w-3.5" /> Shine in minutes
           </p>
           <h2 className="text-3xl font-bold leading-tight sm:text-4xl">
@@ -212,7 +216,7 @@ function AuthTabSwitcher({
             className={joinClassNames(
               'flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
               isActive
-                ? 'bg-white text-[var(--color-ink-900)] shadow-[var(--shadow-card)]'
+                ? 'bg-[var(--color-card)] text-[var(--color-ink-900)] shadow-[var(--shadow-card)]'
                 : 'text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]',
             )}
           >

@@ -40,7 +40,7 @@ export function CustomerBookingProgressTrack({
         className="flex items-center gap-2 rounded-[var(--radius-surface)] bg-[var(--color-danger-50)] px-3 py-2 text-xs font-medium text-[var(--color-danger-600)]"
         aria-label="Booking rejected"
       >
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-danger-600)] text-white">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-danger-solid-hover)] text-white">
           <X className="h-3.5 w-3.5" />
         </span>
         This booking was declined. You can try another shop or time.
@@ -89,10 +89,10 @@ export function CustomerBookingProgressTrack({
                   className={joinClassNames(
                     'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors',
                     isStepCompleted
-                      ? 'bg-[var(--color-brand-700)] text-white'
+                      ? 'bg-[var(--color-primary)] text-white'
                       : isStepCurrent
                         ? 'bg-[var(--color-brand-100)] text-[var(--color-brand-800)] ring-2 ring-[var(--color-brand-500)] ring-offset-2 ring-offset-[var(--color-surface-muted)]'
-                        : 'bg-white text-[var(--color-ink-400)] ring-1 ring-[var(--color-ink-200)]',
+                        : 'bg-[var(--color-card)] text-[var(--color-ink-400)] ring-1 ring-[var(--color-ink-200)]',
                   )}
                 >
                   {isStepCompleted ? (
@@ -120,7 +120,7 @@ export function CustomerBookingProgressTrack({
                   className={joinClassNames(
                     'h-0.5 flex-1 rounded-full transition-colors',
                     isStepCompleted
-                      ? 'bg-[var(--color-brand-700)]'
+                      ? 'bg-[var(--color-primary)]'
                       : 'bg-[var(--color-ink-200)]',
                   )}
                 />

@@ -97,7 +97,7 @@ export function OwnerVerificationBanner({
       elevation="flat"
       className={`flex items-start gap-3 border p-4 ${bannerCopy.containerClassName}`}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-current">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-card)] text-current">
         {bannerCopy.iconNode}
       </span>
       <div className="min-w-0 flex-1">

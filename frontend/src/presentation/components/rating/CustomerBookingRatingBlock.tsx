@@ -53,7 +53,7 @@ export function CustomerBookingRatingBlock({
   return (
     <div className="rounded-[var(--radius-control)] border border-dashed border-[var(--color-brand-400)] bg-[var(--color-brand-50)] p-3">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-700)] text-white">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white">
           <Sparkles className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1 space-y-2">

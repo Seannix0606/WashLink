@@ -226,7 +226,7 @@ export function BookingDetailDrawerBody({
       )}
 
       {canAssign ? (
-        <div className="space-y-2 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-white p-3">
+        <div className="space-y-2 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3">
           <p className="text-sm font-medium text-[var(--color-ink-900)]">
             Assign a worker
           </p>
@@ -280,7 +280,7 @@ const bookingTerminalNoticeIconBubbleClassNameByTone: Record<
   string
 > = {
   neutral: 'bg-[var(--color-ink-500)] text-white',
-  danger: 'bg-[var(--color-danger-500)] text-white',
+  danger: 'bg-[var(--color-danger-solid)] text-white',
 }
 
 function BookingTerminalNotice({

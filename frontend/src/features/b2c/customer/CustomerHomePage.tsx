@@ -101,9 +101,9 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
         ) : null}
         {tab === 'home' ? (
           <>
-            <section className="rounded-[var(--radius-surface)] bg-[var(--color-brand-900)] p-6 text-white">
+            <section className="rounded-[var(--radius-surface)] bg-[var(--color-primary-strong)] p-6 text-white">
               <h1 className="text-2xl font-bold">Book a car wash</h1>
-              <p className="mt-1 text-sm text-[var(--color-brand-100)]">A washer comes to your home, office, condo or parking spot.</p>
+              <p className="mt-1 text-sm text-[var(--color-on-primary-soft)]">A washer comes to your home, office, condo or parking spot.</p>
               <Button
                 className="mt-4"
                 variant="secondary"

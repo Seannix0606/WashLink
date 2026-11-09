@@ -36,7 +36,7 @@ function OwnerProgressSummary({ progress }: { readonly progress: OwnerRelationsh
         aria-valuetext={countText}
         className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-ink-100)]"
       >
-        <div className="h-full rounded-full bg-[var(--color-brand-600)]" style={{ width: `${String(barPercent)}%` }} />
+        <div className="h-full rounded-full bg-[var(--color-primary-soft)]" style={{ width: `${String(barPercent)}%` }} />
       </div>
       <p className="text-sm text-[var(--color-ink-700)]">{describeOwnerProgressRemaining(progress.remainingOwnerCount)}</p>
       <p className="text-xs text-[var(--color-ink-500)]">

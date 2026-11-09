@@ -29,7 +29,7 @@ export function OwnerDashboardTopBar({
               onSearchInputValueChange(searchChangeEvent.target.value)
             }}
             placeholder="Search bookings by customer, service, or address"
-            className="h-10 w-full rounded-full border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] pl-9 pr-4 text-sm text-[var(--color-ink-900)] outline-none transition-colors placeholder:text-[var(--color-ink-500)] focus:border-[var(--color-brand-600)] focus:bg-white"
+            className="h-10 w-full rounded-full border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] pl-9 pr-4 text-sm text-[var(--color-ink-900)] outline-none transition-colors placeholder:text-[var(--color-ink-500)] focus:border-[var(--color-brand-600)] focus:bg-[var(--color-card)]"
           />
         </div>
       }
@@ -44,7 +44,7 @@ export function OwnerDashboardTopBar({
             <span
               aria-hidden="true"
               className={joinClassNames(
-                'absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--color-danger-500)]',
+                'absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--color-danger-solid)]',
                 'ring-2 ring-white',
               )}
             />
