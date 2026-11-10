@@ -2,12 +2,15 @@ import type { ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { AssignedBooking, B2cApi, DispatchRequest, WorkerAccount, WorkerSummary } from '@washlink/shared'
-import { formatPesos, terminalServiceBookingStatuses, workerPausedNotice } from '@washlink/shared'
+import { formatManilaTime, formatPesos, manilaDayKey, terminalServiceBookingStatuses, workerPausedNotice } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
+import { MonthCalendar } from '../../../presentation/components/calendar/MonthCalendar'
+import { ViewToggle, useStoredBookingsView } from '../../../presentation/components/calendar/ViewToggle'
 import { Button, Card, Section, Skeleton, StatusPill, Tabs, statusEdgeStyle } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { DeleteAccountSection } from '../DeleteAccountSection'
+import { useCurrentTime } from '../useCurrentTime'
 import { AssignedJobCard } from './AssignedJobCard'
 import { RequestCard } from './RequestCard'
 import { WorkerDocumentsPanel } from './WorkerDocumentsPanel'
@@ -38,6 +41,9 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
   const [jobs, setJobs] = useState<readonly AssignedBooking[]>([])
   const [summary, setSummary] = useState<WorkerSummary | null>(null)
   const [reviews, setReviews] = useState<Awaited<ReturnType<B2cApi['workerReviews']>>>([])
+  const [view, setView] = useStoredBookingsView('washlink.view.washerWork')
+  const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null)
+  const todayKey = manilaDayKey(useCurrentTime(60000).toISOString())
   const [isToggling, setIsToggling] = useState(false)
 
   const refresh = useCallback(async (): Promise<void> => {
@@ -127,6 +133,23 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
             <Tabs accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />
             {tab === 'work' ? (
               <div className="space-y-5">
+                <div className="flex justify-end"><ViewToggle view={view} onChange={setView} /></div>
+                {view === 'calendar' ? (
+                  <MonthCalendar label="Your work by day" todayKey={todayKey} selectedDayKey={selectedDayKey ?? todayKey} onSelectDay={setSelectedDayKey} hasRequests
+                    entries={[
+                      ...requests.map((request) => ({
+                        id: `request-${request.id}`, dayKey: manilaDayKey(request.scheduledAt), status: 'searching_for_worker' as const, isRequest: true,
+                        title: request.serviceName, timeLabel: request.isImmediate ? 'ASAP' : formatManilaTime(request.scheduledAt),
+                      })),
+                      ...jobs.map((job) => ({
+                        id: job.id, dayKey: manilaDayKey(job.scheduledAt), status: job.status, title: job.serviceName, timeLabel: formatManilaTime(job.scheduledAt),
+                      })),
+                    ]}>
+                    <WorkerDay dayKey={selectedDayKey ?? todayKey} requests={requests} activeJobs={activeJobs} pastJobs={pastJobs}
+                      isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} />
+                  </MonthCalendar>
+                ) : null}
+                {view === 'list' ? (<>
                 <Section title="Booking requests" count={requests.length} description="New bookings waiting for you to accept or decline.">
                   {requests.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No requests right now.</p> : null}
                   {requests.map((request) => <RequestCard key={request.id} request={request} onChanged={refresh} />)}
@@ -135,6 +158,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
                   {activeJobs.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No accepted bookings.</p> : null}
                   {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} />)}
                 </Section>
+                </>) : null}
               </div>
             ) : null}
             {tab === 'history' ? (
@@ -184,6 +208,39 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
           </>
         ) : null}
       </main>
+    </div>
+  )
+}
+
+interface WorkerDayProps {
+  readonly dayKey: string
+  readonly requests: readonly DispatchRequest[]
+  readonly activeJobs: readonly AssignedBooking[]
+  readonly pastJobs: readonly AssignedBooking[]
+  readonly isPaused: boolean
+  readonly canCancel: boolean
+  readonly onChanged: () => Promise<void>
+}
+
+/** One day's work under the calendar: open requests and jobs with their usual actions, finished jobs as short rows. */
+function WorkerDay({ dayKey, requests, activeJobs, pastJobs, isPaused, canCancel, onChanged }: WorkerDayProps): ReactElement {
+  const onDay = <T extends { readonly scheduledAt: string }>(items: readonly T[]): T[] => items.filter((item) => manilaDayKey(item.scheduledAt) === dayKey)
+  const dayRequests = onDay(requests)
+  const dayJobs = onDay(activeJobs)
+  const dayPast = onDay(pastJobs)
+  if (dayRequests.length + dayJobs.length + dayPast.length === 0) {
+    return <p className="text-sm text-[var(--color-ink-700)]">Nothing on this day.</p>
+  }
+  return (
+    <div className="space-y-3">
+      {dayRequests.map((request) => <RequestCard key={request.id} request={request} onChanged={onChanged} />)}
+      {dayJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={isPaused} canCancel={canCancel} onChanged={onChanged} />)}
+      {dayPast.map((job) => (
+        <Card key={job.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm" style={statusEdgeStyle(job.status)}>
+          <span>{formatManilaTime(job.scheduledAt)} · {job.serviceName} · {job.reference}</span>
+          <span className="flex items-center gap-2 tabular-nums">{formatPesos(job.workerEarningsCents)}<StatusPill status={job.status} /></span>
+        </Card>
+      ))}
     </div>
   )
 }

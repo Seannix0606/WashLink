@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -426,5 +426,17 @@ describe('customer bookings grouped by what they need', () => {
     const upcoming = screen.getByRole('region', { name: /Upcoming/ })
     const upcomingText = upcoming.textContent
     expect(upcomingText.indexOf('Finding a washer')).toBeLessThan(upcomingText.indexOf('Washer confirmed'))
+  })
+
+  it('switches to a month calendar that shows the bookings for today under the grid', async () => {
+    window.localStorage.clear()
+    api.myBookings.mockResolvedValue([booking('b9', 'accepted', new Date().toISOString())])
+    render(<CustomerHomePage customerId="c1" />)
+    await userEvent.click(screen.getByRole('tab', { name: 'Bookings' }))
+    await userEvent.click(await screen.findByRole('radio', { name: 'Calendar' }))
+    expect(screen.getByRole('grid', { name: /Your bookings by day/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /today, 1 booking$/ })).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: /^Bookings on / })).getByText('Washer confirmed')).toBeInTheDocument()
+    window.localStorage.clear()
   })
 })

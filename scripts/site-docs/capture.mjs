@@ -97,6 +97,12 @@ const screens = [
   { name: 'offline-page', origin: 'live', path: '/offline.html', steps: async () => undefined },
   { name: 'customer-home', origin: 'local', role: 'customer', steps: async () => undefined },
   { name: 'customer-bookings', origin: 'local', role: 'customer', steps: async (page) => { await tab(page, 'Bookings') } },
+  { name: 'customer-bookings-calendar', origin: 'local', role: 'customer', steps: async (page) => {
+    await tab(page, 'Bookings')
+    await page.getByRole('radio', { name: 'Calendar' }).click()
+    await page.getByRole('button', { name: /, 1 booking$|, [2-9] bookings$/ }).first().click()
+    await settle(page)
+  } },
   { name: 'customer-saved-details', origin: 'local', role: 'customer', steps: async (page) => { await tab(page, 'Addresses and vehicles') } },
   { name: 'customer-account', origin: 'local', role: 'customer', steps: async (page) => { await tab(page, 'Account') } },
   { name: 'wizard-1-when', origin: 'local', role: 'customer', steps: async (page) => {
@@ -130,6 +136,11 @@ const screens = [
     await wizardVehicle(page)
   } },
   { name: 'washer-work', origin: 'local', role: 'washer', steps: async () => undefined },
+  { name: 'washer-work-calendar', origin: 'local', role: 'washer', steps: async (page) => {
+    await page.getByRole('radio', { name: 'Calendar' }).click()
+    await page.getByRole('button', { name: /, 1 booking$|, [2-9] bookings$/ }).first().click()
+    await settle(page)
+  } },
   { name: 'washer-history', origin: 'local', role: 'washer', steps: async (page) => { await tab(page, 'History and earnings') } },
   { name: 'washer-profile', origin: 'local', role: 'washer', steps: async (page) => { await tab(page, 'Profile and hours') } },
   { name: 'admin-bookings-and-washers', origin: 'local', role: 'admin', steps: async () => undefined },

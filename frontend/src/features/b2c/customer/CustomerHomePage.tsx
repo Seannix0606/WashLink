@@ -1,12 +1,15 @@
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { CarFront } from 'lucide-react'
-import { isActiveServiceBooking, serviceBookingStatusGroup, type CustomerBooking, type ServiceBookingStatusGroup } from '@washlink/shared'
+import { formatManilaTime, isActiveServiceBooking, manilaDayKey, serviceBookingStatusGroup, type CustomerBooking, type ServiceBookingStatusGroup } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
+import { MonthCalendar } from '../../../presentation/components/calendar/MonthCalendar'
+import { ViewToggle, useStoredBookingsView } from '../../../presentation/components/calendar/ViewToggle'
 import { Button, EmptyState, Section, Skeleton, Tabs } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { DeleteAccountSection } from '../DeleteAccountSection'
+import { useCurrentTime } from '../useCurrentTime'
 import { BookingCard } from './BookingCard'
 import { SavedDetailsPanel } from './SavedDetailsPanel'
 
@@ -49,6 +52,9 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
   const [isBooking, setIsBooking] = useState(false)
   const [bookings, setBookings] = useState<readonly CustomerBooking[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [view, setView] = useStoredBookingsView('washlink.view.customerBookings')
+  const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null)
+  const todayKey = manilaDayKey(useCurrentTime(60000).toISOString())
 
   const refresh = useCallback(async (): Promise<void> => {
     try {
@@ -141,15 +147,26 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
           </>
         ) : null}
         {tab === 'bookings' ? (
-          bookings === null || bookings.length === 0 ? list(bookings ?? [], 'No bookings yet') : (
-            <div className="space-y-5">
-              {bookingGroups(bookings).map((group) => (
-                <Section key={group.title} title={group.title} count={group.items.length} description={group.description}>
-                  {list(group.items, '')}
-                </Section>
-              ))}
-            </div>
-          )
+          <div className="space-y-4">
+            <div className="flex justify-end"><ViewToggle view={view} onChange={setView} /></div>
+            {bookings === null || bookings.length === 0 ? list(bookings ?? [], 'No bookings yet') : view === 'calendar' ? (
+              <MonthCalendar label="Your bookings by day" todayKey={todayKey} selectedDayKey={selectedDayKey ?? todayKey} onSelectDay={setSelectedDayKey}
+                entries={bookings.map((booking) => ({
+                  id: booking.id, dayKey: manilaDayKey(booking.scheduledAt), status: booking.status, title: booking.serviceName,
+                  timeLabel: booking.isImmediate ? 'ASAP' : formatManilaTime(booking.scheduledAt),
+                }))}>
+                {list(bookings.filter((booking) => manilaDayKey(booking.scheduledAt) === (selectedDayKey ?? todayKey)).sort(byTimeAscending), 'No bookings on this day')}
+              </MonthCalendar>
+            ) : (
+              <div className="space-y-5">
+                {bookingGroups(bookings).map((group) => (
+                  <Section key={group.title} title={group.title} count={group.items.length} description={group.description}>
+                    {list(group.items, '')}
+                  </Section>
+                ))}
+              </div>
+            )}
+          </div>
         ) : null}
         {tab === 'saved' ? <SavedDetailsPanel customerId={customerId} /> : null}
         {tab === 'account' ? <DeleteAccountSection /> : null}
