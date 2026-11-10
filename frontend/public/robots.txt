@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://washlink-h7rc.onrender.com/sitemap.xml

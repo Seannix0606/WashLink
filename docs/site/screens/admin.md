@@ -1,6 +1,7 @@
 # Screen · Admin (Platform administration)
 
-> Documented 2026-11-10 at `4012ce7`, local stack with test data. Screenshots:
+> Documented 2026-11-10 from `feature/ui-redesign` (stages 1–4), local stack with test data. Dark versions end in
+> `-dark.png`. Screenshots:
 > bookings and washers [phone](../screenshots/admin-bookings-and-washers-phone.png) · [desktop](../screenshots/admin-bookings-and-washers-desktop.png);
 > booking case [phone](../screenshots/admin-booking-case-phone.png) · [desktop](../screenshots/admin-booking-case-desktop.png);
 > audit log [phone](../screenshots/admin-audit-log-phone.png) · [desktop](../screenshots/admin-audit-log-desktop.png)
@@ -24,19 +25,22 @@ long scrolling page.
 2. **Summary tiles** (8): Washers to review, Washers online, Finding a washer, No washer found, Active bookings,
    Completed, Expected cash, Expected commission; "Money figures are expected cash totals from completed bookings.
    WashLink does not yet confirm cash collection."
-3. **Services and prices:** Platform commission (%) with **Save**; then one card per service and add-on in sort
-   order, active and hidden mixed together: name, **Draft price** / **Hidden** badges, **Price (₱)**, **Save**
+3. **Services and prices** (outlined section, "Draft prices can't be booked. Hidden items stay saved but customers
+   don't see them."): Platform commission (%) with **Save**; then one card per **active** service and add-on: name, **Draft price** / **Hidden** badges, **Price (₱)**, **Save**
    (or **Set final price** for drafts) and **Hide**/**Show**. Then the **Add an add-on** card (Name, Add-on price
-   (₱), Short description (optional), Extra minutes, **Add add-on**).
-4. **Washers:** "Documents to review: 0", "Files waiting for removal: 0"; one card per washer: name, **verified**
+   (₱), Short description (optional), Extra minutes, **Add add-on**), and a collapsed **Hidden (n): saved, but
+   customers don't see them** group holding hidden services and add-ons with **Show**.
+4. **Washers** (outlined section with a count): "Documents to review: 0", "Files waiting for removal: 0"; one card per washer: name, **verified**
    badge, **WashLink operator** badge, "20 km area · 1 completed", **Documents**, **Suspend** (others: Verify,
    Reject, Move to pending, all with a reason).
-5. **Bookings:** a **Show** select (All statuses or one status, shown as raw keys like "worker on the way"); one row
-   per booking: "WL-5102FAA1 · Basic Wash · ₱250", then "no worker available · Bea Customer · washer: none · 0 open
-   requests" in plain text, **Open case**. Started jobs add "This job has started, so it needs a decision.
+5. **Bookings** (outlined section with a count): a **Show** select (All statuses or one status, by its friendly name,
+   e.g. "Washer on the way"); one row per booking with a status-colored left edge: "WL-5102FAA1 · Basic Wash · ₱250"
+   and a **status pill**, then "Bea Customer · washer: none · 0 open requests", **Open case**. Started jobs add "This job has started, so it needs a decision.
    Suspending the washer does not return it to search." and **Cancel booking** (reason ≥ 10 characters).
-6. **Booking history** (after **Open case**): a card at the **bottom of the page** with timestamped status changes
-   ("11/10/2026, 12:10:13 AM: new to pending by customer") and "Dispatch attempts: 1", **Close case**.
+6. **Booking history** (after **Open case**, which then reads **Close case**): opens **directly under that row**, with
+   timestamped changes in friendly words ("Tue, Nov 10, 9:00 PM: New to Booking received by customer", "…: Finding a
+   washer to No washer available by system")
+   and "Dispatch attempts: 1".
 
 ## Audit log
 A search form built for the workforce (B2B) product: a "Long-open disputes read often" panel ("No flagged
@@ -44,10 +48,7 @@ disputes"), filters Action starts with, Subject type, Subject id, About this acc
 To, and **Search the audit log** ("Choose filters and search. Nothing is read until you search."). Example hints
 mention job openings and worker contracts.
 
-## Notes for the redesign
-- Booking statuses are plain lowercase text with no color; all rows look the same.
-- Hidden services sit between active ones; prices, washers and bookings are uniform white cards with no section
-  outlines, so the long page has no visual structure.
-- **Open case** puts the history at the end of the page, far from the row you clicked.
-- The phone layout stacks everything; the sticky top bar overlaps content in full-page captures.
-- Audit log copy is workforce-specific and doesn't mention bookings or prices.
+## Notes
+- Still open: the audit log copy is workforce-specific (bookings and prices aren't mentioned).
+- Before the redesign statuses were plain text, hidden items sat between active ones and the case history opened at
+  the bottom of the page (baseline `1687f86`).

@@ -1,6 +1,7 @@
 # Screen · Public landing page
 
-> Documented 2026-11-10 from the live site (`994fec3` deployed; catalog data current). Screenshots:
+> Documented 2026-11-10 from `feature/ui-redesign` (stages 1–4), captured from the local build. The landing page is
+> dark in both themes. Screenshots:
 > [phone](../screenshots/landing-phone.png) · [desktop](../screenshots/landing-desktop.png)
 
 **Who sees it:** anyone signed out (B2C on). **Files:** `frontend/src/features/b2c/landing/PublicEntryPage.tsx`,
@@ -17,8 +18,8 @@ It's the only dark screen in the product.
 ## Sections, top to bottom
 1. **Header:** BrandMark with wordmark (left), **Sign in** outline button (right). A skip link "Skip to main content"
    appears on keyboard focus.
-2. **Hero:** `h1` "Your car. Washed where it parks." Sub-line "Book an independent washer for your home, office,
-   condo or parking spot. Choose a time, pin the location, and pay in cash when the job is done." Primary
+2. **Hero:** `h1` "Your car. Washed where it parks." Sub-line "WashLink comes to your home, office, condo or parking
+   spot. Choose a time, pin the location, and pay in cash when the job is done." Primary
    **Book a car wash** button (car icon). "See how it works ↓" link.
 3. **We come to you:** four places with icons: Homes, Offices, Condominiums, Parking areas. Then three numbered steps
    with large accent numerals: **Choose a time** ("Book for now or a later slot. You only see times a washer can
@@ -36,6 +37,6 @@ It's the only dark screen in the product.
 Both **Book a car wash** buttons and **Sign in** open the sign-in screen ([auth](auth.md)); "Back to WashLink"
 returns here.
 
-## Notes for the redesign
-- The hero line "Book an independent washer…" predates operator mode; WashLink now does the washes itself.
-- Draft prices read "Price coming soon"; the three washes look identical apart from text, with no visual tiering.
+## Notes
+- The hero no longer says "independent washer" (changed in Stage 4).
+- Draft prices read "Price coming soon"; the three washes look alike apart from text (wash types stay neutral).

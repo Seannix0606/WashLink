@@ -1,9 +1,7 @@
 # 01 · Overview: what WashLink is and how the site works
 
-> Documented 2026-11-10 from `main` at `4012ce7` and the live site https://washlink-h7rc.onrender.com.
-> Note: at that time the live site still ran `994fec3`. The add-on form, Hide/Show buttons and the removal of the
-> motorcycle vehicle type (`4012ce7`) had not deployed yet. The catalog itself (Basic / Full / Premium) is data, so it
-> was already live.
+> Documented 2026-11-10 from `feature/ui-redesign` (UI redesign stages 1–4, not yet deployed) and the live site
+> https://washlink-h7rc.onrender.com. Pre-redesign baseline: `1687f86`.
 
 ## The product
 WashLink is an on-demand car wash service in Metro Manila. Customers book a wash at their home, office, condo or
@@ -52,6 +50,10 @@ Defined in `packages/shared/src/featureFlags.ts`, read from build-time `VITE_FEA
   `offline.html`. Chrome on Android shows an **Install the app** button on the landing page; iPhone users use
   Share → Add to Home Screen.
 - **Separate Expo mobile app** (`mobile/`): not deployed and out of scope for this documentation.
+
+## Look
+Light and dark themes (Light / Dark / Auto, remembered per device), one color per booking-status group, outlined
+sections, and a month calendar for customers and the washer. See [04 · Design system](04-design-system.md).
 
 ## Language and region
 English (en-PH tone), Philippine pesos (`₱`, whole pesos shown), times in Asia/Manila (`formatManilaDateTime`),

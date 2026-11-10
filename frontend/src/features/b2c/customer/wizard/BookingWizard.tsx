@@ -92,7 +92,8 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
             </li>
           ))}
         </ol>
-        <div className="mt-5">
+        {/* The current step as one outlined panel, so it reads as a single block under the progress bar. */}
+        <div className="mt-5 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-4 sm:p-5">
           {loadError !== null ? <p role="alert" className="text-sm text-[var(--color-danger-600)]">{loadError}</p> : null}
           {stepProps === null && loadError === null ? <Skeleton heightClassName="h-64" /> : null}
           {stepProps !== null && step === 0 ? <StepWhen {...stepProps} /> : null}

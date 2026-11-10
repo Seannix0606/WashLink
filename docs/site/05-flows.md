@@ -1,20 +1,21 @@
 # 05 · Flows: bookings, statuses and who can do what
 
-> Documented 2026-11-10 from `main` at `4012ce7`. The database decides every rule below; the screens only show it.
+> Documented 2026-11-10 from `feature/ui-redesign` (UI redesign stages 1–4). The database decides every rule below; the
+> screens only show it.
 
 ## Booking statuses (`packages/shared/src/bookingStatus.ts`)
-| Status key | Label customers see | Group | Terminal |
+| Status key | Label customers see | Color group | Terminal |
 |---|---|---|---|
-| `pending` | Booking received | waiting | |
-| `searching_for_worker` | Finding a washer | waiting | |
-| `no_worker_available` | No washer available | needs action | (not active, not terminal) |
-| `accepted` | Washer confirmed | confirmed | |
-| `worker_on_the_way` | Washer on the way | moving | |
-| `arrived` | Washer has arrived | moving | |
-| `in_progress` | Washing your vehicle | washing | |
-| `completed` | Completed | done | yes |
-| `cancelled` | Cancelled | stopped | yes |
-| `expired` | Expired | stopped | yes |
+| `pending` | Booking received | waiting (amber) | |
+| `searching_for_worker` | Finding a washer | waiting (amber) | |
+| `no_worker_available` | No washer available | action (red) | (not active, not terminal) |
+| `accepted` | Washer confirmed | confirmed (blue) | |
+| `worker_on_the_way` | Washer on the way | moving (violet) | |
+| `arrived` | Washer has arrived | moving (violet) | |
+| `in_progress` | Washing your vehicle | washing (teal) | |
+| `completed` | Completed | done (green) | yes |
+| `cancelled` | Cancelled | stopped (grey) | yes |
+| `expired` | Expired | stopped (grey) | yes |
 
 The status machine (database `service_booking_transition_allowed`):
 ```
@@ -27,6 +28,9 @@ arrived → in_progress | cancelled
 in_progress → completed | cancelled
 ```
 
+The groups and colors live in `packages/shared/src/bookingStatus.ts` (`serviceBookingStatusGroup`) and are the same on
+every screen and in the calendar.
+
 ## Customer
 1. **Book** with the five-step wizard ([Booking wizard](screens/booking-wizard.md)): When → Where → Service →
    Vehicle → Review. The price is quoted by the server; only times a washer can actually make are offered.
@@ -37,7 +41,9 @@ in_progress → completed | cancelled
 5. **Cancel** is allowed while pending, finding, no washer, confirmed or on the way; once the washer has arrived or
    started, only after the job is overdue (scheduled time + duration + 60 min grace).
 6. After **Completed** they can rate 1–5 with a comment.
-7. **Saved details:** addresses (with landmark and gate notes) and vehicles for faster booking. **Account:** delete
+7. **Bookings** are grouped into Needs action, In progress, Upcoming and Past, or shown on a **month calendar**
+   (List / Calendar switch, remembered per device).
+8. **Saved details:** addresses (with landmark and gate notes) and vehicles for faster booking. **Account:** delete
    the account (requires a recent password sign-in).
 
 ## Operator washer
@@ -45,27 +51,28 @@ in_progress → completed | cancelled
    accepted. **Accept** or **Decline** before the offer expires.
 2. Accepted jobs show the address, landmark, instructions, customer name and phone, **Navigate** and
    **Call customer**.
-3. One next step at a time: **Start travelling** (up to 2 h before the start) → **Mark arrived** (up to 30 min
+3. **Work** has the same List / Calendar switch; the calendar shows accepted and past jobs plus dashed open requests.
+4. One next step at a time: **Start travelling** (up to 2 h before the start) → **Mark arrived** (up to 30 min
    before) → **Start wash** → **Complete wash**.
-4. **Cancel booking** with a 10–500 character reason (operator accounts only); other washers can only hand a job
+5. **Cancel booking** with a 10–500 character reason (operator accounts only); other washers can only hand a job
    back ("I can't do this booking"). **Report a problem** is always available.
-5. **History and earnings:** totals, completed jobs, reviews. **Profile and hours:** bio, service area pin and
+6. **History and earnings:** totals, completed jobs, reviews. **Profile and hours:** bio, service area pin and
    radius, services offered, weekly hours, **Go online** for as-soon-as-possible jobs.
-6. An operator needs no verification documents. Other washers upload documents and wait for admin review.
+7. An operator needs no verification documents. Other washers upload documents and wait for admin review.
 
 ## Admin
 1. **Open bookings / Close bookings** for the whole platform.
 2. **Services and prices:** commission, each service's price (draft prices can't be booked), Hide/Show, add-ons and
-   **Add an add-on** (from `4012ce7`).
+   **Add an add-on**; hidden services and add-ons sit in a collapsed **Hidden (n)** group.
 3. **Washers:** verify, reject, suspend with a reason, review documents; operator accounts carry a
    **WashLink operator** badge.
-4. **Bookings:** filter by status, open a booking's history, cancel with a reason.
+4. **Bookings:** filter by status (friendly names), open a booking's history right under its row, cancel with a reason.
 5. **Audit log:** every money, status and verification change.
 6. Making an operator account and opening washer sign-up are done in SQL: see
    [`docs/b2c/OPERATOR_MODE.md`](../b2c/OPERATOR_MODE.md).
 
 ## Sign up and sign in
-- Create account asks for full name, phone, email and password; it always creates a **customer** while washer
+- Create account asks for full name, phone, email and a password of **at least 8 characters**; it always creates a **customer** while washer
   sign-up is closed (the account-type picker is hidden).
 - Email confirmation is on; the Supabase redirect URLs must point at the live address.
 - Forgot password sends a reset email; opening it shows the reset password page.

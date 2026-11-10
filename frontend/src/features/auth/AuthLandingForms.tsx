@@ -251,15 +251,15 @@ export function SignUpForm({
           type={isPasswordVisible ? 'text' : 'password'}
           autoComplete="new-password"
           label="Password"
-          placeholder="At least 6 characters"
+          placeholder="At least 8 characters"
           required
-          minLength={6}
+          minLength={8}
           value={password}
           onChange={(event): void => {
             onPasswordChanged(event.target.value)
           }}
           leadingIcon={<Lock className="h-4 w-4" />}
-          helperText="Use 6+ characters for better security."
+          helperText="At least 8 characters, the same as in the WashLink app."
           trailingAccessory={
             <IconButton
               size="sm"

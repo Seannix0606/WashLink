@@ -5,6 +5,7 @@
 //   node scripts/site-docs/local-setup.mjs          (once, after the local stack is up)
 //   node scripts/site-docs/capture.mjs              (all screens)
 //   node scripts/site-docs/capture.mjs --only=customer-home,washer-work --skip-build
+//   node scripts/site-docs/capture.mjs --public=local  (public screens from the local build, before a deploy)
 //   node scripts/site-docs/capture.mjs --theme=dark      (the device prefers dark, so Auto shows the dark theme)
 //
 // Output: docs/site/screenshots/<screen>-<phone|desktop>.png, or <screen>-<phone|desktop>-dark.png with --theme=dark
@@ -30,6 +31,9 @@ const viewports = { phone: { width: 390, height: 844 }, desktop: { width: 1280, 
 const args = Object.fromEntries(process.argv.slice(2).map((arg) => arg.replace(/^--/, '').split('=')).map(([key, value]) => [key, value ?? true]))
 const only = typeof args.only === 'string' ? new Set(args.only.split(',')) : null
 const theme = args.theme === 'dark' ? 'dark' : 'light'
+// --public=local takes the public screens from the local build too, to document a branch before it is deployed.
+const isPublicLocal = args.public === 'local'
+const originOf = (screen) => (screen.origin === 'live' && !isPublicLocal ? 'live' : 'local')
 
 function buildLocal() {
   const { anonKey } = localKeys()
@@ -152,7 +156,13 @@ const screens = [
 ]
 
 async function wizardWhen(page) {
-  await page.locator('section[aria-labelledby="when-title"] button[aria-label]:not([aria-label*="unavailable"]):not([disabled])').first().click()
+  const openSlots = page.locator('section[aria-labelledby="when-title"] button[aria-label]:not([aria-label*="unavailable"]):not([disabled])')
+  // Late in the day today has no open slots left, so use the next day.
+  if (await openSlots.count() === 0) {
+    await page.locator('section[aria-labelledby="when-title"] button').filter({ hasText: /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), / }).nth(1).click()
+    await settle(page, 600)
+  }
+  await openSlots.first().click()
   await page.getByRole('button', { name: 'Continue' }).click()
   await settle(page)
 }
@@ -173,7 +183,7 @@ async function wizardVehicle(page) {
 }
 
 const wanted = screens.filter((screen) => !only || only.has(screen.name))
-if (wanted.some((screen) => screen.origin === 'local') && !args['skip-build']) buildLocal()
+if (wanted.some((screen) => originOf(screen) === 'local') && !args['skip-build']) buildLocal()
 fs.mkdirSync(outDir, { recursive: true })
 
 const browser = await chromium.launch()
@@ -181,19 +191,20 @@ const failures = []
 for (const screen of wanted) {
   for (const [viewportName, viewport] of Object.entries(viewports)) {
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1, serviceWorkers: 'block', colorScheme: theme, locale: 'en-PH', timezoneId: 'Asia/Manila' })
-    if (screen.origin === 'local') await serveLocal(context)
+    if (originOf(screen) === 'local') await serveLocal(context)
     const page = await context.newPage()
     try {
       if (screen.role) {
         await signIn(page, ACCOUNTS[screen.role])
       } else {
-        await page.goto(`${screen.origin === 'live' ? LIVE : LOCAL}${screen.path ?? '/'}`)
+        await page.goto(`${originOf(screen) === 'live' ? LIVE : LOCAL}${screen.path ?? '/'}`)
         await settle(page, 2500)
       }
       await screen.steps(page)
       await settle(page)
       // Sign-in and save toasts would cover the top bar; they are momentary, not part of the screen.
-      await page.addStyleTag({ content: '[data-sonner-toaster] { display: none !important; }' })
+      // Full-page shots stitch the page together, so a sticky top bar would also appear wherever the page was scrolled to.
+      await page.addStyleTag({ content: '[data-sonner-toaster] { display: none !important; } .sticky { position: static !important; }' })
       const file = path.join(outDir, `${screen.name}-${viewportName}${theme === 'dark' ? '-dark' : ''}.png`)
       await page.screenshot({ path: file, fullPage: screen.fullPage !== false })
       console.log(`ok   ${screen.name}-${viewportName}${theme === 'dark' ? '-dark' : ''}`)

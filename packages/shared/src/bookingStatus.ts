@@ -126,11 +126,18 @@ export function canCustomerCancelOverdue(status: ServiceBookingStatus, scheduled
     && now.getTime() >= Date.parse(scheduledAt) + (durationMinutes + OVERDUE_CANCEL_GRACE_MINUTES) * millisecondsPerMinute
 }
 
-/** What a washer sees while the next step is still closed. Travel opens first, arrival later. */
+/** What a washer sees while the next step is still closed, worded for that step. Travel opens first, the rest later. */
 export function workerEarlyStepNotice(status: ServiceBookingStatus): string {
-  return status === 'accepted'
-    ? "This booking can't start yet. You can begin up to 2 hours before its scheduled time."
-    : "It's too early for this step. You can mark arrival up to 30 minutes before the scheduled time."
+  switch (status) {
+    case 'accepted':
+      return "This booking can't start yet. You can begin up to 2 hours before its scheduled time."
+    case 'arrived':
+      return "It's too early for this step. You can start the wash up to 30 minutes before the scheduled time."
+    case 'in_progress':
+      return "It's too early for this step. You can complete the wash from 30 minutes before the scheduled time."
+    default:
+      return "It's too early for this step. You can mark arrival up to 30 minutes before the scheduled time."
+  }
 }
 export const customerOverdueCancelNotice = 'This booking is well past its expected finish time, so you can cancel it here.'
 

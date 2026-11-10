@@ -16,7 +16,7 @@ import type { WizardDraft } from './customer/wizard/BookingWizard'
 
 const api = vi.hoisted(() => ({
   acceptRequest: vi.fn(), declineRequest: vi.fn(), advanceBooking: vi.fn(), operatorCancelBooking: vi.fn(), releaseBooking: vi.fn(), cancelBooking: vi.fn(), reviewBooking: vi.fn(), quote: vi.fn(),
-  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(), adminPlatformOperatorIds: vi.fn(), adminSaveAddon: vi.fn(), adminSaveService: vi.fn(),
+  createBooking: vi.fn(), adminSummary: vi.fn(), adminCatalog: vi.fn(), adminWorkers: vi.fn(), adminBookings: vi.fn(), adminUpdateRules: vi.fn(), adminReviewWorker: vi.fn(), adminWorkerDocuments: vi.fn(), adminWorkerDocumentOverview: vi.fn(), adminPlatformOperatorIds: vi.fn(), adminSaveAddon: vi.fn(), adminSaveService: vi.fn(), adminBookingCase: vi.fn(),
   workerAccount: vi.fn(), myBookings: vi.fn(), dispatchRequests: vi.fn(), assignedBookings: vi.fn(), workerSummary: vi.fn(), workerReviews: vi.fn(),
 }))
 vi.mock('./b2cApiClient', () => ({ getB2cApi: (): unknown => api, errorMessage: (error: Error): string => error.message }))
@@ -289,6 +289,37 @@ describe('admin panel', () => {
     api.adminWorkerDocuments.mockResolvedValue([])
     api.adminWorkerDocumentOverview.mockResolvedValue({ documentsToReview: 3, filesWaitingForRemoval: 2, oldestFileWaitingSince: '2026-11-01T01:00:00Z' })
     api.adminPlatformOperatorIds.mockResolvedValue([])
+  })
+
+  it('keeps hidden services and add-ons in a separate Hidden group', async () => {
+    api.adminCatalog.mockResolvedValue({ settings: { bookings_open: true, commission_bps: 0 }, addons: [],
+      services: [
+        { id: 's1', key: 'basic', name: 'Basic Wash', base_price_cents: 25000, is_active: true, price_is_draft: false, sort_order: 10 },
+        { id: 's2', key: 'moto', name: 'Motorcycle wash', base_price_cents: 12000, is_active: false, price_is_draft: true, sort_order: 20 },
+      ] })
+    render(<B2cOperationsPanel />)
+    const hidden = (await screen.findByText(/^Hidden \(1\)/)).closest('details')
+    expect(hidden).not.toBeNull()
+    expect(hidden).toHaveTextContent('Motorcycle wash')
+    expect(hidden).not.toHaveTextContent('Basic Wash')
+  })
+
+  it('opens a booking history right under its row, with friendly status names', async () => {
+    api.adminBookings.mockResolvedValue([
+      { booking_id: 'b1', reference: 'WL-1', service_name: 'Full Wash', status: 'accepted', customer_total_cents: 45000, customer_name: 'Bea', worker_name: 'Wes', open_offers: 0 },
+      { booking_id: 'b2', reference: 'WL-2', service_name: 'Basic Wash', status: 'completed', customer_total_cents: 25000, customer_name: 'Bea', worker_name: 'Wes', open_offers: 0 },
+    ])
+    api.adminBookingCase.mockResolvedValue({ events: [{ id: 'e1', created_at: '2026-11-10T01:00:00Z', from_status: 'searching_for_worker', to_status: 'accepted', actor_kind: 'worker' }], dispatch: [] })
+    render(<B2cOperationsPanel />)
+    expect(await screen.findByRole('option', { name: 'Washer on the way' })).toBeInTheDocument()
+    const openButtons = await screen.findAllByRole('button', { name: 'Open case' })
+    await userEvent.click(openButtons[0])
+    const history = await screen.findByRole('heading', { name: 'Booking history' })
+    expect(history.closest('div')?.textContent).toContain('Finding a washer to Washer confirmed by worker')
+    // It sits directly after the first booking's row, before the second booking.
+    const second = screen.getByText(/WL-2/)
+    expect(history.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: 'Close case' }).length).toBeGreaterThan(0)
   })
 
   it('warns about draft prices and does not call cash received', async () => {

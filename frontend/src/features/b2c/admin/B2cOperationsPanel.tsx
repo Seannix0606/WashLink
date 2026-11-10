@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { WorkerDocumentOverview } from '@washlink/shared'
-import { formatManilaDateTime, formatPesos, serviceBookingStatuses, type ServiceBookingStatus } from '@washlink/shared'
+import { formatManilaDateTime, formatPesos, serviceBookingStatusLabel, serviceBookingStatuses, type ServiceBookingStatus } from '@washlink/shared'
 import { Badge, Button, Card, Input, Section, Select, Skeleton, StatusPill, statusEdgeStyle } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { AdminCancelBookingControl } from './AdminCancelBookingControl'
@@ -19,7 +19,7 @@ const pesos = (cents: unknown): string => formatPesos(num(cents))
 const statusFilter = [
   { value: '', label: 'All statuses' },
   ...['searching_for_worker', 'no_worker_available', 'accepted', 'worker_on_the_way', 'arrived', 'in_progress', 'completed', 'cancelled', 'expired']
-    .map((value) => ({ value, label: value.replaceAll('_', ' ') })),
+    .map((value) => ({ value, label: serviceBookingStatusLabel[value as ServiceBookingStatus] })),
 ]
 
 /** Every action here is checked and audited by the database; this panel only arranges it. */
@@ -30,7 +30,7 @@ export function B2cOperationsPanel(): ReactElement {
   const [operatorIds, setOperatorIds] = useState<ReadonlySet<string>>(new Set())
   const [bookings, setBookings] = useState<readonly Row[]>([])
   const [filter, setFilter] = useState('')
-  const [caseData, setCaseData] = useState<Row | null>(null)
+  const [openCase, setOpenCase] = useState<{ readonly bookingId: string; readonly data: Row } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [overview, setOverview] = useState<WorkerDocumentOverview | null>(null)
 
@@ -91,6 +91,23 @@ export function B2cOperationsPanel(): ReactElement {
     travelBufferMinutes: num(settings.travel_buffer_minutes),
   })
 
+  const hiddenServices = services.filter((service) => service.is_active !== true)
+  const hiddenAddons = addons.filter((addon) => addon.is_active !== true)
+  const serviceRow = (service: Row): ReactElement => (
+    <PriceRow key={text(service.id)} name={text(service.name)} cents={num(service.base_price_cents)} isDraft={service.price_is_draft === true} isActive={service.is_active === true}
+            onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveService({
+              p_id: service.id, p_key: service.key, p_category: service.category, p_name: service.name, p_description: service.description, p_image_url: service.image_url,
+              p_requirements: service.requirements, p_base_price_cents: cents, p_duration_minutes: service.duration_minutes, p_is_active: isActive, p_price_is_draft: false, p_sort_order: service.sort_order,
+            }), isActive === (service.is_active === true) ? 'Price saved' : isActive ? 'Service shown to customers' : 'Service hidden from customers')} />
+  )
+  const addonRow = (addon: Row): ReactElement => (
+    <PriceRow key={text(addon.id)} name={`Add-on: ${text(addon.name)}`} cents={num(addon.price_cents)} isDraft={addon.price_is_draft === true} isActive={addon.is_active === true}
+            onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveAddon({
+              p_id: addon.id, p_key: addon.key, p_name: addon.name, p_description: addon.description, p_price_cents: cents, p_duration_minutes: addon.duration_minutes,
+              p_is_active: isActive, p_price_is_draft: false, p_sort_order: addon.sort_order,
+            }), isActive === (addon.is_active === true) ? 'Price saved' : isActive ? 'Add-on shown to customers' : 'Add-on hidden from customers')} />
+  )
+
   return (
     <div className="space-y-6">
       <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -115,25 +132,24 @@ export function B2cOperationsPanel(): ReactElement {
 
       <Section title="Services and prices" description="Draft prices can't be booked. Hidden items stay saved but customers don't see them.">
         <CommissionForm bps={num(settings.commission_bps)} onSave={(bps): void => void run(() => saveRules({ commissionBps: bps }), 'Commission saved')} />
-        {services.map((service) => (
-          <PriceRow key={text(service.id)} name={text(service.name)} cents={num(service.base_price_cents)} isDraft={service.price_is_draft === true} isActive={service.is_active === true}
-            onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveService({
-              p_id: service.id, p_key: service.key, p_category: service.category, p_name: service.name, p_description: service.description, p_image_url: service.image_url,
-              p_requirements: service.requirements, p_base_price_cents: cents, p_duration_minutes: service.duration_minutes, p_is_active: isActive, p_price_is_draft: false, p_sort_order: service.sort_order,
-            }), isActive === (service.is_active === true) ? 'Price saved' : isActive ? 'Service shown to customers' : 'Service hidden from customers')} />
-        ))}
-        {addons.map((addon) => (
-          <PriceRow key={text(addon.id)} name={`Add-on: ${text(addon.name)}`} cents={num(addon.price_cents)} isDraft={addon.price_is_draft === true} isActive={addon.is_active === true}
-            onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveAddon({
-              p_id: addon.id, p_key: addon.key, p_name: addon.name, p_description: addon.description, p_price_cents: cents, p_duration_minutes: addon.duration_minutes,
-              p_is_active: isActive, p_price_is_draft: false, p_sort_order: addon.sort_order,
-            }), isActive === (addon.is_active === true) ? 'Price saved' : isActive ? 'Add-on shown to customers' : 'Add-on hidden from customers')} />
-        ))}
+        {services.filter((service) => service.is_active === true).map(serviceRow)}
+        {addons.filter((addon) => addon.is_active === true).map(addonRow)}
         <NewAddonForm nextSortOrder={Math.max(0, ...addons.map((addon) => num(addon.sort_order))) + 10}
           onCreate={(addon): Promise<boolean> => run(() => getB2cApi().adminSaveAddon({
             p_id: null, p_key: addonKey(addon.name), p_name: addon.name, p_description: addon.description, p_price_cents: addon.priceCents,
             p_duration_minutes: addon.minutes, p_is_active: true, p_price_is_draft: false, p_sort_order: addon.sortOrder,
           }), 'Add-on added')} />
+        {hiddenServices.length + hiddenAddons.length > 0 ? (
+          <details className="rounded-[var(--radius-control)] border border-dashed border-[var(--color-card-border)] bg-[var(--color-card)] p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--color-ink-700)]">
+              Hidden ({hiddenServices.length + hiddenAddons.length}): saved, but customers don&apos;t see them
+            </summary>
+            <div className="mt-3 space-y-3">
+              {hiddenServices.map(serviceRow)}
+              {hiddenAddons.map(addonRow)}
+            </div>
+          </details>
+        ) : null}
       </Section>
 
       <Section title="Washers" count={workers.length}>
@@ -154,7 +170,8 @@ export function B2cOperationsPanel(): ReactElement {
         {bookings.map((booking) => {
           const status = asStatus(booking.status)
           return (
-          <Card key={text(booking.booking_id)} className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm" style={status === null ? undefined : statusEdgeStyle(status)}>
+          <Fragment key={text(booking.booking_id)}>
+          <Card className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm" style={status === null ? undefined : statusEdgeStyle(status)}>
             <div className="space-y-1">
               <p className="flex flex-wrap items-center gap-2 font-medium text-[var(--color-ink-900)]">
                 {text(booking.reference)} · {text(booking.service_name)} · {pesos(booking.customer_total_cents)}
@@ -162,24 +179,20 @@ export function B2cOperationsPanel(): ReactElement {
               </p>
               <p className="text-[var(--color-ink-700)]">{text(booking.customer_name)} · washer: {text(booking.worker_name) || 'none'} · {text(booking.open_offers)} open requests</p>
             </div>
-            <Button size="sm" variant="secondary" onClick={(): void => { getB2cApi().adminBookingCase(text(booking.booking_id)).then(setCaseData).catch((caught: unknown) => { toast.error(errorMessage(caught)) }) }}>Open case</Button>
+            <Button size="sm" variant="secondary" aria-expanded={openCase?.bookingId === text(booking.booking_id)} onClick={(): void => {
+              const bookingId = text(booking.booking_id)
+              if (openCase?.bookingId === bookingId) {
+                setOpenCase(null)
+                return
+              }
+              getB2cApi().adminBookingCase(bookingId).then((data) => { setOpenCase({ bookingId, data }) }).catch((caught: unknown) => { toast.error(errorMessage(caught)) })
+            }}>{openCase?.bookingId === text(booking.booking_id) ? 'Close case' : 'Open case'}</Button>
             {booking.status === 'arrived' || booking.status === 'in_progress' ? <AdminCancelBookingControl bookingId={text(booking.booking_id)} onCancelled={refresh} /> : null}
           </Card>
+          {openCase?.bookingId === text(booking.booking_id) ? <BookingCaseHistory data={openCase.data} onClose={(): void => { setOpenCase(null) }} /> : null}
+          </Fragment>
           )
         })}
-        {caseData !== null ? (
-          <Card className="space-y-2 p-4 text-sm">
-            <h3 className="font-semibold text-[var(--color-ink-900)]">Booking history</h3>
-            <p className="text-xs text-[var(--color-ink-500)]">Opening a case is recorded in the audit log.</p>
-            <ol className="space-y-1">
-              {((caseData.events ?? []) as readonly Row[]).map((event) => (
-                <li key={text(event.id)}>{new Date(text(event.created_at)).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}: {text(event.from_status) || 'new'} to {text(event.to_status)} by {text(event.actor_kind)}{event.reason ? `. ${text(event.reason)}` : ''}</li>
-              ))}
-            </ol>
-            <p>Dispatch attempts: {((caseData.dispatch ?? []) as readonly Row[]).length}</p>
-            <Button size="sm" variant="ghost" onClick={(): void => { setCaseData(null) }}>Close case</Button>
-          </Card>
-        ) : null}
       </Section>
     </div>
   )
@@ -238,6 +251,30 @@ function PriceRow({ name, cents, isDraft, isActive, onSave }: { readonly name: s
         {/* Hiding keeps the item and its price; customers just stop seeing it, for example when a product runs out. */}
         <Button size="sm" variant="ghost" aria-label={`${isActive ? 'Hide' : 'Show'} ${name}`} onClick={(): void => { onSave(Math.round(Number(pesosValue) * 100), !isActive) }}>{isActive ? 'Hide' : 'Show'}</Button>
       </div>
+    </Card>
+  )
+}
+
+const statusName = (value: unknown): string => {
+  const status = asStatus(value)
+  return status === null ? (text(value) || 'New') : serviceBookingStatusLabel[status]
+}
+
+/** A booking's status history, shown right under its row. */
+function BookingCaseHistory({ data, onClose }: { readonly data: Row; readonly onClose: () => void }): ReactElement {
+  return (
+    <Card elevation="flat" className="ml-3 space-y-2 border-l-4 border-l-[var(--color-ink-300)] p-4 text-sm">
+      <h3 className="font-semibold text-[var(--color-ink-900)]">Booking history</h3>
+      <p className="text-xs text-[var(--color-ink-500)]">Opening a case is recorded in the audit log.</p>
+      <ol className="space-y-1">
+        {((data.events ?? []) as readonly Row[]).map((event) => (
+          <li key={text(event.id)}>
+            <span className="tabular-nums text-[var(--color-ink-500)]">{formatManilaDateTime(text(event.created_at))}</span>: {statusName(event.from_status)} to {statusName(event.to_status)} by {text(event.actor_kind).replaceAll('_', ' ')}{event.reason ? `. ${text(event.reason)}` : ''}
+          </li>
+        ))}
+      </ol>
+      <p>Dispatch attempts: {((data.dispatch ?? []) as readonly Row[]).length}</p>
+      <Button size="sm" variant="ghost" onClick={onClose}>Close case</Button>
     </Card>
   )
 }

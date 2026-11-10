@@ -1,6 +1,6 @@
 # 02 · Branding: name, logo, color, type and voice
 
-> Documented 2026-11-10 from `main` at `4012ce7`.
+> Documented 2026-11-10 from `feature/ui-redesign` (UI redesign stages 1–4). Pre-redesign baseline: `1687f86`.
 
 ## Name and logo
 - **Name:** WashLink. Always one word, capital W and L. The wordmark sets **Wash** in ink and **Link** in brand teal
@@ -10,7 +10,8 @@
   Sizes `sm`, `md`, `lg`; `showWordmark` adds the text.
 - **App icons** (`frontend/public/`): `icon-192.png`, `icon-512.png` (also maskable) and `apple-touch-icon.png`, a
   white water drop with a shine stroke on solid `#0F766E`. Drawn for the installable app on 2026-11-08.
-- **Favicon:** `favicon.svg` is still the default Vite logo, not the WashLink mark. A known gap.
+- **Favicon:** `favicon.svg` is the WashLink drop on a teal rounded square (replaced the Vite logo in Stage 4).
+- **Link preview image:** `og-image.png`, 1200×630: mark, wordmark, "Your car. Washed where it parks." on the dark landing gradient.
 
 ![Landing page header](screenshots/landing-desktop.png)
 
@@ -27,8 +28,9 @@ Brand teal is the only brand color. Everything else is slate "ink" and semantic 
 | Landing accent | `--landing-accent` | `#5EEAD4` | Landing highlights |
 | Ink | `--color-ink-900` … `-100` | `#0F172A` … `#F1F5F9` | Text, borders, page background |
 
-The signed-in app is **light only**. The public landing page is **dark only** (scoped in
-`frontend/src/features/b2c/landing/landing.css`). Sign in / create account is light.
+The signed-in app and the sign-in page come in **light and dark** (Light / Dark / Auto, see [04](04-design-system.md)).
+The public landing page is **dark in both themes** (scoped in `frontend/src/features/b2c/landing/landing.css`).
+Booking statuses have their own colors (amber, red, blue, violet, teal, green, grey); wash types stay neutral.
 
 ## Type
 - **Inter** (400–800) for everything (`--font-sans`, fallback Segoe UI, system-ui).
@@ -46,7 +48,7 @@ Prices are pesos with "pay in cash". Errors say what to do. Copy examples, quote
 
 | Where | Copy |
 |---|---|
-| Landing hero | "Your car. Washed where it parks." |
+| Landing hero | "Your car. Washed where it parks." / "WashLink comes to your home, office, condo or parking spot. Choose a time, pin the location, and pay in cash when the job is done." |
 | Landing footer | "On-demand car washing, wherever you park." |
 | Sign-in hero | "Your car. Washed where it parks." / "Book a detail in seconds, track it live, and let a washer bring the shine to your driveway." |
 | Sign-in benefits | "Car wash professionals, booked online" · "Upfront pricing" · "Realtime status from booking to sparkle" |

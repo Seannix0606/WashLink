@@ -1,6 +1,7 @@
 # Screen · Sign in, create account, forgot password, reset password
 
-> Documented 2026-11-10 from the live site (`994fec3`). Screenshots:
+> Documented 2026-11-10 from `feature/ui-redesign` (stages 1–4), captured from the local build. Dark versions end in
+> `-dark.png`. Screenshots:
 > sign in [phone](../screenshots/auth-sign-in-phone.png) · [desktop](../screenshots/auth-sign-in-desktop.png);
 > create account [phone](../screenshots/auth-create-account-phone.png) · [desktop](../screenshots/auth-create-account-desktop.png);
 > forgot password [phone](../screenshots/auth-forgot-password-phone.png) · [desktop](../screenshots/auth-forgot-password-desktop.png)
@@ -14,7 +15,7 @@
 | ![](../screenshots/auth-sign-in-phone.png) | ![](../screenshots/auth-create-account-phone.png) | ![](../screenshots/auth-forgot-password-phone.png) |
 
 ## Look and feel
-Light. On desktop a two-column layout: a teal gradient hero panel on the left and the form card on the right; on
+Light or dark. A **Light / Dark / Auto** switch sits at the top of the form column. On desktop a two-column layout: a teal gradient hero panel on the left and the form card on the right; on
 phones only the form, with BrandMark above it. "← Back to WashLink" at the top left returns to the landing page.
 
 - **Hero panel (desktop only):** pill "Shine in minutes", headline "Your car. Washed where it parks.", line "Book a
@@ -29,8 +30,8 @@ Card titled "Welcome back", "Sign in to book a wash or manage your work." Fields
 
 ## Create account
 "Create your account", "Book a professional car wash near you." Fields **Full name** (placeholder "Juan Dela
-Cruz"), **Phone number** ("09XX XXX XXXX"), **Email address**, **Password** ("At least 6 characters", helper "Use
-6+ characters for better security."), primary **Create account**, footer "Already have an account? **Sign in**".
+Cruz"), **Phone number** ("09XX XXX XXXX"), **Email address**, **Password** ("At least 8 characters", helper "At least
+8 characters, the same as in the WashLink app."), primary **Create account**, footer "Already have an account? **Sign in**".
 No account-type picker while washer sign-up is closed; the account is always a customer. Duplicate emails show a
 notice with **Sign in** and **Reset password** actions; email confirmation shows "check your email".
 
@@ -42,6 +43,7 @@ notice with **Sign in** and **Reset password** actions; email confirmation shows
 Reached from the email link: fields **New password** and **Confirm new password**. Not captured (needs a real
 recovery link).
 
-## Notes for the redesign
-- The web sign-up asks for 6+ characters; the Expo app asks for 8. Pick one.
+## Notes
+- Sign-up now requires 8 characters on the web, the same as the Expo app; sign-in still accepts older 6-character
+  passwords.
 - All required fields are marked with a red asterisk; errors appear under fields.

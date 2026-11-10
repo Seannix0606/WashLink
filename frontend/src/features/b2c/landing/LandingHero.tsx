@@ -24,8 +24,8 @@ export function LandingHero({ onBook }: LandingHeroProps): ReactElement {
           Washed where it&nbsp;parks.
         </h1>
         <p className="mt-6 max-w-md text-base leading-relaxed text-[var(--landing-soft)] sm:text-lg">
-          Book an independent washer for your home, office, condo or parking spot. Choose a time, pin the
-          location, and pay in cash when the job is done.
+          WashLink comes to your home, office, condo or parking spot. Choose a time, pin the location, and
+          pay in cash when the job is done.
         </p>
         <button type="button" onClick={onBook} className="wl-landing-primary-button mt-8">
           <CarFront className="h-5 w-5" aria-hidden="true" />

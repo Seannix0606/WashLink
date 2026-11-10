@@ -1,6 +1,7 @@
 # 06 · UX audit: where categories blur, and what the redesign must fix
 
-> Documented 2026-11-10 at `4012ce7`, from the screenshots in this folder. Checked against the ui-ux-pro-max
+> Written 2026-11-10 at `4012ce7` (before the redesign); the resolution table at the end was added from
+> `feature/ui-redesign` after stages 1–4. Checked against the ui-ux-pro-max
 > priorities: accessibility, touch, layout, color, hierarchy. This is the input for Phase B; it changes no code.
 
 ## The owner's complaint
@@ -71,3 +72,26 @@ and **bordered, grouped cards**. The website and installed app only.
 
 Each group gets one hue with a light and a dark variant, a pill with the existing label text, and the same
 color on calendar entries.
+
+## Resolved by the redesign (`feature/ui-redesign`, stages 1–4)
+| Finding | Resolution |
+|---|---|
+| W1, C1, A1, X2 | One shared status map with seven colors; `StatusPill` and a colored card edge on every screen; admin rows use pills |
+| W2, A2, C5 | Outlined `Section`s with header bars and counts on washer Work and History, customer Bookings and saved details, admin, and the wizard step panel |
+| W3 | Unchanged by design: the step stays disabled before its window, with a per-step explanation |
+| W4 | `workerEarlyStepNotice` is worded per step (start travelling, mark arrival, start the wash, complete the wash) |
+| W5, C3 | Month calendar with a List / Calendar switch on washer Work and customer Bookings |
+| W6 | Working hours list Monday first, with From and To side by side on phones |
+| C2 | Customer Bookings grouped into Needs action, In progress, Upcoming and Past |
+| C4 | Tabs stay on one row and scroll sideways |
+| A3 | Hidden services and add-ons collected in a collapsed **Hidden (n)** group |
+| A4 | Booking history opens directly under its row; the status filter uses friendly names |
+| L2 | Landing hero says "WashLink comes to your home, office, condo or parking spot…" |
+| L3 | The wizard's current step sits in one outlined panel |
+| L4, X1 | Light and dark themes with a Light / Dark / Auto switch; no hardcoded white cards left |
+| X3, X4 | Pills always carry the status words; a test checks AA contrast in both themes |
+| X6 | Description, sharing tags and image, canonical, robots.txt, sitemap and a WashLink favicon |
+
+Still open: A5 (audit log copy is workforce-specific), L1 (wash tiers look alike — wash types stay neutral by the
+owner's choice), X5 (small text buttons such as Edit and Hide/Show still need a touch-size check), and the Render response headers in
+[03](03-seo-and-meta.md).

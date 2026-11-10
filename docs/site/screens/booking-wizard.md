@@ -1,6 +1,7 @@
 # Screen · Booking wizard
 
-> Documented 2026-11-10 at `4012ce7`, local stack with test data. Screenshots (phone and desktop each):
+> Documented 2026-11-10 from `feature/ui-redesign` (stages 1–4), local stack with test data. Dark versions end in
+> `-dark.png`. Screenshots (phone and desktop each):
 > [1 When](../screenshots/wizard-1-when-phone.png) · [2 Where](../screenshots/wizard-2-where-phone.png) ·
 > [3 Service](../screenshots/wizard-3-service-phone.png) · [4 Vehicle](../screenshots/wizard-4-vehicle-phone.png) ·
 > [5 Review](../screenshots/wizard-5-review-phone.png); desktop versions end in `-desktop.png`.
@@ -15,8 +16,9 @@
 | ![](../screenshots/wizard-1-when-phone.png) | ![](../screenshots/wizard-2-where-phone.png) | ![](../screenshots/wizard-3-service-phone.png) | ![](../screenshots/wizard-4-vehicle-phone.png) | ![](../screenshots/wizard-5-review-phone.png) |
 
 ## Frame
-Full screen, light. "← Leave booking", title "Book a car wash", then a five-segment progress bar labelled When,
-Where, Service, Vehicle, Review (done segments teal, current label bold). **Back** (outline) and **Continue**
+Full screen, light or dark. "← Leave booking", title "Book a car wash", then a five-segment progress bar labelled
+When, Where, Service, Vehicle, Review (done segments teal, current label bold). The current step sits in **one
+outlined panel** under the bar. **Back** (outline) and **Continue**
 (primary) at the bottom; each step is checked before moving on, and a repeated submit can't create a second booking.
 
 ## 1 · When: "When should we come?"
@@ -44,6 +46,5 @@ a map "Your washer comes here"; a price card from the server (Service ₱450, Ve
 **Total, pay in cash ₱450**, "About 75 minutes. You pay your washer when the job is done."); full-width
 **Confirm booking**.
 
-## Notes for the redesign
-- The progress bar is the only orientation; the steps look alike, with no grouping or card outlines.
-- The three wash tiers are plain identical cards; the difference is only in the text.
+## Notes
+- The three wash tiers are plain cards that differ only in text; wash types stay neutral by the owner's choice.
