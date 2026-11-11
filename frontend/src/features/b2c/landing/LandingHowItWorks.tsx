@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 import { Building2, Car, Home, ParkingSquare } from 'lucide-react'
 
 const steps = [
-  { title: 'Choose a time', body: 'Book for now or a later slot. You only see times a washer can actually make.' },
+  { title: 'Choose a time', body: 'Pick an open day and time. You only see times a washer can actually make.' },
   { title: 'Pin the spot', body: 'Search or move the map pin, then add a landmark and any gate or parking notes.' },
   { title: 'Track the wash', body: 'See when your washer accepts, is on the way, arrives and finishes.' },
 ] as const

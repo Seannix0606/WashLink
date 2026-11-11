@@ -83,29 +83,31 @@ export function B2cOperationsPanel(): ReactElement {
   const services = (catalog.services ?? []) as readonly Row[]
   const addons = (catalog.addons ?? []) as readonly Row[]
   const isOpen = settings.bookings_open === true
-  const saveRules = (patch: { bookingsOpen?: boolean; commissionBps?: number }): Promise<void> => getB2cApi().adminUpdateRules({
+  const saveRules = (patch: { bookingsOpen?: boolean; commissionBps?: number; travelBufferMinutes?: number }): Promise<void> => getB2cApi().adminUpdateRules({
     bookingsOpen: patch.bookingsOpen ?? isOpen,
     commissionBps: patch.commissionBps ?? num(settings.commission_bps),
     requestTtlSeconds: num(settings.request_ttl_seconds),
     searchWindowMinutes: num(settings.search_window_minutes),
-    travelBufferMinutes: num(settings.travel_buffer_minutes),
+    travelBufferMinutes: patch.travelBufferMinutes ?? num(settings.travel_buffer_minutes),
   })
 
   const hiddenServices = services.filter((service) => service.is_active !== true)
   const hiddenAddons = addons.filter((addon) => addon.is_active !== true)
   const serviceRow = (service: Row): ReactElement => (
     <PriceRow key={text(service.id)} name={text(service.name)} cents={num(service.base_price_cents)} isDraft={service.price_is_draft === true} isActive={service.is_active === true}
-            onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveService({
+            minutes={num(service.duration_minutes)} minutesRule={serviceMinutes}
+            onSave={(cents, isActive, minutes): void => void run(() => getB2cApi().adminSaveService({
               p_id: service.id, p_key: service.key, p_category: service.category, p_name: service.name, p_description: service.description, p_image_url: service.image_url,
-              p_requirements: service.requirements, p_base_price_cents: cents, p_duration_minutes: service.duration_minutes, p_is_active: isActive, p_price_is_draft: false, p_sort_order: service.sort_order,
-            }), isActive === (service.is_active === true) ? 'Price saved' : isActive ? 'Service shown to customers' : 'Service hidden from customers')} />
+              p_requirements: service.requirements, p_base_price_cents: cents, p_duration_minutes: minutes, p_is_active: isActive, p_price_is_draft: false, p_sort_order: service.sort_order,
+            }), isActive === (service.is_active === true) ? 'Saved' : isActive ? 'Service shown to customers' : 'Service hidden from customers')} />
   )
   const addonRow = (addon: Row): ReactElement => (
     <PriceRow key={text(addon.id)} name={`Add-on: ${text(addon.name)}`} cents={num(addon.price_cents)} isDraft={addon.price_is_draft === true} isActive={addon.is_active === true}
-            onSave={(cents, isActive): void => void run(() => getB2cApi().adminSaveAddon({
-              p_id: addon.id, p_key: addon.key, p_name: addon.name, p_description: addon.description, p_price_cents: cents, p_duration_minutes: addon.duration_minutes,
+            minutes={num(addon.duration_minutes)} minutesRule={addonMinutes}
+            onSave={(cents, isActive, minutes): void => void run(() => getB2cApi().adminSaveAddon({
+              p_id: addon.id, p_key: addon.key, p_name: addon.name, p_description: addon.description, p_price_cents: cents, p_duration_minutes: minutes,
               p_is_active: isActive, p_price_is_draft: false, p_sort_order: addon.sort_order,
-            }), isActive === (addon.is_active === true) ? 'Price saved' : isActive ? 'Add-on shown to customers' : 'Add-on hidden from customers')} />
+            }), isActive === (addon.is_active === true) ? 'Saved' : isActive ? 'Add-on shown to customers' : 'Add-on hidden from customers')} />
   )
 
   return (
@@ -132,6 +134,7 @@ export function B2cOperationsPanel(): ReactElement {
 
       <Section title="Services and prices" description="Draft prices can't be booked. Hidden items stay saved but customers don't see them.">
         <CommissionForm bps={num(settings.commission_bps)} onSave={(bps): void => void run(() => saveRules({ commissionBps: bps }), 'Commission saved')} />
+        <TravelGapForm minutes={num(settings.travel_buffer_minutes)} onSave={(minutes): void => void run(() => saveRules({ travelBufferMinutes: minutes }), 'Travel gap saved')} />
         {services.filter((service) => service.is_active === true).map(serviceRow)}
         {addons.filter((addon) => addon.is_active === true).map(addonRow)}
         <NewAddonForm nextSortOrder={Math.max(0, ...addons.map((addon) => num(addon.sort_order))) + 10}
@@ -208,6 +211,29 @@ function CommissionForm({ bps, onSave }: { readonly bps: number; readonly onSave
   )
 }
 
+/** Free time kept before and after every booking, so the washer can travel and pack up. Same limits as the database. */
+function TravelGapForm({ minutes, onSave }: { readonly minutes: number; readonly onSave: (minutes: number) => void }): ReactElement {
+  const [value, setValue] = useState(String(minutes))
+  const parsed = Number(value)
+  const isValid = value.trim() !== '' && Number.isInteger(parsed) && parsed >= 0 && parsed <= 240
+  return (
+    <div>
+      <div className="flex items-end gap-2">
+        <Input label="Travel gap (minutes)" inputMode="numeric" value={value} onChange={(event): void => { setValue(event.target.value) }} />
+        <Button variant="secondary" disabled={!isValid} onClick={(): void => { onSave(parsed) }}>Save</Button>
+      </div>
+      <p className={isValid ? 'mt-1.5 text-xs text-[var(--color-ink-500)]' : 'mt-1.5 text-xs text-[var(--color-danger-500)]'}>
+        {isValid ? 'Kept free before and after every booking. 0 to 240.' : 'Enter whole minutes from 0 to 240.'}
+      </p>
+    </div>
+  )
+}
+
+interface MinutesRule { readonly label: string; readonly min: number; readonly max: number }
+// The same limits as services.duration_minutes and service_addons.duration_minutes.
+const serviceMinutes: MinutesRule = { label: 'Minutes', min: 10, max: 600 }
+const addonMinutes: MinutesRule = { label: 'Extra minutes', min: 0, max: 240 }
+
 interface NewAddon { readonly name: string; readonly description: string; readonly priceCents: number; readonly minutes: number; readonly sortOrder: number }
 
 function NewAddonForm({ nextSortOrder, onCreate }: { readonly nextSortOrder: number; readonly onCreate: (addon: NewAddon) => Promise<boolean> }): ReactElement {
@@ -240,16 +266,34 @@ function NewAddonForm({ nextSortOrder, onCreate }: { readonly nextSortOrder: num
   )
 }
 
-function PriceRow({ name, cents, isDraft, isActive, onSave }: { readonly name: string; readonly cents: number; readonly isDraft: boolean; readonly isActive: boolean; readonly onSave: (cents: number, isActive: boolean) => void }): ReactElement {
+interface PriceRowProps {
+  readonly name: string
+  readonly cents: number
+  readonly isDraft: boolean
+  readonly isActive: boolean
+  /** How long it takes. Booking times, and the gap to the next booking, follow it. */
+  readonly minutes: number
+  readonly minutesRule: MinutesRule
+  readonly onSave: (cents: number, isActive: boolean, minutes: number) => void
+}
+
+function PriceRow({ name, cents, isDraft, isActive, minutes, minutesRule, onSave }: PriceRowProps): ReactElement {
   const [pesosValue, setPesosValue] = useState(String(cents / 100))
+  const [minutesValue, setMinutesValue] = useState(String(minutes))
+  const parsedMinutes = Number(minutesValue)
+  const isMinutesValid = minutesValue.trim() !== '' && Number.isInteger(parsedMinutes) && parsedMinutes >= minutesRule.min && parsedMinutes <= minutesRule.max
+  const save = (nextIsActive: boolean): void => { onSave(Math.round(Number(pesosValue) * 100), nextIsActive, parsedMinutes) }
   return (
     <Card className="flex flex-wrap items-end justify-between gap-3 p-3">
       <div className="min-w-48 flex-1 text-sm font-medium text-[var(--color-ink-900)]">{name} {isDraft ? <Badge tone="warning">Draft price</Badge> : null}{!isActive ? <Badge tone="neutral">Hidden</Badge> : null}</div>
-      <div className="flex items-end gap-2">
-        <Input label="Price (₱)" inputMode="decimal" value={pesosValue} onChange={(event): void => { setPesosValue(event.target.value) }} />
-        <Button size="sm" onClick={(): void => { onSave(Math.round(Number(pesosValue) * 100), isActive) }}>{isDraft ? 'Set final price' : 'Save'}</Button>
+      <div className="flex flex-wrap items-end gap-2">
+        <Input label="Price (₱)" inputMode="decimal" value={pesosValue} inputContainerClassName="w-28" onChange={(event): void => { setPesosValue(event.target.value) }} />
+        <Input label={minutesRule.label} inputMode="numeric" value={minutesValue} inputContainerClassName="w-24"
+          errorText={isMinutesValid ? undefined : `${String(minutesRule.min)} to ${String(minutesRule.max)}`}
+          onChange={(event): void => { setMinutesValue(event.target.value) }} />
+        <Button size="sm" disabled={!isMinutesValid} onClick={(): void => { save(isActive) }}>{isDraft ? 'Set final price' : 'Save'}</Button>
         {/* Hiding keeps the item and its price; customers just stop seeing it, for example when a product runs out. */}
-        <Button size="sm" variant="ghost" aria-label={`${isActive ? 'Hide' : 'Show'} ${name}`} onClick={(): void => { onSave(Math.round(Number(pesosValue) * 100), !isActive) }}>{isActive ? 'Hide' : 'Show'}</Button>
+        <Button size="sm" variant="ghost" disabled={!isMinutesValid} aria-label={`${isActive ? 'Hide' : 'Show'} ${name}`} onClick={(): void => { save(!isActive) }}>{isActive ? 'Hide' : 'Show'}</Button>
       </div>
     </Card>
   )

@@ -26,7 +26,9 @@ long scrolling page.
    Completed, Expected cash, Expected commission; "Money figures are expected cash totals from completed bookings.
    WashLink does not yet confirm cash collection."
 3. **Services and prices** (outlined section, "Draft prices can't be booked. Hidden items stay saved but customers
-   don't see them."): Platform commission (%) with **Save**; then one card per **active** service and add-on: name, **Draft price** / **Hidden** badges, **Price (₱)**, **Save**
+   don't see them."): Platform commission (%) with **Save**; **Travel gap (minutes)** with **Save** ("Kept free before
+   and after every booking. 0 to 240.", 45 by default); then one card per **active** service and add-on: name, **Draft
+   price** / **Hidden** badges, **Price (₱)**, **Minutes** (services, 10 to 600) or **Extra minutes** (add-ons, 0 to 240), **Save**
    (or **Set final price** for drafts) and **Hide**/**Show**. Then the **Add an add-on** card (Name, Add-on price
    (₱), Short description (optional), Extra minutes, **Add add-on**), and a collapsed **Hidden (n): saved, but
    customers don't see them** group holding hidden services and add-ons with **Show**.

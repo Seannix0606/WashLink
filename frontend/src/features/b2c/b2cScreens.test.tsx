@@ -304,6 +304,35 @@ describe('admin panel', () => {
     expect(hidden).not.toHaveTextContent('Basic Wash')
   })
 
+  it('saves wash minutes with the price, and the travel gap with the other rules', async () => {
+    api.adminCatalog.mockResolvedValue({ settings: { bookings_open: true, commission_bps: 1000, travel_buffer_minutes: 45, request_ttl_seconds: 180, search_window_minutes: 30 }, addons: [],
+      services: [{ id: 's1', key: 'basic', name: 'Basic Wash', base_price_cents: 25000, duration_minutes: 40, is_active: true, price_is_draft: false, sort_order: 10 }] })
+    api.adminSaveService.mockResolvedValue(undefined)
+    api.adminUpdateRules.mockResolvedValue(undefined)
+    render(<B2cOperationsPanel />)
+    const minutes = await screen.findByRole('textbox', { name: 'Minutes' })
+    expect(minutes).toHaveValue('40')
+    await userEvent.clear(minutes)
+    await userEvent.type(minutes, '5')
+    expect(screen.getByText('10 to 600')).toBeInTheDocument()
+    await userEvent.clear(minutes)
+    await userEvent.type(minutes, '50')
+    const around = (element: HTMLElement, selector: string): HTMLElement => {
+      const found = element.closest(selector)
+      if (!(found instanceof HTMLElement)) throw new Error(`No ${selector} around the field`)
+      return found
+    }
+    await userEvent.click(within(around(minutes, 'div.flex.flex-wrap.items-end.justify-between')).getByRole('button', { name: 'Save' }))
+    expect(api.adminSaveService).toHaveBeenCalledWith(expect.objectContaining({ p_id: 's1', p_base_price_cents: 25000, p_duration_minutes: 50 }))
+
+    const gap = screen.getByRole('textbox', { name: /^Travel gap \(minutes\)/ })
+    expect(gap).toHaveValue('45')
+    await userEvent.clear(gap)
+    await userEvent.type(gap, '60')
+    await userEvent.click(within(around(gap, 'div.flex.items-end.gap-2')).getByRole('button', { name: 'Save' }))
+    expect(api.adminUpdateRules).toHaveBeenCalledWith({ bookingsOpen: true, commissionBps: 1000, requestTtlSeconds: 180, searchWindowMinutes: 30, travelBufferMinutes: 60 })
+  })
+
   it('opens a booking history right under its row, with friendly status names', async () => {
     api.adminBookings.mockResolvedValue([
       { booking_id: 'b1', reference: 'WL-1', service_name: 'Full Wash', status: 'accepted', customer_total_cents: 45000, customer_name: 'Bea', worker_name: 'Wes', open_offers: 0 },

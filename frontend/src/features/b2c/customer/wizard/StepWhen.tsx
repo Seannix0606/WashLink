@@ -32,7 +32,7 @@ const sameMonth = (left: ManilaMonth, right: ManilaMonth): boolean => left.year 
 const openCount = (slots: readonly TimeSlot[] | undefined): number => slots?.filter((slot) => slot.isAvailable).length ?? 0
 
 /**
- * A month calendar of the next four weeks: days with at least one free time are marked open and can be picked, then
+ * Every booking is for a chosen day and time (there is no "as soon as possible"). A month calendar of the next four weeks: days with at least one free time are marked open and can be picked, then
  * the free times of that day are listed. Times come from the washer's working hours, existing jobs and travel buffers.
  */
 export function StepWhen({ draft, update, services }: StepProps): ReactElement {
@@ -64,6 +64,13 @@ export function StepWhen({ draft, update, services }: StepProps): ReactElement {
     return (): void => { isCurrent = false }
   }, [dates, probeService, draft.vehicleCategory, draft.addonIds, draft.latitude, draft.longitude])
 
+  // Every booking has a set time: the washer works fixed hours. A draft saved before "As soon as possible" was
+  // removed is switched back to choosing a time.
+  const isImmediateDraft = draft.isImmediate
+  useEffect(() => {
+    if (isImmediateDraft) update({ isImmediate: false, scheduledAt: null })
+  }, [isImmediateDraft, update])
+
   const openDays = useMemo(() => dates.filter((date) => openCount(slotsByDay?.get(date)) > 0), [dates, slotsByDay])
   // Until the customer picks a day, show the day of an already chosen time, else the first open day.
   const draftDay = draft.scheduledAt === null ? null : dates.find((date) => slotsByDay?.get(date)?.some((slot) => slot.startsAt === draft.scheduledAt)) ?? null
@@ -77,14 +84,9 @@ export function StepWhen({ draft, update, services }: StepProps): ReactElement {
   return (
     <section aria-labelledby="when-title" className="space-y-4">
       <h2 id="when-title" className="text-lg font-semibold text-[var(--color-ink-900)]">When should we come?</h2>
-      <button type="button" aria-pressed={draft.isImmediate} className={joinClassNames(choiceClass(draft.isImmediate), 'w-full text-left')}
-        onClick={(): void => { update({ isImmediate: true, scheduledAt: null }) }}>
-        As soon as possible
-      </button>
-
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium text-[var(--color-ink-700)]">Or choose a day</p>
+          <p className="text-sm font-medium text-[var(--color-ink-700)]">Choose a day</p>
           <p className="flex items-center gap-1.5 text-xs text-[var(--color-ink-500)]">
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[var(--color-primary-soft)]" />
             Open for booking

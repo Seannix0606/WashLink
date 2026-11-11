@@ -60,6 +60,15 @@ describe('booking calendar', () => {
     expect(update).toHaveBeenCalledWith({ isImmediate: false, scheduledAt: `${saturday}T02:00:00.000Z` })
   })
 
+  it('offers no "as soon as possible", and switches an old as-soon-as-possible draft back to choosing a time', async () => {
+    const update = vi.fn()
+    render(<StepWhen draft={{ ...draft, isImmediate: true }} update={update} services={[service]} addons={[]} customerId="c1" />)
+    expect(screen.queryByRole('button', { name: 'As soon as possible' })).toBeNull()
+    expect(screen.getByText('Choose a day')).toBeInTheDocument()
+    expect(update).toHaveBeenCalledWith({ isImmediate: false, scheduledAt: null })
+    await screen.findAllByRole('button', { name: /open time/ })
+  })
+
   it('says so when no day in the next four weeks is open', async () => {
     api.availableSlots.mockResolvedValue([])
     render(<StepWhen draft={draft} update={vi.fn()} services={[service]} addons={[]} customerId="c1" />)
