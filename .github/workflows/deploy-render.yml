@@ -1,0 +1,29 @@
+# Deploys the website on Render after every push to main.
+# Render's own GitHub link does not report pushes for this service, so this calls the
+# service's Deploy Hook instead. The hook URL is the repository secret RENDER_DEPLOY_HOOK
+# (Render: WashLink > Settings > Deploy Hook). Render then builds the newest commit on main.
+name: Deploy website to Render
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::error::Repository secret RENDER_DEPLOY_HOOK is not set."
+            exit 1
+          fi
+          curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK" > /dev/null
+          echo "Render deploy started for ${GITHUB_SHA::7}."
