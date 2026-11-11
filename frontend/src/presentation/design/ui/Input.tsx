@@ -49,7 +49,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           'transition-colors focus-within:border-[var(--color-brand-600)]',
           hasErrorText
             ? 'border-[var(--color-danger-500)]'
-            : 'border-[var(--color-ink-200)]',
+            : 'border-[var(--color-card-border)]',
           inputContainerClassName,
         )}
       >

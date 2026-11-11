@@ -75,7 +75,7 @@ export function MyTrainingsPanel({ trainingDependencies }: MyTrainingsPanelProps
             const isInvitation = enrollment.status === 'invited'
             const canLeave = workerTrainingActions(enrollment.status, progress?.progressStatus ?? null, myTraining.program?.status ?? null).includes('leave')
             return (
-              <li key={enrollment.id} className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+              <li key={enrollment.id} className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold break-words text-[var(--color-ink-900)]">{enrollment.programTitleSnapshot}</h3>
                   <p className="text-xs break-words text-[var(--color-ink-500)]">

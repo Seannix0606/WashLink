@@ -39,7 +39,7 @@ function MyContractListItem({ contract, onOpen, onReportProblem }: MyContractLis
   const waitingText =
     contract.pendingVersionId === null ? null : contract.pendingVersionKind === 'amendment' ? 'A proposed change is waiting for your answer.' : 'An offer is waiting for your answer.'
   return (
-    <li aria-label={`Contract with ${shopName}`} className="flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3 sm:flex-row sm:items-center sm:justify-between">
+    <li aria-label={`Contract with ${shopName}`} className="flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 space-y-0.5">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold break-words text-[var(--color-ink-900)]">{shopName}</span>

@@ -103,7 +103,7 @@ export function StepReview({ draft, services, addons, submissionKey, onEditStep,
           <div className="flex justify-between"><span>Service</span><span>{formatPesos(quote.basePriceCents)}</span></div>
           <div className="flex justify-between"><span>Vehicle size</span><span>{formatPesos(quote.vehicleAdjustmentCents)}</span></div>
           <div className="flex justify-between"><span>Add-ons</span><span>{formatPesos(quote.addonsTotalCents)}</span></div>
-          <div className="flex justify-between border-t border-[var(--color-ink-200)] pt-2 text-base font-semibold text-[var(--color-ink-900)]">
+          <div className="flex justify-between border-t border-[var(--color-card-border)] pt-2 text-base font-semibold text-[var(--color-ink-900)]">
             <span>Total, pay in cash</span><span>{formatPesos(quote.customerTotalCents)}</span>
           </div>
           <p className="text-xs text-[var(--color-ink-500)]">About {quote.durationMinutes} minutes. You pay your washer when the job is done.</p>

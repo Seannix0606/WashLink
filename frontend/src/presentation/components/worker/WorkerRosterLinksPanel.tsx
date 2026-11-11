@@ -56,7 +56,7 @@ export function WorkerRosterLinksPanel({
         {rosterLinkEntries.map((rosterLinkEntry) => (
           <li
             key={rosterLinkEntry.workerRowIdentifier}
-            className="flex flex-col gap-2 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] p-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-2 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[var(--color-ink-900)]">

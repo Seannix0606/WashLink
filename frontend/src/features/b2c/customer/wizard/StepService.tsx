@@ -7,7 +7,7 @@ import type { StepProps } from './BookingWizard'
 const optionClass = (isSelected: boolean): string =>
   joinClassNames(
     'block w-full rounded-[var(--radius-surface)] border p-4 text-left transition-colors',
-    isSelected ? 'border-[var(--color-brand-700)] bg-[var(--color-brand-50)]' : 'border-[var(--color-ink-200)] bg-[var(--color-card)]',
+    isSelected ? 'border-[var(--color-brand-700)] bg-[var(--color-brand-50)]' : 'border-[var(--color-card-border)] bg-[var(--color-card)]',
   )
 
 export function StepService({ draft, update, services, addons }: StepProps): ReactElement {
@@ -38,7 +38,7 @@ export function StepService({ draft, update, services, addons }: StepProps): Rea
           {addons.map((addon) => {
             const isChosen = draft.addonIds.includes(addon.id)
             return (
-              <label key={addon.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] px-3 py-2">
+              <label key={addon.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] px-3 py-2">
                 <input type="checkbox" checked={isChosen} className="h-5 w-5 accent-[var(--color-brand-700)]"
                   onChange={(): void => { update({ addonIds: isChosen ? draft.addonIds.filter((id) => id !== addon.id) : [...draft.addonIds, addon.id] }) }} />
                 <span className="flex-1 text-sm text-[var(--color-ink-900)]">{addon.name}</span>

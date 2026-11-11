@@ -48,7 +48,7 @@ function AttendanceRow({
   const sessionLabel = `${formatCalendarDate(session.sessionDate)}, ${trainingSessionKindLabels[session.sessionKind]}`
 
   return (
-    <li className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3" aria-label={sessionLabel}>
+    <li className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3" aria-label={sessionLabel}>
       <p className="text-sm font-medium text-[var(--color-ink-900)]">{sessionLabel}</p>
       {currentRecord !== null ? (
         <div className="flex flex-wrap items-center gap-2">

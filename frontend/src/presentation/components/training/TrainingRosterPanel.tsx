@@ -69,7 +69,7 @@ export function TrainingRosterPanel({
             const isExpanded = expandedEnrollmentId === rosterEntry.enrollmentId
             const ownerActions = isOwnerView ? ownerTrainingEnrollmentActions(rosterEntry.enrollmentStatus, rosterEntry.progressStatus) : []
             return (
-              <li key={rosterEntry.enrollmentId} className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+              <li key={rosterEntry.enrollmentId} className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0 space-y-1">
                     <p className="text-sm font-medium break-words text-[var(--color-ink-900)]">{rosterEntry.displayName}</p>

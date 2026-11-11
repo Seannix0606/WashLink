@@ -29,10 +29,10 @@ export function ShopPickerRow({
       className={joinClassNames(
         'flex w-full items-start gap-3 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all',
         isDisabled
-          ? 'cursor-not-allowed border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] opacity-60'
+          ? 'cursor-not-allowed border-[var(--color-card-border)] bg-[var(--color-surface-muted)] opacity-60'
           : isSelected
           ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
-          : 'border-[var(--color-ink-200)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
+          : 'border-[var(--color-card-border)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
       )}
     >
       <span

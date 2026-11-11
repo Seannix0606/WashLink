@@ -19,7 +19,7 @@ const sizeClassNameBySizeKey: Record<IconButtonSizeVariant, string> = {
 
 const toneClassNameByToneKey: Record<IconButtonToneVariant, string> = {
   neutral:
-    'text-[var(--color-ink-700)] hover:bg-[var(--color-surface-muted)] border border-[var(--color-ink-200)] bg-[var(--color-card)]',
+    'text-[var(--color-ink-700)] hover:bg-[var(--color-surface-muted)] border border-[var(--color-card-border)] bg-[var(--color-card)]',
   brand:
     'text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]',
   danger:

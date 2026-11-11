@@ -86,7 +86,7 @@ function CaseBody({ moderationService, caseId, onDecided }: CaseBodyProps): Reac
         <p className="text-[11px] text-[var(--color-ink-500)]">{adminCaseReporterProtectionText}</p>
         <ul aria-label="Reports" className="space-y-2">
           {reports.map((report) => (
-            <li key={`${report.reporterLabel}-${report.createdAt}`} className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-2">
+            <li key={`${report.reporterLabel}-${report.createdAt}`} className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-2">
               <p className="font-medium text-[var(--color-ink-900)]">{`${report.reporterLabel} · ${reportCategoryLabel[report.category]}`}</p>
               <p>{`${formatShortDateTime(report.createdAt)} · ${reportStatusLabel[report.status]}${report.outcome === null ? '' : ` · ${reportOutcomeLabel[report.outcome]}`}`}</p>
               <p className="whitespace-pre-line break-words">{report.statement}</p>

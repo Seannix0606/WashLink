@@ -87,7 +87,7 @@ function ScheduledJobItem({ jobStatus }: { readonly jobStatus: ScheduledJobStatu
   const jobTitle = knownJobKey === null ? scheduledJob.jobKey : scheduledJobLabel[knownJobKey]
   const headingId = `scheduled-job-${scheduledJob.jobKey}`
   return (
-    <li aria-labelledby={headingId} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+    <li aria-labelledby={headingId} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 id={headingId} className="text-sm font-semibold text-[var(--color-ink-900)]">
           {jobTitle}

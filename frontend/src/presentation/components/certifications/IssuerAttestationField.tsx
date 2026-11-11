@@ -11,7 +11,7 @@ interface IssuerAttestationFieldProps {
 export function IssuerAttestationField({ hasConfirmed, onConfirmedChange }: IssuerAttestationFieldProps): ReactElement {
   const noteId = useId()
   return (
-    <div className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] px-3 py-2">
+    <div className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] px-3 py-2">
       <label className="flex items-start gap-2 text-sm text-[var(--color-ink-900)]">
         <input
           type="checkbox"

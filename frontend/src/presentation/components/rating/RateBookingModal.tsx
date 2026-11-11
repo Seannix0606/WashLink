@@ -82,7 +82,7 @@ export function RateBookingModal({
     >
       <div className="space-y-4">
         {booking !== null ? (
-          <div className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] p-3">
+          <div className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-3">
             <p className="text-xs uppercase tracking-[0.08em] text-[var(--color-ink-500)]">
               Booking
             </p>
@@ -126,7 +126,7 @@ export function RateBookingModal({
             }}
             disabled={isSubmittingRating}
             placeholder="Tell us what went well, or what could be better."
-            className="w-full rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:border-[var(--color-brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-200)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:border-[var(--color-brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-200)] disabled:cursor-not-allowed disabled:opacity-60"
           />
           <p className="text-right text-[11px] text-[var(--color-ink-500)]">
             {draftRatingComment.length}/{ratingCommentCharacterLimit}

@@ -64,7 +64,7 @@ export function NotificationFilterBar({
       <div
         role="group"
         aria-label={readFilterGroupLabel}
-        className="inline-flex gap-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-1"
+        className="inline-flex gap-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-1"
       >
         <ReadFilterButton
           label={allReadStatesLabel}

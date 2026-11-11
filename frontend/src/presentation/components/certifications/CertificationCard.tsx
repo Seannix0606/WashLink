@@ -59,7 +59,7 @@ export function CertificationCard({
   const canRequestReview = !isShopReviewOnHold && canRequestCertificationReview(certification, currentInstant)
 
   return (
-    <li className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+    <li className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 space-y-1">
           <p className="text-sm font-semibold break-words text-[var(--color-ink-900)]">{certification.certificationTitle}</p>

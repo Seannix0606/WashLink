@@ -1,5 +1,5 @@
 /**
- * Light, dark or follow the device. The same rules run before the first paint in public/theme-init.js (a plain
+ * Light (the default), dark or follow the device. The same rules run before the first paint in public/theme-init.js (a plain
  * script, because the site's Content-Security-Policy only allows script files from the site itself). Keep the two
  * in step: the storage key, the values and the theme-color colors.
  */
@@ -12,7 +12,7 @@ export const THEME_STORAGE_KEY = 'washlink.theme'
 export const themeBarColor: Readonly<Record<ResolvedTheme, string>> = { light: '#0F766E', dark: '#0A1315' }
 
 export function parseThemePreference(value: string | null): ThemePreference {
-  return value === 'light' || value === 'dark' || value === 'auto' ? value : 'auto'
+  return value === 'light' || value === 'dark' || value === 'auto' ? value : 'light'
 }
 
 export function resolveTheme(preference: ThemePreference, prefersDark: boolean): ResolvedTheme {

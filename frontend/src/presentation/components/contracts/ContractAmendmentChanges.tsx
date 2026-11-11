@@ -35,7 +35,7 @@ export function ContractAmendmentChanges({ changes, viewerRole }: ContractAmendm
       ) : (
         <ul aria-label="Changes" className="space-y-2">
           {changes.map((change, changeIndex) => (
-            <li key={`${change.changeKind}-${String(changeIndex)}`} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+            <li key={`${change.changeKind}-${String(changeIndex)}`} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
               <p className="text-sm font-medium text-[var(--color-ink-900)]">{`${changeKindLabel[change.changeKind]}: ${describeChangeItem(change)}`}</p>
               {change.previousText !== null ? (
                 <p className="text-sm whitespace-pre-line break-words text-[var(--color-ink-700)]">

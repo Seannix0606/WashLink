@@ -85,7 +85,7 @@ export function SendContractModal({
           </div>
         ) : null}
         <ContractProblemTermFlags flags={preview.flags} notices={flagNotices} />
-        <fieldset className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+        <fieldset className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
           <legend className="px-1 font-medium text-[var(--color-ink-900)]">Confirm before sending</legend>
           <CheckboxRow
             label={`I reviewed the keyword check (${describeFlagCount(preview.flagCount)}).`}

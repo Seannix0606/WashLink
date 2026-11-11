@@ -50,7 +50,7 @@ export function TrainingTrainersSection({ trainingProgramService, program, roste
       ) : (
         <ul aria-label="Designated trainers" className="space-y-2">
           {trainers.map((trainer) => (
-            <li key={trainer.designationId} className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3 text-sm">
+            <li key={trainer.designationId} className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3 text-sm">
               <div className="min-w-0">
                 <p className="font-medium break-words text-[var(--color-ink-900)]">{trainer.displayName}</p>
                 <p className="text-xs text-[var(--color-ink-500)]">

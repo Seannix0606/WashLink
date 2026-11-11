@@ -178,7 +178,7 @@ export function ShopVerificationReviewDrawer({
         </p>
       ) : (
         <div className="space-y-5">
-          <div className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] p-3">
+          <div className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-ink-700)]">
                 Status
@@ -226,7 +226,7 @@ export function ShopVerificationReviewDrawer({
                 }))
               }}
               placeholder="Add notes visible to the owner (required for rejection or requesting changes)."
-              className="w-full rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:border-[var(--color-brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-200)]"
+              className="w-full rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] focus:border-[var(--color-brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-200)]"
             />
             <p className="text-right text-[11px] text-[var(--color-ink-500)]">
               {draftDecisionNotes.length}/{decisionNotesCharacterLimit}

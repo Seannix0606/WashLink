@@ -176,7 +176,7 @@ export function NewWorkerContractModal({ workerContractService, isSubmitting, on
             }}
           />
         </div>
-        <div className="flex flex-col-reverse gap-2 border-t border-[var(--color-ink-200)] pt-3 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-2 border-t border-[var(--color-card-border)] pt-3 sm:flex-row sm:justify-end">
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>

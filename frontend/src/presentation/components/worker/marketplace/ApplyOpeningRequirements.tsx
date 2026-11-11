@@ -44,7 +44,7 @@ export function ApplyOpeningRequirementsSection({
   return (
     <section
       aria-labelledby={headingId}
-      className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] px-4 py-3"
+      className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] px-4 py-3"
     >
       <h3
         id={headingId}

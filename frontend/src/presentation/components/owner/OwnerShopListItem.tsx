@@ -22,7 +22,7 @@ export function OwnerShopListItem({
   onRemoveShop,
 }: OwnerShopListItemProps): ReactElement {
   return (
-    <li className="flex flex-col gap-3 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3 sm:flex-row sm:items-center sm:gap-4">
+    <li className="flex flex-col gap-3 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-3 sm:flex-row sm:items-center sm:gap-4">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate text-sm font-semibold text-[var(--color-ink-900)]">

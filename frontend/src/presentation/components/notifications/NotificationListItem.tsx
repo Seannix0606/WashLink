@@ -24,7 +24,7 @@ export function NotificationListItem({
       className={joinClassNames(
         'flex gap-3 rounded-[var(--radius-control)] border px-3 py-3',
         notification.isRead
-          ? 'border-[var(--color-ink-200)] bg-[var(--color-card)]'
+          ? 'border-[var(--color-card-border)] bg-[var(--color-card)]'
           : 'border-[var(--color-brand-100)] bg-[var(--color-brand-50)]',
       )}
     >

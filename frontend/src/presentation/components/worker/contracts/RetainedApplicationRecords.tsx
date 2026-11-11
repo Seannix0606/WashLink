@@ -18,7 +18,7 @@ interface RetainedApplicationRecordsProps {
 export function RetainedApplicationRecords({ workerContractResponseService }: RetainedApplicationRecordsProps): ReactElement {
   const records = useRetainedApplicationRecords(workerContractResponseService)
   return (
-    <section aria-label={retainedRecordsTitle} className="space-y-2 border-t border-[var(--color-ink-200)] pt-4">
+    <section aria-label={retainedRecordsTitle} className="space-y-2 border-t border-[var(--color-card-border)] pt-4">
       <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--color-ink-900)]">
         <Archive className="h-4 w-4 text-[var(--color-brand-700)]" aria-hidden="true" />
         {retainedRecordsTitle}
@@ -43,7 +43,7 @@ export function RetainedApplicationRecords({ workerContractResponseService }: Re
             const statusLabel =
               (describeJobApplicationStatus(record.status as JobApplicationStatus) as { displayLabel: string } | undefined)?.displayLabel ?? record.status
             return (
-              <li key={record.recordId} aria-label={title} className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+              <li key={record.recordId} aria-label={title} className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
                 <details>
                   <summary className="cursor-pointer space-y-0.5">
                     <span className="text-sm font-medium break-words text-[var(--color-ink-900)]">{title}</span>

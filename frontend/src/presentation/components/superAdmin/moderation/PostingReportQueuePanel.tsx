@@ -67,7 +67,7 @@ export function PostingReportQueuePanel({ moderationService }: PostingReportQueu
                 onClick={(): void => {
                   setOpenCaseId(item.caseId)
                 }}
-                className="flex w-full items-start justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3 text-left transition-colors hover:border-[var(--color-brand-400)]"
+                className="flex w-full items-start justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-3 text-left transition-colors hover:border-[var(--color-brand-400)]"
               >
                 <span className="min-w-0 space-y-0.5">
                   <span className="block text-sm font-semibold break-words text-[var(--color-ink-900)]">{item.openingTitleSnapshot ?? 'Job opening'}</span>

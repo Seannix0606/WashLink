@@ -247,7 +247,7 @@ export function LocationAndShopStep({
         <ul className="space-y-2">
           {isLoadingShops ? (
             <li>
-              <div className="rounded-[var(--radius-surface)] border border-dashed border-[var(--color-ink-200)] bg-[var(--color-card)] px-4 py-5 text-center text-xs text-[var(--color-ink-500)]">
+              <div className="rounded-[var(--radius-surface)] border border-dashed border-[var(--color-card-border)] bg-[var(--color-card)] px-4 py-5 text-center text-xs text-[var(--color-ink-500)]">
                 Loading shops…
               </div>
             </li>
@@ -255,7 +255,7 @@ export function LocationAndShopStep({
 
           {!isLoadingShops && shopsSortedByDistance.length === 0 ? (
             <li>
-              <div className="rounded-[var(--radius-surface)] border border-dashed border-[var(--color-ink-200)] bg-[var(--color-card)] px-4 py-5 text-center text-xs text-[var(--color-ink-500)]">
+              <div className="rounded-[var(--radius-surface)] border border-dashed border-[var(--color-card-border)] bg-[var(--color-card)] px-4 py-5 text-center text-xs text-[var(--color-ink-500)]">
                 No approved shops are available yet. Check back after a shop
                 has published its rates.
               </div>

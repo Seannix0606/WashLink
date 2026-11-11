@@ -21,7 +21,7 @@ import { ChangeWorkforcePolicyModal } from './ChangeWorkforcePolicyModal'
 function WorkforcePolicyItem({ policy, onChange }: { readonly policy: WorkforcePolicy; readonly onChange: () => void }): ReactElement {
   const policyLabel = workforcePolicyKeyLabel[policy.policyKey] ?? policy.policyKey
   return (
-    <li aria-label={policyLabel} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+    <li aria-label={policyLabel} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold text-[var(--color-ink-900)]">{policyLabel}</span>
         <Badge tone="info">{informationalOnlyLabel}</Badge>

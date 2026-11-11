@@ -46,7 +46,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           'transition-colors focus:border-[var(--color-brand-600)]',
           hasErrorText
             ? 'border-[var(--color-danger-500)]'
-            : 'border-[var(--color-ink-200)]',
+            : 'border-[var(--color-card-border)]',
           className,
         )}
         {...selectHtmlAttributes}

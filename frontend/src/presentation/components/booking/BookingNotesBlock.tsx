@@ -11,7 +11,7 @@ interface BookingNotesBlockProps {
 
 const containerClassNameByTone: Record<BookingNotesBlockTone, string> = {
   neutral:
-    'rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] px-3 py-2.5',
+    'rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] px-3 py-2.5',
   highlight:
     'rounded-[var(--radius-surface)] border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] px-3 py-2.5',
 }

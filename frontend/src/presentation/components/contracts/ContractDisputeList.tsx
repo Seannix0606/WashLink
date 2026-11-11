@@ -35,7 +35,7 @@ function DisputeItem({
 }): ReactElement {
   const partyText = [dispute.shopName, dispute.counterpartName].filter((namePart): namePart is string => namePart !== null).join(' · ')
   return (
-    <li aria-label={`Reported problem: ${contractDisputeCategoryLabel[dispute.category]}`} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3 text-xs">
+    <li aria-label={`Reported problem: ${contractDisputeCategoryLabel[dispute.category]}`} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3 text-xs">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold text-[var(--color-ink-900)]">{contractDisputeCategoryLabel[dispute.category]}</span>
         <Badge tone={dispute.status === 'open' ? 'warning' : 'neutral'}>{contractDisputeStatusLabel[dispute.status]}</Badge>

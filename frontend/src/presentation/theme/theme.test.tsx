@@ -37,9 +37,10 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals() })
 
 describe('theme preference rules', () => {
-  it('treats anything unknown as Auto, and Auto follows the device', () => {
-    expect(parseThemePreference(null)).toBe('auto')
-    expect(parseThemePreference('purple')).toBe('auto')
+  it('treats anything unknown as Light, and Auto follows the device', () => {
+    expect(parseThemePreference(null)).toBe('light')
+    expect(parseThemePreference('purple')).toBe('light')
+    expect(parseThemePreference('auto')).toBe('auto')
     expect(parseThemePreference('dark')).toBe('dark')
     expect(resolveTheme('auto', true)).toBe('dark')
     expect(resolveTheme('auto', false)).toBe('light')
@@ -51,6 +52,7 @@ describe('theme preference rules', () => {
     expect(script).toContain(`'${THEME_STORAGE_KEY}'`)
     expect(script).toContain(themeBarColor.dark)
     expect(script).toContain(themeBarColor.light)
+    expect(script).toContain("var preference = 'light'")
     expect(readFileSync('index.html', 'utf8')).toMatch(/<script src="\/theme-init\.js"><\/script>[\s\S]*<\/head>/)
   })
 
@@ -79,7 +81,15 @@ describe('safe storage', () => {
 })
 
 describe('ThemeProvider and ThemeSwitch', () => {
-  it('starts on Auto, follows the device live, and sets the page and browser bar colors', () => {
+  it('starts on Light even when the device prefers dark', () => {
+    isDark = true
+    render(<ThemeProvider><ThemeSwitch /></ThemeProvider>)
+    expect(screen.getByRole('radio', { name: 'Light' })).toHaveAttribute('aria-checked', 'true')
+    expect(document.documentElement.dataset.theme).toBe('light')
+  })
+
+  it('on Auto, follows the device live and sets the page and browser bar colors', () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'auto')
     render(<ThemeProvider><ThemeSwitch /></ThemeProvider>)
     expect(screen.getByRole('radio', { name: 'Auto' })).toHaveAttribute('aria-checked', 'true')
     expect(document.documentElement.dataset.theme).toBe('light')
@@ -107,14 +117,14 @@ describe('ThemeProvider and ThemeSwitch', () => {
 
   it('moves between options with the arrow keys, with only the chosen one reachable by Tab', async () => {
     render(<ThemeProvider><ThemeSwitch /></ThemeProvider>)
-    const auto = screen.getByRole('radio', { name: 'Auto' })
-    expect(auto).toHaveAttribute('tabindex', '0')
-    expect(screen.getByRole('radio', { name: 'Light' })).toHaveAttribute('tabindex', '-1')
-    auto.focus()
+    const light = screen.getByRole('radio', { name: 'Light' })
+    expect(light).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('radio', { name: 'Dark' })).toHaveAttribute('tabindex', '-1')
+    light.focus()
     await userEvent.keyboard('{ArrowRight}')
-    expect(screen.getByRole('radio', { name: 'Light' })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('radio', { name: 'Light' })).toHaveFocus()
+    expect(screen.getByRole('radio', { name: 'Dark' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'Dark' })).toHaveFocus()
     await userEvent.keyboard('{ArrowLeft}')
-    expect(screen.getByRole('radio', { name: 'Auto' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'Light' })).toHaveAttribute('aria-checked', 'true')
   })
 })

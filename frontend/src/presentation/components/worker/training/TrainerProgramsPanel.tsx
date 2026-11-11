@@ -93,7 +93,7 @@ export function TrainerProgramsPanel({
       ) : (
         <ul aria-label="Programs I train for" className="space-y-2">
           {designatedPrograms.map(({ designationId, program }) => (
-            <li key={designationId} className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+            <li key={designationId} className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
               <span className="text-sm font-medium break-words text-[var(--color-ink-900)]">{program.title}</span>
               <Button size="sm" variant="secondary" onClick={(): void => { setSelectedProgramId(program.id) }}>
                 Open trainees

@@ -29,7 +29,7 @@ export function MarketplaceOpeningCard({
   const factClassName = 'flex items-center gap-1.5 text-xs text-[var(--color-ink-700)]'
 
   return (
-    <li className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-4">
+    <li className="space-y-3 rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h3 className="text-sm font-semibold break-words text-[var(--color-ink-900)]">

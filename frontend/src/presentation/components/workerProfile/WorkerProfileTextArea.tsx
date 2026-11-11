@@ -48,7 +48,7 @@ export function WorkerProfileTextArea({
           'w-full rounded-[var(--radius-control)] border bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-ink-900)] outline-none placeholder:text-[var(--color-ink-400)] focus:border-[var(--color-brand-600)]',
           hasErrorText
             ? 'border-[var(--color-danger-500)]'
-            : 'border-[var(--color-ink-200)]',
+            : 'border-[var(--color-card-border)]',
         )}
       />
       <div id={describedById} className="flex justify-between gap-3 text-xs">

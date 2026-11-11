@@ -76,7 +76,7 @@ export function RolePickerGrid({
                 'flex flex-col items-start gap-2 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all',
                 isSelected
                   ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
-                  : 'border-[var(--color-ink-200)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
+                  : 'border-[var(--color-card-border)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
               )}
             >
               <span

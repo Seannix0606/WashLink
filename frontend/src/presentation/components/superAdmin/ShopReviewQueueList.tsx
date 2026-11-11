@@ -77,7 +77,7 @@ export function ShopReviewQueueList({
               onClick={(): void => {
                 onShopSelectedForReview(shopInReviewQueue)
               }}
-              className="w-full rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-4 text-left transition-all hover:border-[var(--color-brand-400)] hover:shadow-[var(--shadow-card)]"
+              className="w-full rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-4 text-left transition-all hover:border-[var(--color-brand-400)] hover:shadow-[var(--shadow-card)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

@@ -35,7 +35,7 @@ export function ShopCertificationValiditySection({ certificationService, shopId 
   }
 
   return (
-    <section aria-label="Certification validity" className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+    <section aria-label="Certification validity" className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
       <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-ink-900)]">
         <CalendarClock className="h-4 w-4 text-[var(--color-brand-700)]" aria-hidden="true" />
         Certification validity

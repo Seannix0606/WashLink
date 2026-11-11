@@ -134,7 +134,7 @@ export function ProfileEditorCard({
   )
 
   const securitySection: ReactElement | null = isEmbeddedInModal ? null : (
-    <div className="mt-5 border-t border-[var(--color-ink-200)] pt-4">
+    <div className="mt-5 border-t border-[var(--color-card-border)] pt-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-[var(--color-ink-900)]">

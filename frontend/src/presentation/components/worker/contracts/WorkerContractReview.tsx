@@ -116,7 +116,7 @@ export function WorkerContractReview({ workerContractResponseService, contract, 
       ) : null}
 
       {openedVersion !== null ? (
-        <section aria-label="Opened version" className="space-y-2 border-t border-[var(--color-ink-200)] pt-3">
+        <section aria-label="Opened version" className="space-y-2 border-t border-[var(--color-card-border)] pt-3">
           <div className="flex items-center justify-between gap-2">
             <h4 className="text-sm font-semibold text-[var(--color-ink-900)]">{describeVersion(openedVersion.versionNumber, openedVersion.kind)}</h4>
             <Button size="sm" variant="ghost" onClick={(): void => { setOpenedVersion(null) }}>

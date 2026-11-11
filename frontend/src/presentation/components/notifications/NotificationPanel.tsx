@@ -53,7 +53,7 @@ function NotificationListSkeleton(): ReactElement {
       {[0, 1, 2].map((placeholderIndex) => (
         <div
           key={placeholderIndex}
-          className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3"
+          className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3"
         >
           <Skeleton widthClassName="w-2/3" />
           <Skeleton heightClassName="h-3" />

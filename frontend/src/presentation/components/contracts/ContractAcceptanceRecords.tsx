@@ -28,7 +28,7 @@ export function ContractAcceptanceRecords({ acceptances }: ContractAcceptanceRec
             <li
               key={`${acceptance.versionId}-${acceptance.partyRole}`}
               aria-label={`${partyRoleLabel[acceptance.partyRole]} acceptance of version ${String(acceptance.versionNumber)}`}
-              className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3"
+              className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="warning">{acceptance.recordLabel.length > 0 ? acceptance.recordLabel : acceptanceRecordLabel}</Badge>

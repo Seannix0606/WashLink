@@ -48,7 +48,7 @@ export function LatestOpeningsList({ workforceDashboardService, onBrowseRequeste
     return (
       <ul aria-label={latestOpeningsHeading} className="space-y-2">
         {latestOpenings.openings.map((opening) => (
-          <li key={opening.jobOpeningId} className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+          <li key={opening.jobOpeningId} className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
             <p className="text-sm font-semibold break-words text-[var(--color-ink-900)]">{opening.title}</p>
             <p className="text-xs break-words text-[var(--color-ink-500)]">{opening.shopName}</p>
             <p className="mt-1 text-xs text-[var(--color-ink-700)]">

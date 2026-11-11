@@ -14,7 +14,7 @@ export function WorkforceActivityList({ events }: WorkforceActivityListProps): R
       {events.map((activityEvent) => {
         const detailLines = describeActivityDetails(activityEvent.details)
         return (
-          <li key={activityEvent.eventId} className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3 text-xs text-[var(--color-ink-700)]">
+          <li key={activityEvent.eventId} className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-3 text-xs text-[var(--color-ink-700)]">
             <p className="text-sm font-medium break-words text-[var(--color-ink-900)]">{describeActivityAction(activityEvent.action)}</p>
             <p>{`${activityActorText[activityEvent.actorLabel]} · ${formatShortDateTime(activityEvent.createdAt)}`}</p>
             {detailLines.length > 0 ? <p className="break-words text-[var(--color-ink-500)]">{detailLines.join(' · ')}</p> : null}

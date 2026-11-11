@@ -113,7 +113,7 @@ export function WorkerContractDraftEditor({ workerContractService, contract, act
             {editor.visibleDraftErrors.formError !== null ? (
               <p role="alert" className="text-sm text-[var(--color-danger-600)]">{editor.visibleDraftErrors.formError}</p>
             ) : null}
-            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-ink-200)] bg-[var(--color-card)] py-3 sm:flex-row sm:flex-wrap sm:justify-end">
+            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-card-border)] bg-[var(--color-card)] py-3 sm:flex-row sm:flex-wrap sm:justify-end">
               <Button
                 variant="ghost"
                 leadingIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
@@ -144,7 +144,7 @@ export function WorkerContractDraftEditor({ workerContractService, contract, act
           </form>
 
           {preview !== null ? (
-            <section aria-label="Saved draft check" className="space-y-4 border-t border-[var(--color-ink-200)] pt-4">
+            <section aria-label="Saved draft check" className="space-y-4 border-t border-[var(--color-card-border)] pt-4">
               <h4 className="text-sm font-semibold text-[var(--color-ink-900)]">Saved draft check</h4>
               {preview.unfilled.length > 0 ? (
                 <div role="status" className="space-y-1 rounded-[var(--radius-control)] bg-[var(--color-warning-50)] p-3 text-sm">

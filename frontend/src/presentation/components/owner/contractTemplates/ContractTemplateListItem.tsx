@@ -29,7 +29,7 @@ export function ContractTemplateListItem({
   const statusDisplay = templateStatusDisplay[template.status]
   const isActive = template.status === 'active'
   return (
-    <li aria-label={template.name} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+    <li aria-label={template.name} className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold break-words text-[var(--color-ink-900)]">{template.name}</span>
         <Badge tone={statusDisplay.tone}>{statusDisplay.label}</Badge>

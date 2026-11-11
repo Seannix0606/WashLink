@@ -54,7 +54,7 @@ export function MyTrainingProgress({ trainingEvidenceService, myTraining }: MyTr
       )}
 
       {agreedTerms === null ? null : (
-        <details className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3" open>
+        <details className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3" open>
           <summary className="cursor-pointer text-sm font-semibold text-[var(--color-ink-900)]">
             Agreed training terms
             {enrollment.termsSnapshotTakenAt === null ? '' : ` (recorded ${formatShortDateTime(enrollment.termsSnapshotTakenAt)})`}

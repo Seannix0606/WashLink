@@ -106,7 +106,7 @@ function DocumentRow({ document, onChanged }: DocumentRowProps): ReactElement {
           {/* The only place a file is shown, and only in an image element: never an iframe, an object or a new window. */}
           {imageUrl !== null && !isBroken ? (
             <img src={imageUrl} alt={`${document.label} from ${document.workerName || 'this washer'}`}
-              className="max-h-96 max-w-full rounded-[var(--radius-control)] border border-[var(--color-ink-200)]"
+              className="max-h-96 max-w-full rounded-[var(--radius-control)] border border-[var(--color-card-border)]"
               onLoad={(): void => { setIsLoaded(true) }}
               onError={(): void => { setIsLoaded(false); setIsBroken(true) }} />
           ) : (

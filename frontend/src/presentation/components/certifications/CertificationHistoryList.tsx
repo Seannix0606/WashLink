@@ -38,7 +38,7 @@ export function CertificationHistoryList({ certificationService, certificationId
       ) : (
         <ol className="space-y-2 text-xs text-[var(--color-ink-700)]">
           {history.items.map((historyEntry) => (
-            <li key={`${historyEntry.entryKind}-${historyEntry.entryId}`} className="space-y-0.5 border-l-2 border-[var(--color-ink-200)] pl-2">
+            <li key={`${historyEntry.entryKind}-${historyEntry.entryId}`} className="space-y-0.5 border-l-2 border-[var(--color-card-border)] pl-2">
               <p className="font-medium text-[var(--color-ink-900)]">
                 {describeHistoryEntryTitle(historyEntry)}, {formatCertificationDate(historyEntry.occurredAt)}
               </p>

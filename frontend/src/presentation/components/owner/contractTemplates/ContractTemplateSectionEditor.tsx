@@ -28,7 +28,7 @@ interface ContractTemplateSectionEditorProps {
 
 function LockedClause({ clause }: { readonly clause: ContractTemplateClause }): ReactElement {
   return (
-    <article aria-label={clause.heading} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] p-3">
+    <article aria-label={clause.heading} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-3">
       <Badge tone={clauseKindDisplay.locked_safeguard.tone}>
         <Lock className="h-3 w-3" aria-hidden="true" />
         {clauseKindDisplay.locked_safeguard.label}
@@ -94,7 +94,7 @@ export function ContractTemplateSectionEditor({
   const headingId = `contract-section-${String(section.sectionNumber)}`
   const sectionShopTerms = draft.shopTerms.filter((shopTerm) => shopTerm.sectionNumber === section.sectionNumber)
   return (
-    <section aria-labelledby={headingId} className="space-y-3 border-t border-[var(--color-ink-200)] pt-4">
+    <section aria-labelledby={headingId} className="space-y-3 border-t border-[var(--color-card-border)] pt-4">
       <header className="space-y-0.5">
         <h3 id={headingId} className="text-sm font-semibold text-[var(--color-ink-900)]">
           {`${String(section.sectionNumber)}. ${section.sectionTitle}`}

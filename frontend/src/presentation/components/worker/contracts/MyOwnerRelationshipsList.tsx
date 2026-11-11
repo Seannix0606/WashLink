@@ -22,7 +22,7 @@ function MyOwnerRelationshipItem({ relationship }: { readonly relationship: MyOw
   return (
     <li
       aria-label={`Relationship with ${relationship.ownerName}`}
-      className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3"
+      className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3"
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold break-words text-[var(--color-ink-900)]">{relationship.ownerName}</span>

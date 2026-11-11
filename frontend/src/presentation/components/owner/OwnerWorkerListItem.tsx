@@ -19,7 +19,7 @@ export function OwnerWorkerListItem({
   onRemoveWorker,
 }: OwnerWorkerListItemProps): ReactElement {
   return (
-    <li className="flex flex-wrap items-center gap-3 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3">
+    <li className="flex flex-wrap items-center gap-3 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-3">
       <Avatar fullName={worker.workerName} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">

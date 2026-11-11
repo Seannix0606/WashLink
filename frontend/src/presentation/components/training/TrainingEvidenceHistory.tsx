@@ -69,7 +69,7 @@ export function TrainingEvidenceHistory({ evidence }: TrainingEvidenceHistoryPro
             return (
               <li
                 key={evidenceEntry.evidenceId}
-                className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3 text-sm"
+                className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3 text-sm"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium break-words text-[var(--color-ink-900)]">{describeEvidence(evidenceEntry)}</span>

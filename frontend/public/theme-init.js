@@ -2,12 +2,12 @@
 // Loaded as a file (not inline) because the site's Content-Security-Policy only allows scripts from the site itself.
 // Same rules as src/application/theme/themePreference.ts: keep the key, values and colors in step.
 ;(function () {
-  var preference = 'auto'
+  var preference = 'light'
   try {
     var stored = window.localStorage.getItem('washlink.theme')
     if (stored === 'light' || stored === 'dark' || stored === 'auto') preference = stored
   } catch (error) {
-    // Storage blocked: follow the device.
+    // Storage blocked: light.
   }
   var prefersDark = false
   try {

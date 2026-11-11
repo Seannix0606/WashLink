@@ -41,7 +41,7 @@ export function TrainingSessionList({
         return (
           <li
             key={session.id}
-            className="flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3 sm:flex-row sm:items-start sm:justify-between"
+            className="flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3 sm:flex-row sm:items-start sm:justify-between"
           >
             <div className="min-w-0 space-y-1">
               <p className="text-sm font-medium text-[var(--color-ink-900)]">

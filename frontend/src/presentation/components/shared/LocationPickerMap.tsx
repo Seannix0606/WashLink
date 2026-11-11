@@ -87,7 +87,7 @@ export function LocationPickerMap({
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] ${heightClassName}`}
+      className={`relative w-full overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-card-border)] ${heightClassName}`}
     >
       <MapContainer
         center={[mapCenterLatitude, mapCenterLongitude]}

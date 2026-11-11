@@ -18,7 +18,7 @@ const variantClassNameByVariantKey: Record<ButtonVisualVariant, string> = {
   primary:
     'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-strong)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]',
   secondary:
-    'bg-[var(--color-card)] text-[var(--color-ink-900)] border border-[var(--color-ink-200)] hover:bg-[var(--color-surface-muted)]',
+    'bg-[var(--color-card)] text-[var(--color-ink-900)] border border-[var(--color-card-border)] hover:bg-[var(--color-surface-muted)]',
   ghost:
     'bg-transparent text-[var(--color-ink-700)] hover:bg-[var(--color-surface-muted)]',
   danger:

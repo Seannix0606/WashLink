@@ -169,7 +169,7 @@ export function CustomerHomeTab({
                 }
               </Badge>
             </div>
-            <div className="flex items-center justify-between border-t border-[var(--color-ink-200)] pt-3">
+            <div className="flex items-center justify-between border-t border-[var(--color-card-border)] pt-3">
               <span className="text-sm text-[var(--color-ink-500)]">
                 Quoted price
               </span>

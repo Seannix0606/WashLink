@@ -183,7 +183,7 @@ export function ApplicantProfileDrawer({
           </p>
 
           {application.openingSnapshot !== null ? (
-            <details className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+            <details className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
               <summary className="cursor-pointer text-sm font-semibold text-[var(--color-ink-900)]">
                 Opening as the worker applied
               </summary>

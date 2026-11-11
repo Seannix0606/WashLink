@@ -44,7 +44,7 @@ export function Modal({
             transition={{ duration: 0.15 }}
             className={`relative w-full ${maxWidthClassName} rounded-[var(--radius-surface)] bg-[var(--color-card)] shadow-[var(--shadow-popover)]`}
           >
-            <header className="flex items-center justify-between gap-3 border-b border-[var(--color-ink-200)] px-5 py-4">
+            <header className="flex items-center justify-between gap-3 border-b border-[var(--color-card-border)] px-5 py-4">
               <h2 className="text-base font-semibold text-[var(--color-ink-900)]">
                 {title}
               </h2>
@@ -56,7 +56,7 @@ export function Modal({
             </header>
             <div className="px-5 py-4">{children}</div>
             {footer ? (
-              <footer className="border-t border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] px-5 py-3">
+              <footer className="border-t border-[var(--color-card-border)] bg-[var(--color-surface-muted)] px-5 py-3">
                 {footer}
               </footer>
             ) : null}

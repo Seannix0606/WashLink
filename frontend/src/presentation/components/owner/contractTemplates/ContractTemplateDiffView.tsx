@@ -42,7 +42,7 @@ function WordDiff({ standardBody, versionBody }: { readonly standardBody: string
 function DiffRowView({ row }: { readonly row: ContractTemplateDiffRow }): ReactElement {
   const changeDisplay = clauseChangeDisplay[row.change]
   return (
-    <li aria-label={`${row.versionHeading}: ${changeDisplay.label}`} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3">
+    <li aria-label={`${row.versionHeading}: ${changeDisplay.label}`} className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h5 className="text-sm font-medium break-words text-[var(--color-ink-900)]">{row.versionHeading}</h5>
         <Badge tone={changeDisplay.tone}>{changeDisplay.label}</Badge>

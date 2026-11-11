@@ -9,10 +9,10 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const elevationClassNameByLevel: Record<CardElevationLevel, string> = {
-  flat: 'bg-[var(--color-card)] border border-[var(--color-ink-200)]',
-  raised: 'bg-[var(--color-card)] shadow-[var(--shadow-card)]',
+  flat: 'bg-[var(--color-card)] border border-[var(--color-card-border)]',
+  raised: 'bg-[var(--color-card)] border border-[var(--color-card-border)] shadow-[var(--shadow-card)]',
   interactive:
-    'bg-[var(--color-card)] shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)] cursor-pointer',
+    'bg-[var(--color-card)] border border-[var(--color-card-border)] shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)] cursor-pointer',
 }
 
 export function Card({

@@ -76,7 +76,7 @@ export function ContractDiffWithStandard({ clauses }: ContractDiffWithStandardPr
                 <li
                   key={`${String(clause.sectionNumber)}-${String(clause.position)}`}
                   aria-label={`${clause.heading}: ${changeLabels[clause.change]}`}
-                  className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3"
+                  className="space-y-1 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <h6 className="text-sm font-medium break-words text-[var(--color-ink-900)]">{clause.heading}</h6>

@@ -55,7 +55,7 @@ export function CertifiableTraineesSection({ certificationDependencies, program,
           {certifiable.items.map((enrollment) => (
             <li
               key={enrollment.enrollmentId}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3"
             >
               <div className="min-w-0 text-sm">
                 <p className="font-medium break-words text-[var(--color-ink-900)]">{enrollment.workerDisplayName}</p>

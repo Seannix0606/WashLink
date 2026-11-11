@@ -28,7 +28,7 @@ export function CustomerBookingRatingBlock({
 
   if (hasExistingRating) {
     return (
-      <div className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] p-3">
+      <div className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Star className="h-4 w-4 text-[var(--color-warning-500)]" />

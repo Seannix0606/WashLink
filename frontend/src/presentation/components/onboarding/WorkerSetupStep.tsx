@@ -127,7 +127,7 @@ export function WorkerSetupStep({
             {draftWorkers.map((draftWorker, draftWorkerIndex) => (
               <div
                 key={draftWorker.draftIdentifier}
-                className="rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] p-4"
+                className="rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-4"
               >
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-ink-500)]">

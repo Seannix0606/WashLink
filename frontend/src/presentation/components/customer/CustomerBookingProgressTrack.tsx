@@ -92,7 +92,7 @@ export function CustomerBookingProgressTrack({
                       ? 'bg-[var(--color-primary)] text-white'
                       : isStepCurrent
                         ? 'bg-[var(--color-brand-100)] text-[var(--color-brand-800)] ring-2 ring-[var(--color-brand-500)] ring-offset-2 ring-offset-[var(--color-surface-muted)]'
-                        : 'bg-[var(--color-card)] text-[var(--color-ink-400)] ring-1 ring-[var(--color-ink-200)]',
+                        : 'bg-[var(--color-card)] text-[var(--color-ink-400)] ring-1 ring-[var(--color-card-border)]',
                   )}
                 >
                   {isStepCompleted ? (

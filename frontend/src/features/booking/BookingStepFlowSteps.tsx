@@ -238,7 +238,7 @@ function VehicleSelectionStep({
                 'flex flex-col items-start gap-2 rounded-[var(--radius-surface)] border px-4 py-4 text-left transition-all',
                 isSelected
                   ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
-                  : 'border-[var(--color-ink-200)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
+                  : 'border-[var(--color-card-border)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
               )}
             >
               <span
@@ -302,7 +302,7 @@ function ServiceSelectionStep({
                   'flex w-full items-start gap-3 rounded-[var(--radius-surface)] border px-4 py-3 text-left transition-all',
                   isSelected
                     ? 'border-[var(--color-brand-600)] bg-[var(--color-brand-50)] shadow-[var(--shadow-card)]'
-                    : 'border-[var(--color-ink-200)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
+                    : 'border-[var(--color-card-border)] bg-[var(--color-card)] hover:border-[var(--color-brand-300)]',
                 )}
               >
                 <span
@@ -417,7 +417,7 @@ function ScheduleStep({
             rows={3}
             placeholder="Gate code, parking slot, car color, anything the worker should know…"
             className={joinClassNames(
-              'w-full resize-y rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] outline-none transition-colors',
+              'w-full resize-y rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-ink-900)] placeholder:text-[var(--color-ink-400)] outline-none transition-colors',
               'focus:border-[var(--color-brand-600)]',
             )}
           />
@@ -470,7 +470,7 @@ function ReviewStep({
         title="Review your booking"
         description="Double-check the details before confirming."
       />
-      <dl className="divide-y divide-[var(--color-ink-200)] rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)]">
+      <dl className="divide-y divide-[var(--color-card-border)] rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)]">
         <ReviewSummaryRow label="Name" value={customerName || '—'} />
         <ReviewSummaryRow label="Shop" value={selectedShopLabel} />
         <ReviewSummaryRow label="Vehicle" value={selectedVehicleLabel || '—'} />
@@ -567,7 +567,7 @@ function StickyMobileBookingBar({
   readonly onConfirmClicked: () => void
 }): ReactElement {
   return (
-    <div className="fixed inset-x-0 bottom-14 z-30 border-t border-[var(--color-ink-200)] bg-[var(--color-card)]/95 px-4 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur sm:hidden">
+    <div className="fixed inset-x-0 bottom-14 z-30 border-t border-[var(--color-card-border)] bg-[var(--color-card)]/95 px-4 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur sm:hidden">
       <div className="mx-auto flex max-w-md items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-ink-500)]">

@@ -46,7 +46,7 @@ export function ContractVersionHistory({ history, onOpenVersion }: ContractVersi
               <li
                 key={version.versionId}
                 aria-label={describeVersion(version.versionNumber, version.kind)}
-                className="flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="space-y-0.5">
                   <div className="flex flex-wrap items-center gap-2">

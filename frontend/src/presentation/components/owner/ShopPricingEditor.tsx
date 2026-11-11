@@ -99,7 +99,7 @@ export function ShopPricingEditor({
           {shopPricingVehicleTypes.map((vehicleType) => (
             <section
               key={vehicleType}
-              className="space-y-3 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] p-4"
+              className="space-y-3 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] p-4"
             >
               <h3 className="text-sm font-semibold text-[var(--color-ink-900)]">
                 {vehicleType}

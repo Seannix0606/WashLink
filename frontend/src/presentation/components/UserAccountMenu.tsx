@@ -100,11 +100,11 @@ export function UserAccountMenu(): ReactElement | null {
         <div
           role="menu"
           className={joinClassNames(
-            'absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] shadow-[var(--shadow-popover)]',
+            'absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] shadow-[var(--shadow-popover)]',
             'wl-animate-in',
           )}
         >
-          <div className="border-b border-[var(--color-ink-200)] p-4">
+          <div className="border-b border-[var(--color-card-border)] p-4">
             <div className="flex items-center gap-3">
               <Avatar fullName={authenticatedUser.fullName} size="md" />
               <div className="min-w-0">
@@ -120,7 +120,7 @@ export function UserAccountMenu(): ReactElement | null {
               {roleDisplayLabelByRoleKey[authenticatedUser.role]}
             </p>
           </div>
-          <div role="group" aria-labelledby="account-menu-appearance" className="border-b border-[var(--color-ink-200)] px-4 py-3">
+          <div role="group" aria-labelledby="account-menu-appearance" className="border-b border-[var(--color-card-border)] px-4 py-3">
             <p id="account-menu-appearance" className="mb-2 text-xs font-medium text-[var(--color-ink-500)]">Appearance</p>
             <ThemeSwitch />
           </div>
@@ -149,7 +149,7 @@ export function UserAccountMenu(): ReactElement | null {
             type="button"
             role="menuitem"
             onClick={handleChangePasswordClicked}
-            className="flex w-full items-center gap-2 border-b border-[var(--color-ink-200)] px-4 py-3 text-left text-sm font-medium text-[var(--color-ink-900)] transition-colors hover:bg-[var(--color-surface-muted)]"
+            className="flex w-full items-center gap-2 border-b border-[var(--color-card-border)] px-4 py-3 text-left text-sm font-medium text-[var(--color-ink-900)] transition-colors hover:bg-[var(--color-surface-muted)]"
           >
             <KeyRound className="h-4 w-4 text-[var(--color-ink-500)]" />
             Change password

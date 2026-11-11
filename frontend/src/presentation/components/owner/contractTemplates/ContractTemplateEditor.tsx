@@ -88,7 +88,7 @@ export function ContractTemplateEditor({
       <p className="text-xs text-[var(--color-ink-500)]">{classificationNotChosenHereText}</p>
 
       {editor.isReadOnly ? null : (
-        <details className="rounded-[var(--radius-control)] border border-[var(--color-ink-200)] px-3 py-2 text-sm">
+        <details className="rounded-[var(--radius-control)] border border-[var(--color-card-border)] px-3 py-2 text-sm">
           <summary className="cursor-pointer font-medium text-[var(--color-ink-900)]">Placeholders you can use</summary>
           <p className="mt-2 text-xs text-[var(--color-ink-500)]">{placeholderHelpText}</p>
           <p className="mt-1 text-xs text-[var(--color-ink-500)]">{lockedOnlyPlaceholdersText}</p>
@@ -145,7 +145,7 @@ export function ContractTemplateEditor({
             </p>
           ) : null}
           {editor.isReadOnly ? null : (
-            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-ink-200)] bg-[var(--color-card)] py-3 sm:flex-row sm:justify-end">
+            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[var(--color-card-border)] bg-[var(--color-card)] py-3 sm:flex-row sm:justify-end">
               <Button variant="secondary" disabled={!editor.isDirty || editor.isSaving} onClick={editor.discardChanges}>
                 Discard changes
               </Button>

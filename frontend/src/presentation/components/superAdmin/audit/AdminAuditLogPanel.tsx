@@ -19,7 +19,7 @@ import { AdminAuditFilters } from './AdminAuditFilters'
 
 function AuditEventItem({ auditEvent }: { readonly auditEvent: AdminAuditLogEvent }): ReactElement {
   return (
-    <li className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3 text-xs text-[var(--color-ink-700)]">
+    <li className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-3 text-xs text-[var(--color-ink-700)]">
       <p className="font-medium break-words text-[var(--color-ink-900)]">{`${auditEvent.action} · ${formatShortDateTime(auditEvent.createdAt)}`}</p>
       <p className="break-all">{`By ${auditEvent.actorRole ?? auditEvent.actorKind ?? 'system'}${auditEvent.actorId === null ? '' : ` (${auditEvent.actorId})`}`}</p>
       <p className="break-all">

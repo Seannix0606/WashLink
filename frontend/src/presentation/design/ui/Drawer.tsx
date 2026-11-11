@@ -44,7 +44,7 @@ export function Drawer({
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             className="relative ml-auto flex h-full w-full max-w-md flex-col bg-[var(--color-card)] shadow-[var(--shadow-popover)]"
           >
-            <header className="flex items-start justify-between gap-3 border-b border-[var(--color-ink-200)] px-5 py-4">
+            <header className="flex items-start justify-between gap-3 border-b border-[var(--color-card-border)] px-5 py-4">
               <div>
                 <h2 className="text-base font-semibold text-[var(--color-ink-900)]">
                   {title}
@@ -65,7 +65,7 @@ export function Drawer({
             <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
 
             {footer ? (
-              <footer className="border-t border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] px-5 py-3">
+              <footer className="border-t border-[var(--color-card-border)] bg-[var(--color-surface-muted)] px-5 py-3">
                 {footer}
               </footer>
             ) : null}

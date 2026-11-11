@@ -25,7 +25,7 @@ export function BottomNav<NavItemValue extends string>({
     <nav
       aria-label="Primary"
       className={joinClassNames(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-ink-200)] bg-[var(--color-card)]/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur sm:hidden',
+        'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-card-border)] bg-[var(--color-card)]/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur sm:hidden',
         className,
       )}
     >

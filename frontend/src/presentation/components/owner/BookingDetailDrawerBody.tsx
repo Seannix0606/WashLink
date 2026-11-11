@@ -226,7 +226,7 @@ export function BookingDetailDrawerBody({
       )}
 
       {canAssign ? (
-        <div className="space-y-2 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-card)] p-3">
+        <div className="space-y-2 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-3">
           <p className="text-sm font-medium text-[var(--color-ink-900)]">
             Assign a worker
           </p>

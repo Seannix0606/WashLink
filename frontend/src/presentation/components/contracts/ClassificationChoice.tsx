@@ -37,7 +37,7 @@ export function ClassificationChoice({
     <fieldset
       aria-describedby={hasError ? errorId : `${fieldName}-help`}
       aria-invalid={hasError || undefined}
-      className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-3"
+      className="space-y-2 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-3"
     >
       <legend className="px-1 text-sm font-medium text-[var(--color-ink-900)]">
         Relationship type

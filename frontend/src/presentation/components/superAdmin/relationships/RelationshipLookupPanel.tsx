@@ -75,7 +75,7 @@ function LookupResultView({
       ) : (
         <ul aria-label="Relationships" className="space-y-2">
           {result.relationships.map((relationship) => (
-            <li key={relationship.relationshipId} className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-ink-200)] p-2">
+            <li key={relationship.relationshipId} className="space-y-0.5 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-2">
               <p className="font-medium break-words text-[var(--color-ink-900)]">
                 {`${relationship.counterpartNameSnapshot ?? 'Name not recorded'}${relationship.isOwnerPresent === false ? ' (account removed)' : ''}`}
               </p>

@@ -35,7 +35,7 @@ export function AddWorkerInlineForm({
   }
 
   return (
-    <div className="space-y-3 rounded-[var(--radius-surface)] border border-[var(--color-ink-200)] bg-[var(--color-surface-muted)] p-3">
+    <div className="space-y-3 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           name="newWorkerName"

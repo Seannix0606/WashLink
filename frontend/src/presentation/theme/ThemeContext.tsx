@@ -56,5 +56,5 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }): R
 /** Outside a ThemeProvider (isolated component tests) this reports light and ignores changes. */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTheme(): ThemeContextValue {
-  return useContext(ThemeContext) ?? { preference: 'auto', resolvedTheme: 'light', setPreference: (): void => undefined }
+  return useContext(ThemeContext) ?? { preference: 'light', resolvedTheme: 'light', setPreference: (): void => undefined }
 }

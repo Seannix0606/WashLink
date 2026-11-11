@@ -122,7 +122,7 @@ export function TrainingSessionsEditor({ trainingProgramService, program, onSche
         <form
           noValidate
           aria-label="Add a training day"
-          className="grid gap-3 rounded-[var(--radius-control)] border border-dashed border-[var(--color-ink-200)] p-3 sm:grid-cols-2"
+          className="grid gap-3 rounded-[var(--radius-control)] border border-dashed border-[var(--color-card-border)] p-3 sm:grid-cols-2"
           onSubmit={(submitEvent): void => {
             submitEvent.preventDefault()
             void submitNewSession()
