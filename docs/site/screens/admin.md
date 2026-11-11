@@ -48,6 +48,14 @@ disputes"), filters Action starts with, Subject type, Subject id, About this acc
 To, and **Search the audit log** ("Choose filters and search. Nothing is read until you search."). Example hints
 mention job openings and worker contracts.
 
+## Signing out after 30 minutes
+Only admin accounts (`AdminIdleSignOut`, rules in `frontend/src/application/session/adminIdleSession.ts`). Use is
+recorded in `localStorage` (`washlink.admin.lastActive`, shared by all tabs) on clicks, taps, keys and scrolling, and
+on sign-in. One minute before the limit a dialog "Are you still there?" counts down with **Sign out now** and **Stay
+signed in**. At 30 minutes, or when the site is reopened after that, the admin is signed out and the landing page shows
+"You were signed out after 30 minutes without use. Sign in again to continue." Customers and the washer stay signed
+in until they tap Sign out (a signed-out washer would stop receiving booking requests).
+
 ## Notes
 - Still open: the audit log copy is workforce-specific (bookings and prices aren't mentioned).
 - Before the redesign statuses were plain text, hidden items sat between active ones and the case history opened at

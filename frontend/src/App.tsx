@@ -6,6 +6,7 @@ import {
   useAuthenticatedUser,
 } from './presentation/auth/AuthenticatedUserContext'
 import { ApplicationToaster } from './presentation/design/ui'
+import { AdminIdleSignOut } from './presentation/auth/AdminIdleSignOut'
 import { ErrorBoundary } from './presentation/components/ErrorBoundary'
 import { ThemeProvider } from './presentation/theme/ThemeContext'
 
@@ -116,6 +117,7 @@ function AppContent(): ReactElement {
     return createElement(
       Suspense,
       { fallback: createElement(PageLoadingFallback) },
+      createElement(AdminIdleSignOut),
       createElement(SuperAdminDashboardPage, {
         superAdminIdentifier: authenticatedUser.userIdentifier,
       }),

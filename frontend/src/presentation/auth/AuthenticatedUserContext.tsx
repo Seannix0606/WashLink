@@ -2,6 +2,7 @@
 import type { ReactElement, ReactNode } from 'react'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { AuthService } from '../../application/services/AuthService'
+import { markActive } from '../../application/session/adminIdleSession'
 import { ProfileService } from '../../application/services/ProfileService'
 import type { AuthenticatedUser } from '../../domain/models/AuthenticatedUser'
 import type {
@@ -98,6 +99,8 @@ export function AuthenticatedUserProvider({
     isPasswordRecoveryInProgress,
     signIn: async (emailAddress: string, password: string): Promise<void> => {
       await authService.signIn(emailAddress, password)
+      // A fresh sign-in starts the admin's 30-minute clock again (see AdminIdleSignOut).
+      markActive()
       const refreshedUser = await authService.getCurrentSessionUserWithProfile()
       setAuthenticatedUser(refreshedUser)
     },
