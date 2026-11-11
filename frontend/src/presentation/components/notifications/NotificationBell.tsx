@@ -31,13 +31,14 @@ export function NotificationBell({
         aria-haspopup="dialog"
         aria-expanded={isPanelOpen}
         onClick={onOpenRequested}
+        tone="harbor"
         icon={<Bell className="h-4 w-4" aria-hidden="true" />}
       />
       {unreadCount > 0 ? (
         <span
           aria-hidden="true"
           data-testid="notification-unread-badge"
-          className="pointer-events-none absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-[var(--color-danger-solid)] px-1 text-[11px] font-semibold leading-5 text-white"
+          className="pointer-events-none absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-[var(--color-danger-solid)] px-1 text-[11px] ring-2 ring-[var(--color-harbor-900)] font-semibold leading-5 text-white"
         >
           {displayedUnreadCount}
         </span>

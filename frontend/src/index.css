@@ -2,6 +2,8 @@
 
 @theme static {
   --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  /* Page and section titles: Archivo at normal width (the landing page uses its wide cut). */
+  --font-display: 'Archivo', 'Inter', 'Segoe UI', system-ui, sans-serif;
 
   --color-brand-50: #f0fdfa;
   --color-brand-100: #ccfbf1;
@@ -15,9 +17,10 @@
   --color-brand-900: #134e4a;
   --color-brand-950: #042f2e;
 
+  /* Cool, teal-tinted neutrals ("mist"): the page sits a step below the white cards, so cards lift off it. */
   --color-surface: #ffffff;
-  --color-surface-muted: #f8fafc;
-  --color-surface-sunken: #f1f5f9;
+  --color-surface-muted: #f3f7f8;
+  --color-surface-sunken: #e6eef0;
 
   --color-ink-900: #0f172a;
   --color-ink-700: #334155;
@@ -46,6 +49,32 @@
   /* Cards and their outline. Components use these instead of a fixed white. */
   --color-card: #ffffff;
   --color-card-border: #94a3b8;
+  /* Section header strip: a whisper of teal above the white cards inside. */
+  --color-section-head: #eaf4f3;
+
+  /*
+   * Harbor: the deep navy-teal band at the top of every signed-in page (logo, page title, tabs on phones) and the
+   * desktop sidebar's active item. Text on it uses --color-on-harbor (white) and --color-on-harbor-muted.
+   */
+  --color-harbor-950: #061b22;
+  --color-harbor-900: #0a2731;
+  --color-harbor-800: #0f3641;
+  --color-harbor-700: #164a55;
+  --color-on-harbor: #ffffff;
+  --color-on-harbor-muted: #a8c6cb;
+  /* Selected navigation item and count chips: navy on light pages, brand teal on dark ones (navy would vanish). */
+  --color-selected: #0a2731;
+  --color-on-selected: #ffffff;
+
+  /*
+   * Accent: sunlit amber, the "shine" next to teal. For highlights only (the main booking button, money figures,
+   * small decorative touches), never for booking status: the waiting status keeps its own amber pill.
+   */
+  --color-accent: #f5b83d;
+  --color-accent-hover: #e9a823;
+  --color-accent-soft: #fdf3dc;
+  --color-on-accent: #3d2800;
+  --color-accent-ink: #8a5800;
 
   /*
    * Solid fills that carry white text. They stay the same in both themes, so a teal or red button reads the same
@@ -90,11 +119,18 @@
   --radius-surface: 16px;
   --radius-pill: 9999px;
 
-  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
-  --shadow-card-hover: 0 4px 8px -2px rgb(15 23 42 / 0.08),
-    0 2px 4px -2px rgb(15 23 42 / 0.06);
-  --shadow-popover: 0 12px 24px -8px rgb(15 23 42 / 0.18),
-    0 6px 12px -6px rgb(15 23 42 / 0.12);
+  /* Soft, layered, tinted with the harbor navy so depth reads cool rather than grey. */
+  --shadow-card: 0 1px 2px 0 rgb(10 39 49 / 0.06), 0 4px 12px -4px rgb(10 39 49 / 0.10);
+  --shadow-card-hover: 0 2px 4px 0 rgb(10 39 49 / 0.06), 0 12px 24px -8px rgb(10 39 49 / 0.18);
+  --shadow-popover: 0 16px 32px -10px rgb(10 39 49 / 0.28),
+    0 6px 12px -6px rgb(10 39 49 / 0.14);
+  /* A lifted button: a soft drop plus a faint inner highlight along the top edge. */
+  --shadow-button: 0 1px 2px 0 rgb(10 39 49 / 0.18), inset 0 1px 0 0 rgb(255 255 255 / 0.14);
+
+  /* Motion: one rhythm for hover and state changes. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-quick: 160ms;
+  --duration-base: 220ms;
 }
 
 :root {
@@ -151,6 +187,22 @@
 
   --color-card: #121d20;
   --color-card-border: #2a3b41;
+  --color-section-head: #16262a;
+
+  --color-harbor-950: #030d11;
+  --color-harbor-900: #061820;
+  --color-harbor-800: #0b2530;
+  --color-harbor-700: #12363f;
+  --color-on-harbor: #ffffff;
+  --color-on-harbor-muted: #9cb9be;
+  --color-selected: #0f766e;
+  --color-on-selected: #ffffff;
+
+  --color-accent: #f5b83d;
+  --color-accent-hover: #f7c561;
+  --color-accent-soft: #33260a;
+  --color-on-accent: #2b1c00;
+  --color-accent-ink: #f8cd73;
 
   --status-waiting-bg: #2e2108;
   --status-waiting-fg: #fcd34d;
@@ -174,9 +226,10 @@
   --status-stopped-fg: #b6c4c9;
   --status-stopped-line: #8296a0;
 
-  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 1px 3px 0 rgb(0 0 0 / 0.3);
-  --shadow-card-hover: 0 4px 10px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
-  --shadow-popover: 0 12px 28px -8px rgb(0 0 0 / 0.6), 0 6px 12px -6px rgb(0 0 0 / 0.5);
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.45);
+  --shadow-card-hover: 0 2px 4px 0 rgb(0 0 0 / 0.45), 0 12px 24px -8px rgb(0 0 0 / 0.6);
+  --shadow-popover: 0 16px 32px -10px rgb(0 0 0 / 0.7), 0 6px 12px -6px rgb(0 0 0 / 0.5);
+  --shadow-button: 0 1px 2px 0 rgb(0 0 0 / 0.45), inset 0 1px 0 0 rgb(255 255 255 / 0.08);
 }
 
 html,
@@ -246,6 +299,42 @@ button {
 
 .wl-pulse {
   animation: wl-pulse-soft 1.4s ease-in-out infinite;
+}
+
+/* Loading placeholders: a soft sheen moving across instead of a flat blink. */
+@keyframes wl-sheen {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.wl-skeleton {
+  background: linear-gradient(90deg, var(--color-ink-100) 25%, var(--color-section-head) 50%, var(--color-ink-100) 75%);
+  background-size: 200% 100%;
+  animation: wl-sheen 1.6s ease-in-out infinite;
+}
+
+/*
+ * The harbor band behind the top of signed-in pages: deep navy-teal with two soft light pools (teal and a hint of
+ * amber) so it reads as depth, not a flat block.
+ */
+.wl-harbor {
+  background-color: var(--color-harbor-900);
+  background-image:
+    radial-gradient(60rem 18rem at 85% -20%, rgb(45 212 191 / 0.22), transparent 60%),
+    radial-gradient(40rem 14rem at 0% 120%, rgb(245 184 61 / 0.10), transparent 65%),
+    linear-gradient(180deg, var(--color-harbor-900), var(--color-harbor-800));
+  color: var(--color-on-harbor);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-skeleton,
+  .wl-pulse {
+    animation: none;
+  }
 }
 
 /* Leaflet custom pin marker (div icon) */

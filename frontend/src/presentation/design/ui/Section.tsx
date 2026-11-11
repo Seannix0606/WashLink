@@ -22,13 +22,14 @@ export function Section({ title, count, action, description, children, className
   const titleId = useId()
   return (
     <section aria-labelledby={titleId}
-      className={joinClassNames('overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)]', className)}>
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-card-border)] bg-[var(--color-card)] px-4 py-3">
+      className={joinClassNames('overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] shadow-[var(--shadow-card)]', className)}>
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-card-border)] bg-[var(--color-section-head)] px-4 py-3">
         <div className="min-w-0">
-          <h2 id={titleId} className="flex items-center gap-2 text-base font-semibold text-[var(--color-ink-900)]">
+          <h2 id={titleId} className="flex items-center gap-2 font-[family-name:var(--font-display)] text-base font-bold tracking-tight text-[var(--color-ink-900)]">
+            <span aria-hidden="true" className="h-4 w-1 rounded-full bg-[var(--color-primary-soft)]" />
             {title}
             {count !== undefined ? (
-              <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--color-ink-100)] px-2 text-xs font-semibold tabular-nums text-[var(--color-ink-700)]">
+              <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--color-selected)] px-2 font-[family-name:var(--font-sans)] text-xs font-semibold tabular-nums text-[var(--color-on-selected)]">
                 {count}
               </span>
             ) : null}

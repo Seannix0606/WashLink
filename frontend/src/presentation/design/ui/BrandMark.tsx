@@ -6,6 +6,8 @@ interface BrandMarkProps {
   readonly size?: 'sm' | 'md' | 'lg'
   readonly showWordmark?: boolean
   readonly className?: string
+  /** inverse: on the dark harbor band, white wordmark with an amber "Link". */
+  readonly tone?: 'default' | 'inverse'
 }
 
 const markSizeClassNameBySizeKey: Record<'sm' | 'md' | 'lg', string> = {
@@ -24,7 +26,9 @@ export function BrandMark({
   size = 'md',
   showWordmark = true,
   className,
+  tone = 'default',
 }: BrandMarkProps): ReactElement {
+  const isInverse = tone === 'inverse'
   return (
     <div className={joinClassNames('flex items-center gap-2', className)}>
       <span
@@ -39,11 +43,12 @@ export function BrandMark({
       {showWordmark ? (
         <span
           className={joinClassNames(
-            'font-extrabold tracking-tight text-[var(--color-ink-900)]',
+            'font-extrabold tracking-tight',
+            isInverse ? 'text-[var(--color-on-harbor)]' : 'text-[var(--color-ink-900)]',
             wordmarkClassNameBySizeKey[size],
           )}
         >
-          Wash<span className="text-[var(--color-brand-700)]">Link</span>
+          Wash<span className={isInverse ? 'text-[var(--color-accent)]' : 'text-[var(--color-brand-700)]'}>Link</span>
         </span>
       ) : null}
     </div>

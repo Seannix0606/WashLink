@@ -33,6 +33,35 @@
   (`/5`–`/30`) on teal hero panels.
 - The public landing page stays dark in both themes.
 
+## Visual identity: Harbor (redesign, 2026-11-12)
+Chosen by the owner: the **Harbor** layout, a **sunlit amber** accent, **Archivo** headings and a **desktop sidebar**.
+
+- **Harbor band:** every signed-in page (`AppShell`) starts with a deep navy-teal band (`.wl-harbor`:
+  `--color-harbor-900/800` with soft teal and amber light pools) holding the top bar and the page title (`h1`, Archivo,
+  white) with a subtitle in `--color-on-harbor-muted`. The customer and washer titles greet by Manila time
+  ("Good morning, Bea", `features/b2c/greeting.ts`). The washer sees an Online/Offline chip on the band.
+- **Navigation:** `AppShell`'s `navigation` slot takes `<Tabs variant="navigation">` with an icon per tab. Phones and
+  tablets: a floating white bar overlapping the band's bottom edge, scrolling sideways. Desktop (1024px+): a sticky
+  sidebar card on the left. It is one tab list (rendered once), so behavior and tests are unchanged; Up/Down keys work
+  as well as Left/Right. The selected item uses `--color-selected` (navy in light, brand teal in dark).
+- **Page:** cool mist neutrals (`--color-surface-sunken #e6eef0`, `--color-surface-muted #f3f7f8`); cards stay white with
+  the strong outline the owner asked for (`--color-card-border #94a3b8`) and a soft layered shadow tinted with the
+  harbor navy (`--shadow-card`, `--shadow-card-hover`).
+- **Sections:** a teal-tinted header strip (`--color-section-head`) with a short teal marker, an Archivo title and a
+  count chip in `--color-selected`.
+- **Accent (amber):** `--color-accent #f5b83d` with `--color-on-accent`, `--color-accent-soft`, `--color-accent-ink`.
+  Highlights only: the `accent` Button variant for the one main action ("Book a car wash"), the admin money figures,
+  the wordmark's "Link" on the band, the active sidebar icon. Never for booking status.
+- **Buttons:** primary is a gently lit teal gradient with `--shadow-button`; `accent` is amber with dark text; all
+  buttons respond to presses (`active:scale-[0.98]`, off under reduced motion). Secondary/ghost hover with a teal tint.
+- **Admin summary:** a bento grid: the two money tiles lead on the harbor color with amber figures, then six count
+  tiles with an icon chip each.
+- **Empty and loading:** empty states get a soft tinted panel and an icon in an amber ring (`Inbox` by default);
+  skeletons use a moving sheen (`.wl-skeleton`, still under reduced motion).
+- **Type:** `--font-display` (Archivo, normal width 600/700) for page, section and card titles and key figures; Inter
+  for everything else. `index.html` loads Archivo `wdth,wght@100,600;100,700;125,800`.
+- **Motion:** `--duration-quick 160ms`, `--duration-base 220ms`, `--ease-out-soft`.
+
 ## Tokens
 | Group | Light | Dark |
 |---|---|---|

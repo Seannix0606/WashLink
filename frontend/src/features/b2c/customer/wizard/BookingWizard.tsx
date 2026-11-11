@@ -77,8 +77,8 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--color-surface-muted)]">
-      <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6">
+    <div>
+      <div className="mx-auto max-w-2xl">
         <button type="button" onClick={onClose} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--color-ink-700)]">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Leave booking

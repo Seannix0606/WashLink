@@ -6,7 +6,16 @@ export interface TabItemDefinition<TabValue extends string> {
   readonly value: TabValue
   readonly label: string
   readonly badgeContent?: ReactNode
+  /** Shown before the label in the navigation look (decorative: the label names the tab). */
+  readonly icon?: ReactNode
 }
+
+/**
+ * pill: a compact segmented control inside a page.
+ * navigation: a page's main sections, for AppShell's navigation slot. A floating white bar that scrolls sideways on
+ * phones and tablets, and a vertical sidebar list with icons on desktop.
+ */
+export type TabsVariant = 'pill' | 'navigation'
 
 interface TabsProps<TabValue extends string> {
   readonly tabItems: readonly TabItemDefinition<TabValue>[]
@@ -14,11 +23,12 @@ interface TabsProps<TabValue extends string> {
   readonly onTabChange: (nextTabValue: TabValue) => void
   readonly accessibleLabel: string
   readonly className?: string
+  readonly variant?: TabsVariant
 }
 
 /**
  * One row of tabs. On a narrow phone the row scrolls sideways instead of wrapping, and the active tab is kept in view.
- * Keyboard: Tab reaches the active tab; Left/Right/Home/End move between tabs.
+ * Keyboard: Tab reaches the active tab; Left/Right (and Up/Down, for the desktop sidebar)/Home/End move between tabs.
  */
 export function Tabs<TabValue extends string>({
   tabItems,
@@ -26,7 +36,9 @@ export function Tabs<TabValue extends string>({
   onTabChange,
   accessibleLabel,
   className,
+  variant = 'pill',
 }: TabsProps<TabValue>): ReactElement {
+  const isNavigation = variant === 'navigation'
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,8 +49,10 @@ export function Tabs<TabValue extends string>({
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const current = tabItems.findIndex((tabItem) => tabItem.value === activeTabValue)
     const last = tabItems.length - 1
-    const target = event.key === 'ArrowRight' ? (current === last ? 0 : current + 1)
-      : event.key === 'ArrowLeft' ? (current === 0 ? last : current - 1)
+    const isNext = event.key === 'ArrowRight' || event.key === 'ArrowDown'
+    const isPrevious = event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+    const target = isNext ? (current === last ? 0 : current + 1)
+      : isPrevious ? (current === 0 ? last : current - 1)
         : event.key === 'Home' ? 0
           : event.key === 'End' ? last
             : -1
@@ -58,7 +72,10 @@ export function Tabs<TabValue extends string>({
       aria-label={accessibleLabel}
       onKeyDown={onKeyDown}
       className={joinClassNames(
-        'flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-[var(--color-ink-100)] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        'flex max-w-full gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        isNavigation
+          ? 'w-full rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-card-hover)] lg:flex-col lg:gap-0.5 lg:p-2'
+          : 'w-fit rounded-full bg-[var(--color-ink-100)] p-1',
         className,
       )}
     >
@@ -75,19 +92,31 @@ export function Tabs<TabValue extends string>({
               onTabChange(tabItem.value)
             }}
             className={joinClassNames(
-              'inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+              'inline-flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-medium transition-colors duration-[var(--duration-quick)]',
+              isNavigation
+                ? 'min-h-10 rounded-[var(--radius-control)] px-3 py-2 lg:min-h-11 lg:w-full lg:justify-start lg:px-3.5'
+                : 'min-h-9 rounded-full px-3.5 py-1.5',
               isActive
-                ? 'bg-[var(--color-card)] text-[var(--color-ink-900)] shadow-[var(--shadow-card)]'
-                : 'text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]',
+                ? isNavigation
+                  ? 'bg-[var(--color-selected)] text-[var(--color-on-selected)] shadow-[var(--shadow-button)]'
+                  : 'bg-[var(--color-card)] text-[var(--color-ink-900)] shadow-[var(--shadow-card)]'
+                : isNavigation
+                  ? 'text-[var(--color-ink-700)] hover:bg-[var(--color-section-head)] hover:text-[var(--color-ink-900)]'
+                  : 'text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]',
             )}
           >
-            <span>{tabItem.label}</span>
+            {isNavigation && tabItem.icon !== undefined ? (
+              <span aria-hidden="true" className={joinClassNames('flex h-4 w-4 items-center justify-center', isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-500)]')}>
+                {tabItem.icon}
+              </span>
+            ) : null}
+            <span className={isNavigation ? 'lg:flex-1 lg:text-left' : undefined}>{tabItem.label}</span>
             {tabItem.badgeContent !== undefined ? (
               <span
                 className={joinClassNames(
                   'inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold',
                   isActive
-                    ? 'bg-[var(--color-brand-100)] text-[var(--color-brand-800)]'
+                    ? isNavigation ? 'bg-[var(--color-accent)] text-[var(--color-on-accent)]' : 'bg-[var(--color-brand-100)] text-[var(--color-brand-800)]'
                     : 'bg-[var(--color-ink-200)] text-[var(--color-ink-700)]',
                 )}
               >

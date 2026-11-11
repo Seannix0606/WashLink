@@ -1,12 +1,15 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { BriefcaseBusiness, CheckCircle2, History, SlidersHorizontal, Star, Wallet } from 'lucide-react'
 import type { AssignedBooking, B2cApi, DispatchRequest, WorkerAccount, WorkerSummary } from '@washlink/shared'
 import { formatManilaTime, formatPesos, manilaDayKey, terminalServiceBookingStatuses, workerPausedNotice } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
 import { MonthCalendar } from '../../../presentation/components/calendar/MonthCalendar'
 import { ViewToggle, useStoredBookingsView } from '../../../presentation/components/calendar/ViewToggle'
-import { Button, Card, Section, Skeleton, StatusPill, Tabs, statusEdgeStyle } from '../../../presentation/design/ui'
+import { AppShell, Button, Card, Section, Skeleton, StatCard, StatusPill, Tabs, statusEdgeStyle } from '../../../presentation/design/ui'
+import { joinClassNames } from '../../../presentation/design/classNames'
+import { greeting } from '../greeting'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { DeleteAccountSection } from '../DeleteAccountSection'
@@ -18,9 +21,9 @@ import { WorkerSetupPanel } from './WorkerSetupPanel'
 
 type WorkerTab = 'work' | 'history' | 'setup'
 const tabItems = [
-  { value: 'work' as const, label: 'Work' },
-  { value: 'history' as const, label: 'History and earnings' },
-  { value: 'setup' as const, label: 'Profile and hours' },
+  { value: 'work' as const, label: 'Work', icon: <BriefcaseBusiness className="h-4 w-4" /> },
+  { value: 'history' as const, label: 'History and earnings', icon: <History className="h-4 w-4" /> },
+  { value: 'setup' as const, label: 'Profile and hours', icon: <SlidersHorizontal className="h-4 w-4" /> },
 ]
 
 const statusText: Readonly<Record<WorkerAccount['verificationStatus'], string>> = {
@@ -32,9 +35,11 @@ const statusText: Readonly<Record<WorkerAccount['verificationStatus'], string>> 
 
 interface IndependentWorkerPageProps {
   readonly workerId: string
+  /** The washer's full name, for the greeting on the page band. */
+  readonly workerName?: string
 }
 
-export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps): ReactElement {
+export function IndependentWorkerPage({ workerId, workerName }: IndependentWorkerPageProps): ReactElement {
   const [tab, setTab] = useState<WorkerTab>('work')
   const [account, setAccount] = useState<WorkerAccount | null | undefined>(undefined)
   const [requests, setRequests] = useState<readonly DispatchRequest[]>([])
@@ -106,22 +111,31 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
   const pausedNotice = account ? workerPausedNotice(account.verificationStatus, activeJobs.length) : null
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--color-surface-muted)]">
-      <AuthenticatedTopBar />
-      <main className="mx-auto max-w-3xl space-y-5 px-4 pb-12 pt-2 sm:px-6">
+    <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5"
+      title={greeting(workerName)}
+      subtitle={account ? 'Your requests, bookings, earnings and hours.' : 'Set up your profile to start receiving bookings.'}
+      headerAside={account ? (
+        <span className={joinClassNames('inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold',
+          isOnline ? 'border-[color-mix(in_srgb,var(--color-success-500)_55%,transparent)] bg-[color-mix(in_srgb,var(--color-success-500)_22%,transparent)] text-[var(--color-on-harbor)]' : 'border-white/15 bg-white/10 text-[var(--color-on-harbor-muted)]')}>
+          <span aria-hidden="true" className={joinClassNames('h-2 w-2 rounded-full', isOnline ? 'bg-[var(--color-success-500)] shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-success-500)_30%,transparent)]' : 'bg-[var(--color-ink-400)]')} />
+          {isOnline ? 'Online' : 'Offline'}
+        </span>
+      ) : undefined}
+      navigation={account ? <Tabs variant="navigation" accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} /> : undefined}>
         {account === undefined ? <Skeleton heightClassName="h-32" /> : null}
         {account === null ? (
           <>
-            <h1 className="text-2xl font-bold text-[var(--color-ink-900)]">Set up your washer profile</h1>
+            <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight text-[var(--color-ink-900)]">Set up your washer profile</h2>
             <WorkerDocumentsPanel verificationStatus={null} />
             <WorkerSetupPanel workerId={workerId} account={null} onSaved={refresh} />
           </>
         ) : null}
         {account ? (
           <>
-            <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <Card className={joinClassNames('flex flex-wrap items-center justify-between gap-3 border-l-4 p-4',
+              isOnline ? 'border-l-[var(--color-success-500)]' : 'border-l-[var(--color-ink-400)]')}>
               <div>
-                <h1 className="text-lg font-semibold text-[var(--color-ink-900)]">{isOnline ? 'You are online' : 'You are offline'}</h1>
+                <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--color-ink-900)]">{isOnline ? 'You are online' : 'You are offline'}</h2>
                 <p className="text-sm text-[var(--color-ink-700)]">{isOnline ? 'New booking requests can reach you.' : statusText[account.verificationStatus]}</p>
                 {account.verificationNote !== null ? <p className="mt-1 text-sm text-[var(--color-ink-900)]">WashLink&apos;s note: {account.verificationNote}</p> : null}
               </div>
@@ -130,7 +144,6 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
               </Button>
             </Card>
             {pausedNotice !== null ? <p role="status" className="rounded-[var(--radius-control)] bg-[var(--color-warning-50)] p-3 text-sm text-[var(--color-ink-900)]">{pausedNotice}</p> : null}
-            <Tabs accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />
             {tab === 'work' ? (
               <div className="space-y-5">
                 <div className="flex justify-end"><ViewToggle view={view} onChange={setView} /></div>
@@ -164,9 +177,9 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
             {tab === 'history' ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <Card className="p-4"><p className="text-xs text-[var(--color-ink-500)]">Earnings</p><p className="text-xl font-semibold tabular-nums">{formatPesos(summary?.earningsCents ?? 0)}</p></Card>
-                  <Card className="p-4"><p className="text-xs text-[var(--color-ink-500)]">Completed</p><p className="text-xl font-semibold tabular-nums">{summary?.completedCount ?? 0}</p></Card>
-                  <Card className="p-4"><p className="text-xs text-[var(--color-ink-500)]">Rating</p><p className="text-xl font-semibold tabular-nums">{summary?.averageRating ?? 'None yet'}</p></Card>
+                  <StatCard icon={<Wallet className="h-5 w-5" aria-hidden="true" />} accentTone="brand" label="Earnings" value={formatPesos(summary?.earningsCents ?? 0)} />
+                  <StatCard icon={<CheckCircle2 className="h-5 w-5" aria-hidden="true" />} accentTone="success" label="Completed" value={summary?.completedCount ?? 0} />
+                  <StatCard icon={<Star className="h-5 w-5" aria-hidden="true" />} accentTone="warning" label="Rating" value={summary?.averageRating ?? 'None yet'} />
                 </div>
                 <Section title="Past bookings" count={pastJobs.length}>
                   <ul className="space-y-2">
@@ -207,8 +220,7 @@ export function IndependentWorkerPage({ workerId }: IndependentWorkerPageProps):
             ) : null}
           </>
         ) : null}
-      </main>
-    </div>
+    </AppShell>
   )
 }
 

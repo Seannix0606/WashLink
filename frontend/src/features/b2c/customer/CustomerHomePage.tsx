@@ -1,14 +1,15 @@
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { CarFront } from 'lucide-react'
+import { CalendarCheck, CarFront, House, MapPin, Sparkles, UserRound } from 'lucide-react'
 import { formatManilaTime, isActiveServiceBooking, manilaDayKey, serviceBookingStatusGroup, type CustomerBooking, type ServiceBookingStatusGroup } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
 import { MonthCalendar } from '../../../presentation/components/calendar/MonthCalendar'
 import { ViewToggle, useStoredBookingsView } from '../../../presentation/components/calendar/ViewToggle'
-import { Button, EmptyState, Section, Skeleton, Tabs } from '../../../presentation/design/ui'
+import { AppShell, Button, EmptyState, Section, Skeleton, Tabs } from '../../../presentation/design/ui'
 import { getSupabaseClient } from '../../../infrastructure/supabase/supabaseClient'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { DeleteAccountSection } from '../DeleteAccountSection'
+import { greeting } from '../greeting'
 import { useCurrentTime } from '../useCurrentTime'
 import { BookingCard } from './BookingCard'
 import { SavedDetailsPanel } from './SavedDetailsPanel'
@@ -17,14 +18,16 @@ const BookingWizard = lazy(async () => ({ default: (await import('./wizard/Booki
 
 type CustomerTab = 'home' | 'bookings' | 'saved' | 'account'
 const tabItems = [
-  { value: 'home' as const, label: 'Home' },
-  { value: 'bookings' as const, label: 'Bookings' },
-  { value: 'saved' as const, label: 'Addresses and vehicles' },
-  { value: 'account' as const, label: 'Account' },
+  { value: 'home' as const, label: 'Home', icon: <House className="h-4 w-4" /> },
+  { value: 'bookings' as const, label: 'Bookings', icon: <CalendarCheck className="h-4 w-4" /> },
+  { value: 'saved' as const, label: 'Addresses and vehicles', icon: <MapPin className="h-4 w-4" /> },
+  { value: 'account' as const, label: 'Account', icon: <UserRound className="h-4 w-4" /> },
 ]
 
 interface CustomerHomePageProps {
   readonly customerId: string
+  /** The customer's full name, for the greeting on the page band. */
+  readonly customerName?: string
 }
 
 interface BookingGroup {
@@ -47,7 +50,7 @@ function bookingGroups(bookings: readonly CustomerBooking[]): readonly BookingGr
   ].filter((group) => group.items.length > 0)
 }
 
-export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactElement {
+export function CustomerHomePage({ customerId, customerName }: CustomerHomePageProps): ReactElement {
   const [tab, setTab] = useState<CustomerTab>('home')
   const [isBooking, setIsBooking] = useState(false)
   const [bookings, setBookings] = useState<readonly CustomerBooking[] | null>(null)
@@ -84,6 +87,7 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
 
   if (isBooking) {
     return (
+      <AppShell topBar={<AuthenticatedTopBar />}>
       <Suspense fallback={<Skeleton heightClassName="h-40" />}>
         <BookingWizard
           customerId={customerId}
@@ -93,6 +97,7 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
           }}
         />
       </Suspense>
+      </AppShell>
     )
   }
 
@@ -116,10 +121,9 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--color-surface-muted)]">
-      <AuthenticatedTopBar />
-      <main className="mx-auto max-w-3xl space-y-5 px-4 pb-12 pt-2 sm:px-6">
-        <Tabs accessibleLabel="Your WashLink" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />
+    <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5"
+      title={greeting(customerName)} subtitle="Book a wash and follow it from your phone, step by step."
+      navigation={<Tabs variant="navigation" accessibleLabel="Your WashLink" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />}>
         {loadError !== null ? (
           <p role="alert" className="rounded-[var(--radius-control)] bg-[var(--color-danger-50)] p-3 text-sm text-[var(--color-danger-600)]">
             {loadError}
@@ -127,12 +131,20 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
         ) : null}
         {tab === 'home' ? (
           <>
-            <section className="rounded-[var(--radius-surface)] bg-[var(--color-primary-strong)] p-6 text-white">
-              <h1 className="text-2xl font-bold">Book a car wash</h1>
-              <p className="mt-1 text-sm text-[var(--color-on-primary-soft)]">A washer comes to your home, office, condo or parking spot.</p>
+            <section className="relative overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-primary-strong)] bg-[linear-gradient(135deg,var(--color-primary-strong),var(--color-primary)_55%,var(--color-primary-soft))] p-6 text-white shadow-[var(--shadow-card-hover)] sm:p-8">
+              {/* Decorative light pools: amber shine top right, a soft teal glow bottom left. */}
+              <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[var(--color-accent)] opacity-25 blur-3xl" />
+              <span aria-hidden="true" className="pointer-events-none absolute -bottom-24 -left-10 h-56 w-56 rounded-full bg-[var(--color-brand-300)] opacity-20 blur-3xl" />
+              <div className="relative">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold text-[var(--color-on-primary-soft)]">
+                <Sparkles className="h-3.5 w-3.5 text-[var(--color-accent)]" aria-hidden="true" /> We come to you
+              </p>
+              <h2 className="mt-3 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight sm:text-3xl">Book a car wash</h2>
+              <p className="mt-1 max-w-md text-sm text-[var(--color-on-primary-soft)]">A washer comes to your home, office, condo or parking spot.</p>
               <Button
-                className="mt-4"
-                variant="secondary"
+                className="mt-5"
+                variant="accent"
+                size="lg"
                 leadingIcon={<CarFront className="h-5 w-5" aria-hidden="true" />}
                 onClick={(): void => {
                   setIsBooking(true)
@@ -140,6 +152,7 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
               >
                 Book a car wash
               </Button>
+              </div>
             </section>
             <Section title="Current bookings" count={bookings === null ? undefined : active.length}>
               {list(active, 'No current bookings')}
@@ -170,7 +183,6 @@ export function CustomerHomePage({ customerId }: CustomerHomePageProps): ReactEl
         ) : null}
         {tab === 'saved' ? <SavedDetailsPanel customerId={customerId} /> : null}
         {tab === 'account' ? <DeleteAccountSection /> : null}
-      </main>
-    </div>
+    </AppShell>
   )
 }

@@ -25,11 +25,11 @@ export function AuthenticatedTopBar({
   return (
     <div
       className={joinClassNames(
-        'mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8',
+        'mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8',
         className,
       )}
     >
-      <BrandMark size="sm" />
+      <BrandMark size="sm" tone="inverse" />
       {centerSlot ? (
         <div className="mx-2 hidden flex-1 md:block">{centerSlot}</div>
       ) : (

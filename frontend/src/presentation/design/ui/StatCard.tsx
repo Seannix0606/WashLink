@@ -32,7 +32,7 @@ export function StatCard({
   return (
     <div
       className={joinClassNames(
-        'rounded-[var(--radius-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-card)]',
+        'rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-card)]',
         className,
       )}
     >
@@ -40,7 +40,7 @@ export function StatCard({
         {icon ? (
           <div
             className={joinClassNames(
-              'flex h-10 w-10 items-center justify-center rounded-full',
+              'flex h-10 w-10 items-center justify-center rounded-xl',
               accentBackgroundClassNameByTone[accentTone],
             )}
           >
@@ -51,7 +51,7 @@ export function StatCard({
           <p className="truncate text-xs font-medium text-[var(--color-ink-500)]">
             {label}
           </p>
-          <p className="text-xl font-semibold text-[var(--color-ink-900)]">{value}</p>
+          <p className="font-[family-name:var(--font-display)] text-xl font-bold tabular-nums text-[var(--color-ink-900)]">{value}</p>
         </div>
       </div>
       {helperText ? (

@@ -146,7 +146,7 @@ function AppContent(): ReactElement {
     return createElement(
       Suspense,
       { fallback: createElement(PageLoadingFallback) },
-      createElement(IndependentWorkerPage, { workerId: authenticatedUser.userIdentifier }),
+      createElement(IndependentWorkerPage, { workerId: authenticatedUser.userIdentifier, workerName: authenticatedUser.fullName }),
     )
   }
 
@@ -164,7 +164,7 @@ function AppContent(): ReactElement {
     return createElement(
       Suspense,
       { fallback: createElement(PageLoadingFallback) },
-      createElement(CustomerHomePage, { customerId: authenticatedUser.userIdentifier }),
+      createElement(CustomerHomePage, { customerId: authenticatedUser.userIdentifier, customerName: authenticatedUser.fullName }),
     )
   }
 

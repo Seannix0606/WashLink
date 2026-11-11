@@ -2,6 +2,7 @@ import { featureFlags } from '../../application/featureFlags'
 import { B2cOperationsPanel } from '../b2c/admin/B2cOperationsPanel'
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useMemo, useState } from 'react'
+import { BadgeCheck, CarFront, FileSignature, FileWarning, Flag, LayoutDashboard, Network, ScrollText, ShieldCheck, Scale } from 'lucide-react'
 import { createSuperAdminDependencies } from '../../presentation/dependencyInjection/createSuperAdminDependencies'
 import { AppShell, Skeleton, Tabs } from '../../presentation/design/ui'
 import { AuthenticatedTopBar } from '../../presentation/components/AuthenticatedTopBar'
@@ -61,6 +62,19 @@ interface SuperAdminDashboardPageProps {
  * Certification reviews, Contract disputes, Standard contract, Relationships, Audit log, Policies.
  * Every read and action is checked by the database; this page only arranges the sections.
  */
+const adminTabIcons: Readonly<Record<SuperAdminTabKey, ReactElement>> = {
+  b2c_operations: <CarFront className="h-4 w-4" />,
+  overview: <LayoutDashboard className="h-4 w-4" />,
+  shop_verification: <BadgeCheck className="h-4 w-4" />,
+  posting_reports: <Flag className="h-4 w-4" />,
+  certification_reviews: <ShieldCheck className="h-4 w-4" />,
+  contract_disputes: <FileWarning className="h-4 w-4" />,
+  standard_contract: <FileSignature className="h-4 w-4" />,
+  relationships: <Network className="h-4 w-4" />,
+  audit_log: <ScrollText className="h-4 w-4" />,
+  policies: <Scale className="h-4 w-4" />,
+}
+
 export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDashboardPageProps): ReactElement {
   const { shopService, shopVerificationService, workforcePolicyService, oversightDependencies } = useMemo(
     () => createSuperAdminDependencies(),
@@ -75,10 +89,11 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
   const visibleWorkforceTabs = featureFlags.isB2bEnabled
     ? workforceTabItems
     : workforceTabItems.filter((tabItem) => tabItem.value === 'audit_log')
-  const tabItems = featureFlags.isB2cEnabled
+  const tabItemsWithoutIcons = featureFlags.isB2cEnabled
     ? [{ value: 'b2c_operations' as const, label: 'Bookings and washers' }, ...visibleWorkforceTabs]
     : workforceTabItems
   const panelFallback = <Skeleton heightClassName="h-40" />
+  const tabItems = tabItemsWithoutIcons.map((tabItem) => ({ ...tabItem, icon: adminTabIcons[tabItem.value] }))
 
   const renderActivePanel = (): ReactElement => {
     switch (activeTab) {
@@ -132,24 +147,13 @@ export function SuperAdminDashboardPage({ superAdminIdentifier }: SuperAdminDash
   }
 
   return (
-    <AppShell topBar={<AuthenticatedTopBar />}>
-      <div className="space-y-5">
-        <header className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-[var(--color-ink-900)] sm:text-3xl">Platform administration</h1>
-          <p className="text-sm text-[var(--color-ink-500)]">
-            {featureFlags.isB2bEnabled ? null : 'Bookings, washers, prices and the audit log.'}
-            {featureFlags.isB2bEnabled ? (<>
-            Shop verification, posting reports, WashLink reviews of certification decisions, reported contract problems, the standard contract template, audited lookups and workforce policies.
-            </>) : null}
-          </p>
-        </header>
-
-        <div className="overflow-x-auto">
-          <Tabs accessibleLabel="Administration sections" tabItems={tabItems} activeTabValue={activeTab} onTabChange={setActiveTab} />
-        </div>
-
-        <Suspense fallback={panelFallback}>{renderActivePanel()}</Suspense>
-      </div>
+    <AppShell topBar={<AuthenticatedTopBar />}
+      title="Platform administration"
+      subtitle={featureFlags.isB2bEnabled
+        ? 'Shop verification, posting reports, WashLink reviews of certification decisions, reported contract problems, the standard contract template, audited lookups and workforce policies.'
+        : 'Bookings, washers, prices and the audit log.'}
+      navigation={<Tabs variant="navigation" accessibleLabel="Administration sections" tabItems={tabItems} activeTabValue={activeTab} onTabChange={setActiveTab} />}>
+      <Suspense fallback={panelFallback}>{renderActivePanel()}</Suspense>
     </AppShell>
   )
 }

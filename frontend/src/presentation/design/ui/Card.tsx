@@ -12,7 +12,7 @@ const elevationClassNameByLevel: Record<CardElevationLevel, string> = {
   flat: 'bg-[var(--color-card)] border border-[var(--color-card-border)]',
   raised: 'bg-[var(--color-card)] border border-[var(--color-card-border)] shadow-[var(--shadow-card)]',
   interactive:
-    'bg-[var(--color-card)] border border-[var(--color-card-border)] shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)] cursor-pointer',
+    'bg-[var(--color-card)] border border-[var(--color-card-border)] shadow-[var(--shadow-card)] transition-[box-shadow,border-color] duration-[var(--duration-base)] ease-[var(--ease-out-soft)] hover:border-[var(--color-brand-600)] hover:shadow-[var(--shadow-card-hover)] cursor-pointer',
 }
 
 export function Card({

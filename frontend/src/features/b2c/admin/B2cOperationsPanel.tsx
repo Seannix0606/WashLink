@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react'
+import { CalendarClock, CheckCircle2, CircleSlash, Coins, Radio, Search, ShieldAlert, Store, TriangleAlert, Wallet } from 'lucide-react'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { WorkerDocumentOverview } from '@washlink/shared'
@@ -112,22 +113,52 @@ export function B2cOperationsPanel(): ReactElement {
 
   return (
     <div className="space-y-6">
-      <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
-        <div>
-          <h2 className="font-semibold text-[var(--color-ink-900)]">{isOpen ? 'Bookings are open' : 'Bookings are closed'}</h2>
+      <Card className={`flex flex-wrap items-center justify-between gap-3 border-l-4 p-4 ${isOpen ? 'border-l-[var(--color-success-500)]' : 'border-l-[var(--color-ink-400)]'}`}>
+        <div className="flex items-start gap-3">
+          <span aria-hidden="true" className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOpen ? 'bg-[var(--color-success-50)] text-[var(--color-success-600)]' : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]'}`}>
+            {isOpen ? <Store className="h-5 w-5" /> : <CircleSlash className="h-5 w-5" />}
+          </span>
+          <div>
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--color-ink-900)]">{isOpen ? 'Bookings are open' : 'Bookings are closed'}</h2>
           <p className="text-sm text-[var(--color-ink-700)]">
             {num(summary.draft_prices) > 0 ? `${text(summary.draft_prices)} services still have draft prices. Set final prices below before opening.` : 'All active services have final prices.'}
           </p>
+          </div>
         </div>
         <Button variant={isOpen ? 'secondary' : 'primary'} onClick={(): void => void run(() => saveRules({ bookingsOpen: !isOpen }), isOpen ? 'Bookings closed' : 'Bookings opened')}>
           {isOpen ? 'Close bookings' : 'Open bookings'}
         </Button>
       </Card>
 
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[['Washers to review', summary.workers_pending], ['Washers online', summary.workers_online], ['Finding a washer', summary.bookings_searching], ['No washer found', summary.bookings_no_worker],
-          ['Active bookings', summary.bookings_active], ['Completed', summary.bookings_completed], ['Expected cash', pesos(summary.customer_total_cents)], ['Expected commission', pesos(summary.platform_fee_cents)]].map(([label, value]) => (
-          <Card key={text(label)} className="p-3"><dt className="text-xs text-[var(--color-ink-500)]">{text(label)}</dt><dd className="text-lg font-semibold tabular-nums">{text(value)}</dd></Card>
+      {/* Bento: the two money figures lead on the harbor color, then six counts with an icon each. */}
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+        {[
+          { label: 'Expected cash', value: pesos(summary.customer_total_cents), icon: <Wallet className="h-5 w-5" /> },
+          { label: 'Expected commission', value: pesos(summary.platform_fee_cents), icon: <Coins className="h-5 w-5" /> },
+        ].map((tile) => (
+          <div key={tile.label} className="wl-harbor relative col-span-2 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-harbor-700)] p-4 shadow-[var(--shadow-card-hover)] sm:col-span-1 lg:col-span-3">
+            <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-on-harbor-muted)]">
+              <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-[var(--color-accent)]">{tile.icon}</span>
+              {tile.label}
+            </dt>
+            <dd className="mt-3 font-[family-name:var(--font-display)] text-3xl font-bold tabular-nums text-[var(--color-accent)]">{tile.value}</dd>
+          </div>
+        ))}
+        {[
+          { label: 'Washers to review', value: summary.workers_pending, icon: <ShieldAlert className="h-4 w-4" />, tone: 'warning' },
+          { label: 'Washers online', value: summary.workers_online, icon: <Radio className="h-4 w-4" />, tone: 'success' },
+          { label: 'Finding a washer', value: summary.bookings_searching, icon: <Search className="h-4 w-4" />, tone: 'warning' },
+          { label: 'No washer found', value: summary.bookings_no_worker, icon: <TriangleAlert className="h-4 w-4" />, tone: 'danger' },
+          { label: 'Active bookings', value: summary.bookings_active, icon: <CalendarClock className="h-4 w-4" />, tone: 'brand' },
+          { label: 'Completed', value: summary.bookings_completed, icon: <CheckCircle2 className="h-4 w-4" />, tone: 'success' },
+        ].map((tile) => (
+          <Card key={tile.label} className="p-3 lg:col-span-2">
+            <dt className="flex items-center gap-2 text-xs font-medium text-[var(--color-ink-500)]">
+              <span aria-hidden="true" className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tileTone[tile.tone]}`}>{tile.icon}</span>
+              {tile.label}
+            </dt>
+            <dd className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold tabular-nums text-[var(--color-ink-900)]">{text(tile.value)}</dd>
+          </Card>
         ))}
       </dl>
       <p className="text-xs text-[var(--color-ink-500)]">Money figures are expected cash totals from completed bookings. WashLink does not yet confirm cash collection.</p>
@@ -209,6 +240,13 @@ function CommissionForm({ bps, onSave }: { readonly bps: number; readonly onSave
       <Button variant="secondary" onClick={(): void => { onSave(Math.round(Number(percent) * 100)) }}>Save</Button>
     </div>
   )
+}
+
+const tileTone: Readonly<Record<string, string>> = {
+  brand: 'bg-[var(--color-brand-50)] text-[var(--color-brand-700)]',
+  success: 'bg-[var(--color-success-50)] text-[var(--color-success-600)]',
+  warning: 'bg-[var(--color-warning-50)] text-[var(--color-warning-600)]',
+  danger: 'bg-[var(--color-danger-50)] text-[var(--color-danger-600)]',
 }
 
 /** Free time kept before and after every booking, so the washer can travel and pack up. Same limits as the database. */

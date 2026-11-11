@@ -188,6 +188,8 @@ const failures = []
 for (const screen of wanted) {
   for (const [viewportName, viewport] of Object.entries(viewports)) {
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1, serviceWorkers: 'block', colorScheme: theme, locale: 'en-PH', timezoneId: 'Asia/Manila' })
+    // The app starts in Light whatever the device prefers, so the dark captures choose Dark the way a person would.
+    if (theme === 'dark') await context.addInitScript(() => { try { window.localStorage.setItem('washlink.theme', 'dark') } catch { /* storage blocked */ } })
     if (originOf(screen) === 'local') await serveLocal(context)
     const page = await context.newPage()
     try {

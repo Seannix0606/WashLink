@@ -88,10 +88,10 @@ export function UserAccountMenu(): ReactElement | null {
         }}
         aria-haspopup="menu"
         aria-expanded={isMenuOpen}
-        className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-[var(--color-surface-muted)]"
+        className="flex items-center gap-2 rounded-full p-1 pr-1 transition-colors hover:bg-white/10 sm:pr-3"
       >
         <Avatar fullName={authenticatedUser.fullName} size="sm" />
-        <span className="hidden text-sm font-medium text-[var(--color-ink-900)] sm:inline">
+        <span className="hidden text-sm font-medium text-[var(--color-on-harbor)] sm:inline">
           {authenticatedUser.fullName.split(' ')[0]}
         </span>
       </button>

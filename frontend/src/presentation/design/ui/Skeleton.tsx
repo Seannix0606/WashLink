@@ -26,7 +26,7 @@ export function Skeleton({
     <span
       aria-hidden="true"
       className={joinClassNames(
-        'block bg-[var(--color-ink-100)] wl-pulse',
+        'block wl-skeleton',
         shapeClassNameByShapeKey[shape],
         widthClassName,
         heightClassName,

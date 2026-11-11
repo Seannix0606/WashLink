@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactElement, ReactNode } from 'react'
 import { joinClassNames } from '../classNames'
 
 type IconButtonSizeVariant = 'sm' | 'md' | 'lg'
-type IconButtonToneVariant = 'neutral' | 'brand' | 'danger'
+type IconButtonToneVariant = 'neutral' | 'brand' | 'danger' | 'harbor'
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly icon: ReactNode
@@ -24,6 +24,9 @@ const toneClassNameByToneKey: Record<IconButtonToneVariant, string> = {
     'text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]',
   danger:
     'text-white bg-[var(--color-danger-solid)] hover:bg-[var(--color-danger-solid-hover)]',
+  // On the dark harbor band: a frosted button.
+  harbor:
+    'text-[var(--color-on-harbor)] border border-white/15 bg-white/10 hover:bg-white/20',
 }
 
 export function IconButton({
