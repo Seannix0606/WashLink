@@ -29,7 +29,7 @@
   `-success-solid`, `-warning-solid`, and the tints on them `--color-on-primary-soft` `#ccfbf1`,
   `--color-on-primary-accent` `#99f6e4`. Use these, never the brand scale, for button and hero backgrounds.
 - **Cards** use `--color-card` and `--color-card-border` instead of white. Every card, section, input and divider is
-  outlined with `--color-card-border` (light `#cbd5e1`), never `--color-ink-200`, which is too faint on white. `bg-white` remains only as faint overlays
+  outlined with `--color-card-border` (light `#94a3b8`), never `--color-ink-200`, which is too faint on white. `bg-white` remains only as faint overlays
   (`/5`–`/30`) on teal hero panels.
 - The public landing page stays dark in both themes.
 
@@ -38,7 +38,7 @@
 |---|---|---|
 | Brand | 50 `#f0fdfa` … **700 `#0f766e`** … 950 `#042f2e` | 50 `#0c2a28` … 700 `#5eead4` (text) … 950 `#f0fdfa` |
 | Surface | `#ffffff` · muted `#f8fafc` · sunken `#f1f5f9` | `#121d20` · `#0f191c` · `#0a1315` |
-| Card | `#ffffff`, border `#cbd5e1` | `#121d20`, border `#2a3b41` |
+| Card | `#ffffff`, border `#94a3b8` | `#121d20`, border `#2a3b41` |
 | Ink | 900 `#0f172a` … 100 `#f1f5f9` | 900 `#e7eef0` … 100 `#1a282c` |
 | Success / warning / danger | 50 · 500 · 600 | dark tints and lighter text |
 | Info | 50 `#f0f9ff` · 200 `#bae6fd` · 600 `#0369a1` | `#0b2638` · `#1e4a66` · `#7dd3fc` |

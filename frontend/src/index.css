@@ -45,7 +45,7 @@
 
   /* Cards and their outline. Components use these instead of a fixed white. */
   --color-card: #ffffff;
-  --color-card-border: #cbd5e1;
+  --color-card-border: #94a3b8;
 
   /*
    * Solid fills that carry white text. They stay the same in both themes, so a teal or red button reads the same
