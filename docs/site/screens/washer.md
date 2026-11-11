@@ -53,7 +53,8 @@ Completed green, Cancelled or Expired grey) and **Reviews** ("5 out of 5: Spotle
    (km)?"
 4. **Services you offer:** a checkbox per active service.
 5. **Working hours** ("Customers can only book times inside these hours."): Monday to Sunday, each with a checkbox
-   and From / To side by side.
+   and From / To side by side, in 12-hour times ("10:00 AM", "8:00 PM"); To goes up to "12:00 AM" (midnight). The
+   live operator schedule: Friday 8:00 PM to 12:00 AM, Saturday and Sunday 10:00 AM to 10:00 PM.
 6. **Save profile**, then the **Delete account** card.
 
 Items 2–5 are outlined sections.

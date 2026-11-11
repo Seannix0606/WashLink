@@ -5,11 +5,12 @@ import type { CatalogService, WorkerAccount } from '@washlink/shared'
 import { LocationPickerMap, type PickedLocationValue } from '../../../presentation/components/shared/LocationPickerMap'
 import { Button, Input, Section, Select } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
+import { hourLabel } from './hourLabel'
 
 const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 /** Shown Monday first, like the calendar; the stored weekday numbers stay Sunday = 0. */
 const mondayFirst = [1, 2, 3, 4, 5, 6, 0]
-const hourOptions = Array.from({ length: 25 }, (_unused, hour) => ({ value: String(hour * 60), label: `${String(hour).padStart(2, '0')}:00` }))
+const hourOptions = Array.from({ length: 25 }, (_unused, hour) => ({ value: String(hour * 60), label: hourLabel(hour) }))
 
 interface DayHours {
   readonly isWorking: boolean

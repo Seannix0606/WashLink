@@ -22,9 +22,13 @@ outlined panel** under the bar. **Back** (outline) and **Continue**
 (primary) at the bottom; each step is checked before moving on, and a repeated submit can't create a second booking.
 
 ## 1 · When: "When should we come?"
-**As soon as possible** option, then "Or choose a date": a horizontal row of day chips ("Tue, Nov 10"); then
-"Choose a time": a 3-column grid of 30-minute slots. Only slots a washer can make are enabled; unavailable ones are
-struck through (e.g. "7:30 PM"). The selected day has a teal outline.
+**As soon as possible** option, then "Or choose a day": a Monday-first month calendar of the next four weeks
+(`BOOKING_CALENDAR_DAYS` = 28, one `availableSlots` call per day) with a "● Open for booking" legend and ‹ › when the
+four weeks cross into the next month. Days with at least one free time are teal with a dot and can be picked; closed
+days are grey and disabled. The first open day is selected for the customer (solid teal). Below, "Choose a time on
+Friday, November 13": a 3-column grid of 30-minute slots. Only slots a washer can make are enabled; unavailable ones
+are struck through (e.g. "11:30 PM" when the wash would run past the washer's hours). If no day is open: "No open days
+in the next four weeks".
 
 ## 2 · Where: "Where is the vehicle?"
 Saved places as chips ("Office"); **Search for an address** with **Search**; **Use my location**; an OpenStreetMap

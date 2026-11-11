@@ -156,12 +156,9 @@ const screens = [
 ]
 
 async function wizardWhen(page) {
-  const openSlots = page.locator('section[aria-labelledby="when-title"] button[aria-label]:not([aria-label*="unavailable"]):not([disabled])')
-  // Late in the day today has no open slots left, so use the next day.
-  if (await openSlots.count() === 0) {
-    await page.locator('section[aria-labelledby="when-title"] button').filter({ hasText: /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), / }).nth(1).click()
-    await settle(page, 600)
-  }
+  // The first open day is chosen for the customer; its free times sit in the fieldset under the calendar.
+  await page.locator('section[aria-labelledby="when-title"] button[aria-label*=" open time"]').first().waitFor({ timeout: 15000 })
+  const openSlots = page.locator('section[aria-labelledby="when-title"] fieldset button:not([disabled])')
   await openSlots.first().click()
   await page.getByRole('button', { name: 'Continue' }).click()
   await settle(page)

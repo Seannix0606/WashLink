@@ -97,7 +97,8 @@ update public.independent_workers set base_latitude = 14.5547, base_longitude = 
 delete from public.independent_worker_services where worker_id = ${id('washer')};
 insert into public.independent_worker_services select ${id('washer')}, id from public.services where is_active;
 delete from public.independent_worker_hours where worker_id = ${id('washer')};
-insert into public.independent_worker_hours select ${id('washer')}, d, 360, 1200 from generate_series(0, 6) d;
+-- The real schedule: Friday 8 PM to midnight, Saturday and Sunday 10 AM to 10 PM (weekday 0 = Sunday).
+insert into public.independent_worker_hours values (${id('washer')}, 5, 1200, 1440), (${id('washer')}, 6, 600, 1320), (${id('washer')}, 0, 600, 1320);
 -- The customer's saved place and car.
 delete from public.customer_addresses where customer_id = ${id('customer')};
 insert into public.customer_addresses (customer_id, label, address, latitude, longitude, landmark, instructions)
