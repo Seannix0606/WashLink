@@ -43,7 +43,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         aria-describedby={descriptionId}
         className={joinClassNames(
           'h-11 w-full rounded-[var(--radius-control)] border bg-[var(--color-card)] px-3 text-sm text-[var(--color-ink-900)] outline-none',
-          'transition-colors focus:border-[var(--color-brand-600)]',
+          'transition-[border-color,box-shadow] focus:border-[var(--color-brand-600)] focus:shadow-[0_0_0_1px_var(--color-brand-600)]',
           hasErrorText
             ? 'border-[var(--color-danger-500)]'
             : 'border-[var(--color-card-border)]',

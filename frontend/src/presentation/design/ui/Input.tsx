@@ -46,7 +46,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <div
         className={joinClassNames(
           'flex items-center gap-2 rounded-[var(--radius-control)] border bg-[var(--color-card)] px-3',
-          'transition-colors focus-within:border-[var(--color-brand-600)]',
+          'transition-[border-color,box-shadow] focus-within:border-[var(--color-brand-600)] focus-within:shadow-[0_0_0_1px_var(--color-brand-600)]',
           hasErrorText
             ? 'border-[var(--color-danger-500)]'
             : 'border-[var(--color-card-border)]',

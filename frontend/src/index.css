@@ -201,10 +201,22 @@ button {
   font-family: inherit;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-brand-600);
-  outline-offset: 2px;
-  border-radius: 6px;
+/*
+ * Keyboard focus. In the base layer so a component's own focus style (outline-none plus a border highlight) wins.
+ * The outline follows each element's own corners; it never changes them.
+ */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+
+  /* Text fields: the highlight sits on the field's own border, never as a second box around or inside it. */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline-offset: -1px;
+  }
 }
 
 @keyframes wl-fade-in {
