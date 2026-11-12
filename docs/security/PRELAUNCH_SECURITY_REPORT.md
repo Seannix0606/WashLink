@@ -2,13 +2,13 @@
 
 Scope: the web app (`frontend/`), the shared package, the Supabase database (local copy and, read-only, the live project
 `wkkqlugwuvenzapitkdt`), the live site `https://washlink-h7rc.onrender.com`, the mobile app's packages and the whole Git
-history. Code fixes are on branch `security/pre-launch-hardening` (commit `[SEC-1]`).
+history. Code fixes are on branch `security/pre-launch-hardening` (commit `[SEC-1]`). The database and sign-in changes are applied on the live project.
 
 ## Summary
 
 | You asked for | Result |
 | --- | --- |
-| A real login, every password hashed | **Already in place.** Supabase Auth handles sign-in and stores passwords as bcrypt hashes; the app never sees or stores a password. Email confirmation is on live. **Your action:** raise the live minimum password length from 6 to 8 (the app already asks for 8) and turn on "Secure password change". |
+| A real login, every password hashed | **Already in place.** Supabase Auth handles sign-in and stores passwords as bcrypt hashes; the app never sees or stores a password. Email confirmation is on live. Live minimum password length is now 8, and "Secure password change" is on. |
 | API keys on the server, never in the browser | **Already in place, verified.** The live JavaScript holds only the publishable Supabase key, which is public by design. No secret or service-role key appears in the live bundle or the source. The Render deploy hook is a GitHub secret. |
 | Database locked so people see only their own data | **In place, tightened.** Row level security is on for every public table (live and local). Signed-out visitors can read only the active service list, prices and add-ons. SEC-1 also removes leftover write grants for signed-out visitors on six early tables (row level security already refused those writes). |
 | HTTPS everywhere | **Already in place, verified.** `http://` redirects to `https://` (301), and HSTS is sent with a 10-year max-age. |
@@ -26,23 +26,31 @@ history. Code fixes are on branch `security/pre-launch-hardening` (commit `[SEC-
 | Update risky packages, remove unused ones | **Fixed.** Removed `nodemailer` (a shipped package with a high advisory, used only by two stray test scripts, also removed) and five unused build packages. Updated vite, zod, ws and others. **Shipped web packages: 0 known vulnerabilities.** 7 moderate advisories remain in lint tools that never ship. The mobile app's 4 moderate advisories are in Expo's build tools, not in the app on the phone; updating them needs an Expo upgrade. |
 | Scan Git history for leaked keys, replace any found | **Clean, so nothing to replace.** All commits on every branch were searched for Supabase keys (JWT and `sb_secret`/`sb_publishable`), Stripe, AWS, Google, GitHub and Slack tokens, private keys, database URLs with passwords, SMTP passwords and long secret assignments. Only placeholders and test values were found. |
 
-## What you need to do
+## Done on the live project (2026-11-13, with your approval)
 
-1. **Apply the SEC-1 migration to the live database.** In the Supabase SQL Editor, run
-   `supabase/migrations/2026_11_15_sec_prelaunch_hardening.sql`.
-2. **Supabase → Authentication → Sign In / Providers → Email:**
-   - Minimum password length: **8** (it's 6 now; the app already asks for 8).
-   - **Secure password change: on.** A password change then needs a recent sign-in, so a stolen session can't lock the owner out.
-   - **Prevent use of leaked passwords: on**, if your plan offers it.
-3. **Render → washlink → Settings → Headers.** Add these, because the live site isn't using `render.yaml`:
+- **SEC-1 migration applied** in the Supabase SQL Editor. The shop verification bucket is now limited to PDF, PNG, JPEG or
+  WebP up to 8 MB, and signed-out visitors have no write grants left. After applying it, the public service list still
+  loads for signed-out visitors (HTTP 200), and a signed-out insert into `shops` is refused with "permission denied".
+- **Minimum password length raised from 6 to 8.** This matches what the app asks for; existing passwords keep working.
+- **Secure password change turned on.** A password change now needs a sign-in within the last 24 hours. The app's
+  "change password" already signs in again with the current password first, and reset links start a fresh session,
+  so both keep working.
+- **Leaked-password blocking: not available.** Supabase only offers it on the Pro plan or higher, and it refused the
+  setting on this project's plan.
+
+## What you still need to do
+
+1. **Render → washlink → Settings → Headers.** Add these, because the live site isn't using `render.yaml`:
    - `/*` `X-Frame-Options: DENY` (stops other sites from embedding WashLink to trick clicks)
    - `/*` `Referrer-Policy: strict-origin-when-cross-origin`
    - `/*` `Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=()`
    - `/*` `Content-Security-Policy:` the value from `render.yaml`, which also adds `frame-ancestors 'none'`.
 
    Alternatively, connect the service to `render.yaml` as a Blueprint.
-4. **Merge** branch `security/pre-launch-hardening` to `main`, so Render deploys it.
-5. **Decide on `backend/`.** It's an old server that isn't deployed. Deleting it removes code that nobody checks.
+2. **Merge** branch `security/pre-launch-hardening` to `main`, so the Content-Security-Policy and the package
+   updates go live.
+3. **Decide on `backend/`.** It's an old server that isn't deployed. Deleting it removes code that nobody checks.
+4. **Optional:** upgrade to Supabase Pro if you want leaked-password blocking.
 
 ## Tests run
 
