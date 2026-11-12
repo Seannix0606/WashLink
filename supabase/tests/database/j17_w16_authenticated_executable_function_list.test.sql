@@ -2,7 +2,8 @@
 -- one signature per line and sorted, so a failure shows the diff. Generated once from the local catalog after the 99 migrations.
 -- 155 rows: 152 non-trigger functions, the figure in FINAL_REVIEW, plus the three pre-workforce trigger functions
 -- (handle_new_user, set_booking_quote_from_shop_pricing, set_shop_pricing_updated_at). W15 and W16 added none. By design (R6) any new
--- 33 B2C functions added at b2c, nine at B2C-7 (each reviewed, each with its own test in j19_b2c7_callable_function_authorization) and two at OP-1 (tested in j19_op1_operator_mode). authenticated-executable function fails this file: update the list in the same increment, after checking the function is caller-scoped.
+-- 33 B2C functions added at b2c, nine at B2C-7 (each reviewed, each with its own test in j19_b2c7_callable_function_authorization) and two at OP-1 (tested in j19_op1_operator_mode), eleven at MSG-1 (each checks the caller; tested in
+-- j19_msg1_booking_messages). authenticated-executable function fails this file: update the list in the same increment, after checking the function is caller-scoped.
 -- Local Docker stack only.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -37,6 +38,7 @@ admin_review_worker_document(uuid, text, text)
 admin_save_addon(uuid, text, text, text, integer, integer, boolean, boolean, integer)
 admin_save_service(uuid, text, text, text, text, text, text, integer, integer, boolean, boolean, integer)
 admin_service_booking_case(uuid)
+admin_service_booking_chat(uuid, text)
 admin_service_bookings(text)
 admin_set_service_vehicle_price(uuid, text, integer)
 admin_unreviewed_approved_shops()
@@ -50,6 +52,7 @@ advance_service_booking(uuid, text)
 applicant_profiles_for_job_opening(uuid)
 applicant_verified_certifications(uuid)
 b2c_public_status()
+begin_service_booking_chat_photo(uuid)
 begin_worker_document_upload(text)
 can_manage_shop_verification_storage(text)
 can_read_certification(uuid)
@@ -104,6 +107,7 @@ job_opening_report_max_open_per_worker()
 job_opening_report_max_per_opening()
 list_my_roster_links()
 mark_notifications_read(uuid[])
+mark_service_booking_chat_read(uuid)
 moderate_job_opening(uuid, integer, text, text, text, text)
 my_assigned_service_bookings()
 my_certification_platform_reviews()
@@ -116,6 +120,7 @@ my_job_opening_reports()
 my_owner_relationship_progress()
 my_owner_relationships()
 my_retained_application_records()
+my_service_booking_chats()
 my_service_bookings()
 my_worker_contracts()
 my_worker_dashboard_summary()
@@ -164,8 +169,15 @@ save_independent_worker_profile(text, text[], double precision, double precision
 save_owner_contract_template_version(uuid, integer, uuid, jsonb, jsonb)
 save_worker_contract_draft(uuid, integer, text, date, date, jsonb, jsonb, jsonb)
 search_job_openings(text, text, text, text, text, boolean, numeric, text, integer, integer)
+send_service_booking_message(uuid, text, text, uuid)
 send_worker_contract_version(uuid, integer, text, text, integer)
 service_booking_available_slots(date, uuid, text, uuid[], double precision, double precision)
+service_booking_chat_can_join(text)
+service_booking_chat_messages(uuid, timestamp with time zone, integer)
+service_booking_chat_photo_is_readable(text)
+service_booking_chat_read_is_visible(uuid)
+service_booking_chat_upload_is_open(text)
+service_booking_message_is_visible(uuid, uuid)
 service_booking_quote(uuid, text, uuid[])
 set_booking_quote_from_shop_pricing()
 set_independent_worker_online(boolean)

@@ -3,6 +3,7 @@ import type { BookingQuote, PaymentStatus, VehicleCategory } from './catalog'
 import type { AssignedBooking, CatalogAddon, CatalogService, CustomerBooking, DispatchRequest, NewBookingInput, SavedAddress, SavedVehicle, TimeSlot, WorkerAccount, WorkerHoursRow, WorkerSummary } from './b2cTypes'
 import { nullableNum, nullableStr, num, rows, run, str, strs, type B2cSupabaseClient, type Row } from './b2cRequest'
 import { createWorkerDocumentsApi } from './workerDocuments'
+import { createBookingMessagesApi } from './bookingMessages'
 
 export { B2cRequestError } from './b2cRequest'
 export type { B2cSupabaseClient } from './b2cRequest'
@@ -40,6 +41,7 @@ export type B2cApi = ReturnType<typeof createB2cApi>
 export function createB2cApi(client: B2cSupabaseClient) {
   return {
     ...createWorkerDocumentsApi(client),
+    ...createBookingMessagesApi(client),
     async bookingsAreOpen(): Promise<boolean> {
       const result = await rows(client.rpc('b2c_public_status'))
       return result[0]?.bookings_open === true
