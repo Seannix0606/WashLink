@@ -1,7 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { z } from 'zod'
 import './index.css'
 import App from './App.tsx'
+
+// The Content-Security-Policy forbids eval. Zod would otherwise probe for it (and log a policy violation) to compile
+// faster validators; jitless keeps it on its plain, eval-free path.
+z.config({ jitless: true })
 
 const rootElement = document.getElementById('root')
 

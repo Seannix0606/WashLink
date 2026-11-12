@@ -8,7 +8,8 @@ const isolatedEnvironmentDirectory = fileURLToPath(
 )
 
 export default mergeConfig(
-  viteConfig,
+  // The CSP plugin only runs on builds, so the test run never uses the env it reads.
+  viteConfig({ mode: 'test', command: 'serve' }),
   defineConfig({
     envDir: isolatedEnvironmentDirectory,
     test: {
