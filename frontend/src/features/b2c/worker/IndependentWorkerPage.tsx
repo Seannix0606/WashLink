@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { BriefcaseBusiness, CheckCircle2, History, SlidersHorizontal, Star, Wallet } from 'lucide-react'
+import { BriefcaseBusiness, CheckCircle2, History, MessageCircle, SlidersHorizontal, Star, Wallet } from 'lucide-react'
 import type { AssignedBooking, B2cApi, DispatchRequest, WorkerAccount, WorkerSummary } from '@washlink/shared'
 import { formatManilaTime, formatPesos, manilaDayKey, terminalServiceBookingStatuses, workerPausedNotice } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
@@ -19,10 +19,13 @@ import { RequestCard } from './RequestCard'
 import { WorkerDocumentsPanel } from './WorkerDocumentsPanel'
 import { WorkerSetupPanel } from './WorkerSetupPanel'
 import { WorkerGlance } from './WorkerGlance'
+import { MessagesPanel } from '../messages/MessagesPanel'
+import { useBookingChats } from '../messages/useBookingChats'
 
-type WorkerTab = 'work' | 'history' | 'setup'
+type WorkerTab = 'work' | 'history' | 'setup' | 'messages'
 const tabItems = [
   { value: 'work' as const, label: 'Work', icon: <BriefcaseBusiness className="h-4 w-4" /> },
+  { value: 'messages' as const, label: 'Messages', icon: <MessageCircle className="h-4 w-4" /> },
   { value: 'history' as const, label: 'History and earnings', icon: <History className="h-4 w-4" /> },
   { value: 'setup' as const, label: 'Profile and hours', icon: <SlidersHorizontal className="h-4 w-4" /> },
 ]
@@ -42,6 +45,12 @@ interface IndependentWorkerPageProps {
 
 export function IndependentWorkerPage({ workerId, workerName }: IndependentWorkerPageProps): ReactElement {
   const [tab, setTab] = useState<WorkerTab>('work')
+  const chats = useBookingChats(workerId)
+  const [chatBookingId, setChatBookingId] = useState<string | null>(null)
+  const openChat = (bookingId: string): void => {
+    setChatBookingId(bookingId)
+    setTab('messages')
+  }
   const [account, setAccount] = useState<WorkerAccount | null | undefined>(undefined)
   const [requests, setRequests] = useState<readonly DispatchRequest[]>([])
   const [jobs, setJobs] = useState<readonly AssignedBooking[]>([])
@@ -122,8 +131,9 @@ export function IndependentWorkerPage({ workerId, workerName }: IndependentWorke
           {isOnline ? 'Online' : 'Offline'}
         </span>
       ) : undefined}
-      navigation={account ? <Tabs variant="navigation" accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} /> : undefined}
-      summary={account ? <WorkerGlance todayKey={todayKey} activeJobs={activeJobs} requestCount={requests.length} totals={summary} /> : undefined}>
+      navigation={account ? <Tabs variant="navigation" accessibleLabel="Your work" activeTabValue={tab} onTabChange={setTab}
+        tabItems={tabItems.map((item) => (item.value === 'messages' && chats.unreadTotal > 0 ? { ...item, badgeContent: chats.unreadTotal } : item))} /> : undefined}
+      summary={account && tab !== 'messages' ? <WorkerGlance todayKey={todayKey} activeJobs={activeJobs} requestCount={requests.length} totals={summary} /> : undefined}>
         {account === undefined ? <Skeleton heightClassName="h-32" /> : null}
         {account === null ? (
           <>
@@ -177,12 +187,16 @@ export function IndependentWorkerPage({ workerId, workerName }: IndependentWorke
                   {activeJobs.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No accepted bookings.</p> : null}
                   {activeJobs.length > 0 ? (
                     <div className="grid items-start gap-3 xl:grid-cols-2">
-                      {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} />)}
+                      {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} onMessage={openChat} />)}
                     </div>
                   ) : null}
                 </Section>
                 </>) : null}
               </div>
+            ) : null}
+            {tab === 'messages' ? (
+              <MessagesPanel chats={chats} profileId={workerId} selectedBookingId={chatBookingId} onSelect={setChatBookingId}
+                onViewBooking={(): void => { setTab('work') }} />
             ) : null}
             {tab === 'history' ? (
               <div className="space-y-4">

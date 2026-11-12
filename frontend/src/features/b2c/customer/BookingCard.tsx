@@ -1,8 +1,9 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Star } from 'lucide-react'
+import { MessageCircle, Star } from 'lucide-react'
 import {
+  isActiveServiceBooking,
   canCustomerCancel,
   canCustomerCancelOverdue,
   customerOverdueCancelNotice,
@@ -17,9 +18,11 @@ import { useCurrentTime } from '../useCurrentTime'
 interface BookingCardProps {
   readonly booking: CustomerBooking
   readonly onChanged: () => Promise<void>
+  /** Opens this booking's conversation; shown while a washer is on the booking. */
+  readonly onMessage?: (bookingId: string) => void
 }
 
-export function BookingCard({ booking, onChanged }: BookingCardProps): ReactElement {
+export function BookingCard({ booking, onChanged, onMessage }: BookingCardProps): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false)
   const [rating, setRating] = useState(0)
@@ -61,6 +64,13 @@ export function BookingCard({ booking, onChanged }: BookingCardProps): ReactElem
           </div>
         ) : null}
       </dl>
+
+      {onMessage !== undefined && booking.workerName !== '' && isActiveServiceBooking(booking.status) ? (
+        <Button size="sm" variant="secondary" leadingIcon={<MessageCircle className="h-4 w-4" aria-hidden="true" />}
+          onClick={(): void => { onMessage(booking.id) }}>
+          Message {booking.workerName}
+        </Button>
+      ) : null}
 
       {booking.status === 'no_worker_available' ? (
         <div className="flex flex-wrap items-center gap-2">

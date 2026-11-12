@@ -4,12 +4,24 @@
 Transform WashLink into a B2C mobile car wash marketplace: React web and Expo mobile on one Supabase backend, with shared TypeScript.
 
 ## Current phase
-B2C-7 (washer verification documents) passed independent verification on `feature/b2c`, local only. Commit tag `[B2C-7]`; base `5a3f769`. Record: `loop/workforce/increments/B2C-7/` (PLAN, LOG, REVIEW, VERDICT). Overall status: docs/b2c/FINAL_REPORT.md.
+MSG-1 (booking messages between customer and washer) built on `feature/messaging`, local only, on top of the visual redesign
+(`feature/visual-redesign`). Migration `2026_11_13_msa_booking_messages.sql` is applied to the local stack only; the live database
+still needs it. Design and rules: the migration's header and `docs/site/04-design-system.md`.
+
+Earlier: B2C-7 (washer verification documents) passed independent verification on `feature/b2c`, local only. Commit tag `[B2C-7]`; base `5a3f769`. Record: `loop/workforce/increments/B2C-7/` (PLAN, LOG, REVIEW, VERDICT). Overall status: docs/b2c/FINAL_REPORT.md.
 
 ## Tested
 - Backend, web customer, washer and admin flows against the local stack.
 - B2C-7 in a browser on the local stack, synthetic images only: upload, refusals, admin open and review, verify, replace, revoke with a job held, suspend, delete. Driven by script against the real controls and not repeated independently.
 - Mobile worker documents in the browser preview only, through the picker's web input.
+
+## MSG-1 tested
+- pgTAP `j19_msg1_booking_messages` (43 checks): access, hand-over privacy, closing after 24 hours, photos, admin audit.
+- Two signed-in browsers on the Docker dev site: live delivery, typing, online, Seen, photo, phone layout.
+
+## MSG-1 not verified
+Realtime and the private channel on hosted Supabase; the photo removal job (photos are already unreadable after 90 days, but files are
+only queued); web push (not built: in-app bell and badges only, by the owner's choice).
 
 ## Not verified
 Native builds, camera and photo library, permissions, HEIC, secure storage on a device, push, production deploy. The removal job's Deno wrapper, deployment and scheduling have never run. Nothing has run on hosted Supabase, including the Storage operation names the admin read and upload policies rely on. Whether a browser honours `no-store` wasn't observed. Two-session concurrency beyond the upload race smoke.
@@ -41,6 +53,9 @@ Before real IDs are collected:
 Also: real prices, logo files, photos, map provider, production migration approval, an Expo account and devices. Workforce W17 parked unverified on `feature/workforce`; W18 not started.
 
 ## Known issues
+- Existing: booking notifications whose reference has 7 or more digits in a row (e.g. WL-81904306) are silently skipped, because
+  `notification_text_is_safe` treats the run as a phone number. About 1 booking in 20. MSG-1 message notifications avoid it by
+  naming the service; the booking status notifications still need a fix.
 `j2_job_opening_lifecycle` test 46 fails rarely by chance: it searches audit payloads for `4321`, and each payload holds a random `shop_id`.
 
 ## Housekeeping

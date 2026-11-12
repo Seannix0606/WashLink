@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { CalendarCheck, CarFront, House, MapPin, Sparkles, UserRound } from 'lucide-react'
+import { CalendarCheck, CarFront, House, MapPin, MessageCircle, Sparkles, UserRound } from 'lucide-react'
 import { formatManilaTime, isActiveServiceBooking, manilaDayKey, serviceBookingStatusGroup, type CustomerBooking, type ServiceBookingStatusGroup } from '@washlink/shared'
 import { AuthenticatedTopBar } from '../../../presentation/components/AuthenticatedTopBar'
 import { MonthCalendar } from '../../../presentation/components/calendar/MonthCalendar'
@@ -13,14 +13,17 @@ import { greeting } from '../greeting'
 import { useCurrentTime } from '../useCurrentTime'
 import { BookingCard } from './BookingCard'
 import { CustomerSummary } from './CustomerSummary'
+import { MessagesPanel } from '../messages/MessagesPanel'
+import { useBookingChats } from '../messages/useBookingChats'
 import { SavedDetailsPanel } from './SavedDetailsPanel'
 
 const BookingWizard = lazy(async () => ({ default: (await import('./wizard/BookingWizard')).BookingWizard }))
 
-type CustomerTab = 'home' | 'bookings' | 'saved' | 'account'
+type CustomerTab = 'home' | 'bookings' | 'messages' | 'saved' | 'account'
 const tabItems = [
   { value: 'home' as const, label: 'Home', icon: <House className="h-4 w-4" /> },
   { value: 'bookings' as const, label: 'Bookings', icon: <CalendarCheck className="h-4 w-4" /> },
+  { value: 'messages' as const, label: 'Messages', icon: <MessageCircle className="h-4 w-4" /> },
   { value: 'saved' as const, label: 'Addresses and vehicles', icon: <MapPin className="h-4 w-4" /> },
   { value: 'account' as const, label: 'Account', icon: <UserRound className="h-4 w-4" /> },
 ]
@@ -53,6 +56,12 @@ function bookingGroups(bookings: readonly CustomerBooking[]): readonly BookingGr
 
 export function CustomerHomePage({ customerId, customerName }: CustomerHomePageProps): ReactElement {
   const [tab, setTab] = useState<CustomerTab>('home')
+  const chats = useBookingChats(customerId)
+  const [chatBookingId, setChatBookingId] = useState<string | null>(null)
+  const openChat = (bookingId: string): void => {
+    setChatBookingId(bookingId)
+    setTab('messages')
+  }
   const [isBooking, setIsBooking] = useState(false)
   const [bookings, setBookings] = useState<readonly CustomerBooking[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -114,7 +123,7 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
       <ul className="grid items-start gap-3 xl:grid-cols-2">
         {items.map((booking) => (
           <li key={booking.id}>
-            <BookingCard booking={booking} onChanged={refresh} />
+            <BookingCard booking={booking} onChanged={refresh} onMessage={openChat} />
           </li>
         ))}
       </ul>
@@ -124,8 +133,9 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
   return (
     <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5"
       title={greeting(customerName)} subtitle="Book a wash and follow it from your phone, step by step."
-      navigation={<Tabs variant="navigation" accessibleLabel="Your WashLink" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />}
-      summary={<CustomerSummary bookings={bookings} onBook={(): void => { setIsBooking(true) }} />}>
+      navigation={<Tabs variant="navigation" accessibleLabel="Your WashLink" activeTabValue={tab} onTabChange={setTab}
+        tabItems={tabItems.map((item) => (item.value === 'messages' && chats.unreadTotal > 0 ? { ...item, badgeContent: chats.unreadTotal } : item))} />}
+      summary={tab === 'messages' ? undefined : <CustomerSummary bookings={bookings} onBook={(): void => { setIsBooking(true) }} />}>
         {loadError !== null ? (
           <p role="alert" className="rounded-[var(--radius-control)] bg-[var(--color-danger-50)] p-3 text-sm text-[var(--color-danger-600)]">
             {loadError}
@@ -182,6 +192,10 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
               </div>
             )}
           </div>
+        ) : null}
+        {tab === 'messages' ? (
+          <MessagesPanel chats={chats} profileId={customerId} selectedBookingId={chatBookingId} onSelect={setChatBookingId}
+            onViewBooking={(): void => { setTab('bookings') }} />
         ) : null}
         {tab === 'saved' ? <SavedDetailsPanel customerId={customerId} /> : null}
         {tab === 'account' ? <DeleteAccountSection /> : null}

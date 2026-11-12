@@ -7,6 +7,7 @@ import { formatManilaDateTime, formatPesos, serviceBookingStatusLabel, serviceBo
 import { Badge, Button, Card, Input, Section, Select, Skeleton, StatusPill, statusEdgeStyle } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
 import { useMediaQuery, WIDE_SCREEN_QUERY } from '../../../presentation/design/useMediaQuery'
+import { AdminChatReader } from './AdminChatReader'
 import { AdminCancelBookingControl } from './AdminCancelBookingControl'
 import { addonKey } from './addonKey'
 import { WasherVerificationCard } from './WasherVerificationCard'
@@ -229,7 +230,7 @@ export function B2cOperationsPanel(): ReactElement {
               }}>{openCase?.bookingId === text(booking.booking_id) ? 'Close case' : 'Open case'}</Button>
               {booking.status === 'arrived' || booking.status === 'in_progress' ? <AdminCancelBookingControl bookingId={text(booking.booking_id)} onCancelled={refresh} /> : null}
             </Card>
-            {openCase?.bookingId === text(booking.booking_id) ? <BookingCaseHistory data={openCase.data} onClose={(): void => { setOpenCase(null) }} /> : null}
+            {openCase?.bookingId === text(booking.booking_id) ? <BookingCaseHistory bookingId={openCase.bookingId} data={openCase.data} onClose={(): void => { setOpenCase(null) }} /> : null}
             </Fragment>
             )
           })}
@@ -384,7 +385,7 @@ const statusName = (value: unknown): string => {
 }
 
 /** A booking's status history, shown right under its row. */
-function BookingCaseHistory({ data, onClose }: { readonly data: Row; readonly onClose: () => void }): ReactElement {
+function BookingCaseHistory({ bookingId, data, onClose }: { readonly bookingId: string; readonly data: Row; readonly onClose: () => void }): ReactElement {
   return (
     <Card elevation="flat" className="ml-3 space-y-2 border-l-4 border-l-[var(--color-ink-300)] p-4 text-sm">
       <h3 className="font-semibold text-[var(--color-ink-900)]">Booking history</h3>
@@ -397,6 +398,7 @@ function BookingCaseHistory({ data, onClose }: { readonly data: Row; readonly on
         ))}
       </ol>
       <p>Dispatch attempts: {((data.dispatch ?? []) as readonly Row[]).length}</p>
+      <AdminChatReader bookingId={bookingId} />
       <Button size="sm" variant="ghost" onClick={onClose}>Close case</Button>
     </Card>
   )

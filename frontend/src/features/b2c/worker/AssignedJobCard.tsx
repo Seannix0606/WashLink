@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Navigation, Phone } from 'lucide-react'
+import { MessageCircle, Navigation, Phone } from 'lucide-react'
 import {
   canWorkerAdvanceNow,
   directionsUrl,
@@ -41,9 +41,11 @@ interface AssignedJobCardProps {
   /** Only a WashLink operator account may cancel; the database checks this again. Other washers hand a job back. */
   readonly canCancel?: boolean
   readonly onChanged: () => Promise<void>
+  /** Opens this booking's conversation with the customer. */
+  readonly onMessage?: (bookingId: string) => void
 }
 
-export function AssignedJobCard({ job, isPaused = false, canCancel = false, onChanged }: AssignedJobCardProps): ReactElement {
+export function AssignedJobCard({ job, isPaused = false, canCancel = false, onChanged, onMessage }: AssignedJobCardProps): ReactElement {
   const [isBusy, setIsBusy] = useState(false)
   const [note, setNote] = useState('')
   const [noteMode, setNoteMode] = useState<NoteMode | null>(null)
@@ -95,6 +97,12 @@ export function AssignedJobCard({ job, isPaused = false, canCancel = false, onCh
             href={directionsUrl(job.latitude, job.longitude)} target="_blank" rel="noreferrer">
             <Navigation className="h-4 w-4" aria-hidden="true" />Navigate
           </a>
+        ) : null}
+        {onMessage !== undefined ? (
+          <button type="button" className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-300)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-ink-900)] hover:bg-[var(--color-section-head)]"
+            onClick={(): void => { onMessage(job.id) }}>
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />Message customer
+          </button>
         ) : null}
         {job.customerPhone ? (
           <a className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-ink-300)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-ink-900)]" href={`tel:${job.customerPhone}`}>
