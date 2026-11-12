@@ -26,8 +26,8 @@ type WorkerTab = 'work' | 'history' | 'setup' | 'messages'
 const tabItems = [
   { value: 'work' as const, label: 'Work', icon: <BriefcaseBusiness className="h-4 w-4" /> },
   { value: 'messages' as const, label: 'Messages', icon: <MessageCircle className="h-4 w-4" /> },
-  { value: 'history' as const, label: 'History and earnings', icon: <History className="h-4 w-4" /> },
-  { value: 'setup' as const, label: 'Profile and hours', icon: <SlidersHorizontal className="h-4 w-4" /> },
+  { value: 'history' as const, label: 'History and earnings', shortLabel: 'History', icon: <History className="h-4 w-4" /> },
+  { value: 'setup' as const, label: 'Profile and hours', shortLabel: 'Profile', icon: <SlidersHorizontal className="h-4 w-4" /> },
 ]
 
 const statusText: Readonly<Record<WorkerAccount['verificationStatus'], string>> = {
@@ -121,7 +121,7 @@ export function IndependentWorkerPage({ workerId, workerName }: IndependentWorke
   const pausedNotice = account ? workerPausedNotice(account.verificationStatus, activeJobs.length) : null
 
   return (
-    <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5"
+    <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5" isNavigationAtBottomOnPhones
       title={greeting(workerName)}
       subtitle={account ? 'Your requests, bookings, earnings and hours.' : 'Set up your profile to start receiving bookings.'}
       headerAside={account ? (
@@ -131,7 +131,7 @@ export function IndependentWorkerPage({ workerId, workerName }: IndependentWorke
           {isOnline ? 'Online' : 'Offline'}
         </span>
       ) : undefined}
-      navigation={account ? <Tabs variant="navigation" accessibleLabel="Your work" activeTabValue={tab} onTabChange={setTab}
+      navigation={account ? <Tabs variant="navigation" isPhoneBottomBar accessibleLabel="Your work" activeTabValue={tab} onTabChange={setTab}
         tabItems={tabItems.map((item) => (item.value === 'messages' && chats.unreadTotal > 0 ? { ...item, badgeContent: chats.unreadTotal } : item))} /> : undefined}
       summary={account && tab !== 'messages' ? <WorkerGlance todayKey={todayKey} activeJobs={activeJobs} requestCount={requests.length} totals={summary} /> : undefined}>
         {account === undefined ? <Skeleton heightClassName="h-32" /> : null}

@@ -19,6 +19,11 @@ interface AppShellProps {
    */
   readonly navigation?: ReactNode
   /**
+   * Phones below 768px: the navigation becomes a bar fixed to the bottom of the screen (pass Tabs isPhoneBottomBar too).
+   * Tablets and desktop are unchanged.
+   */
+  readonly isNavigationAtBottomOnPhones?: boolean
+  /**
    * A glance panel shown to the right of the content on wide screens (1280px and wider) only. It must repeat nothing
    * the page can't do without: below that width it is not rendered at all.
    */
@@ -40,10 +45,12 @@ export function AppShell({
   subtitle,
   headerAside,
   navigation,
+  isNavigationAtBottomOnPhones = false,
   summary,
 }: AppShellProps): ReactElement {
   const hasHeading = title !== undefined
   const hasNavigation = navigation !== undefined
+  const isBottomOnPhones = hasNavigation && isNavigationAtBottomOnPhones
   const isWide = useMediaQuery(WIDE_SCREEN_QUERY)
   const isSummaryShown = summary !== undefined && isWide
   // Content stays readable on very large screens; it is centered in the space beside the sidebar.
@@ -69,7 +76,7 @@ export function AppShell({
           <div className={joinClassNames(
             'mx-auto flex w-full flex-wrap items-end justify-between gap-3 px-4 pt-5 sm:px-6 lg:px-8',
             contentWidth,
-            hasNavigation ? 'pb-14 lg:pb-10' : 'pb-8',
+            hasNavigation ? (isBottomOnPhones ? 'pb-8 md:pb-14 lg:pb-10' : 'pb-14 lg:pb-10') : 'pb-8',
           )}>
             <div className="min-w-0">
               <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight text-[var(--color-on-harbor)] sm:text-3xl">{title}</h1>
@@ -84,6 +91,7 @@ export function AppShell({
         <aside className={joinClassNames(
           'relative z-20 px-4 [grid-area:nav] sm:px-6',
           hasHeading ? '-mt-8' : 'mt-4',
+          isBottomOnPhones ? 'max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-40 max-md:mt-0 max-md:px-0' : '',
           // Desktop: a full-height dark rail with the brand on top, stuck to the left edge while the page scrolls.
           'lg:sticky lg:top-0 lg:mt-0 lg:flex lg:h-[100dvh] lg:flex-col lg:gap-6 lg:border-r lg:border-white/10 lg:bg-[var(--color-harbor-950)] lg:px-3 lg:py-4 lg:[grid-area:side]',
         )}>
@@ -102,7 +110,9 @@ export function AppShell({
       )}>
         <main
           className={joinClassNames(
-            'min-w-0 py-5 pb-24 sm:pb-10',
+            'min-w-0 py-5',
+            // Room for the fixed bottom bar and the home indicator.
+            isBottomOnPhones ? 'pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-10' : 'pb-24 sm:pb-10',
             hasNavigation ? 'lg:pt-8' : '',
             mainClassName,
           )}

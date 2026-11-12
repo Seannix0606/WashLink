@@ -24,7 +24,7 @@ const tabItems = [
   { value: 'home' as const, label: 'Home', icon: <House className="h-4 w-4" /> },
   { value: 'bookings' as const, label: 'Bookings', icon: <CalendarCheck className="h-4 w-4" /> },
   { value: 'messages' as const, label: 'Messages', icon: <MessageCircle className="h-4 w-4" /> },
-  { value: 'saved' as const, label: 'Addresses and vehicles', icon: <MapPin className="h-4 w-4" /> },
+  { value: 'saved' as const, label: 'Addresses and vehicles', shortLabel: 'Saved', icon: <MapPin className="h-4 w-4" /> },
   { value: 'account' as const, label: 'Account', icon: <UserRound className="h-4 w-4" /> },
 ]
 
@@ -131,9 +131,9 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
   }
 
   return (
-    <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5"
+    <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5" isNavigationAtBottomOnPhones
       title={greeting(customerName)} subtitle="Book a wash and follow it from your phone, step by step."
-      navigation={<Tabs variant="navigation" accessibleLabel="Your WashLink" activeTabValue={tab} onTabChange={setTab}
+      navigation={<Tabs variant="navigation" isPhoneBottomBar accessibleLabel="Your WashLink" activeTabValue={tab} onTabChange={setTab}
         tabItems={tabItems.map((item) => (item.value === 'messages' && chats.unreadTotal > 0 ? { ...item, badgeContent: chats.unreadTotal } : item))} />}
       summary={tab === 'messages' ? undefined : <CustomerSummary bookings={bookings} onBook={(): void => { setIsBooking(true) }} />}>
         {loadError !== null ? (
