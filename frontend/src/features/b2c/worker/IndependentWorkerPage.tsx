@@ -18,6 +18,7 @@ import { AssignedJobCard } from './AssignedJobCard'
 import { RequestCard } from './RequestCard'
 import { WorkerDocumentsPanel } from './WorkerDocumentsPanel'
 import { WorkerSetupPanel } from './WorkerSetupPanel'
+import { WorkerGlance } from './WorkerGlance'
 
 type WorkerTab = 'work' | 'history' | 'setup'
 const tabItems = [
@@ -121,7 +122,8 @@ export function IndependentWorkerPage({ workerId, workerName }: IndependentWorke
           {isOnline ? 'Online' : 'Offline'}
         </span>
       ) : undefined}
-      navigation={account ? <Tabs variant="navigation" accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} /> : undefined}>
+      navigation={account ? <Tabs variant="navigation" accessibleLabel="Your work" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} /> : undefined}
+      summary={account ? <WorkerGlance todayKey={todayKey} activeJobs={activeJobs} requestCount={requests.length} totals={summary} /> : undefined}>
         {account === undefined ? <Skeleton heightClassName="h-32" /> : null}
         {account === null ? (
           <>
@@ -165,11 +167,19 @@ export function IndependentWorkerPage({ workerId, workerName }: IndependentWorke
                 {view === 'list' ? (<>
                 <Section title="Booking requests" count={requests.length} description="New bookings waiting for you to accept or decline.">
                   {requests.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No requests right now.</p> : null}
-                  {requests.map((request) => <RequestCard key={request.id} request={request} onChanged={refresh} />)}
+                  {requests.length > 0 ? (
+                    <div className="grid items-start gap-3 xl:grid-cols-2">
+                      {requests.map((request) => <RequestCard key={request.id} request={request} onChanged={refresh} />)}
+                    </div>
+                  ) : null}
                 </Section>
                 <Section title="Your bookings" count={activeJobs.length} description="Accepted jobs, soonest first.">
                   {activeJobs.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No accepted bookings.</p> : null}
-                  {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} />)}
+                  {activeJobs.length > 0 ? (
+                    <div className="grid items-start gap-3 xl:grid-cols-2">
+                      {activeJobs.map((job) => <AssignedJobCard key={job.id} job={job} isPaused={pausedNotice !== null} canCancel={account.isPlatformOperator} onChanged={refresh} />)}
+                    </div>
+                  ) : null}
                 </Section>
                 </>) : null}
               </div>

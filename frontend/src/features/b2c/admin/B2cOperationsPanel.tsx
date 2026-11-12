@@ -6,6 +6,7 @@ import type { WorkerDocumentOverview } from '@washlink/shared'
 import { formatManilaDateTime, formatPesos, serviceBookingStatusLabel, serviceBookingStatuses, type ServiceBookingStatus } from '@washlink/shared'
 import { Badge, Button, Card, Input, Section, Select, Skeleton, StatusPill, statusEdgeStyle } from '../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../b2cApiClient'
+import { useMediaQuery, WIDE_SCREEN_QUERY } from '../../../presentation/design/useMediaQuery'
 import { AdminCancelBookingControl } from './AdminCancelBookingControl'
 import { addonKey } from './addonKey'
 import { WasherVerificationCard } from './WasherVerificationCard'
@@ -30,6 +31,7 @@ export function B2cOperationsPanel(): ReactElement {
   const [workers, setWorkers] = useState<readonly Row[]>([])
   const [operatorIds, setOperatorIds] = useState<ReadonlySet<string>>(new Set())
   const [bookings, setBookings] = useState<readonly Row[]>([])
+  const isWide = useMediaQuery(WIDE_SCREEN_QUERY)
   const [filter, setFilter] = useState('')
   const [openCase, setOpenCase] = useState<{ readonly bookingId: string; readonly data: Row } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -111,123 +113,162 @@ export function B2cOperationsPanel(): ReactElement {
             }), isActive === (addon.is_active === true) ? 'Saved' : isActive ? 'Add-on shown to customers' : 'Add-on hidden from customers')} />
   )
 
+  // Wide screens: services, washers and bookings on the left; the overview stays in view on the right.
+  const overviewBlock = (
+    <>
+        <Card className={`flex flex-wrap items-center justify-between gap-3 border-l-4 p-4 ${isOpen ? 'border-l-[var(--color-success-500)]' : 'border-l-[var(--color-ink-400)]'}`}>
+          <div className="flex items-start gap-3">
+            <span aria-hidden="true" className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOpen ? 'bg-[var(--color-success-50)] text-[var(--color-success-600)]' : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]'}`}>
+              {isOpen ? <Store className="h-5 w-5" /> : <CircleSlash className="h-5 w-5" />}
+            </span>
+            <div>
+            <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--color-ink-900)]">{isOpen ? 'Bookings are open' : 'Bookings are closed'}</h2>
+            <p className="text-sm text-[var(--color-ink-700)]">
+              {num(summary.draft_prices) > 0 ? `${text(summary.draft_prices)} services still have draft prices. Set final prices below before opening.` : 'All active services have final prices.'}
+            </p>
+            </div>
+          </div>
+          <Button variant={isOpen ? 'secondary' : 'primary'} onClick={(): void => void run(() => saveRules({ bookingsOpen: !isOpen }), isOpen ? 'Bookings closed' : 'Bookings opened')}>
+            {isOpen ? 'Close bookings' : 'Open bookings'}
+          </Button>
+        </Card>
+
+        {/* Bento: the two money figures lead on the harbor color, then six counts with an icon each. */}
+        <dl className={isWide ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-2 gap-3 lg:grid-cols-6'}>
+          {[
+            { label: 'Expected cash', value: pesos(summary.customer_total_cents), icon: <Wallet className="h-5 w-5" /> },
+            { label: 'Expected commission', value: pesos(summary.platform_fee_cents), icon: <Coins className="h-5 w-5" /> },
+          ].map((tile) => (
+            <div key={tile.label} className={`wl-harbor relative col-span-2 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-harbor-700)] p-4 shadow-[var(--shadow-card-hover)] ${isWide ? '' : 'sm:col-span-1 lg:col-span-3'}`}>
+              <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-on-harbor-muted)]">
+                <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-[var(--color-accent)]">{tile.icon}</span>
+                {tile.label}
+              </dt>
+              <dd className="mt-3 font-[family-name:var(--font-display)] text-3xl font-bold tabular-nums text-[var(--color-accent)]">{tile.value}</dd>
+            </div>
+          ))}
+          {[
+            { label: 'Washers to review', value: summary.workers_pending, icon: <ShieldAlert className="h-4 w-4" />, tone: 'warning' },
+            { label: 'Washers online', value: summary.workers_online, icon: <Radio className="h-4 w-4" />, tone: 'success' },
+            { label: 'Finding a washer', value: summary.bookings_searching, icon: <Search className="h-4 w-4" />, tone: 'warning' },
+            { label: 'No washer found', value: summary.bookings_no_worker, icon: <TriangleAlert className="h-4 w-4" />, tone: 'danger' },
+            { label: 'Active bookings', value: summary.bookings_active, icon: <CalendarClock className="h-4 w-4" />, tone: 'brand' },
+            { label: 'Completed', value: summary.bookings_completed, icon: <CheckCircle2 className="h-4 w-4" />, tone: 'success' },
+          ].map((tile) => (
+            <Card key={tile.label} className={isWide ? 'p-3' : 'p-3 lg:col-span-2'}>
+              <dt className="flex items-center gap-2 text-xs font-medium text-[var(--color-ink-500)]">
+                <span aria-hidden="true" className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tileTone[tile.tone]}`}>{tile.icon}</span>
+                {tile.label}
+              </dt>
+              <dd className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold tabular-nums text-[var(--color-ink-900)]">{text(tile.value)}</dd>
+            </Card>
+          ))}
+        </dl>
+        <p className="text-xs text-[var(--color-ink-500)]">Money figures are expected cash totals from completed bookings. WashLink does not yet confirm cash collection.</p>
+    </>
+  )
+  const sections = (
+    <>
+        <Section title="Services and prices" description="Draft prices can't be booked. Hidden items stay saved but customers don't see them.">
+          <CommissionForm bps={num(settings.commission_bps)} onSave={(bps): void => void run(() => saveRules({ commissionBps: bps }), 'Commission saved')} />
+          <TravelGapForm minutes={num(settings.travel_buffer_minutes)} onSave={(minutes): void => void run(() => saveRules({ travelBufferMinutes: minutes }), 'Travel gap saved')} />
+          {services.filter((service) => service.is_active === true).map(serviceRow)}
+          {addons.filter((addon) => addon.is_active === true).map(addonRow)}
+          <NewAddonForm nextSortOrder={Math.max(0, ...addons.map((addon) => num(addon.sort_order))) + 10}
+            onCreate={(addon): Promise<boolean> => run(() => getB2cApi().adminSaveAddon({
+              p_id: null, p_key: addonKey(addon.name), p_name: addon.name, p_description: addon.description, p_price_cents: addon.priceCents,
+              p_duration_minutes: addon.minutes, p_is_active: true, p_price_is_draft: false, p_sort_order: addon.sortOrder,
+            }), 'Add-on added')} />
+          {hiddenServices.length + hiddenAddons.length > 0 ? (
+            <details className="rounded-[var(--radius-control)] border border-dashed border-[var(--color-card-border)] bg-[var(--color-card)] p-3">
+              <summary className="cursor-pointer text-sm font-semibold text-[var(--color-ink-700)]">
+                Hidden ({hiddenServices.length + hiddenAddons.length}): saved, but customers don&apos;t see them
+              </summary>
+              <div className="mt-3 space-y-3">
+                {hiddenServices.map(serviceRow)}
+                {hiddenAddons.map(addonRow)}
+              </div>
+            </details>
+          ) : null}
+        </Section>
+
+        <Section title="Washers" count={workers.length}>
+          {overview !== null ? (
+            <div className="space-y-1 text-sm text-[var(--color-ink-700)]">
+              <p>Documents to review: <span className="font-semibold tabular-nums">{overview.documentsToReview}</span></p>
+              <p>Files waiting for removal: <span className="font-semibold tabular-nums">{overview.filesWaitingForRemoval}</span>{overview.oldestFileWaitingSince !== null ? `, the oldest since ${formatManilaDateTime(overview.oldestFileWaitingSince)}` : ''}</p>
+              {overview.filesWaitingForRemoval > 0 ? <p className="text-xs text-[var(--color-ink-500)]">This count includes items the job hasn&apos;t reached yet, so it can be higher than the number of real files. These files stay in storage until the removal job runs. See the operations guide.</p> : null}
+            </div>
+          ) : null}
+          {workers.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No washers have signed up yet.</p> : null}
+          {workers.map((worker) => <WasherVerificationCard key={text(worker.profile_id)} worker={worker} isPlatformOperator={operatorIds.has(text(worker.profile_id))} runAction={run} onChanged={refresh} />)}
+        </Section>
+
+        <Section title="Bookings" count={bookings.length}>
+          <Select label="Show" options={statusFilter} value={filter} onChange={(event): void => { setFilter(event.target.value) }} />
+          {bookings.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No bookings to show.</p> : null}
+          {bookings.map((booking) => {
+            const status = asStatus(booking.status)
+            return (
+            <Fragment key={text(booking.booking_id)}>
+            <Card className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm" style={status === null ? undefined : statusEdgeStyle(status)}>
+              <div className="space-y-1">
+                <p className="flex flex-wrap items-center gap-2 font-medium text-[var(--color-ink-900)]">
+                  {text(booking.reference)} · {text(booking.service_name)} · {pesos(booking.customer_total_cents)}
+                  {status === null ? <span className="text-[var(--color-ink-500)]">{text(booking.status)}</span> : <StatusPill status={status} />}
+                </p>
+                <p className="text-[var(--color-ink-700)]">{text(booking.customer_name)} · washer: {text(booking.worker_name) || 'none'} · {text(booking.open_offers)} open requests</p>
+              </div>
+              <Button size="sm" variant="secondary" aria-expanded={openCase?.bookingId === text(booking.booking_id)} onClick={(): void => {
+                const bookingId = text(booking.booking_id)
+                if (openCase?.bookingId === bookingId) {
+                  setOpenCase(null)
+                  return
+                }
+                getB2cApi().adminBookingCase(bookingId).then((data) => { setOpenCase({ bookingId, data }) }).catch((caught: unknown) => { toast.error(errorMessage(caught)) })
+              }}>{openCase?.bookingId === text(booking.booking_id) ? 'Close case' : 'Open case'}</Button>
+              {booking.status === 'arrived' || booking.status === 'in_progress' ? <AdminCancelBookingControl bookingId={text(booking.booking_id)} onCancelled={refresh} /> : null}
+            </Card>
+            {openCase?.bookingId === text(booking.booking_id) ? <BookingCaseHistory data={openCase.data} onClose={(): void => { setOpenCase(null) }} /> : null}
+            </Fragment>
+            )
+          })}
+        </Section>
+    </>
+  )
+  const needsAttention = bookings.filter((booking) => booking.status === 'no_worker_available' || booking.status === 'searching_for_worker')
+
+  if (isWide) {
+    return (
+      <div className="grid grid-cols-[minmax(0,1fr)_22rem] items-start gap-8">
+        <div className="min-w-0 space-y-6">{sections}</div>
+        {/* Not sticky: taller than most screens, and the last card must stay reachable. */}
+        <div className="space-y-4">
+          {overviewBlock}
+          <Card className="space-y-3 p-4">
+            <h2 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-base font-bold text-[var(--color-ink-900)]">
+              <TriangleAlert className="h-4 w-4 text-[var(--color-warning-500)]" aria-hidden="true" /> Needs attention
+            </h2>
+            {needsAttention.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">Every booking has a washer or is finished.</p> : (
+              <ul className="space-y-2">
+                {needsAttention.map((booking) => (
+                  <li key={text(booking.booking_id)} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="min-w-0 truncate text-[var(--color-ink-900)]">{text(booking.reference)} · {text(booking.service_name)}</span>
+                    <span className="shrink-0 text-xs font-semibold text-[var(--color-ink-700)]">{statusName(booking.status)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <Card className={`flex flex-wrap items-center justify-between gap-3 border-l-4 p-4 ${isOpen ? 'border-l-[var(--color-success-500)]' : 'border-l-[var(--color-ink-400)]'}`}>
-        <div className="flex items-start gap-3">
-          <span aria-hidden="true" className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOpen ? 'bg-[var(--color-success-50)] text-[var(--color-success-600)]' : 'bg-[var(--color-ink-100)] text-[var(--color-ink-700)]'}`}>
-            {isOpen ? <Store className="h-5 w-5" /> : <CircleSlash className="h-5 w-5" />}
-          </span>
-          <div>
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--color-ink-900)]">{isOpen ? 'Bookings are open' : 'Bookings are closed'}</h2>
-          <p className="text-sm text-[var(--color-ink-700)]">
-            {num(summary.draft_prices) > 0 ? `${text(summary.draft_prices)} services still have draft prices. Set final prices below before opening.` : 'All active services have final prices.'}
-          </p>
-          </div>
-        </div>
-        <Button variant={isOpen ? 'secondary' : 'primary'} onClick={(): void => void run(() => saveRules({ bookingsOpen: !isOpen }), isOpen ? 'Bookings closed' : 'Bookings opened')}>
-          {isOpen ? 'Close bookings' : 'Open bookings'}
-        </Button>
-      </Card>
-
-      {/* Bento: the two money figures lead on the harbor color, then six counts with an icon each. */}
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-6">
-        {[
-          { label: 'Expected cash', value: pesos(summary.customer_total_cents), icon: <Wallet className="h-5 w-5" /> },
-          { label: 'Expected commission', value: pesos(summary.platform_fee_cents), icon: <Coins className="h-5 w-5" /> },
-        ].map((tile) => (
-          <div key={tile.label} className="wl-harbor relative col-span-2 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--color-harbor-700)] p-4 shadow-[var(--shadow-card-hover)] sm:col-span-1 lg:col-span-3">
-            <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-on-harbor-muted)]">
-              <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-[var(--color-accent)]">{tile.icon}</span>
-              {tile.label}
-            </dt>
-            <dd className="mt-3 font-[family-name:var(--font-display)] text-3xl font-bold tabular-nums text-[var(--color-accent)]">{tile.value}</dd>
-          </div>
-        ))}
-        {[
-          { label: 'Washers to review', value: summary.workers_pending, icon: <ShieldAlert className="h-4 w-4" />, tone: 'warning' },
-          { label: 'Washers online', value: summary.workers_online, icon: <Radio className="h-4 w-4" />, tone: 'success' },
-          { label: 'Finding a washer', value: summary.bookings_searching, icon: <Search className="h-4 w-4" />, tone: 'warning' },
-          { label: 'No washer found', value: summary.bookings_no_worker, icon: <TriangleAlert className="h-4 w-4" />, tone: 'danger' },
-          { label: 'Active bookings', value: summary.bookings_active, icon: <CalendarClock className="h-4 w-4" />, tone: 'brand' },
-          { label: 'Completed', value: summary.bookings_completed, icon: <CheckCircle2 className="h-4 w-4" />, tone: 'success' },
-        ].map((tile) => (
-          <Card key={tile.label} className="p-3 lg:col-span-2">
-            <dt className="flex items-center gap-2 text-xs font-medium text-[var(--color-ink-500)]">
-              <span aria-hidden="true" className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tileTone[tile.tone]}`}>{tile.icon}</span>
-              {tile.label}
-            </dt>
-            <dd className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold tabular-nums text-[var(--color-ink-900)]">{text(tile.value)}</dd>
-          </Card>
-        ))}
-      </dl>
-      <p className="text-xs text-[var(--color-ink-500)]">Money figures are expected cash totals from completed bookings. WashLink does not yet confirm cash collection.</p>
-
-      <Section title="Services and prices" description="Draft prices can't be booked. Hidden items stay saved but customers don't see them.">
-        <CommissionForm bps={num(settings.commission_bps)} onSave={(bps): void => void run(() => saveRules({ commissionBps: bps }), 'Commission saved')} />
-        <TravelGapForm minutes={num(settings.travel_buffer_minutes)} onSave={(minutes): void => void run(() => saveRules({ travelBufferMinutes: minutes }), 'Travel gap saved')} />
-        {services.filter((service) => service.is_active === true).map(serviceRow)}
-        {addons.filter((addon) => addon.is_active === true).map(addonRow)}
-        <NewAddonForm nextSortOrder={Math.max(0, ...addons.map((addon) => num(addon.sort_order))) + 10}
-          onCreate={(addon): Promise<boolean> => run(() => getB2cApi().adminSaveAddon({
-            p_id: null, p_key: addonKey(addon.name), p_name: addon.name, p_description: addon.description, p_price_cents: addon.priceCents,
-            p_duration_minutes: addon.minutes, p_is_active: true, p_price_is_draft: false, p_sort_order: addon.sortOrder,
-          }), 'Add-on added')} />
-        {hiddenServices.length + hiddenAddons.length > 0 ? (
-          <details className="rounded-[var(--radius-control)] border border-dashed border-[var(--color-card-border)] bg-[var(--color-card)] p-3">
-            <summary className="cursor-pointer text-sm font-semibold text-[var(--color-ink-700)]">
-              Hidden ({hiddenServices.length + hiddenAddons.length}): saved, but customers don&apos;t see them
-            </summary>
-            <div className="mt-3 space-y-3">
-              {hiddenServices.map(serviceRow)}
-              {hiddenAddons.map(addonRow)}
-            </div>
-          </details>
-        ) : null}
-      </Section>
-
-      <Section title="Washers" count={workers.length}>
-        {overview !== null ? (
-          <div className="space-y-1 text-sm text-[var(--color-ink-700)]">
-            <p>Documents to review: <span className="font-semibold tabular-nums">{overview.documentsToReview}</span></p>
-            <p>Files waiting for removal: <span className="font-semibold tabular-nums">{overview.filesWaitingForRemoval}</span>{overview.oldestFileWaitingSince !== null ? `, the oldest since ${formatManilaDateTime(overview.oldestFileWaitingSince)}` : ''}</p>
-            {overview.filesWaitingForRemoval > 0 ? <p className="text-xs text-[var(--color-ink-500)]">This count includes items the job hasn&apos;t reached yet, so it can be higher than the number of real files. These files stay in storage until the removal job runs. See the operations guide.</p> : null}
-          </div>
-        ) : null}
-        {workers.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No washers have signed up yet.</p> : null}
-        {workers.map((worker) => <WasherVerificationCard key={text(worker.profile_id)} worker={worker} isPlatformOperator={operatorIds.has(text(worker.profile_id))} runAction={run} onChanged={refresh} />)}
-      </Section>
-
-      <Section title="Bookings" count={bookings.length}>
-        <Select label="Show" options={statusFilter} value={filter} onChange={(event): void => { setFilter(event.target.value) }} />
-        {bookings.length === 0 ? <p className="text-sm text-[var(--color-ink-700)]">No bookings to show.</p> : null}
-        {bookings.map((booking) => {
-          const status = asStatus(booking.status)
-          return (
-          <Fragment key={text(booking.booking_id)}>
-          <Card className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm" style={status === null ? undefined : statusEdgeStyle(status)}>
-            <div className="space-y-1">
-              <p className="flex flex-wrap items-center gap-2 font-medium text-[var(--color-ink-900)]">
-                {text(booking.reference)} · {text(booking.service_name)} · {pesos(booking.customer_total_cents)}
-                {status === null ? <span className="text-[var(--color-ink-500)]">{text(booking.status)}</span> : <StatusPill status={status} />}
-              </p>
-              <p className="text-[var(--color-ink-700)]">{text(booking.customer_name)} · washer: {text(booking.worker_name) || 'none'} · {text(booking.open_offers)} open requests</p>
-            </div>
-            <Button size="sm" variant="secondary" aria-expanded={openCase?.bookingId === text(booking.booking_id)} onClick={(): void => {
-              const bookingId = text(booking.booking_id)
-              if (openCase?.bookingId === bookingId) {
-                setOpenCase(null)
-                return
-              }
-              getB2cApi().adminBookingCase(bookingId).then((data) => { setOpenCase({ bookingId, data }) }).catch((caught: unknown) => { toast.error(errorMessage(caught)) })
-            }}>{openCase?.bookingId === text(booking.booking_id) ? 'Close case' : 'Open case'}</Button>
-            {booking.status === 'arrived' || booking.status === 'in_progress' ? <AdminCancelBookingControl bookingId={text(booking.booking_id)} onCancelled={refresh} /> : null}
-          </Card>
-          {openCase?.bookingId === text(booking.booking_id) ? <BookingCaseHistory data={openCase.data} onClose={(): void => { setOpenCase(null) }} /> : null}
-          </Fragment>
-          )
-        })}
-      </Section>
+      {overviewBlock}
+      {sections}
     </div>
   )
 }

@@ -13,7 +13,7 @@ export interface TabItemDefinition<TabValue extends string> {
 /**
  * pill: a compact segmented control inside a page.
  * navigation: a page's main sections, for AppShell's navigation slot. A floating white bar that scrolls sideways on
- * phones and tablets, and a vertical sidebar list with icons on desktop.
+ * phones and tablets, and a vertical list in AppShell's dark desktop rail (1024px and wider).
  */
 export type TabsVariant = 'pill' | 'navigation'
 
@@ -74,7 +74,7 @@ export function Tabs<TabValue extends string>({
       className={joinClassNames(
         'flex max-w-full gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         isNavigation
-          ? 'w-full rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-card-hover)] lg:flex-col lg:gap-0.5 lg:p-2'
+          ? 'w-full rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-card-hover)] lg:flex-col lg:gap-1 lg:overflow-visible lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none'
           : 'w-fit rounded-full bg-[var(--color-ink-100)] p-1',
         className,
       )}
@@ -98,15 +98,16 @@ export function Tabs<TabValue extends string>({
                 : 'min-h-9 rounded-full px-3.5 py-1.5',
               isActive
                 ? isNavigation
-                  ? 'bg-[var(--color-selected)] text-[var(--color-on-selected)] shadow-[var(--shadow-button)]'
+                  // On the dark desktop rail the selected item is brand teal (navy would vanish there).
+                  ? 'bg-[var(--color-selected)] text-[var(--color-on-selected)] shadow-[var(--shadow-button)] lg:bg-[var(--color-primary)] lg:text-white'
                   : 'bg-[var(--color-card)] text-[var(--color-ink-900)] shadow-[var(--shadow-card)]'
                 : isNavigation
-                  ? 'text-[var(--color-ink-700)] hover:bg-[var(--color-section-head)] hover:text-[var(--color-ink-900)]'
+                  ? 'text-[var(--color-ink-700)] hover:bg-[var(--color-section-head)] hover:text-[var(--color-ink-900)] lg:text-[var(--color-on-harbor-muted)] lg:hover:bg-white/10 lg:hover:text-[var(--color-on-harbor)]'
                   : 'text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]',
             )}
           >
             {isNavigation && tabItem.icon !== undefined ? (
-              <span aria-hidden="true" className={joinClassNames('flex h-4 w-4 items-center justify-center', isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-500)]')}>
+              <span aria-hidden="true" className={joinClassNames('flex h-4 w-4 items-center justify-center', isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-500)] lg:text-[var(--color-on-harbor-muted)]')}>
                 {tabItem.icon}
               </span>
             ) : null}

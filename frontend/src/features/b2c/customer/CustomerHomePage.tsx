@@ -12,6 +12,7 @@ import { DeleteAccountSection } from '../DeleteAccountSection'
 import { greeting } from '../greeting'
 import { useCurrentTime } from '../useCurrentTime'
 import { BookingCard } from './BookingCard'
+import { CustomerSummary } from './CustomerSummary'
 import { SavedDetailsPanel } from './SavedDetailsPanel'
 
 const BookingWizard = lazy(async () => ({ default: (await import('./wizard/BookingWizard')).BookingWizard }))
@@ -110,7 +111,7 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
       return <EmptyState title={emptyTitle} description="Book a wash and it will appear here." />
     }
     return (
-      <ul className="space-y-3">
+      <ul className="grid items-start gap-3 xl:grid-cols-2">
         {items.map((booking) => (
           <li key={booking.id}>
             <BookingCard booking={booking} onChanged={refresh} />
@@ -123,7 +124,8 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
   return (
     <AppShell topBar={<AuthenticatedTopBar />} mainClassName="space-y-5"
       title={greeting(customerName)} subtitle="Book a wash and follow it from your phone, step by step."
-      navigation={<Tabs variant="navigation" accessibleLabel="Your WashLink" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />}>
+      navigation={<Tabs variant="navigation" accessibleLabel="Your WashLink" tabItems={tabItems} activeTabValue={tab} onTabChange={setTab} />}
+      summary={<CustomerSummary bookings={bookings} onBook={(): void => { setIsBooking(true) }} />}>
         {loadError !== null ? (
           <p role="alert" className="rounded-[var(--radius-control)] bg-[var(--color-danger-50)] p-3 text-sm text-[var(--color-danger-600)]">
             {loadError}

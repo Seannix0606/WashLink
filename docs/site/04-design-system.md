@@ -41,8 +41,14 @@ Chosen by the owner: the **Harbor** layout, a **sunlit amber** accent, **Archivo
   white) with a subtitle in `--color-on-harbor-muted`. The customer and washer titles greet by Manila time
   ("Good morning, Bea", `features/b2c/greeting.ts`). The washer sees an Online/Offline chip on the band.
 - **Navigation:** `AppShell`'s `navigation` slot takes `<Tabs variant="navigation">` with an icon per tab. Phones and
-  tablets: a floating white bar overlapping the band's bottom edge, scrolling sideways. Desktop (1024px+): a sticky
-  sidebar card on the left. It is one tab list (rendered once), so behavior and tests are unchanged; Up/Down keys work
+  tablets: a floating white bar overlapping the band's bottom edge, scrolling sideways. Desktop (1024px+): an app
+  layout, with a full-height dark rail (`--color-harbor-950`) against the left edge holding the brand and the tabs (the
+  selected tab in brand teal), and the band plus content filling the rest, up to 90rem wide.
+- **Wide screens (1280px+):** booking and job cards sit two per row, and `AppShell`'s `summary` slot shows a glance
+  panel on the right (customer: next wash, upcoming, completed, spent; washer: today's jobs, requests waiting,
+  earnings, completed, rating). The admin page puts its overview (open/closed, money, counts, "Needs attention") in a
+  right column beside services, washers and bookings. Below 1280px these panels are not rendered at all
+  (`useMediaQuery`), so nothing is duplicated for screen readers or tests. It is one tab list (rendered once), so behavior and tests are unchanged; Up/Down keys work
   as well as Left/Right. The selected item uses `--color-selected` (navy in light, brand teal in dark).
 - **Page:** cool mist neutrals (`--color-surface-sunken #e6eef0`, `--color-surface-muted #f3f7f8`); cards stay white with
   the strong outline the owner asked for (`--color-card-border #94a3b8`) and a soft layered shadow tinted with the
