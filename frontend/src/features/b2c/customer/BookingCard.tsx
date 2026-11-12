@@ -53,7 +53,7 @@ export function BookingCard({ booking, onChanged, onMessage }: BookingCardProps)
         <div className="[overflow-wrap:anywhere]">{booking.address}</div>
         <div>{booking.vehicleMake} {booking.vehicleModel}</div>
         <div className="tabular-nums">
-          {formatPesos(booking.customerTotalCents)}, pay in cash · Reference {booking.reference}
+          {formatPesos(booking.customerTotalCents)}, pay in cash · <span className="whitespace-nowrap">Reference {booking.reference}</span>
         </div>
         {booking.workerName !== '' ? (
           <div>

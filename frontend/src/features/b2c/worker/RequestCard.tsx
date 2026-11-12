@@ -47,7 +47,7 @@ export function RequestCard({ request, onChanged }: RequestCardProps): ReactElem
         {request.distanceKm !== null ? ` · ${distanceBandLabel(request.distanceKm)}` : ''}
       </p>
       {request.addonNames.length > 0 ? <p className="text-sm text-[var(--color-ink-700)]">Add-ons: {request.addonNames.join(', ')}</p> : null}
-      <p className="text-xs tabular-nums text-[var(--color-ink-500)]">Reference {request.reference} · expires in {minutes}:{String(secondsLeft % 60).padStart(2, '0')}</p>
+      <p className="text-xs tabular-nums text-[var(--color-ink-500)]"><span className="whitespace-nowrap">Reference {request.reference}</span> · expires in {minutes}:{String(secondsLeft % 60).padStart(2, '0')}</p>
       <div className="flex gap-2">
         <Button isLoading={isBusy} disabled={secondsLeft === 0} onClick={(): void => void act(() => getB2cApi().acceptRequest(request.id), 'Booking accepted')}>Accept</Button>
         <Button variant="secondary" disabled={isBusy || secondsLeft === 0} onClick={(): void => void act(() => getB2cApi().declineRequest(request.id), 'Request declined')}>Decline</Button>

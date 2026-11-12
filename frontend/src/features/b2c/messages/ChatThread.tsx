@@ -73,12 +73,12 @@ export function ChatThread({ chat, profileId, isVisible, onBack, onViewBooking }
 
       <div className="border-b border-[var(--color-card-border)] bg-[var(--color-section-head)] px-4 py-2.5 text-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-semibold text-[var(--color-ink-900)]">{chat.serviceName} · {chat.reference}</p>
+          <p className="min-w-0 font-semibold text-[var(--color-ink-900)]">{chat.serviceName} · {chat.reference}</p>
           <Button size="sm" variant="ghost" onClick={onViewBooking}>View booking</Button>
         </div>
         <p className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-[var(--color-ink-700)]">
           <span className="inline-flex items-center gap-1"><CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />{formatManilaDateTime(chat.scheduledAt)}</span>
-          {chat.address !== null ? <span className="inline-flex min-w-0 items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /><span className="truncate">{chat.address}</span></span> : null}
+          {chat.address !== null ? <span className="inline-flex min-w-0 max-w-full items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /><span className="truncate">{chat.address}</span></span> : null}
         </p>
       </div>
 
