@@ -1,5 +1,12 @@
+# Local development. `docker compose up -d --build` starts only the website, at http://localhost:5173, with live
+# reload: it serves this folder's frontend/ and packages/, so saving a file updates the page. It talks to the Supabase
+# named in frontend/.env.local (gitignored); use the local test stack there, never the live project.
+#
+# The old Python backend and Redis are no longer used by the website (it talks to Supabase directly). They only start
+# with the "legacy-backend" profile: docker compose --profile legacy-backend up -d
 services:
   backend:
+    profiles: ["legacy-backend"]
     build:
       context: ./backend
     command:
@@ -37,6 +44,7 @@ services:
       start_period: 10s
 
   redis:
+    profiles: ["legacy-backend"]
     image: redis:7-alpine
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -49,17 +57,15 @@ services:
       # The repository root, so the image includes packages/shared as well as frontend.
       context: .
       dockerfile: frontend/Dockerfile
-    depends_on:
-      backend:
-        condition: service_healthy
+    # Comes back whenever Docker Desktop starts, until stopped with `docker compose stop`.
+    restart: unless-stopped
     ports:
       - "5173:5173"
     environment:
-      VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
-      VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
-      VITE_FEATURE_B2B: ${VITE_FEATURE_B2B:-false}
-      VITE_FEATURE_B2C: ${VITE_FEATURE_B2C:-true}
-      VITE_FEATURE_WASHER_SIGNUP: ${VITE_FEATURE_WASHER_SIGNUP:-false}
+      # Supabase address, key and feature flags come from frontend/.env.local, read by Vite. Setting them here, even
+      # empty, would override that file.
+      # Files changed on Windows don't send change events into the container, so Vite checks for changes instead.
+      WASHLINK_DEV_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./frontend:/app/frontend

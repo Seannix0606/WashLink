@@ -11,5 +11,10 @@ export default defineConfig({
       '@washlink/shared': fileURLToPath(new URL('../packages/shared/src/index.ts', import.meta.url)),
     },
   },
-  server: { fs: { allow: ['..'] } },
+  server: {
+    fs: { allow: ['..'] },
+    // In Docker on Windows, saved files send no change events into the container, so Vite polls (compose.yaml sets
+    // WASHLINK_DEV_POLLING). Outside Docker it watches normally.
+    watch: process.env.WASHLINK_DEV_POLLING === 'true' ? { usePolling: true, interval: 300 } : undefined,
+  },
 })

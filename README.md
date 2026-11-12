@@ -8,28 +8,31 @@ This repository contains both the frontend and backend for the WashLink platform
 
 ## Getting Started
 
-### Run frontend and backend with Docker Compose
+### Run the website with Docker Compose
 
-Install Docker Desktop, then from the repository root copy `.env.example` to
-`.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from your
-Supabase project. These are the public client URL and anon key; never put a
-Supabase service-role key in the frontend environment.
+Install Docker Desktop. The website reads its Supabase address and key from
+`frontend/.env.local` (gitignored). Point it at the local Supabase test stack
+(`supabase_*_washlink-local-test` containers, `http://127.0.0.1:54321`), never at
+the live project: `node scripts/site-docs/local-setup.mjs` prepares that stack
+with test accounts, and the stack's anon key comes from `localKeys()` in the same
+file. Never put a Supabase service-role key in the frontend environment.
 
-Start both services with:
+From the repository root:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
-- Frontend: <http://localhost:5173>
-- Backend API health: <http://localhost:8000/api/v1/health>
-- Backend API docs: <http://localhost:8000/docs>
+- Website: <http://localhost:5173>
+- It serves this folder's `frontend/` and `packages/`, so saving a file updates
+  the open page within a second (Vite polls for changes, because Windows file
+  changes don't reach the container on their own).
+- It starts again whenever Docker Desktop starts (`restart: unless-stopped`).
+  Stop it with `docker compose stop`; remove it with `docker compose down`.
+- After changing `frontend/package.json`, run `docker compose up -d --build` again.
+- The old Python backend and Redis are not used by the website and only start with
+  `docker compose --profile legacy-backend up -d`.
 
-The frontend and backend source folders are mounted for live development. Redis
-is started as a supporting service, and the backend uses a Docker-managed
-SQLite data volume by default. Stop the services with `Ctrl+C`, or run
-`docker compose down` in another terminal. To rebuild after changing a
-dependency manifest, use `docker compose up --build` again.
 This Compose setup is for local development; it does not deploy the app or
 provide production secrets, a production database, or a production web server.
 
