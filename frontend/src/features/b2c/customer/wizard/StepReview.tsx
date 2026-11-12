@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { formatManilaDateTime, formatPesos, vehicleCategoryLabel, type BookingQuote } from '@washlink/shared'
+import { formatManilaDateTime, formatManilaVisit, formatPesos, vehicleCategoryLabel, type BookingQuote } from '@washlink/shared'
 import { LocationPickerMap } from '../../../../presentation/components/shared/LocationPickerMap'
 import { Button, Card, Skeleton } from '../../../../presentation/design/ui'
 import { errorMessage, getB2cApi } from '../../b2cApiClient'
@@ -75,7 +75,11 @@ export function StepReview({ draft, services, addons, submissionKey, onEditStep,
       <h2 id="review-title" className="text-lg font-semibold text-[var(--color-ink-900)]">Review your booking</h2>
       <Card className="px-4 py-1">
         <dl className="divide-y divide-[var(--color-ink-100)]">
-          <Row label="Time" step={0} onEdit={onEditStep}>{draft.isImmediate || draft.scheduledAt === null ? 'As soon as possible' : formatManilaDateTime(draft.scheduledAt)}</Row>
+          <Row label="Time" step={0} onEdit={onEditStep}>
+            {draft.isImmediate || draft.scheduledAt === null ? 'As soon as possible'
+              : quote !== null ? formatManilaVisit(draft.scheduledAt, quote.durationMinutes) : formatManilaDateTime(draft.scheduledAt)}
+            {!draft.isImmediate && draft.scheduledAt !== null ? <><br /><span className="text-xs text-[var(--color-ink-500)]">Your washer arrives at the start time and begins right away.</span></> : null}
+          </Row>
           <Row label="Location" step={1} onEdit={onEditStep}>
             {draft.address}
             {draft.landmark !== '' ? <><br />Landmark: {draft.landmark}</> : null}

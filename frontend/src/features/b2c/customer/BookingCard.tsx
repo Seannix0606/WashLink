@@ -7,7 +7,7 @@ import {
   canCustomerCancel,
   canCustomerCancelOverdue,
   customerOverdueCancelNotice,
-  formatManilaDateTime,
+  formatManilaVisit,
   formatPesos,
   type CustomerBooking,
 } from '@washlink/shared'
@@ -49,7 +49,7 @@ export function BookingCard({ booking, onChanged, onMessage }: BookingCardProps)
         <StatusPill status={booking.status} />
       </div>
       <dl className="grid gap-1 text-sm text-[var(--color-ink-700)]">
-        <div>{booking.isImmediate ? 'As soon as possible' : formatManilaDateTime(booking.scheduledAt)}</div>
+        <div>{booking.isImmediate ? 'As soon as possible' : formatManilaVisit(booking.scheduledAt, booking.durationMinutes)}</div>
         <div className="[overflow-wrap:anywhere]">{booking.address}</div>
         <div>{booking.vehicleMake} {booking.vehicleModel}</div>
         <div className="tabular-nums">

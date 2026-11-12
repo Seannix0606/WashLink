@@ -32,7 +32,7 @@ export function SignInForm({
   onSubmit,
 }: SignInFormProps): ReactElement {
   return (
-    <Card elevation="flat" className="space-y-4 p-6">
+    <Card className="space-y-4 p-6 shadow-[var(--shadow-card-hover)] sm:p-7">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-[var(--color-ink-900)]">
           Welcome back
@@ -174,7 +174,7 @@ export function SignUpForm({
   onSelectedRoleChanged,
 }: SignUpFormProps): ReactElement {
   return (
-    <Card elevation="flat" className="space-y-4 p-6">
+    <Card className="space-y-4 p-6 shadow-[var(--shadow-card-hover)] sm:p-7">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-[var(--color-ink-900)]">
           Create your account

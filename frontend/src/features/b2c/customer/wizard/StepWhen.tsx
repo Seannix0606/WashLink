@@ -83,7 +83,10 @@ export function StepWhen({ draft, update, services }: StepProps): ReactElement {
 
   return (
     <section aria-labelledby="when-title" className="space-y-4">
-      <h2 id="when-title" className="text-lg font-semibold text-[var(--color-ink-900)]">When should we come?</h2>
+      <div>
+        <h2 id="when-title" className="text-lg font-semibold text-[var(--color-ink-900)]">When should we come?</h2>
+        <p className="mt-0.5 text-sm text-[var(--color-ink-700)]">Your washer arrives at the time you choose and starts the wash right away.</p>
+      </div>
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium text-[var(--color-ink-700)]">Choose a day</p>

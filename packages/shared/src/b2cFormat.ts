@@ -23,6 +23,19 @@ export function formatManilaTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })
 }
 
+/**
+ * A booked time and when the wash should be done: "Fri, Nov 14, 10:00 AM – about 11:45 AM". The booked time is when
+ * the washer arrives and starts; the end is that plus the wash length, "about" because a job can run over.
+ */
+export function formatManilaVisit(startIso: string, durationMinutes: number): string {
+  // Without a usable wash length, show the start time alone rather than a wrong or broken end time.
+  if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+    return formatManilaDateTime(startIso)
+  }
+  const end = new Date(Date.parse(startIso) + durationMinutes * 60_000).toISOString()
+  return `${formatManilaDateTime(startIso)} – about ${formatManilaTime(end)}`
+}
+
 /* ---- Month calendar (Asia/Manila is UTC+8 all year, with no daylight saving) ---- */
 
 const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000

@@ -330,6 +330,32 @@ button {
   color: var(--color-on-harbor);
 }
 
+/*
+ * Behind the sign-in form: a soft teal wash from the top right and a hint of amber at the bottom left, so the light
+ * theme has depth instead of flat grey. Dark keeps its plain deep surface, which already gives the form contrast.
+ */
+.wl-auth-backdrop {
+  background-color: var(--color-surface-sunken);
+  background-image:
+    radial-gradient(48rem 32rem at 100% 0%, rgb(45 212 191 / 0.20), transparent 62%),
+    radial-gradient(40rem 28rem at 0% 100%, rgb(245 184 61 / 0.14), transparent 62%),
+    linear-gradient(160deg, #f4fbfa, var(--color-surface-sunken));
+}
+:root[data-theme='dark'] .wl-auth-backdrop {
+  background-image: radial-gradient(48rem 32rem at 100% 0%, rgb(45 212 191 / 0.07), transparent 62%);
+}
+
+/* The brand panel: the primary gradient with a faint dot grid, so the large area reads as texture, not a flat block. */
+.wl-auth-brand {
+  background-color: var(--color-primary-strong);
+  background-image:
+    radial-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1.5px),
+    radial-gradient(36rem 26rem at 100% 0%, rgb(245 184 61 / 0.10), transparent 60%),
+    radial-gradient(40rem 32rem at 0% 100%, rgb(94 234 212 / 0.20), transparent 62%),
+    linear-gradient(145deg, var(--color-primary), var(--color-primary-strong));
+  background-size: 22px 22px, auto, auto, auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wl-skeleton,
   .wl-pulse {

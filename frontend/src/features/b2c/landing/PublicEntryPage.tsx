@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react'
 import { lazy, Suspense, useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import { PublicLandingPage } from './PublicLandingPage'
 
 const AuthLandingPage = lazy(async () => ({
@@ -22,20 +21,12 @@ export function PublicEntryPage(): ReactElement {
     )
   }
   return (
-    <div>
-      <button
-        type="button"
-        onClick={(): void => {
+    <Suspense fallback={null}>
+      <AuthLandingPage
+        onBack={(): void => {
           setIsAuthOpen(false)
         }}
-        className="m-3 inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] px-3 text-sm font-medium text-[var(--color-ink-700)] hover:bg-[var(--color-surface-sunken)]"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to WashLink
-      </button>
-      <Suspense fallback={null}>
-        <AuthLandingPage />
-      </Suspense>
-    </div>
+      />
+    </Suspense>
   )
 }
