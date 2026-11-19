@@ -62,7 +62,7 @@ select is(pg_temp.busy(pg_temp.at(3, 600 - 30 - pg_temp.minutes())), true, 'bg1_
 -- 3) Customers see the held time as taken, and can't book it.
 select test_helpers.act_as(pg_temp.id('c2'));
 select is((select s.is_available from public.service_booking_available_slots((pg_temp.at(3, 0) at time zone 'Asia/Manila')::date,
-             pg_temp.id('svc'), 'sedan') s where s.slot_start = pg_temp.at(3, 600 + 30)), false, 'bg1_held_time_shown_unavailable');
+             pg_temp.id('svc'), 'sedan', '{}', 14.5995, 120.9842) s where s.slot_start = pg_temp.at(3, 600 + 30)), false, 'bg1_held_time_shown_unavailable');
 select throws_ok($$ select public.create_service_booking(pg_temp.id('svc'), 'sedan', 'Honda', 'City', 2021, '{}',
                      '34 Other Street, Makati City', 14.5995, 120.9842, '', '', false, pg_temp.at(3, 630), 'key-bg1-clash') $$,
                  '23514', 'That time is no longer available. Choose another.', 'bg1_second_customer_cannot_book_held_time');
