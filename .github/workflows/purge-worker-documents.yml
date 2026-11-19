@@ -1,0 +1,36 @@
+# Removes washer verification files queued for deletion (audit finding F2): deleted accounts, replaced and abandoned uploads.
+# Dormant until an operator turns it on: set the repository variable PURGE_WORKER_DOCUMENTS_ENABLED to "true" and the
+# repository secrets SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (Supabase -> Project Settings -> API). The job prints counts
+# only. A run that leaves files queued fails, so it shows up, and the files are retried on the next run.
+name: Purge deleted washer documents
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: purge-worker-documents
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    if: vars.PURGE_WORKER_DOCUMENTS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --omit=dev --ignore-scripts
+        working-directory: frontend
+      - run: node scripts/jobs/purge-worker-documents.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
