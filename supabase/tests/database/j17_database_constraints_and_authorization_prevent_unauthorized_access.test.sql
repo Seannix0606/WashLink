@@ -35,7 +35,9 @@ create function pg_temp.pre_workforce() returns text[] language sql immutable as
     'service_booking_status_events', 'service_bookings', 'service_vehicle_prices', 'services',
     -- MSG-1 booking messages: grants, RLS and Realtime are pinned in j19_msg1_booking_messages.
     'service_booking_chat_photo_file_queue', 'service_booking_chat_reads', 'service_booking_chat_uploads',
-    'service_booking_messages'] $$;
+    'service_booking_messages',
+    -- SEC-2 private location tables (no client grants, RLS on): pinned in j19_sec2_washer_location_privacy.
+    'independent_worker_service_areas', 'service_location_checks'] $$;
 create function pg_temp.rels(p_kinds "char"[]) returns setof text language sql stable as $$
   select c.relname::text from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = any (p_kinds) $$;
 -- (role, table, privileges) held by design. Anything else on a workforce table or view fails (D-78: w13b revoked the
