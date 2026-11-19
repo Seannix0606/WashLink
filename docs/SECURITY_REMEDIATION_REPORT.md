@@ -1,14 +1,15 @@
 # WashLink security remediation report
 
 Date: 2026-11-20. Findings: `docs/SECURITY_AUDIT_REPORT.md`. All work is in the isolated audit copy
-`C:\Users\PC\WashLink-audit`, branch `security/remediation`. **Nothing was deployed or pushed, and no live system was
-touched.** The original repository `C:\Users\PC\WashLink` was not modified.
+`C:\Users\PC\WashLink-audit`, branch `security/remediation`; no live system was touched during the remediation itself.
+**Afterwards, with your approval, the three database migrations were applied to the live project on 2026-11-20 and the
+fixes were merged to `main`** (section 7). The original repository `C:\Users\PC\WashLink` was not modified.
 
 ## Summary
 
 | Finding | Severity | Status | Commit |
 | --- | --- | --- | --- |
-| F1 Washer base location and range recoverable by customers | High | **Fixed and verified** on the audit stack. **Live site still exposed until deployed** | `4606675` [SEC-2] |
+| F1 Washer base location and range recoverable by customers | High | **Fixed and verified** on the audit stack, **applied on the live project 2026-11-20** (section 7) | `4606675` [SEC-2] |
 | F2 Washer ID documents kept after account deletion | Medium | **Fixed and verified**; needs GitHub secrets to run in production | `11e6c6d` [SEC-5] |
 | F3 Legacy FastAPI data routes unauthenticated | Low (latent) | **Fixed and verified** | `d102b3e` [SEC-4] |
 | F4 "As soon as possible" accepted by the server | Low | **Fixed and verified**; mobile app updated | `6a31468` [SEC-3] |
@@ -168,26 +169,34 @@ Evidence: `audit/evidence/*-after-fix.json`, `06c`/`06d`/`06e`. Message text is 
 
 ## 7. Production
 
-**Current live exposure:** F1 is live now. Any customer account can locate washers' bases through the website's
-booking-times lookup.
+**F1 is closed on the live project.** Applied on 2026-11-20, with your approval, in the Supabase SQL Editor:
+`2026_11_20_ssr_slots_within_service_range.sql` (B2C-8), `2026_11_21_sec2_washer_location_privacy.sql` and
+`2026_11_21_sec3_immediate_bookings_gate.sql`, in that order, each as one transaction. The editor text was checked
+against each file (SHA-256, ignoring whitespace) before every run.
 
-**Emergency mitigation, if you cannot deploy SEC-2 promptly:** in the admin console, turn **bookings open** off. Tested
-against the live function definition: with bookings closed, no time is ever reported available (even inside a washer's
-range), and booking creation refuses ("not taking bookings") before it checks location, so nothing can be
-triangulated. The cost is that new bookings stop until SEC-2 is applied. It is reversible instantly. Also consider
-telling washers to set their base to a nearby public landmark.
+- **Pre-check (read-only):** none of the new tables, columns, functions or triggers existed, and the two replaced
+  functions matched the `2026_11_06_b2cc` definitions byte for byte (md5 of the function body). So
+  `docs/security/SEC2_SEC3_LIVE_ROLLBACK.sql` restores the exact previous state. It was tested on the audit stack:
+  rolled back to the same fingerprints as live, then re-applied cleanly.
+- **Post-check (read-only):** the same as the audit stack. The one washer with a base has a private centre (offset and
+  margin within bounds); RLS is on the new tables and signed-in users have no grants on them and cannot run the helper
+  functions; the cap is 20; "as soon as possible" is off and its trigger is in place; the slot lookup counts checks and
+  is still callable by signed-in users only.
+- **Customer test** as the live customer account, inside a block that raises at the end so everything is rolled back:
+  37 open times over the next 7 days near the washer, none 573 km away, and the 21st different place refused with the
+  cap message. Afterwards 0 location checks were stored. (A first "far" point turned out to be 11 km from the washer,
+  inside their 15 km range, so it rightly showed times; the test was repeated with the 573 km point.)
 
-**Changes that need manual deployment (none were done):**
+**If the live database ever needs to go back:** close bookings in the admin first (the rollback restores the leak),
+then run `docs/security/SEC2_SEC3_LIVE_ROLLBACK.sql` in the SQL Editor.
 
-1. **Database migrations on the live project, in this order**, through the SQL editor as with SEC-1:
-   `2026_11_20_ssr_slots_within_service_range.sql` (B2C-8; on `main` but not yet applied live),
-   `2026_11_21_sec2_washer_location_privacy.sql`, `2026_11_21_sec3_immediate_bookings_gate.sql`. Take a database
-   backup first. Each file ends with manual rollback steps.
-2. **Code:** cherry-pick `4606675`, `6a31468`, `6bd680b`, `d102b3e`, `11e6c6d`, plus the two reports, onto `main`.
-   **Do not merge** the audit-only commits `8b2d6d4`, `d184536` and `f8555ce` (they change `supabase/config.toml` and
-   the stager's project id for the isolated stack), or the `audit/` folder. A push to `main` redeploys the website
-   automatically (the web change is only the shared step message).
-3. **Mobile app:** rebuild to ship the removal of "As soon as possible".
+**Remaining manual steps:**
+
+1. **Database migrations:** done (above).
+2. **Code:** the fixes and these reports are on `main`, without the audit-only commits (`8b2d6d4`, `d184536`,
+   `f8555ce`) or the `audit/` folder. The push redeploys the website (the web change is only the shared step message).
+3. **Mobile app:** rebuild to ship the removal of "As soon as possible". Older builds that choose it get the server's
+   "Choose a day and time" refusal.
 4. **Document purge:** in GitHub, set the secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` and the variable
    `PURGE_WORKER_DOCUMENTS_ENABLED=true`, then run the workflow once by hand. Its first run removes the existing
    backlog.
@@ -197,7 +206,7 @@ telling washers to set their base to a nearby public landmark.
 
 ## 8. Remaining risks and recommendations
 
-- F1 residuals in section 1; the live site stays exposed until step 1 above.
+- F1 residuals in section 1 (the fix is live since 2026-11-20).
 - Informational items I2 (PostgREST hints), I3 (HTTP 500 on another washer's request) and I4 (dev defaults) are
   unchanged; low value, no data exposure.
 - Pre-existing failing database tests `j18` test 1 and `j19_b2c6_dispatch_rounds_and_distance` need their own fix
