@@ -61,11 +61,12 @@ describe('notification routing', () => {
 })
 
 describe('booking steps', () => {
-  it('requires a time, a pin and address, a service and a vehicle', () => {
-    expect(bookingStepProblem(0, emptyBookingDraft)).not.toBeNull()
-    expect(bookingStepProblem(0, { ...emptyBookingDraft, isImmediate: true })).toBeNull()
-    expect(bookingStepProblem(1, { ...emptyBookingDraft, address: '12 Ayala Avenue, Makati' })).not.toBeNull()
-    expect(bookingStepProblem(1, { ...emptyBookingDraft, address: '12 Ayala Avenue, Makati', latitude: 14.5, longitude: 121 })).toBeNull()
+  // Where comes first (B2C-8): times are only offered by washers whose service area covers the pinned location.
+  it('requires a pin and address, a time, a service and a vehicle', () => {
+    expect(bookingStepProblem(0, { ...emptyBookingDraft, address: '12 Ayala Avenue, Makati' })).not.toBeNull()
+    expect(bookingStepProblem(0, { ...emptyBookingDraft, address: '12 Ayala Avenue, Makati', latitude: 14.5, longitude: 121 })).toBeNull()
+    expect(bookingStepProblem(1, emptyBookingDraft)).toBe('Choose a day and time.')
+    expect(bookingStepProblem(1, { ...emptyBookingDraft, scheduledAt: '2026-11-22T02:00:00.000Z' })).toBeNull()
     expect(bookingStepProblem(2, emptyBookingDraft)).not.toBeNull()
     expect(bookingStepProblem(3, emptyBookingDraft)).not.toBeNull()
     expect(bookingStepProblem(4, emptyBookingDraft)).toBeNull()
