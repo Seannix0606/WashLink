@@ -29,7 +29,7 @@ def test_health_route_returns_success() -> None:
     assert response.json()["success"] is True
 
 
-def test_domain_routes_are_registered() -> None:
+def test_domain_routes_are_registered(operator_headers) -> None:
     client = TestClient(app)
     app.dependency_overrides[get_booking_service] = lambda: DummyService()
     app.dependency_overrides[get_profile_service] = lambda: DummyService()
@@ -37,9 +37,10 @@ def test_domain_routes_are_registered() -> None:
     app.dependency_overrides[get_worker_service] = lambda: DummyService()
 
     try:
-        assert client.get("/api/v1/bookings").status_code == 200
-        assert client.get("/api/v1/profiles").status_code == 200
-        assert client.get("/api/v1/shops").status_code == 200
-        assert client.get("/api/v1/workers").status_code == 200
+        assert client.get("/api/v1/bookings", headers=operator_headers).status_code == 200
+        assert client.get("/api/v1/profiles", headers=operator_headers).status_code == 200
+        assert client.get("/api/v1/shops", headers=operator_headers).status_code == 200
+        assert client.get("/api/v1/workers", headers=operator_headers).status_code == 200
     finally:
-        app.dependency_overrides.clear()
+        for dependency in (get_booking_service, get_profile_service, get_shop_service, get_worker_service):
+            app.dependency_overrides.pop(dependency, None)

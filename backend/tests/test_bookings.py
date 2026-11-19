@@ -3,9 +3,9 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
-def test_list_bookings_returns_expected_contract() -> None:
+def test_list_bookings_returns_expected_contract(operator_headers) -> None:
     client = TestClient(app)
-    response = client.get("/api/v1/bookings")
+    response = client.get("/api/v1/bookings", headers=operator_headers)
 
     assert response.status_code == 200
     payload = response.json()

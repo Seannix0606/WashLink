@@ -18,13 +18,15 @@ services:
       - "8000"
       - --reload
     ports:
-      - "8000:8000"
+      # This machine only: the legacy API lists personal data (audit finding F3).
+      - "127.0.0.1:8000:8000"
     environment:
       APP_ENV: ${APP_ENV:-development}
-      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_DEBUG: ${APP_DEBUG:-false}
       DATABASE_URL: ${DATABASE_URL:-sqlite+aiosqlite:////data/washlink.db}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-me}
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN:-}
       CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:5173","http://127.0.0.1:5173"]}'
     volumes:
       - ./backend:/app

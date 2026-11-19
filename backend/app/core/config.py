@@ -14,11 +14,13 @@ class Settings(BaseSettings):
 
     app_name: str = "WashLink Backend"
     app_env: str = Field(default="development")
-    debug: bool = Field(default=True)
+    debug: bool = Field(default=False)
     database_url: str = Field(default="sqlite+aiosqlite:///./washlink.db")
     redis_url: str = Field(default="redis://localhost:6379/0")
     cors_origins: List[str] = Field(default=["http://localhost:5173"])
-    secret_key: SecretStr = Field(default="dev-secret-key-change-me")
+    secret_key: SecretStr | None = Field(default=None)
+    # Operator access to the data routes. Unset or shorter than 32 characters disables them (fail closed).
+    admin_api_token: SecretStr | None = Field(default=None)
     port: int = Field(default=8000)
 
     @field_validator("cors_origins", mode="before")
