@@ -22,14 +22,22 @@ export const emptyBookingDraft: BookingDraft = {
   serviceId: null, addonIds: [], vehicleCategory: 'sedan', vehicleMake: '', vehicleModel: '',
 }
 
-export const bookingStepTitles = ['When', 'Where', 'Service', 'Vehicle', 'Review'] as const
+// Where comes first: times are only offered by washers whose saved service range covers the customer's location.
+export const bookingStepTitles = ['Where', 'When', 'Service', 'Vehicle', 'Review'] as const
+
+/** Applies a step's change. A new location clears the chosen time, since it may be out of range for the washers behind it. */
+export function applyBookingPatch<T extends BookingDraft>(current: T, patch: Partial<T>): T {
+  const next = { ...current, ...patch }
+  const locationChanged = next.latitude !== current.latitude || next.longitude !== current.longitude
+  return locationChanged && !('scheduledAt' in patch) ? { ...next, scheduledAt: null } : next
+}
 
 /** Why the customer can't leave this step yet, or null. The server checks all of this again. */
 export function bookingStepProblem(step: number, draft: BookingDraft): string | null {
-  if (step === 0 && !draft.isImmediate && draft.scheduledAt === null) {
+  if (step === 1 && !draft.isImmediate && draft.scheduledAt === null) {
     return 'Choose a time, or book for as soon as possible.'
   }
-  if (step === 1 && (draft.latitude === null || draft.longitude === null || draft.address.trim().length < bookingLimits.addressMinLength)) {
+  if (step === 0 && (draft.latitude === null || draft.longitude === null || draft.address.trim().length < bookingLimits.addressMinLength)) {
     return 'Pin the location and confirm the full address.'
   }
   if (step === 2 && draft.serviceId === null) {

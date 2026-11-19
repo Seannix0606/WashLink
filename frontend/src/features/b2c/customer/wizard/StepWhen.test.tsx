@@ -69,10 +69,10 @@ describe('booking calendar', () => {
     await screen.findAllByRole('button', { name: /open time/ })
   })
 
-  it('says so when no day in the next four weeks is open', async () => {
+  it('says so when no washer covering the location has an open day in the next four weeks', async () => {
     api.availableSlots.mockResolvedValue([])
     render(<StepWhen draft={draft} update={vi.fn()} services={[service]} addons={[]} customerId="c1" />)
-    expect(await screen.findByText('No open days in the next four weeks')).toBeInTheDocument()
+    expect(await screen.findByText('No washers near you in the next four weeks')).toBeInTheDocument()
   })
 })
 

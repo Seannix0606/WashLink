@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router'
 import { useEffect, useMemo, useState, type ReactElement } from 'react'
 import { ScrollView, View } from 'react-native'
 import {
+  applyBookingPatch,
   bookingStepProblem,
   bookingStepTitles,
   createBookingSubmissionKey,
@@ -67,7 +68,7 @@ function StepWhen({ draft, update, services }: StepProps): ReactElement {
         {dates.map((value) => <Choice key={value} label={dateLabel(value)} isSelected={value === date} onPress={(): void => { setDate(value) }} />)}
       </ScrollView>
       <Notice tone="error" message={error} />
-      {slots?.length === 0 ? <Body muted>No washers on this day. Try another date, or book for as soon as possible.</Body> : null}
+      {slots?.length === 0 ? <Body muted>No washer whose service area covers your location works this day. Try another date, or book for as soon as possible.</Body> : null}
       {slots !== null && slots.length > 0 && slots.every((slot) => !slot.isAvailable) ? <Body muted>Every time on this day has passed or is taken. Try another date.</Body> : null}
       <Row>
         {slots?.map((slot) => (
@@ -251,8 +252,8 @@ function StepReview({ draft, services, addons, submissionKey, onEdit, onDone }: 
   }
 
   const rows: readonly (readonly [string, string, number])[] = [
-    ['Time', draft.isImmediate || draft.scheduledAt === null ? 'As soon as possible' : formatManilaDateTime(draft.scheduledAt), 0],
-    ['Location', [draft.address, draft.landmark && `Landmark: ${draft.landmark}`, draft.instructions && `Instructions: ${draft.instructions}`].filter(Boolean).join('\n'), 1],
+    ['Time', draft.isImmediate || draft.scheduledAt === null ? 'As soon as possible' : formatManilaDateTime(draft.scheduledAt), 1],
+    ['Location', [draft.address, draft.landmark && `Landmark: ${draft.landmark}`, draft.instructions && `Instructions: ${draft.instructions}`].filter(Boolean).join('\n'), 0],
     ['Service', `${service?.name ?? ''}${chosen.length > 0 ? ` with ${chosen.map((addon) => addon.name).join(', ')}` : ''}`, 2],
     ['Vehicle', `${draft.vehicleMake} ${draft.vehicleModel}, ${vehicleCategoryLabel[draft.vehicleCategory]}`, 3],
   ]
@@ -300,7 +301,7 @@ export default function BookingWizard(): ReactElement {
   }, [])
 
   const stepProps: StepProps | null = services === null ? null : {
-    draft, services, addons, customerId, update: (patch): void => { setDraft((current) => ({ ...current, ...patch })) },
+    draft, services, addons, customerId, update: (patch): void => { setDraft((current) => applyBookingPatch(current, patch)) },
   }
   const leave = (): void => { if (router.canGoBack()) { router.back() } else { router.replace('/') } }
 
@@ -309,8 +310,8 @@ export default function BookingWizard(): ReactElement {
       <Button label="Leave booking" variant="ghost" onPress={leave} />
       <Title>Book a car wash</Title>
       <Body muted>Step {step + 1} of {bookingStepTitles.length}: {bookingStepTitles[step]}</Body>
-      {stepProps !== null && step === 0 ? <StepWhen {...stepProps} /> : null}
-      {stepProps !== null && step === 1 ? <StepWhere {...stepProps} /> : null}
+      {stepProps !== null && step === 1 ? <StepWhen {...stepProps} /> : null}
+      {stepProps !== null && step === 0 ? <StepWhere {...stepProps} /> : null}
       {stepProps !== null && step === 2 ? <StepService {...stepProps} /> : null}
       {stepProps !== null && step === 3 ? <StepVehicle {...stepProps} /> : null}
       {stepProps !== null && step === 4 ? <StepReview {...stepProps} submissionKey={submissionKey} onEdit={setStep} onDone={(): void => { router.replace('/customer/bookings') }} /> : null}

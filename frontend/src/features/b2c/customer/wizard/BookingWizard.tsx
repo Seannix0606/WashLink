@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import {
+  applyBookingPatch,
   bookingStepProblem,
   bookingStepTitles,
   createBookingSubmissionKey,
@@ -62,7 +63,7 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
 
   const stepProps: StepProps | null = services === null ? null : {
     draft,
-    update: (patch): void => { setDraft((current) => ({ ...current, ...patch })) },
+    update: (patch): void => { setDraft((current) => applyBookingPatch(current, patch)) },
     services,
     addons,
     customerId,
@@ -96,8 +97,8 @@ export function BookingWizard({ customerId, onClose }: BookingWizardProps): Reac
         <div className="mt-5 rounded-[var(--radius-surface)] border border-[var(--color-card-border)] bg-[var(--color-surface-muted)] p-4 sm:p-5">
           {loadError !== null ? <p role="alert" className="text-sm text-[var(--color-danger-600)]">{loadError}</p> : null}
           {stepProps === null && loadError === null ? <Skeleton heightClassName="h-64" /> : null}
-          {stepProps !== null && step === 0 ? <StepWhen {...stepProps} /> : null}
-          {stepProps !== null && step === 1 ? <StepWhere {...stepProps} /> : null}
+          {stepProps !== null && step === 1 ? <StepWhen {...stepProps} /> : null}
+          {stepProps !== null && step === 0 ? <StepWhere {...stepProps} /> : null}
           {stepProps !== null && step === 2 ? <StepService {...stepProps} /> : null}
           {stepProps !== null && step === 3 ? <StepVehicle {...stepProps} /> : null}
           {stepProps !== null && step === 4 ? (

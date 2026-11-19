@@ -33,7 +33,7 @@ const openCount = (slots: readonly TimeSlot[] | undefined): number => slots?.fil
 
 /**
  * Every booking is for a chosen day and time (there is no "as soon as possible"). A month calendar of the next four weeks: days with at least one free time are marked open and can be picked, then
- * the free times of that day are listed. Times come from the washer's working hours, existing jobs and travel buffers.
+ * the free times of that day are listed. Times come only from washers whose saved service range covers the pinned location: their working hours, existing jobs and travel buffers.
  */
 export function StepWhen({ draft, update, services }: StepProps): ReactElement {
   const dates = useMemo(() => upcomingManilaDates(BOOKING_CALENDAR_DAYS), [])
@@ -141,7 +141,7 @@ export function StepWhen({ draft, update, services }: StepProps): ReactElement {
       {error !== null ? <p role="alert" className="text-sm text-[var(--color-danger-600)]">{error}</p> : null}
       {slotsByDay === null && error === null ? <Skeleton heightClassName="h-24" /> : null}
       {slotsByDay !== null && openDays.length === 0 ? (
-        <EmptyState title="No open days in the next four weeks" description="Book for as soon as possible, or check back soon." />
+        <EmptyState title="No washers near you in the next four weeks" description="No washer whose service area covers your location has an open time yet. Try a different address, or check back soon." />
       ) : null}
       {selectedDay !== null && daySlots !== undefined && openCount(daySlots) > 0 ? (
         <fieldset className="min-w-0">
