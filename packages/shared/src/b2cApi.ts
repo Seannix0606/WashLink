@@ -119,6 +119,9 @@ export function createB2cApi(client: B2cSupabaseClient) {
     saveAddress: async (customerId: string, input: Omit<SavedAddress, 'id'>): Promise<void> => {
       await run(client.from('customer_addresses').insert({ customer_id: customerId, ...input }))
     },
+    updateAddress: async (id: string, input: Partial<Omit<SavedAddress, 'id'>>): Promise<void> => {
+      await run(client.from('customer_addresses').update({ ...input, updated_at: new Date().toISOString() }).eq('id', id))
+    },
     deleteAddress: async (id: string): Promise<void> => {
       await run(client.from('customer_addresses').delete().eq('id', id))
     },

@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -26,6 +27,15 @@ vi.mock('../../presentation/auth/AuthenticatedUserContext', () => ({
   }),
 }))
 
+// The map can't draw in jsdom: a stand-in places a home pin the way the real field does.
+vi.mock('../b2c/customer/HomeLocationField', () => ({
+  HomeLocationField: ({ onChange }: { onChange: (next: unknown) => void }): ReactElement => (
+    <button type="button" onClick={(): void => { onChange({ address: '12 Sample Street, Makati City', latitude: 14.5995, longitude: 120.9842 }) }}>
+      Pin test home
+    </button>
+  ),
+}))
+
 describe('washer sign-up closed (OP-1)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -51,9 +61,18 @@ describe('washer sign-up closed (OP-1)', () => {
     await user.type(screen.getByLabelText(/Phone number/), '09000000000')
     await user.type(screen.getByLabelText(/Email address/), 'customer@local.test')
     await user.type(screen.getByLabelText(/^Password/), 'secret-123')
+    // A customer must say where they usually want their car washed.
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Pin where you usually want your car washed.')
+    expect(authContextDouble.signUpCustomer).not.toHaveBeenCalled()
+
+    await user.click(await screen.findByRole('button', { name: 'Pin test home' }))
     await user.click(screen.getByRole('button', { name: 'Create account' }))
 
     expect(authContextDouble.signUpCustomer).toHaveBeenCalledTimes(1)
+    expect(authContextDouble.signUpCustomer).toHaveBeenCalledWith(expect.objectContaining({
+      homeLocation: { address: '12 Sample Street, Makati City', latitude: 14.5995, longitude: 120.9842 },
+    }))
     expect(authContextDouble.signUpWorker).not.toHaveBeenCalled()
   })
 

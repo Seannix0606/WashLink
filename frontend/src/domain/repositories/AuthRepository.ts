@@ -1,3 +1,4 @@
+import type { HomeLocation } from '@washlink/shared'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type {
   AuthenticatedUser,
@@ -9,6 +10,8 @@ export interface SignUpInput {
   readonly password: string
   readonly fullName: string
   readonly phoneNumber: string
+  /** Customers only: where they usually want their car washed. Saved as their Home address on first sign-in. */
+  readonly homeLocation?: HomeLocation
 }
 
 /** 'confirmation_required' when the project requires email confirmation (no session yet). */

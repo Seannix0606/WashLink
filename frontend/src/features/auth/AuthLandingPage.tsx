@@ -29,6 +29,8 @@ export function AuthLandingPage({ onBack }: AuthLandingPageProps = {}): ReactEle
     fullName,
     phoneNumber,
     selectedRole,
+    homeLocation,
+    homeLocationError,
     signUpFeedback,
     isPasswordVisible,
     isSubmitting,
@@ -39,6 +41,7 @@ export function AuthLandingPage({ onBack }: AuthLandingPageProps = {}): ReactEle
     setFullName,
     setPhoneNumber,
     setSelectedRole,
+    setHomeLocation,
     togglePasswordVisibility,
     setIsForgotPasswordOpen,
     handleSignInSubmit,
@@ -100,6 +103,9 @@ export function AuthLandingPage({ onBack }: AuthLandingPageProps = {}): ReactEle
                   isSubmitting={isSubmitting}
                   selectedRole={selectedRole}
                   signUpFeedback={signUpFeedback}
+                  homeLocation={homeLocation}
+                  homeLocationError={homeLocationError}
+                  onHomeLocationChanged={setHomeLocation}
                   onFullNameChanged={setFullName}
                   onPhoneNumberChanged={setPhoneNumber}
                   onEmailAddressChanged={setEmailAddress}

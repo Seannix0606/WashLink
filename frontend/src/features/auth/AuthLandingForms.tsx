@@ -1,10 +1,15 @@
 import type { ReactElement, SyntheticEvent } from 'react'
+import { lazy, Suspense } from 'react'
+import type { HomeLocationDraft } from '@washlink/shared'
 import { featureFlags } from '../../application/featureFlags'
-import { Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react'
+import { Eye, EyeOff, House, Lock, Mail, Phone, User } from 'lucide-react'
 import type { SignUpRole } from '../../domain/models/AuthenticatedUser'
-import { Button, Card, IconButton, Input } from '../../presentation/design/ui'
+import { Button, Card, IconButton, Input, Skeleton } from '../../presentation/design/ui'
 import { isRolePickerShown, RolePickerGrid } from './RolePickerGrid'
 import { SignUpFeedbackNotice, type SignUpFeedback } from './SignUpFeedbackNotice'
+
+// The map is only loaded when a customer signs up, so the sign-in page stays light.
+const HomeLocationField = lazy(async () => ({ default: (await import('../b2c/customer/HomeLocationField')).HomeLocationField }))
 
 interface SignInFormProps {
   readonly emailAddress: string
@@ -143,6 +148,9 @@ interface SignUpFormProps {
   readonly isSubmitting: boolean
   readonly selectedRole: SignUpRole
   readonly signUpFeedback: SignUpFeedback | null
+  readonly homeLocation: HomeLocationDraft
+  readonly homeLocationError: string | null
+  readonly onHomeLocationChanged: (nextHomeLocation: HomeLocationDraft) => void
   readonly onFullNameChanged: (nextFullName: string) => void
   readonly onPhoneNumberChanged: (nextPhoneNumber: string) => void
   readonly onEmailAddressChanged: (nextEmail: string) => void
@@ -163,6 +171,9 @@ export function SignUpForm({
   isSubmitting,
   selectedRole,
   signUpFeedback,
+  homeLocation,
+  homeLocationError,
+  onHomeLocationChanged,
   onFullNameChanged,
   onPhoneNumberChanged,
   onEmailAddressChanged,
@@ -280,6 +291,23 @@ export function SignUpForm({
             />
           }
         />
+
+        {selectedRole === 'customer' ? (
+          <fieldset className="min-w-0 space-y-3 rounded-[var(--radius-control)] border border-[var(--color-card-border)] p-4">
+            <legend className="flex items-center gap-2 px-1 text-sm font-semibold text-[var(--color-ink-900)]">
+              <House className="h-4 w-4" aria-hidden="true" /> Your home location
+            </legend>
+            <p className="text-sm text-[var(--color-ink-500)]">
+              Where do you usually want your car washed? We use it to show washers who serve your area. You can still choose another place for any booking.
+            </p>
+            <Suspense fallback={<Skeleton heightClassName="h-56" />}>
+              <HomeLocationField value={homeLocation} onChange={onHomeLocationChanged} addressLabel="Home address" />
+            </Suspense>
+            {homeLocationError !== null ? (
+              <p role="alert" className="text-sm text-[var(--color-danger-600)]">{homeLocationError}</p>
+            ) : null}
+          </fieldset>
+        ) : null}
 
         <Button
           type="submit"

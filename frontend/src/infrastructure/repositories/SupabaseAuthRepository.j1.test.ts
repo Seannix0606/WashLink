@@ -54,6 +54,20 @@ describe('SupabaseAuthRepository sign-up (J1 registration)', () => {
     })
   })
 
+  it('sends a customer home location with the sign-up, and never for other roles', async () => {
+    const authRepository = new SupabaseAuthRepository()
+    authDouble.signUpResult = { data: { user: signedUpUser, session: null }, error: null }
+    const homeLocation = { address: '12 Sample Street, Makati City', latitude: 14.5995, longitude: 120.9842 }
+
+    await authRepository.signUp({ ...signUpInput, homeLocation }, 'customer')
+    await authRepository.signUp({ ...signUpInput, homeLocation }, 'worker')
+
+    expect(authDouble.recordedSignUpCalls[0]).toMatchObject({
+      options: { data: { role: 'customer', home_address: '12 Sample Street, Makati City', home_latitude: 14.5995, home_longitude: 120.9842 } },
+    })
+    expect(JSON.stringify(authDouble.recordedSignUpCalls[1])).not.toContain('home_')
+  })
+
   it('j1_sign_up_maps_existing_account_to_duplicate_error', async () => {
     const authRepository = new SupabaseAuthRepository()
 

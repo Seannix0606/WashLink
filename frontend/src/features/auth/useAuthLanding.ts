@@ -1,4 +1,5 @@
 import { useState, type SyntheticEvent } from 'react'
+import { completeHomeLocation, emptyHomeLocationDraft, homeLocationProblem, type HomeLocationDraft } from '@washlink/shared'
 import { applicationToast } from '../../presentation/design/ui'
 import { useAuthenticatedUser } from '../../presentation/auth/AuthenticatedUserContext'
 import { DuplicateAccountError } from '../../domain/errors/DuplicateAccountError'
@@ -18,6 +19,8 @@ interface UseAuthLandingResult {
   readonly fullName: string
   readonly phoneNumber: string
   readonly selectedRole: SignUpRole
+  readonly homeLocation: HomeLocationDraft
+  readonly homeLocationError: string | null
   readonly signUpFeedback: SignUpFeedback | null
   readonly isPasswordVisible: boolean
   readonly isSubmitting: boolean
@@ -28,6 +31,7 @@ interface UseAuthLandingResult {
   readonly setFullName: (nextFullName: string) => void
   readonly setPhoneNumber: (nextPhoneNumber: string) => void
   readonly setSelectedRole: (nextRole: SignUpRole) => void
+  readonly setHomeLocation: (nextHomeLocation: HomeLocationDraft) => void
   readonly togglePasswordVisibility: () => void
   readonly setIsForgotPasswordOpen: (isOpen: boolean) => void
   readonly handleSignInSubmit: (event: SyntheticEvent<HTMLFormElement>) => Promise<void>
@@ -42,6 +46,8 @@ export function useAuthLanding(): UseAuthLandingResult {
   const [fullName, setFullName] = useState<string>('')
   const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [selectedRole, setSelectedRole] = useState<SignUpRole>('customer')
+  const [homeLocation, setHomeLocationState] = useState<HomeLocationDraft>(emptyHomeLocationDraft)
+  const [homeLocationError, setHomeLocationError] = useState<string | null>(null)
   const [signUpFeedback, setSignUpFeedback] = useState<SignUpFeedback | null>(null)
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -82,9 +88,17 @@ export function useAuthLanding(): UseAuthLandingResult {
     event: SyntheticEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault()
+    // Customers say where they usually want their car washed, so booking can start from there.
+    const isCustomer = selectedRole === 'customer'
+    const homeProblem = isCustomer ? homeLocationProblem(homeLocation) : null
+    setHomeLocationError(homeProblem)
+    if (homeProblem !== null) {
+      return
+    }
     setIsSubmitting(true)
     setSignUpFeedback(null)
     const trimmedEmailAddress = emailAddress.trim()
+    const completedHomeLocation = isCustomer ? completeHomeLocation(homeLocation) : null
 
     try {
       const signUpOutcome = await signUpByRole[selectedRole]({
@@ -92,6 +106,7 @@ export function useAuthLanding(): UseAuthLandingResult {
         phoneNumber: phoneNumber.trim(),
         emailAddress: trimmedEmailAddress,
         password,
+        ...(completedHomeLocation !== null ? { homeLocation: completedHomeLocation } : {}),
       })
 
       if (signUpOutcome === 'confirmation_required') {
@@ -124,6 +139,8 @@ export function useAuthLanding(): UseAuthLandingResult {
     fullName,
     phoneNumber,
     selectedRole,
+    homeLocation,
+    homeLocationError,
     signUpFeedback,
     isPasswordVisible,
     isSubmitting,
@@ -134,6 +151,10 @@ export function useAuthLanding(): UseAuthLandingResult {
     setFullName,
     setPhoneNumber,
     setSelectedRole,
+    setHomeLocation: (nextHomeLocation: HomeLocationDraft): void => {
+      setHomeLocationState(nextHomeLocation)
+      setHomeLocationError(null)
+    },
     togglePasswordVisibility: (): void => {
       setIsPasswordVisible((previous) => !previous)
     },

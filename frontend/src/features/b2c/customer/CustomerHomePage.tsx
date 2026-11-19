@@ -16,6 +16,7 @@ import { CustomerSummary } from './CustomerSummary'
 import { MessagesPanel } from '../messages/MessagesPanel'
 import { useBookingChats } from '../messages/useBookingChats'
 import { SavedDetailsPanel } from './SavedDetailsPanel'
+import { HomeLocationCard } from './HomeLocationCard'
 
 const BookingWizard = lazy(async () => ({ default: (await import('./wizard/BookingWizard')).BookingWizard }))
 
@@ -63,6 +64,7 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
     setTab('messages')
   }
   const [isBooking, setIsBooking] = useState(false)
+  const [savedVersion, setSavedVersion] = useState(0)
   const [bookings, setBookings] = useState<readonly CustomerBooking[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [view, setView] = useStoredBookingsView('washlink.view.customerBookings')
@@ -166,6 +168,7 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
               </Button>
               </div>
             </section>
+            <HomeLocationCard customerId={customerId} />
             <Section title="Current bookings" count={bookings === null ? undefined : active.length}>
               {list(active, 'No current bookings')}
             </Section>
@@ -197,7 +200,12 @@ export function CustomerHomePage({ customerId, customerName }: CustomerHomePageP
           <MessagesPanel chats={chats} profileId={customerId} selectedBookingId={chatBookingId} onSelect={setChatBookingId}
             onViewBooking={(): void => { setTab('bookings') }} />
         ) : null}
-        {tab === 'saved' ? <SavedDetailsPanel customerId={customerId} /> : null}
+        {tab === 'saved' ? (
+          <div className="space-y-5">
+            <HomeLocationCard customerId={customerId} onSaved={(): void => { setSavedVersion((version) => version + 1) }} />
+            <SavedDetailsPanel key={savedVersion} customerId={customerId} />
+          </div>
+        ) : null}
         {tab === 'account' ? <DeleteAccountSection /> : null}
     </AppShell>
   )

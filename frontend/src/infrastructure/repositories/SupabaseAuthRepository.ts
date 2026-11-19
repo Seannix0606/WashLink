@@ -1,3 +1,4 @@
+import { homeLocationToSignUpData } from '@washlink/shared'
 import type {
   AuthChangeEvent,
   AuthError,
@@ -77,6 +78,7 @@ export class SupabaseAuthRepository implements AuthRepository {
           role,
           full_name: signUpInput.fullName,
           phone_number: signUpInput.phoneNumber,
+          ...(role === 'customer' && signUpInput.homeLocation !== undefined ? homeLocationToSignUpData(signUpInput.homeLocation) : {}),
         },
       },
     })

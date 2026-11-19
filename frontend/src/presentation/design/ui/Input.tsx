@@ -9,6 +9,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   readonly leadingIcon?: ReactNode
   readonly trailingAccessory?: ReactNode
   readonly inputContainerClassName?: string
+  /** Shows the required mark and sets aria-required, but leaves the check to the form (no browser pop-up). */
+  readonly isRequiredByForm?: boolean
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -22,6 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     className,
     id,
     required,
+    isRequiredByForm = false,
     ...inputHtmlAttributes
   },
   forwardedRef,
@@ -37,7 +40,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {label ? (
         <span className="text-sm font-medium text-[var(--color-ink-900)]">
           {label}
-          {required ? (
+          {required === true || isRequiredByForm ? (
             <span className="ml-0.5 text-[var(--color-danger-500)]">*</span>
           ) : null}
         </span>
@@ -60,6 +63,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           id={controlId}
           ref={forwardedRef}
           required={required}
+          aria-required={isRequiredByForm ? true : undefined}
           aria-invalid={hasErrorText || undefined}
           aria-describedby={descriptionId}
           className={joinClassNames(
