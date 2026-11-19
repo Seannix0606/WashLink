@@ -35,7 +35,7 @@ export function applyBookingPatch<T extends BookingDraft>(current: T, patch: Par
 /** Why the customer can't leave this step yet, or null. The server checks all of this again. */
 export function bookingStepProblem(step: number, draft: BookingDraft): string | null {
   if (step === 1 && !draft.isImmediate && draft.scheduledAt === null) {
-    return 'Choose a time, or book for as soon as possible.'
+    return 'Choose a day and time.'
   }
   if (step === 0 && (draft.latitude === null || draft.longitude === null || draft.address.trim().length < bookingLimits.addressMinLength)) {
     return 'Pin the location and confirm the full address.'

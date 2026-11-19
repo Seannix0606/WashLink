@@ -62,13 +62,12 @@ function StepWhen({ draft, update, services }: StepProps): ReactElement {
   return (
     <>
       <Heading>When should we come?</Heading>
-      <Choice label="As soon as possible" isSelected={draft.isImmediate} onPress={(): void => { update({ isImmediate: true, scheduledAt: null }) }} />
-      <Body>Or choose a date</Body>
+      <Body>Choose a day</Body>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
         {dates.map((value) => <Choice key={value} label={dateLabel(value)} isSelected={value === date} onPress={(): void => { setDate(value) }} />)}
       </ScrollView>
       <Notice tone="error" message={error} />
-      {slots?.length === 0 ? <Body muted>No washer whose service area covers your location works this day. Try another date, or book for as soon as possible.</Body> : null}
+      {slots?.length === 0 ? <Body muted>No washer whose service area covers your location works this day. Try another date.</Body> : null}
       {slots !== null && slots.length > 0 && slots.every((slot) => !slot.isAvailable) ? <Body muted>Every time on this day has passed or is taken. Try another date.</Body> : null}
       <Row>
         {slots?.map((slot) => (

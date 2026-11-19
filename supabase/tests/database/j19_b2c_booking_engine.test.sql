@@ -3,6 +3,8 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 select plan(38);
+-- SEC-3: immediate bookings are off by default; these tests book "as soon as possible".
+update public.platform_settings set immediate_bookings_open = true;
 
 create temporary table ids on commit drop as
   select test_helpers.create_customer('b2c-customer@local.test') as customer,

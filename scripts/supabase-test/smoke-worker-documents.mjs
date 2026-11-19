@@ -41,6 +41,14 @@ export function setWorkerDocumentUploads(enabled) {
   if (result.status !== 0) throw new Error(`could not change the uploads flag: ${(result.stderr ?? '').split('\n')[0]}`)
 }
 
+/** LOCAL STACK ONLY. SEC-3: "as soon as possible" bookings are off until turned on with SQL; the smokes that book immediately turn them on. */
+export function setImmediateBookings(enabled) {
+  const projectId = assertLocalTestProjectId(fs.readFileSync(path.join(repoRoot, STAGED_DIRECTORY_NAME, 'supabase', 'config.toml'), 'utf8'), 'staged config.toml')
+  const result = spawnSync('docker', ['exec', '-i', `supabase_db_${projectId}`, 'psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', 'postgres', '-c',
+    `update public.platform_settings set immediate_bookings_open = ${enabled === true}`], { encoding: 'utf8' })
+  if (result.status !== 0) throw new Error(`could not change the immediate bookings flag: ${(result.stderr ?? '').split('\n')[0]}`)
+}
+
 export const WORKER_DOCUMENT_BUCKET = 'worker-verification-documents'
 export const SMOKE_JPEG = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0xff, 0xd9])
 export const SMOKE_PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d])

@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 import { pathAndTypeAttacks } from './smoke-worker-document-attacks.mjs'
 import { routeAttacks } from './smoke-worker-document-routes.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
-import { approveWorkerDocument, beginWorkerDocument, giveWorkerApprovedDocuments, setWorkerDocumentUploads, SMOKE_JPEG, SMOKE_PNG, uploadWorkerDocument, WORKER_DOCUMENT_BUCKET as BUCKET } from './smoke-worker-documents.mjs'
+import { approveWorkerDocument, beginWorkerDocument, giveWorkerApprovedDocuments, setImmediateBookings, setWorkerDocumentUploads, SMOKE_JPEG, SMOKE_PNG, uploadWorkerDocument, WORKER_DOCUMENT_BUCKET as BUCKET } from './smoke-worker-documents.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const workdir = path.join(repoRoot, STAGED_DIRECTORY_NAME)
@@ -310,6 +310,7 @@ async function main() {
 }
 
 let crashed = null
+setImmediateBookings(true)
 try {
   await main()
 } catch (error) {
@@ -322,5 +323,6 @@ for (const id of [...createdUserIds]) {
   check('delete_synthetic_user', !error, error?.message)
 }
 setWorkerDocumentUploads(false)
+setImmediateBookings(false)
 console.log(`b2c7-api-smoke: ${passed} passed, ${failed} failed`)
 process.exit(failed === 0 && crashed === null ? 0 : 1)

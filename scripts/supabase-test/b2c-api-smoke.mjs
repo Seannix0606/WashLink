@@ -19,7 +19,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { giveWorkerApprovedDocuments, setWorkerDocumentUploads } from './smoke-worker-documents.mjs'
+import { giveWorkerApprovedDocuments, setImmediateBookings, setWorkerDocumentUploads } from './smoke-worker-documents.mjs'
 import { assertLocalTestProjectId, STAGED_DIRECTORY_NAME } from './stage-local-workdir.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -169,6 +169,7 @@ const RULES = { commissionBps: 1000, requestTtlSeconds: 300, searchWindowMinutes
 
 async function main() {
   setWorkerDocumentUploads(true)
+  setImmediateBookings(true)
   const anonApi = shared.createB2cApi(newClient(anonKey))
   check('anon_reads_public_status', (await anonApi.bookingsAreOpen()) === false)
   const publicServices = await anonApi.listServices()
@@ -409,5 +410,6 @@ for (const id of [...createdUserIds]) {
   check('delete_synthetic_user', !error, error?.message)
 }
 setWorkerDocumentUploads(false)
+setImmediateBookings(false)
 console.log(`b2c-api-smoke: ${passed} passed, ${failed} failed`)
 process.exit(failed === 0 && crashed === null ? 0 : 1)
