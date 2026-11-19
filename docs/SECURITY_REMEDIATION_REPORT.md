@@ -61,8 +61,9 @@ call it with POST.
   attacker. Booking spam limits still apply to successful calls.
 - An attacker with many accounts can collect the coarse covered area and estimate the shifted centre (about 1.1 km from
   the base in the test). The washer's home then lies somewhere 0.8–1.5 km from that point, in an unknown direction.
-- A washer may now receive requests up to about 3.3 km beyond their configured range (offset + margin + grid). They can
-  decline them.
+- A washer may now receive requests beyond their configured range: up to about 4.8 km in the direction of their secret
+  shift (the centre moves up to 1.5 km and the range grows by offset + margin, up to 2.5 km, plus up to 0.8 km of grid
+  rounding) and up to about 1.8 km in the opposite direction (margin + grid). They can decline them.
 - Strongest additional protection: ask washers to set their base to a public landmark near home.
 
 ## 2. F2: deleted washers' ID documents [SEC-5]
