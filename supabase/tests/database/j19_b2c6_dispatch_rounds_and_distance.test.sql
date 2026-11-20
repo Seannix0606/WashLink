@@ -68,6 +68,9 @@ select is(pg_temp.row_status('b1', 'w2'), 'offered,superseded', 'retry_reoffers_
 select is(pg_temp.row_status('b1', 'w1'), 'declined', 'retry_does_not_reoffer_declined_washer');
 
 -- ---------- release starts a new round ----------
+-- A live offer holds a washer for that time (2026_11_12_bga_booking_gaps), and every "as soon as possible" booking here is
+-- at now(). Let b1's offers lapse first so its washers are free for b2, as they would be once a real offer expires.
+select pg_temp.lapse('b1');
 select pg_temp.book('b2');
 select pg_temp.lapse('b2', 'w1');
 select public.service_dispatch_sweep(pg_temp.id('b2'));
@@ -80,8 +83,11 @@ select is(pg_temp.row_status('b2', 'w1'), 'offered,superseded', 'release_reoffer
 -- ---------- offer length ----------
 select pg_temp.book('sch', ((now() at time zone 'Asia/Manila')::date + 2 + interval '10 hours') at time zone 'Asia/Manila');
 select is((select min(expires_at) from public.dispatch_requests where booking_id = pg_temp.id('sch')), now() + interval '60 minutes', 'scheduled_offer_lasts_sixty_minutes');
+-- b2's new round holds its washers at now(); let it lapse so the immediate booking reaches them (see the note above).
+select pg_temp.lapse('b2');
 select pg_temp.book('imm');
-select is((select min(expires_at) from public.dispatch_requests where booking_id = pg_temp.id('imm')), now() + interval '180 seconds', 'immediate_offer_uses_request_ttl');
+select is((select min(expires_at) from public.dispatch_requests where booking_id = pg_temp.id('imm')),
+          now() + make_interval(secs => (select request_ttl_seconds from public.platform_settings)), 'immediate_offer_uses_request_ttl');
 
 -- ---------- bands ----------
 select is((select array_agg(public.service_dispatch_distance_band(km) order by km) from unnest(array[0, 2, 2.01, 5, 5.01, 10, 10.01, 20, 20.01, 50, 50.01, 200]::numeric[]) km),

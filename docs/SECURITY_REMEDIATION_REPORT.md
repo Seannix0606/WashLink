@@ -142,7 +142,7 @@ refused, scheduled still works, customer cannot turn it on, works when turned on
 
 | Suite | Result |
 | --- | --- |
-| Database, **fresh stack** `washlink-verify-local-test` (all migrations applied from scratch; nothing reset) | 137 files, 3,904 tests. **2 failures, both pre-existing and identical on `main` before any change**: `j18` test 1 (`j18_customer_books_with_server_quote`) and `j19_b2c6_dispatch_rounds_and_distance` (time-of-day dependent). New `j19_sec2` 19/19, `j19_sec3` 6/6; migration replay `001` passes |
+| Database, **fresh stack** `washlink-verify-local-test` (all migrations applied from scratch; nothing reset) | 137 files, 3,904 tests. **2 failures, both pre-existing and identical on `main` before any change**: `j18` test 1 (`j18_customer_books_with_server_quote`) and `j19_b2c6_dispatch_rounds_and_distance`. New `j19_sec2` 19/19, `j19_sec3` 6/6; migration replay `001` passes. **Both fixed afterwards (2026-11-20): 137 files, 3,913 tests, all pass.** They were not time dependent: `j18` hard-coded exactly 114 migrations (now "at least 114"; `001` pins the exact list), and the dispatch test predates the 2026-11-12 rule that a live offer holds a washer, so its back-to-back "now" bookings found no free washer (it now lets the earlier offers lapse first) and its offer-length check reads the configured TTL instead of assuming 180 seconds |
 | Web: `tsc -b`, `eslint .`, Vitest, `vite build` | Clean, clean, **595/595** (178 files), built |
 | Mobile: `tsc --noEmit`, Jest | Clean, **35/35** |
 | Backend: pytest, ruff, pip-audit | **24/24**, no new issues (77 pre-existing), no vulnerabilities |
@@ -207,13 +207,24 @@ then run `docs/security/SEC2_SEC3_LIVE_ROLLBACK.sql` in the SQL Editor.
 ## 8. Remaining risks and recommendations
 
 - F1 residuals in section 1 (the fix is live since 2026-11-20).
-- Informational items I2 (PostgREST hints), I3 (HTTP 500 on another washer's request) and I4 (dev defaults) are
-  unchanged; low value, no data exposure.
-- Pre-existing failing database tests `j18` test 1 and `j19_b2c6_dispatch_rounds_and_distance` need their own fix
-  (time dependent).
-- Not verified: live configuration (CSP header on Render, email confirmation, Auth rate limits), edge functions running
-  on Deno, the mobile app on a device, Realtime presence beyond the booking chat, and B2B workforce objects in the
-  IDOR sweep.
+- **Live security headers are missing (checked 2026-11-20).** The live site sends only `Strict-Transport-Security` and
+  `X-Content-Type-Options`; there is no `Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy` or
+  `Permissions-Policy`, so other sites can frame WashLink (clickjacking) and a script injection would not be contained.
+  `render.yaml` defines all of them, but the live service does not use it. **Proven safe to add:** the live site was
+  loaded with exactly the `render.yaml` headers injected (Playwright, desktop and phone, signed-out pages: landing,
+  sign-in, create account with the home map, an address search answered locally): 0 policy violations, 0 page errors,
+  fonts, map tiles, address search and Supabase all working. A positive control (an injected inline script and an image
+  from an unlisted host) was refused, so the policy was really enforced. Signed-in pages were not walked; they use only
+  the same hosts (`*.supabase.co` for data, Realtime and photos), which the policy allows. Add them in Render →
+  washlink → Settings → Headers (values in `render.yaml`), or connect the service to `render.yaml` as a Blueprint.
+- I3 (HTTP 500 instead of 4xx): **left as is, by decision.** SQLSTATE `55000` ("wrong state") is used for about 18
+  refusals across 8 migrations, and PostgREST maps the whole `55` class to HTTP 500, not only
+  `decline_dispatch_request`. Changing it means redefining all of those functions and another live migration, to change
+  a status code; the messages are generic and reveal nothing. If it is ever done, use PostgREST's `PT4xx` codes.
+- I2 (PostgREST hints) and I4 (dev defaults) are unchanged; low value, no data exposure.
+- Not verified: Auth settings on the live project (email confirmation, rate limits; the dashboard session had expired),
+  edge functions running on Deno, the mobile app on a device, Realtime presence beyond the booking chat, and B2B
+  workforce objects in the IDOR sweep.
 - Moderate advisories remain in lint and Expo build tooling; updating Expo needs an Expo upgrade.
 
 ## Files changed on `security/remediation`
