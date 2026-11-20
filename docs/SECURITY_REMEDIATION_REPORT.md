@@ -207,7 +207,13 @@ then run `docs/security/SEC2_SEC3_LIVE_ROLLBACK.sql` in the SQL Editor.
 ## 8. Remaining risks and recommendations
 
 - F1 residuals in section 1 (the fix is live since 2026-11-20).
-- **Live security headers are missing (checked 2026-11-20).** The live site sends only `Strict-Transport-Security` and
+- **Live security headers: added 2026-11-20, with your approval, in Render → WashLink → Headers** (path `/*`):
+  `Content-Security-Policy`, `X-Frame-Options: DENY`, `Referrer-Policy` and `Permissions-Policy`, with the exact
+  `render.yaml` values (checked character for character before saving). The live site served them about 20 seconds
+  later, each once, beside Render's own HSTS and `nosniff`. The same Playwright walk against the real headers (no
+  injection): 0 policy violations, map, fonts, address search and Supabase working, and the control refused. What was
+  found before the change:
+- **Live security headers were missing (checked 2026-11-20).** The live site sent only `Strict-Transport-Security` and
   `X-Content-Type-Options`; there is no `Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy` or
   `Permissions-Policy`, so other sites can frame WashLink (clickjacking) and a script injection would not be contained.
   `render.yaml` defines all of them, but the live service does not use it. **Proven safe to add:** the live site was
